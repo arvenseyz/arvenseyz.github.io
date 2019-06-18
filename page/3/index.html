@@ -251,6 +251,333 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/04/30/leetcode105-179-200/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/04/30/leetcode105-179-200/" itemprop="url">前序中序构建二叉树，构建最大的数字，岛屿的数量</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-30T15:39:20+08:00">
+                2019-04-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/leetcode/" itemprop="url" rel="index">
+                    <span itemprop="name">leetcode</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="105"><a href="#105" class="headerlink" title="105"></a>105</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>从前序和中序遍历结果构建二叉树</p>
+<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><p>前序遍历的第一个节点是根节点，再在中序遍历中找到这个节点，其左边是左子树，右边是右子树，递归即可。</p>
+<pre><code>        3
+
+    /        \
+
+9            20    
+
+             /    \
+
+           15       7
+</code></pre><p>前序遍历结果3,9,20,15,7；中序遍历结果9,3,15,20,7。</p>
+<p> 首先找到根节点在中序遍历中的位置索引index，即1；</p>
+<p>那么中序遍历结果中，”起始位置“（0）到”索引位-1“（0）为左子树，”索引位+1“（2）到”结束位置（4）为右子树。</p>
+<p>前序遍历结果中，“起始位置+1”（1）【因为起始位置就是根节点，它下个节点就是左子树开始】为左子树开始，“索引位-中序的起始位置+前序的开始位置”（1）为左子树结束，【索引位-中序的起始位置其实就是左子树长度】。“下一个位置”（2）是右子树开始，“结束位置”（4）是右子树结束。</p>
+<p>按照上面的方法传值即可。实际上不需要前序遍历结束的位置，因为是在中序遍历中找前序遍历的第一个节点。</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">   <span class="function"><span class="keyword">public</span> TreeNode <span class="title">buildTree</span><span class="params">(<span class="keyword">int</span>[] preorder, <span class="keyword">int</span>[] inorder)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> build(<span class="number">0</span>,<span class="number">0</span>,inorder.length-<span class="number">1</span>,preorder,inorder);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> TreeNode <span class="title">build</span><span class="params">(<span class="keyword">int</span> preStart, <span class="keyword">int</span> inStart, <span class="keyword">int</span> inEnd, <span class="keyword">int</span>[] preorder, <span class="keyword">int</span>[] inorder)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(preStart &gt; preorder.length - <span class="number">1</span>||inStart&gt;inEnd) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> index=<span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = inStart; i &lt;= inEnd; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span>(inorder[i]==preorder[preStart])&#123;</span><br><span class="line">                index = i;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        TreeNode treeNode = <span class="keyword">new</span> TreeNode(preorder[preStart]);</span><br><span class="line">        treeNode.left=build(preStart+<span class="number">1</span>,inStart,index-<span class="number">1</span>,preorder,inorder);</span><br><span class="line">        treeNode.right=build(preStart+index-inStart+<span class="number">1</span>,index+<span class="number">1</span>,inEnd,preorder,inorder);</span><br><span class="line">        <span class="keyword">return</span> treeNode;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="179"><a href="#179" class="headerlink" title="179"></a>179</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>最大的数字。</p>
+<p><strong>Input:</strong> <code>[3,30,34,5,9]</code><br><strong>Output:</strong> “<code>9534330&quot;</code></p>
+<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>把数字从大到小接起来肯定不对。</p>
+<p>比如，[10,2]，答案应该是210。</p>
+<p>有个东西叫字典序，比如说ab&gt;ace。因为a一样，b在c前面。</p>
+<p>这个题只要数组中的元素，也按这种顺序比较，比如，54&gt;530，排序连接，即可。</p>
+<p>下一个问题，怎么重写排序函数，</p>
+<p>按位比当然可以，这还有种数学方法，可以得到，2&gt;10。</p>
+<p>2连接10是210，10连接2是102，210大于102，所以2&gt;10。</p>
+<p>重写比较函数，排序后连接即可。</p>
+<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">     <span class="function"><span class="keyword">public</span> String <span class="title">largestNumber</span><span class="params">(<span class="keyword">int</span>[] nums)</span> </span>&#123;</span><br><span class="line">        String[] strings= <span class="keyword">new</span> String[nums.length];</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i =<span class="number">0</span>;i&lt;nums.length;i++)&#123;</span><br><span class="line">            strings[i]=String.valueOf(nums[i]);</span><br><span class="line">        &#125;</span><br><span class="line">        Arrays.sort(strings,<span class="keyword">new</span> Comparator&lt;String&gt;()&#123;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compare</span><span class="params">(String o1, String o2)</span> </span>&#123;</span><br><span class="line">                String a =o1+o2;</span><br><span class="line">                String b =o2+o1;</span><br><span class="line">                <span class="keyword">return</span> b.compareTo(a);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="keyword">if</span> (<span class="string">"0"</span>.equals(strings[<span class="number">0</span>])) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="string">"0"</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        StringBuilder sb =<span class="keyword">new</span> StringBuilder();</span><br><span class="line">        <span class="keyword">for</span> (String str :strings) &#123;</span><br><span class="line">            sb.append(str);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> sb.toString();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="200"><a href="#200" class="headerlink" title="200"></a>200</h1><h2 id="题目-2"><a href="#题目-2" class="headerlink" title="题目"></a>题目</h2><p>岛屿的数量，世界由二维矩阵表示，1是陆地，0是海洋，被海洋包围就是岛咯，二维矩阵之外也是海。</p>
+<h2 id="解答-2"><a href="#解答-2" class="headerlink" title="解答"></a>解答</h2><p>用标记广搜的方法，岛都是连起来的，广搜可以找到这个岛所有地方，然后标记，每进行一次广搜，意味着一个岛。</p>
+<h2 id="代码-2"><a href="#代码-2" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">numIslands</span><span class="params">(<span class="keyword">char</span>[][] grid)</span> </span>&#123;</span><br><span class="line">       <span class="keyword">int</span> cnt=<span class="number">0</span>;</span><br><span class="line">       <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;grid.length;i++)&#123;</span><br><span class="line">           <span class="keyword">for</span>(<span class="keyword">int</span> j =<span class="number">0</span>;j&lt;grid[<span class="number">0</span>].length;j++)&#123;</span><br><span class="line">               <span class="keyword">if</span>(grid[i][j]==<span class="string">'1'</span>)&#123;</span><br><span class="line">                   cnt++;</span><br><span class="line">                   search(grid,i,j);</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">return</span> cnt;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">search</span><span class="params">(<span class="keyword">char</span>[][] grid, <span class="keyword">int</span> x, <span class="keyword">int</span> y)</span> </span>&#123;</span><br><span class="line">       grid[x][y]=<span class="number">2</span>;</span><br><span class="line">       <span class="keyword">if</span> (x &gt; grid.length-<span class="number">1</span> &amp;&amp; y &gt; grid[<span class="number">0</span>].length-<span class="number">1</span> ) &#123;</span><br><span class="line">           <span class="keyword">return</span>;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">if</span> (x &lt; grid.length-<span class="number">1</span> &amp;&amp; grid[x+<span class="number">1</span>][y] == <span class="string">'1'</span>) &#123;<span class="comment">//向下</span></span><br><span class="line">           search(grid,x+<span class="number">1</span>,y);</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">if</span> (y &lt; grid[<span class="number">0</span>].length-<span class="number">1</span> &amp;&amp; grid[x][y+<span class="number">1</span>] == <span class="string">'1'</span>)&#123;<span class="comment">//向右</span></span><br><span class="line">           search(grid,x,y+<span class="number">1</span>);</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">if</span> (x &gt; <span class="number">0</span> &amp;&amp; grid[x-<span class="number">1</span>][y] == <span class="string">'1'</span> )&#123;<span class="comment">//向上</span></span><br><span class="line">           search(grid,x-<span class="number">1</span>,y);</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">if</span> (y &gt; <span class="number">0</span> &amp;&amp; grid[x][y-<span class="number">1</span>] == <span class="string">'1'</span>) &#123;<span class="comment">//向左</span></span><br><span class="line">           search(grid,x,y-<span class="number">1</span>);</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/04/28/leetcode125-131-160/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/04/28/leetcode125-131-160/" itemprop="url">合法的回文字符，回文分区，两个链表的第一个公共节点</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-28T17:07:36+08:00">
+                2019-04-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/leetcode/" itemprop="url" rel="index">
+                    <span itemprop="name">leetcode</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="125"><a href="#125" class="headerlink" title="125"></a>125</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>合法的回文字符，比如abc当然不合法。还有就是，给的字符串带标点的，判断的时候无视标点，比如”a,ba”合法。</p>
+<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><p>String的replaceAll函数，第一个参数，输入的是正则表达式，把标点符号全部抹去即可。</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isPalindrome</span><span class="params">(String s)</span> </span>&#123;</span><br><span class="line">    String actual = s.replaceAll(<span class="string">"[^A-Za-z0-9]"</span>, <span class="string">""</span>).toLowerCase();</span><br><span class="line">    String rev = <span class="keyword">new</span> StringBuffer(actual).reverse().toString();</span><br><span class="line">    <span class="keyword">return</span> actual.equals(rev);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="131"><a href="#131" class="headerlink" title="131"></a>131</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>回文分区，比如aab，可分为两个子串，”aa”,”b”，每个子串都是回文串。还有种分法”a”,”a”,”b”，要求给出所有分法。</p>
+<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>首先如何判断一个哪些子串是回文串，之前做过一个动态规划题的，求的是最大回文子串长度，这个求是不是没有必要，只需要倒转比较即可。用一个二维矩阵，每个格子存从i到j是否是回文串。</p>
+<p>找的过程当然是深度优先搜索，问题是怎么搜，到某个位置，直到字符串结束，即从j到j一直到j到最后一个，都尝试。</p>
+<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> List&lt;List&lt;String&gt;&gt; partition(String s) &#123;</span><br><span class="line">        <span class="keyword">boolean</span> dic[][] = <span class="keyword">new</span> <span class="keyword">boolean</span>[s.length()][s.length()];</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span> ;i&lt;s.length();i++)&#123;</span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">int</span> j = i;j&lt;s.length();j++)&#123;</span><br><span class="line">                String sb=s.substring(i,j+<span class="number">1</span>);</span><br><span class="line">                dic[i][j]=sb.equals(<span class="keyword">new</span> StringBuilder(sb).reverse().toString());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">                <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span> ;i&lt;s.length();i++)&#123;</span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">int</span> j = <span class="number">0</span>;j&lt;s.length();j++)&#123;</span><br><span class="line">                System.out.printf(dic[i][j]+<span class="string">""</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            System.out.println();</span><br><span class="line">        &#125;</span><br><span class="line">        List&lt;List&lt;String&gt;&gt; ans = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        List&lt;String&gt; cur = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        <span class="keyword">int</span> pos =<span class="number">0</span>;</span><br><span class="line">        dfs(ans,cur,dic,s,pos);</span><br><span class="line">        <span class="keyword">return</span> ans;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">dfs</span><span class="params">(List&lt;List&lt;String&gt;&gt; ans, List&lt;String&gt; cur, <span class="keyword">boolean</span>[][] dic, String s, <span class="keyword">int</span> pos)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(pos==s.length())&#123;</span><br><span class="line">            ans.add(<span class="keyword">new</span> ArrayList&lt;&gt;(cur));</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i+pos&lt;s.length();i++)&#123;</span><br><span class="line">            <span class="keyword">if</span>(!dic[pos][pos+i])&#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            cur.add(s.substring(pos,pos+i+<span class="number">1</span>));</span><br><span class="line">            dfs(ans, cur, dic, s, pos+i+<span class="number">1</span>);</span><br><span class="line">            cur.remove(cur.size()-<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="160"><a href="#160" class="headerlink" title="160"></a>160</h1><h2 id="题目-2"><a href="#题目-2" class="headerlink" title="题目"></a>题目</h2><p>找两个链表的第一个公共节点。</p>
+<h2 id="解答-2"><a href="#解答-2" class="headerlink" title="解答"></a>解答</h2><p>答案给了种神奇的，基于数学公式的算法。</p>
+<p>比如说A字符串长度a+c；B字符串长度b+c，c即公共部分。</p>
+<p>不妨设a&gt;b。A和B双指针同时出发，当b走法，a还剩a-b。</p>
+<p>这时让B指针也从A链表开始出发，当A走到底，即再走a-b步，B指针即在A链表的a-b位置。这时让A指针从B链表出发。此时两者是对齐的了。</p>
+<p>其实没必要这么麻烦，只要算出A和B链表的长度，然后从对齐的位置出发即可。</p>
+<h2 id="代码-2"><a href="#代码-2" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> ListNode <span class="title">getIntersectionNode</span><span class="params">(ListNode headA, ListNode headB)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(headA==<span class="keyword">null</span>||headB==<span class="keyword">null</span>)&#123;<span class="keyword">return</span> <span class="keyword">null</span>;&#125;</span><br><span class="line">        ListNode ta = headA, tb = headB;</span><br><span class="line">        <span class="keyword">int</span> la = getlen(ta);</span><br><span class="line">        <span class="keyword">int</span> lb = getlen(tb);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (la &gt; lb) &#123;</span><br><span class="line">            headA = headA.next;</span><br><span class="line">            la--;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">while</span> (lb &gt; la) &#123;</span><br><span class="line">            headB = headB.next;</span><br><span class="line">            lb--;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (headA!=headB)&#123;</span><br><span class="line">            headA=headA.next;</span><br><span class="line">            headB=headB.next;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> headA;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">getlen</span><span class="params">(ListNode t)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> cnt = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">while</span> (t.next != <span class="keyword">null</span>) &#123;</span><br><span class="line">            t = t.next;</span><br><span class="line">            cnt++;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> cnt;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/04/28/4-28技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1565,378 +1892,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/04/03/4-3技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/04/03/4-3技术笔记/" itemprop="url">NIO与netty概念再读</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-03T16:11:14+08:00">
-                2019-04-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>传统的 IO 是面向字节流或字符流的, 而在 NIO 中, 抛弃了传统的 IO 流, 而是引入了<strong>Channel</strong>和<strong>Buffer</strong>的概念. 在 NIO 中, 只能从 Channel 中读取数据到 Buffer 中或将数据从 Buffer 中写入到 Channel.</p>
-<h2 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a>Channel</h2><p>通常来说, 所有的 NIO 的 I/O 操作都是从 Channel 开始的. 一个 channel 类似于一个 stream。</p>
-<p>区别在于，channel既可以读也可以写，stream只能读或写。channel可以是异步的，stream阻塞的。channel交互需要媒介Buffer。</p>
-<p>Channel 类型有:</p>
-<ul>
-<li><p>FileChannel, 文件操作</p>
-</li>
-<li><p>DatagramChannel, UDP 操作</p>
-</li>
-<li><p>SocketChannel, TCP 操作</p>
-</li>
-<li><p>ServerSocketChannel, TCP 操作, 使用在服务器端.  </p>
-</li>
-</ul>
-<h3 id="FileChannel"><a href="#FileChannel" class="headerlink" title="FileChannel"></a>FileChannel</h3><p>FileChannel 是操作文件的Channel, 我们可以通过 FileChannel 从一个文件中读取数据, 也可以将数据写入到文件中.</p>
-<p>例子：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">( String[] args )</span> <span class="keyword">throws</span> Exception</span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//找到文件 </span></span><br><span class="line"></span><br><span class="line">    RandomAccessFile aFile = <span class="keyword">new</span> RandomAccessFile(<span class="string">"/Users/z/settings.xml"</span>, <span class="string">"rw"</span>);</span><br><span class="line">    <span class="comment">//打开channel</span></span><br><span class="line"></span><br><span class="line">    FileChannel inChannel = aFile.getChannel();</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//申请一个buffer</span></span><br><span class="line"></span><br><span class="line">    ByteBuffer buf = ByteBuffer.allocate(<span class="number">48</span>);</span><br><span class="line">    <span class="comment">//读取数据</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> bytesRead = inChannel.read(buf);</span><br><span class="line">    <span class="comment">//如果 read()返回 -1, 那么表示连接中断了.</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (bytesRead != -<span class="number">1</span>) &#123;</span><br><span class="line">        buf.flip();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span>(buf.hasRemaining())&#123;</span><br><span class="line">            System.out.print((<span class="keyword">char</span>) buf.get());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        buf.clear();</span><br><span class="line">        bytesRead = inChannel.read(buf);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//写入数据</span></span><br><span class="line">    String newData = <span class="string">"New String to write to file..."</span> + System.currentTimeMillis();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    ByteBuffer wbuf = ByteBuffer.allocate(<span class="number">48</span>);</span><br><span class="line"></span><br><span class="line">    wbuf.clear();</span><br><span class="line"></span><br><span class="line">    wbuf.put(newData.getBytes());</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    wbuf.flip();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(buf.hasRemaining()) &#123;</span><br><span class="line">    channel.write(buf);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//关闭channel</span></span><br><span class="line"></span><br><span class="line">    aFile.close();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="SocketChannel"><a href="#SocketChannel" class="headerlink" title="SocketChannel"></a>SocketChannel</h3><p>SocketChannel 是一个客户端用来进行 TCP 连接的 Channel.<br>创建一个 SocketChannel 的方法有两种:</p>
-<ul>
-<li><p>打开一个 SocketChannel, 然后将其连接到某个服务器中</p>
-</li>
-<li><p>当一个 ServerSocketChannel 接受到连接请求时, 会返回一个 SocketChannel 对象.</p>
-</li>
-</ul>
-<p>例子：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//打开channel</span></span><br><span class="line">SocketChannel socketChannel = SocketChannel.open();</span><br><span class="line">socketChannel.connect(<span class="keyword">new</span> InetSocketAddress(<span class="string">"http://example.com"</span>, <span class="number">80</span>));</span><br><span class="line"><span class="comment">//读取数据</span></span><br><span class="line">ByteBuffer buf = ByteBuffer.allocate(<span class="number">48</span>);</span><br><span class="line"><span class="keyword">int</span> bytesRead = socketChannel.read(buf);</span><br><span class="line"></span><br><span class="line"><span class="comment">//异步操作</span></span><br><span class="line">socketChannel.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line">socketChannel.connect(<span class="keyword">new</span> InetSocketAddress(<span class="string">"http://example.com"</span>, <span class="number">80</span>));</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span>(! socketChannel.finishConnect() )&#123;</span><br><span class="line">    <span class="comment">//wait, or do something else...    </span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//关闭</span></span><br><span class="line">socketChannel.close();</span><br></pre></td></tr></table></figure>
-<h3 id="ServerSocketChannel"><a href="#ServerSocketChannel" class="headerlink" title="ServerSocketChannel"></a>ServerSocketChannel</h3><p>ServerSocketChannel 顾名思义, 是用在服务器为端的, 可以监听客户端的 TCP 连接。</p>
-<p>例如：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//打开</span></span><br><span class="line">ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();</span><br><span class="line"><span class="comment">//监听</span></span><br><span class="line">serverSocketChannel.socket().bind(<span class="keyword">new</span> InetSocketAddress(<span class="number">9999</span>));</span><br><span class="line"><span class="keyword">while</span>(<span class="keyword">true</span>)&#123;</span><br><span class="line"><span class="comment">//我们可以使用ServerSocketChannel.accept()方法来监听客户端的 TCP 连接请求, accept()方法会阻塞, 直到有连接到来, 当有连接时, 这个方法会返回一个 SocketChannel 对象:</span></span><br><span class="line">    SocketChannel socketChannel =</span><br><span class="line">            serverSocketChannel.accept();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//do something with socketChannel...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="DatagramChannel"><a href="#DatagramChannel" class="headerlink" title="DatagramChannel"></a>DatagramChannel</h3><p>DatagramChannel 是用来处理 UDP 连接的.类似。</p>
-<p># </p>
-<h1 id="Buffer"><a href="#Buffer" class="headerlink" title="Buffer"></a>Buffer</h1><p>其实就是一块内存区，维持着读写一个指针，和最大容量。</p>
-<p>使用 NIO Buffer 的步骤如下:</p>
-<ul>
-<li><p>将数据写入到 Buffer 中.</p>
-</li>
-<li><p>调用 Buffer.flip()方法, 将 NIO Buffer 转换为读模式.</p>
-</li>
-<li><p>从 Buffer 中读取数据</p>
-</li>
-<li><p>调用 Buffer.clear() 或 Buffer.compact()方法, 将 Buffer 转换为写模式.</p>
-</li>
-</ul>
-<p>例如：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//申请内存，大小是两个int</span></span><br><span class="line"></span><br><span class="line">        IntBuffer intBuffer = IntBuffer.allocate(<span class="number">2</span>);</span><br><span class="line">        <span class="comment">//写入两个int</span></span><br><span class="line"></span><br><span class="line">        intBuffer.put(<span class="number">12345678</span>);</span><br><span class="line">        intBuffer.put(<span class="number">2</span>);</span><br><span class="line">        <span class="comment">//切换为读模式</span></span><br><span class="line"></span><br><span class="line">        intBuffer.flip();</span><br><span class="line">        <span class="comment">//读取两个int</span></span><br><span class="line"></span><br><span class="line">        System.err.println(intBuffer.get());</span><br><span class="line">        System.err.println(intBuffer.get());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>其实读写切换之类的操作，都只是操作指针而已。</p>
-<p>比如说flip()源码</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Buffer <span class="title">flip</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    limit = position;</span><br><span class="line">    position = <span class="number">0</span>;</span><br><span class="line">    mark = -<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>最大容量改为写的位置（因为只能读这么多），指针位置置0（从头开始读）。</p>
-<p>再比如说clear()源码</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Buffer <span class="title">clear</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    position = <span class="number">0</span>;</span><br><span class="line">    limit = capacity;</span><br><span class="line">    mark = -<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>将 positin 设置为0(从头开始), 将 limit 设置为 capacity(最大容量).</p>
-<p># </p>
-<h1 id="Selector"><a href="#Selector" class="headerlink" title="Selector"></a>Selector</h1><p>Selector 允许一个单一的线程来操作多个 Channel. 如果我们的应用程序中使用了多个 Channel, 那么使用 Selector 很方便的实现这样的目的, 但是因为在一个线程中使用了多个 Channel, 因此也会造成了每个 Channel 传输效率的降低.</p>
-<p>为了使用 Selector, 我们首先需要将 Channel 注册到 Selector 中, 随后调用 Selector 的 select()方法, 这个方法会阻塞, 直到注册在 Selector 中的 Channel 发送可读写事件. 当这个方法返回后, 当前的这个线程就可以处理 Channel 的事件了.</p>
-<p>例如：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NioEchoServer</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> BUF_SIZE = <span class="number">256</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TIMEOUT = <span class="number">3000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String args[])</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">// 打开服务端 Socket</span></span><br><span class="line">        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 打开 Selector</span></span><br><span class="line">        Selector selector = Selector.open();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 服务端 Socket 监听8080端口, 并配置为非阻塞模式</span></span><br><span class="line">        serverSocketChannel.socket().bind(<span class="keyword">new</span> InetSocketAddress(<span class="number">8080</span>));</span><br><span class="line">        serverSocketChannel.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 将 channel 注册到 selector 中.</span></span><br><span class="line">        <span class="comment">// 通常我们都是先注册一个 OP_ACCEPT 事件, 然后在 OP_ACCEPT 到来时, 再将这个 Channel 的 OP_READ</span></span><br><span class="line">        <span class="comment">// 注册到 Selector 中.</span></span><br><span class="line">        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            <span class="comment">// 通过调用 select 方法, 阻塞地等待 channel I/O 可操作</span></span><br><span class="line">            <span class="keyword">if</span> (selector.select(TIMEOUT) == <span class="number">0</span>) &#123;</span><br><span class="line">                System.out.print(<span class="string">"."</span>);</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 获取 I/O 操作就绪的 SelectionKey, 通过 SelectionKey 可以知道哪些 Channel 的哪类 I/O 操作已经就绪.</span></span><br><span class="line">            Iterator&lt;SelectionKey&gt; keyIterator = selector.selectedKeys().iterator();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">while</span> (keyIterator.hasNext()) &#123;</span><br><span class="line"></span><br><span class="line">                SelectionKey key = keyIterator.next();</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 当获取一个 SelectionKey 后, 就要将它删除, 表示我们已经对这个 IO 事件进行了处理.</span></span><br><span class="line">                keyIterator.remove();</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (key.isAcceptable()) &#123;</span><br><span class="line">                    <span class="comment">// 当 OP_ACCEPT 事件到来时, 我们就有从 ServerSocketChannel 中获取一个 SocketChannel,</span></span><br><span class="line">                    <span class="comment">// 代表客户端的连接</span></span><br><span class="line">                    <span class="comment">// 注意, 在 OP_ACCEPT 事件中, 从 key.channel() 返回的 Channel 是 ServerSocketChannel.</span></span><br><span class="line">                    <span class="comment">// 而在 OP_WRITE 和 OP_READ 中, 从 key.channel() 返回的是 SocketChannel.</span></span><br><span class="line">                    SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();</span><br><span class="line">                    clientChannel.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line">                    <span class="comment">//在 OP_ACCEPT 到来时, 再将这个 Channel 的 OP_READ 注册到 Selector 中.</span></span><br><span class="line">                    <span class="comment">// 注意, 这里我们如果没有设置 OP_READ 的话, 即 interest set 仍然是 OP_CONNECT 的话, 那么 select 方法会一直直接返回.</span></span><br><span class="line">                    clientChannel.register(key.selector(), OP_READ, ByteBuffer.allocate(BUF_SIZE));</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (key.isReadable()) &#123;</span><br><span class="line">                    SocketChannel clientChannel = (SocketChannel) key.channel();</span><br><span class="line">                    ByteBuffer buf = (ByteBuffer) key.attachment();</span><br><span class="line">                    <span class="keyword">long</span> bytesRead = clientChannel.read(buf);</span><br><span class="line">                    <span class="keyword">if</span> (bytesRead == -<span class="number">1</span>) &#123;</span><br><span class="line">                        clientChannel.close();</span><br><span class="line">                    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (bytesRead &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                        key.interestOps(OP_READ | SelectionKey.OP_WRITE);</span><br><span class="line">                        System.out.println(<span class="string">"Get data length: "</span> + bytesRead);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (key.isValid() &amp;&amp; key.isWritable()) &#123;</span><br><span class="line">                    ByteBuffer buf = (ByteBuffer) key.attachment();</span><br><span class="line">                    buf.flip();</span><br><span class="line">                    SocketChannel clientChannel = (SocketChannel) key.channel();</span><br><span class="line"></span><br><span class="line">                    clientChannel.write(buf);</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (!buf.hasRemaining()) &#123;</span><br><span class="line">                        key.interestOps(OP_READ);</span><br><span class="line">                    &#125;</span><br><span class="line">                    buf.compact();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="EventLoopGroup"><a href="#EventLoopGroup" class="headerlink" title="EventLoopGroup"></a>EventLoopGroup</h1><p>bossGroup就是parentGroup，是负责处理TCP/IP连接的，而workerGroup就是childGroup，是负责处理Channel（通道）的I/O事件。</p>
-<p><img src="https://i.loli.net/2019/04/03/5ca474b23d82d.png" alt="5ca474b23d82d"></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/04/02/leetcode103-150-230/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/04/02/leetcode103-150-230/" itemprop="url">二叉树“之”字型输出,逆波兰表达式,二叉搜索树的第k小元素</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-02T17:55:35+08:00">
-                2019-04-02
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/leetcode/" itemprop="url" rel="index">
-                    <span itemprop="name">leetcode</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="103"><a href="#103" class="headerlink" title="103"></a>103</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>二叉树“之”字型输出。</p>
-<p>即按层遍历，先从左往右，再从右往左，循环。</p>
-<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><p>也是广度优先搜索，不过变形。</p>
-<p>实际上，递归的方式不行。</p>
-<p>比如说:</p>
-<pre><code>            1
-
-        /        \
-
-    2            3
-
-   /   \        /   \
-
-4    null     null    5
-</code></pre><p>即使按层数，第一次左子树右子树，第二次右子树左子树。</p>
-<p>在第三层时，实际上3的左子树先进的调用栈，这样不对。</p>
-<p>所以用队列循环的方式。</p>
-<p>需要一个双端队列，奇数层和偶数层操作相反。</p>
-<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> List&lt;List&lt;Integer&gt;&gt; zigzagLevelOrder(TreeNode root) &#123;</span><br><span class="line">        List&lt;List&lt;Integer&gt;&gt; ans = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        Deque&lt;TreeNode&gt; deque = <span class="keyword">new</span> ArrayDeque&lt;&gt;();</span><br><span class="line">        <span class="keyword">if</span>(root==<span class="keyword">null</span>)&#123;<span class="keyword">return</span> ans;&#125;</span><br><span class="line">        <span class="keyword">int</span> floor = <span class="number">1</span>;</span><br><span class="line">        deque.addFirst(root);</span><br><span class="line">        <span class="keyword">while</span> (!deque.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">if</span>(floor % <span class="number">2</span> == <span class="number">1</span>) &#123;</span><br><span class="line">                List&lt;Integer&gt; cur = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> i = deque.size(); i &gt; <span class="number">0</span>; i--) &#123;</span><br><span class="line">                    TreeNode node = deque.pollFirst();</span><br><span class="line">                    <span class="keyword">if</span>(node.left != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        deque.addLast(node.left);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span>(node.right != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        deque.addLast(node.right);</span><br><span class="line">                    &#125;</span><br><span class="line">                    cur.add(node.val);</span><br><span class="line">                &#125;</span><br><span class="line">                ans.add(cur);</span><br><span class="line">                floor++;</span><br><span class="line">            &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">                List&lt;Integer&gt; cur = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> i = deque.size(); i &gt; <span class="number">0</span>; i--) &#123;</span><br><span class="line">                    TreeNode node = deque.pollLast();</span><br><span class="line">                    <span class="keyword">if</span>(node.right != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        deque.addFirst(node.right);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span>(node.left != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        deque.addFirst(node.left);</span><br><span class="line">                    &#125;</span><br><span class="line">                    cur.add(node.val);</span><br><span class="line">                &#125;</span><br><span class="line">                ans.add(cur);</span><br><span class="line">                floor++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> ans;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<h1 id="150"><a href="#150" class="headerlink" title="150"></a>150</h1><h1 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h1><p>输出逆波兰表达式的结果。</p>
-<p><strong>Input:</strong> [“2”, “1”, “+”, “3”, “<em>“]<br><strong>Output:</strong> 9<br><strong>Explanation:</strong> ((2 + 1) </em> 3) = 9</p>
-<h1 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h1><p>栈的基本问题，遇到符号计算即可。</p>
-<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">evalRPN</span><span class="params">(String[] tokens)</span> </span>&#123;</span><br><span class="line">        Stack&lt;Integer&gt; stack = <span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line">        <span class="keyword">int</span> ans = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; tokens.length; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span>(<span class="string">"+"</span>.equals(tokens[i])) &#123;</span><br><span class="line">                <span class="keyword">int</span> a = stack.pop();</span><br><span class="line">                <span class="keyword">int</span> b = stack.pop();</span><br><span class="line">                stack.push(a + b);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span>(<span class="string">"-"</span>.equals(tokens[i])) &#123;</span><br><span class="line">                <span class="keyword">int</span> a = stack.pop();</span><br><span class="line">                <span class="keyword">int</span> b = stack.pop();</span><br><span class="line">                stack.push(b - a);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span>(<span class="string">"*"</span>.equals(tokens[i])) &#123;</span><br><span class="line">                <span class="keyword">int</span> a = stack.pop();</span><br><span class="line">                <span class="keyword">int</span> b = stack.pop();</span><br><span class="line">                stack.push(a * b);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span>(<span class="string">"/"</span>.equals(tokens[i])) &#123;</span><br><span class="line">                <span class="keyword">int</span> a = stack.pop();</span><br><span class="line">                <span class="keyword">int</span> b = stack.pop();</span><br><span class="line">                stack.push(b / a);</span><br><span class="line">            &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">                stack.push(Integer.parseInt(tokens[i]));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> stack.pop();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<h1 id="250"><a href="#250" class="headerlink" title="250"></a>250</h1><h2 id="题目-2"><a href="#题目-2" class="headerlink" title="题目"></a>题目</h2><p>二叉搜索树的第k小元素</p>
-<h2 id="解答-2"><a href="#解答-2" class="headerlink" title="解答"></a>解答</h2><p>二叉搜索树中序输出，则是升序排序。</p>
-<h2 id="代码-2"><a href="#代码-2" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">kthSmallest</span><span class="params">(TreeNode root, <span class="keyword">int</span> k)</span> </span>&#123;</span><br><span class="line">      List&lt;Integer&gt; list = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">      search(root,list);</span><br><span class="line">      <span class="keyword">return</span> list.get(k-<span class="number">1</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">search</span><span class="params">(TreeNode root, List&lt;Integer&gt; list)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">if</span>(root==<span class="keyword">null</span>)&#123;</span><br><span class="line">          <span class="keyword">return</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      search(root.left,list);</span><br><span class="line">      list.add(root.val);</span><br><span class="line">      search(root.right,list);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/blog/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/blog/">1</a><a class="page-number" href="/blog/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/blog/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/16/">16</a><a class="extend next" rel="next" href="/blog/page/4/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/blog/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/blog/">1</a><a class="page-number" href="/blog/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/blog/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/17/">17</a><a class="extend next" rel="next" href="/blog/page/4/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1982,7 +1942,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">160</span>
+                  <span class="site-state-item-count">162</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
