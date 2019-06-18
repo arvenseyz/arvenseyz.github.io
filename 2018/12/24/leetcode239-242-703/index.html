@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/blog/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/blog/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/blog/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/blog/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/blog/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/blog/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/blog/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="字符串,映射,优先队列,">
+
+
+
+
+
+  <link rel="alternate" href="/blog/atom.xml" title="Arvense" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="239题目滑动窗口最大值，一个稳定滑动的滑动窗口，输出它每刻的最大值。 解答优先队列实现滑动窗口，每次向右滑动，移除滑出的元素，输出优先队列顶部元素即可。 代码1234567891011121314151617181920public int[] maxSlidingWindow(int[] nums, int k) &amp;#123;            int[] ans= new int[num">
+<meta name="keywords" content="字符串,映射,优先队列">
+<meta property="og:type" content="article">
+<meta property="og:title" content="滑动窗口最大值，相同元素字符串，输入流的第k大元素">
+<meta property="og:url" content="http://yoursite.com/blog/2018/12/24/leetcode239-242-703/index.html">
+<meta property="og:site_name" content="Arvense">
+<meta property="og:description" content="239题目滑动窗口最大值，一个稳定滑动的滑动窗口，输出它每刻的最大值。 解答优先队列实现滑动窗口，每次向右滑动，移除滑出的元素，输出优先队列顶部元素即可。 代码1234567891011121314151617181920public int[] maxSlidingWindow(int[] nums, int k) &amp;#123;            int[] ans= new int[num">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-05-05T07:56:28.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="滑动窗口最大值，相同元素字符串，输入流的第k大元素">
+<meta name="twitter:description" content="239题目滑动窗口最大值，一个稳定滑动的滑动窗口，输出它每刻的最大值。 解答优先队列实现滑动窗口，每次向右滑动，移除滑出的元素，输出优先队列顶部元素即可。 代码1234567891011121314151617181920public int[] maxSlidingWindow(int[] nums, int k) &amp;#123;            int[] ans= new int[num">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/blog/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/blog/2018/12/24/leetcode239-242-703/">
+
+
+
+
+
+  <title>滑动窗口最大值，相同元素字符串，输入流的第k大元素 | Arvense</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/blog/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Arvense</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/blog/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/blog/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/blog/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/blog/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/12/24/leetcode239-242-703/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">滑动窗口最大值，相同元素字符串，输入流的第k大元素</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-24T19:53:18+08:00">
+                2018-12-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/leetcode/" itemprop="url" rel="index">
+                    <span itemprop="name">leetcode</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="239"><a href="#239" class="headerlink" title="239"></a>239</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>滑动窗口最大值，一个稳定滑动的滑动窗口，输出它每刻的最大值。</p>
+<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><p>优先队列实现滑动窗口，每次向右滑动，移除滑出的元素，输出优先队列顶部元素即可。</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">int</span>[] maxSlidingWindow(<span class="keyword">int</span>[] nums, <span class="keyword">int</span> k) &#123;</span><br><span class="line">            <span class="keyword">int</span>[] ans= <span class="keyword">new</span> <span class="keyword">int</span>[nums.length-k+<span class="number">1</span>];</span><br><span class="line">        PriorityQueue&lt;Integer&gt; queue = <span class="keyword">new</span> PriorityQueue&lt;&gt;(<span class="keyword">new</span> Comparator&lt;Integer&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compare</span><span class="params">(Integer o1, Integer o2)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> o2-o1;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">            <span class="keyword">if</span>(nums.length == <span class="number">0</span>) <span class="keyword">return</span> <span class="keyword">new</span> <span class="keyword">int</span>[<span class="number">0</span>];</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;k;i++)&#123;</span><br><span class="line">            queue.add(nums[i]);</span><br><span class="line">        &#125;</span><br><span class="line">        ans[<span class="number">0</span>]=queue.peek();</span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">int</span> i = k;i&lt;nums.length;i++)&#123;</span><br><span class="line">                queue.remove(nums[i-k]);</span><br><span class="line">                queue.add(nums[i]);</span><br><span class="line">                ans[i-k+<span class="number">1</span>]=queue.peek();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> ans;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="感想"><a href="#感想" class="headerlink" title="感想"></a>感想</h2><p>优先队列是用堆实现的，堆是一个完全二叉树（除了最后一层，每一层都是满的的二叉树），并且有性质，父节点大于（小于）子节点，前者叫大顶堆，后者叫小顶堆。</p>
+<p>堆的结构看起来有点像二叉搜索树，但要求比其简单，因为对左右子节点没有要求。结构的简单带来使用上来说，一来维持堆的结构比较容易，二来搜索很困难。所以堆这个结构可能只有堆顶比较有意义。</p>
+<p>所以堆的使用一般都是用堆顶，比如优先队列用堆实现；比如堆排序（每次取出堆顶元素，同时维持这个堆）。</p>
+<h1 id="242"><a href="#242" class="headerlink" title="242"></a>242</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>判断两个字符串是不是除了顺序其他一样：比如assdfa和ssfdaa是一样的。</p>
+<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>用哈希表存下来即可，key是字母，value是次数。然后第二个反向操作。</p>
+<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isAnagram</span><span class="params">(String s, String t)</span> </span>&#123;</span><br><span class="line">        HashMap&lt;Character,Integer&gt; map = <span class="keyword">new</span> HashMap();</span><br><span class="line">        <span class="keyword">if</span>(s.length()!=t.length())&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span> ;i &lt;s.length();i++)&#123;</span><br><span class="line">            <span class="keyword">if</span>(map.containsKey(s.charAt(i)))&#123;</span><br><span class="line">                 map.put(s.charAt(i), map.get(s.charAt(i)) + <span class="number">1</span>);</span><br><span class="line">            &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">                map.put(s.charAt(i),<span class="number">1</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span> ;i&lt;t.length();i++)&#123;</span><br><span class="line">            <span class="keyword">if</span>(map.containsKey(t.charAt(i)))&#123;</span><br><span class="line">                map.put(t.charAt(i),map.get(t.charAt(i)) - <span class="number">1</span>);</span><br><span class="line">                <span class="keyword">if</span>(map.get(t.charAt(i))==<span class="number">0</span>)</span><br><span class="line">                &#123;</span><br><span class="line">                    map.remove(t.charAt(i));</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="感想-1"><a href="#感想-1" class="headerlink" title="感想"></a>感想</h2><p>哈希表典型操作，却有点迷糊，原因是没想清楚，哈希表要存，一般都是key是值，value是次数。</p>
+<h1 id="703"><a href="#703" class="headerlink" title="703"></a>703</h1><h2 id="题目-2"><a href="#题目-2" class="headerlink" title="题目"></a>题目</h2><p>输入流的第k大元素。一个输入流的意思是，不是给好的数组，而是一个一个数给的，每给一个数，都需要输出第k大的元素。</p>
+<h2 id="解答-2"><a href="#解答-2" class="headerlink" title="解答"></a>解答</h2><p>简单想法是排序，每给一个数，都重新排序，然后输出此时第k大元素。快排nlgn，n个数，效率n^2lgn。似乎可以把整个过程看成插入排序？没试过。</p>
+<p>可以维护一个优先队列，队列是一定大的，就是说保持k个元素，有点像滑动窗口吧，每给一个数，如果比队列顶元素大，就队顶元素出队，当前元素入队，此时新的队顶元素就是此时的第k大元素。</p>
+<h2 id="代码-2"><a href="#代码-2" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">KthLargest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    PriorityQueue&lt;Integer&gt; queue = <span class="keyword">new</span> PriorityQueue&lt;&gt;();</span><br><span class="line">    <span class="keyword">int</span> k;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">KthLargest</span><span class="params">(<span class="keyword">int</span> k, <span class="keyword">int</span>[] nums)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.k = k;</span><br><span class="line">        queue = <span class="keyword">new</span> PriorityQueue&lt;&gt;(k);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i : nums) &#123;</span><br><span class="line">            add(i);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> val)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(queue.size() &lt; k) &#123;</span><br><span class="line">            queue.offer(val);</span><br><span class="line">        &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">if</span>(queue.peek() &lt; val) &#123;</span><br><span class="line">                queue.poll();</span><br><span class="line">                queue.offer(val);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> queue.peek();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="感想-2"><a href="#感想-2" class="headerlink" title="感想"></a>感想</h2><table>
+<thead>
+<tr>
+<th></th>
+<th>抛异常</th>
+<th>返回false</th>
+<th>阻塞</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>插入</td>
+<td>add</td>
+<td>offer</td>
+<td>put</td>
+</tr>
+<tr>
+<td>移除</td>
+<td>remove</td>
+<td>poll</td>
+<td>take</td>
+</tr>
+<tr>
+<td>顶部元素</td>
+<td>element</td>
+<td>peak</td>
+</tr>
+</tbody>
+</table>
+<p> 队列相关操作</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/blog/tags/字符串/" rel="tag"># 字符串</a>
+          
+            <a href="/blog/tags/映射/" rel="tag"># 映射</a>
+          
+            <a href="/blog/tags/优先队列/" rel="tag"># 优先队列</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/blog/2018/12/18/leetcode70-141-142/" rel="next" title="爬楼梯走法数，链表是否有环，找到链表环的起点">
+                <i class="fa fa-chevron-left"></i> 爬楼梯走法数，链表是否有环，找到链表环的起点
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/blog/2018/12/25/leetcode98-235-236/" rel="prev" title="二叉树是不是二叉搜索树，二叉搜索树最低公共父节点，二叉树最低公共父节点">
+                二叉树是不是二叉搜索树，二叉搜索树最低公共父节点，二叉树最低公共父节点 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Arvense</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/blog/archives/">
+              
+                  <span class="site-state-item-count">160</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/blog/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/blog/tags/index.html">
+                  <span class="site-state-item-count">76</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/blog/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#239"><span class="nav-number">1.</span> <span class="nav-text">239</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#题目"><span class="nav-number">1.1.</span> <span class="nav-text">题目</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解答"><span class="nav-number">1.2.</span> <span class="nav-text">解答</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#代码"><span class="nav-number">1.3.</span> <span class="nav-text">代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#感想"><span class="nav-number">1.4.</span> <span class="nav-text">感想</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#242"><span class="nav-number">2.</span> <span class="nav-text">242</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#题目-1"><span class="nav-number">2.1.</span> <span class="nav-text">题目</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解答-1"><span class="nav-number">2.2.</span> <span class="nav-text">解答</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#代码-1"><span class="nav-number">2.3.</span> <span class="nav-text">代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#感想-1"><span class="nav-number">2.4.</span> <span class="nav-text">感想</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#703"><span class="nav-number">3.</span> <span class="nav-text">703</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#题目-2"><span class="nav-number">3.1.</span> <span class="nav-text">题目</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#解答-2"><span class="nav-number">3.2.</span> <span class="nav-text">解答</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#代码-2"><span class="nav-number">3.3.</span> <span class="nav-text">代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#感想-2"><span class="nav-number">3.4.</span> <span class="nav-text">感想</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a>Arvense</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">blog   </div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/blog/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/blog/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/blog/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/blog/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/blog/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

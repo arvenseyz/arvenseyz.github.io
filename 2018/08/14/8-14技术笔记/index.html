@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/blog/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/blog/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/blog/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/blog/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/blog/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/blog/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/blog/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="java基础,反射,">
+
+
+
+
+
+  <link rel="alternate" href="/blog/atom.xml" title="Arvense" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="final不可改变final基本数据类型，则该基本数据类型值不可改变；final对象，指的是对该对象的引用不可改变。   空白final类的final域不初始化，而是在构造函数中初始化，这样类的每个对象该属性值可以不同。   final参数无法在方法中更改参数引用所指的对象。   final方法防止任何继承类修改其定义，继承中方法行为保持不变，不会被覆盖。   privateprivate定义里包">
+<meta name="keywords" content="java基础,反射">
+<meta property="og:type" content="article">
+<meta property="og:title" content="final和反射">
+<meta property="og:url" content="http://yoursite.com/blog/2018/08/14/8-14技术笔记/index.html">
+<meta property="og:site_name" content="Arvense">
+<meta property="og:description" content="final不可改变final基本数据类型，则该基本数据类型值不可改变；final对象，指的是对该对象的引用不可改变。   空白final类的final域不初始化，而是在构造函数中初始化，这样类的每个对象该属性值可以不同。   final参数无法在方法中更改参数引用所指的对象。   final方法防止任何继承类修改其定义，继承中方法行为保持不变，不会被覆盖。   privateprivate定义里包">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-08-14T07:57:38.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="final和反射">
+<meta name="twitter:description" content="final不可改变final基本数据类型，则该基本数据类型值不可改变；final对象，指的是对该对象的引用不可改变。   空白final类的final域不初始化，而是在构造函数中初始化，这样类的每个对象该属性值可以不同。   final参数无法在方法中更改参数引用所指的对象。   final方法防止任何继承类修改其定义，继承中方法行为保持不变，不会被覆盖。   privateprivate定义里包">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/blog/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/blog/2018/08/14/8-14技术笔记/">
+
+
+
+
+
+  <title>final和反射 | Arvense</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/blog/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Arvense</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/blog/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/blog/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/blog/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/blog/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/14/8-14技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">final和反射</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-14T14:02:42+08:00">
+                2018-08-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="final"><a href="#final" class="headerlink" title="final"></a>final</h1><h2 id="不可改变"><a href="#不可改变" class="headerlink" title="不可改变"></a>不可改变</h2><p>final基本数据类型，则该基本数据类型值不可改变；final对象，指的是对该对象的引用不可改变。  </p>
+<h2 id="空白final"><a href="#空白final" class="headerlink" title="空白final"></a>空白final</h2><p>类的final域不初始化，而是在构造函数中初始化，这样类的每个对象该属性值可以不同。  </p>
+<h2 id="final参数"><a href="#final参数" class="headerlink" title="final参数"></a>final参数</h2><p>无法在方法中更改参数引用所指的对象。  </p>
+<h2 id="final方法"><a href="#final方法" class="headerlink" title="final方法"></a>final方法</h2><p>防止任何继承类修改其定义，继承中方法行为保持不变，不会被覆盖。  </p>
+<h2 id="private"><a href="#private" class="headerlink" title="private"></a>private</h2><p>private定义里包含final。（尝试重写一个private方法，不会重写，但会生成一个同名新方法，使用@Override避免此尴尬）  </p>
+<h2 id="final类"><a href="#final类" class="headerlink" title="final类"></a>final类</h2><p>无法被继承，方法无法被覆盖。  </p>
+<h1 id="反射"><a href="#反射" class="headerlink" title="反射"></a>反射</h1><h2 id="class"><a href="#class" class="headerlink" title="class"></a>class</h2><p>每个类拥有自己的class对象，通过类名.class或者对象名.getclass()获得，或者直接通过Class的静态函数Class.forName(),参数为类的名字获得该对象。<br>该对象有大量的get和is方法，通过他们获得该类的信息，是否是接口，获得构造函数等等。<br>可以通过class对象创建该类的对象，使用对象.newInstance(),通过其无参构造函数获得对象。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;?&gt; c=finaltry1.getClass();</span><br><span class="line">Class&lt;?&gt; d=Finaltry.class;</span><br><span class="line">try &#123;</span><br><span class="line">    Class&lt;?&gt; e=Class.forName(&quot;Finaltry&quot;);</span><br><span class="line">    java.lang.Object finaltry3=e.newInstance();</span><br><span class="line">    System.out.println(((Finaltry)finaltry3).j);</span><br><span class="line">&#125; catch (ClassNotFoundException |InstantiationException |IllegalAccessException e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br></pre></td></tr></table></figure></p>
+<h2 id="reflect"><a href="#reflect" class="headerlink" title="reflect"></a>reflect</h2><p>使用Constructor对象创建新的对象，使用Field对象get和set方法读取和修改相关联的字段，使用invoke()方法调用Method对象关联的方法。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public class Finaltry &#123;</span><br><span class="line">    private int j;</span><br><span class="line">    public Finaltry()&#123;this.j=1;&#125;</span><br><span class="line">    public Finaltry(int j)&#123;</span><br><span class="line">        this.j=j;</span><br><span class="line">    &#125;</span><br><span class="line">    public void show()&#123;</span><br><span class="line">        System.out.println(&quot;***&quot;);&#125;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Finaltry finaltry1=new Finaltry();</span><br><span class="line">        Method method1=d.getDeclaredMethod(&quot;show&quot;);</span><br><span class="line">        method1.invoke(finaltry1);</span><br><span class="line"></span><br><span class="line">        Method method2[]=d.getMethods();</span><br><span class="line">        method2[1].invoke(finaltry1);</span><br><span class="line"></span><br><span class="line">        Constructor constructor[]= d.getConstructors();</span><br><span class="line">        java.lang.Object ff=constructor[1].newInstance(1);</span><br><span class="line"></span><br><span class="line">        Field field=d.getDeclaredField(&quot;j&quot;);</span><br><span class="line">        System.out.println(field.get(finaltry1));</span><br><span class="line">        field.setAccessible(true);</span><br><span class="line">        field.set(finaltry1,4);</span><br><span class="line">      &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/blog/tags/java基础/" rel="tag"># java基础</a>
+          
+            <a href="/blog/tags/反射/" rel="tag"># 反射</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/blog/2018/08/13/8-13技术笔记/" rel="next" title="RocketMQ">
+                <i class="fa fa-chevron-left"></i> RocketMQ
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/blog/2018/08/16/8-16业务笔记/" rel="prev" title="分页显示">
+                分页显示 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Arvense</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/blog/archives/">
+              
+                  <span class="site-state-item-count">160</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/blog/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/blog/tags/index.html">
+                  <span class="site-state-item-count">76</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/blog/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#final"><span class="nav-number">1.</span> <span class="nav-text">final</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#不可改变"><span class="nav-number">1.1.</span> <span class="nav-text">不可改变</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#空白final"><span class="nav-number">1.2.</span> <span class="nav-text">空白final</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#final参数"><span class="nav-number">1.3.</span> <span class="nav-text">final参数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#final方法"><span class="nav-number">1.4.</span> <span class="nav-text">final方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#private"><span class="nav-number">1.5.</span> <span class="nav-text">private</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#final类"><span class="nav-number">1.6.</span> <span class="nav-text">final类</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#反射"><span class="nav-number">2.</span> <span class="nav-text">反射</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#class"><span class="nav-number">2.1.</span> <span class="nav-text">class</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#reflect"><span class="nav-number">2.2.</span> <span class="nav-text">reflect</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a>Arvense</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">blog   </div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/blog/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/blog/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/blog/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/blog/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/blog/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/blog/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
