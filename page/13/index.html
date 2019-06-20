@@ -251,6 +251,163 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/26/9-26技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/09/26/9-26技术笔记/" itemprop="url">springboot+定时任务</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-26T15:18:41+08:00">
+                2018-09-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="定时任务"><a href="#定时任务" class="headerlink" title="定时任务"></a>定时任务</h1><p>springboot内嵌了定时任务的简单实现，而使用Quartz可以实现较复杂的定时任务。</p>
+<h1 id="springboot实现"><a href="#springboot实现" class="headerlink" title="springboot实现"></a>springboot实现</h1><ol>
+<li>在Application启动类上使用@EnableScheduling注解，表示使用定时任务。</li>
+<li>定时任务方法上使用注解 @Scheduled(cron = “0/5 <em> </em> <em> </em> *“)，则为定时任务。</li>
+<li>定时任务是单线程的，多线程多任务需要注册线程池。  </li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">@Configuration</span><br><span class="line">@EnableAsync</span><br><span class="line">public class AsyncConfig &#123;</span><br><span class="line">    private int corePoolSize = 10;</span><br><span class="line">    private int maxPoolSize = 200;</span><br><span class="line">    private int queueCapacity = 10;</span><br><span class="line">    @Bean</span><br><span class="line">    public Executor taskExecutor() &#123;</span><br><span class="line">        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();</span><br><span class="line">        executor.setCorePoolSize(corePoolSize);</span><br><span class="line">        executor.setMaxPoolSize(maxPoolSize);</span><br><span class="line">        executor.setQueueCapacity(queueCapacity);</span><br><span class="line">        executor.initialize();</span><br><span class="line">        return executor;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li>之后在定时任务类上，使用@Async注解，多定时任务异步多线程。  </li>
+</ol>
+<h1 id="Quartz"><a href="#Quartz" class="headerlink" title="Quartz"></a>Quartz</h1><p>1.定时任务类应继承自QuartzJobBean<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class QuartzTestTask extends QuartzJobBean&#123;</span><br><span class="line">    private String name;</span><br><span class="line">    public void setName(String name)&#123;</span><br><span class="line">        this.name = name;</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    protected void executeInternal(org.quartz.JobExecutionContext jobExecutionContext) throws JobExecutionException &#123;</span><br><span class="line">        System.out.println(String.format(&quot;Hello %s!&quot;, name));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<ol start="2">
+<li>其配置类中设置其属性和定时时间等设置  </li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">@Configuration</span><br><span class="line">public class QuartzTestScheduler &#123;</span><br><span class="line">    @Bean</span><br><span class="line">    public JobDetail QuartzTestTaskDetail()&#123;</span><br><span class="line">        return JobBuilder.newJob(QuartzTestTask.class).withIdentity(&quot;QuartzTestTask&quot;)</span><br><span class="line">                .usingJobData(&quot;name&quot;, &quot;World&quot;).storeDurably().build();</span><br><span class="line">    &#125;</span><br><span class="line">    @Bean</span><br><span class="line">    public Trigger sampleJobTrigger() &#123;</span><br><span class="line">        CronScheduleBuilder cronScheduleBuilder = CronScheduleBuilder.cronSchedule(&quot;0/6 * * * * ?&quot;);</span><br><span class="line">        SimpleScheduleBuilder scheduleBuilder = SimpleScheduleBuilder.simpleSchedule()</span><br><span class="line">                .withIntervalInSeconds(2).repeatForever();</span><br><span class="line"></span><br><span class="line">        return TriggerBuilder.newTrigger().forJob(QuartzTestTaskDetail())</span><br><span class="line">                .withIdentity(&quot;QuartzTestTrigger&quot;).withSchedule(scheduleBuilder).build();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="cron表达式"><a href="#cron表达式" class="headerlink" title="cron表达式"></a>cron表达式</h1><p>在线生成器<a href="http://cron.qqe2.com/" target="_blank" rel="noopener">http://cron.qqe2.com/</a><br>具体细节<a href="https://www.cnblogs.com/javahr/p/8318728.html" target="_blank" rel="noopener">https://www.cnblogs.com/javahr/p/8318728.html</a></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/25/9-25技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1665,181 +1822,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/07/9-7技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/09/07/9-7技术笔记/" itemprop="url">组合模式，装饰模式</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-07T15:10:58+08:00">
-                2018-09-07
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="组合模式"><a href="#组合模式" class="headerlink" title="组合模式"></a>组合模式</h1><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>实体对象是树状结构，比如文件目录，公司架构。即有分支节点，也有叶子节点。</p>
-<h2 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h2><ol>
-<li><p>抽象基类</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">abstract class Node &#123;</span><br><span class="line">    public abstract void add(Node c); //增加成员</span><br><span class="line">    public abstract void remove(Node c); //删除成员</span><br><span class="line">    public abstract Node getChild(int i); //获取成员</span><br><span class="line">    public abstract void operation();  //业务方法</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>叶子节点</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">public class LeafNode extends Node&#123;</span><br><span class="line">    public void add(Node c) &#123;</span><br><span class="line">        //异常处理或错误提示</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void remove(Node c) &#123;</span><br><span class="line">        //异常处理或错误提示</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public Node getChild(int i) &#123;</span><br><span class="line">        //异常处理或错误提示</span><br><span class="line">        return null;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void operation() &#123;</span><br><span class="line">        //叶子构件具体业务方法的实现</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>分支节点</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">public class BranchNode extends Node&#123;</span><br><span class="line">    private ArrayList&lt;Node&gt; list = new ArrayList&lt;Node&gt;();</span><br><span class="line"></span><br><span class="line">    public void add(Node c) &#123;</span><br><span class="line">        list.add(c);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void remove(Node c) &#123;</span><br><span class="line">        list.remove(c);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public Node getChild(int i) &#123;</span><br><span class="line">        return (Node)list.get(i);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void operation() &#123;</span><br><span class="line">        //容器构件具体业务方法的实现</span><br><span class="line">        //递归调用成员构件的业务方法</span><br><span class="line">        for(Node obj:list) &#123;</span><br><span class="line">            obj.operation();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>操作使用</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[] args)&#123;</span><br><span class="line">Node node1,node2,node3;</span><br><span class="line">node1=new BranchNode();</span><br><span class="line">node2=new LeafNode();</span><br><span class="line">node3=new LeafNode();</span><br><span class="line">node1.add(node2);</span><br><span class="line">node1.operation();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<h2 id="透明组合和安全组合模式"><a href="#透明组合和安全组合模式" class="headerlink" title="透明组合和安全组合模式"></a>透明组合和安全组合模式</h2><h3 id="安全组合"><a href="#安全组合" class="headerlink" title="安全组合"></a>安全组合</h3><p>叶子节点实际上不需要add(),remove(),和getChild()方法，如果我们把它们的实现放在Node基类中，叶子节点就只有业务代码。如果不希望出现任何错误提示，我们可以在客户端定义文件对象时不使用抽象层，而直接使用具体叶子构件本身。这样就产生了一种不透明的使用方式，即在客户端不能全部针对抽象构件类编程，需要使用具体叶子构件类型来定义叶子对象。</p>
-<h3 id="透明组合"><a href="#透明组合" class="headerlink" title="透明组合"></a>透明组合</h3><p>还有一种解决方法是在抽象构件基类中不声明任何用于访问和管理成员构件的方法， 由于在抽象构件基类中没有声明add()、remove()等访问和管理成员的方法，其叶子构件子类无须提供实现；而且无论客户端如何定义叶子构件对象都无法调用到这些方法，不需要做任何错误和异常处理，容器构件再根据需要增加访问和管理成员的方法，但这时候也存在一个问题：客户端不得不使用容器类本身来声明容器构件对象，否则无法访问其中新增的add()、remove()等方法，如果客户端一致性地对待叶子和容器，将会导致容器构件的新增对客户端不可见，客户端代码对于容器构件无法再使用抽象构件来定义。</p>
-<h1 id="装配模式"><a href="#装配模式" class="headerlink" title="装配模式"></a>装配模式</h1><h2 id="使用场景-1"><a href="#使用场景-1" class="headerlink" title="使用场景"></a>使用场景</h2><h2 id="使用方法-1"><a href="#使用方法-1" class="headerlink" title="使用方法"></a>使用方法</h2><ol>
-<li><p>基础抽象基类</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Shape &#123;</span><br><span class="line">    public void draw()&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>被装饰对象子类</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public class Circle extends Shape &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void draw() &#123;</span><br><span class="line">        System.out.println(&quot;Circle&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>装饰器抽象基类，继承基础抽象基类，持有基础抽象基类的对象，并在构造函数将其初始化。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">abstract class Color extends Shape &#123;</span><br><span class="line">    private Shape shape;</span><br><span class="line">    Color(Shape shape) &#123;</span><br><span class="line">        this.shape=shape;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void draw() &#123;</span><br><span class="line">        shape.draw();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>具体装饰器类，构造函数调用super方法进行构造。重写装饰器抽象基类中方法</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class RedColor extends Color&#123;</span><br><span class="line">    RedColor(Shape shape)&#123;</span><br><span class="line">        super(shape);</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public void draw() &#123;</span><br><span class="line">        super.draw();</span><br><span class="line">        System.out.println(&quot;red&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>使用</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public class Weuse &#123;</span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">        Shape kuang=new Circle();</span><br><span class="line">        Shape zhuang= new RedColor(kuang);</span><br><span class="line">        zhuang.draw();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1890,7 +1872,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">163</span>
+                  <span class="site-state-item-count">164</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
