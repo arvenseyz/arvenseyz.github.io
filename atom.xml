@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-06-25T08:06:54.261Z</updated>
+  <updated>2019-06-27T02:38:59.723Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,31 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>for range和select</title>
+    <link href="http://yoursite.com/blog/2019/06/27/6-27%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2019/06/27/6-27技术笔记/</id>
+    <published>2019-06-27T02:29:54.000Z</published>
+    <updated>2019-06-27T02:38:59.723Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="for-range"><a href="#for-range" class="headerlink" title="for range"></a>for range</h1><p>for range 对于channel是一个阻塞式的行为，如果拿不到数据，会被阻塞，直到通道关闭或者拿到数据。</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"strconv"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">makeCakeAndSend</span><span class="params">(cs <span class="keyword">chan</span> <span class="keyword">string</span>, count <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt;= count; i++ &#123;</span><br><span class="line">        cakeName := <span class="string">"Strawberry Cake "</span> + strconv.Itoa(i)</span><br><span class="line">        cs &lt;- cakeName <span class="comment">//send a strawberry cake</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">close</span>(cs)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">receiveCakeAndPack</span><span class="params">(cs <span class="keyword">chan</span> <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> s := <span class="keyword">range</span> cs &#123;</span><br><span class="line">        fmt.Println(<span class="string">"Packing received cake: "</span>, s)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    cs := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>)</span><br><span class="line">    <span class="keyword">go</span> makeCakeAndSend(cs, <span class="number">5</span>)</span><br><span class="line">    receiveCakeAndPack(cs)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>蛋糕制作函数制作五个蛋糕，然后发给通道，最后关闭通道。</p><p>接受程序遍历通道，for s:=range cs ,就相当于从通道接受了数据s。</p><p>主函数里申请了一个无缓存的通道。</p><h1 id="select"><a href="#select" class="headerlink" title="select"></a>select</h1><p>select也是阻塞的，如果没有可用通道，则阻塞。</p><p>从通道接受数据可以是两个返回值，第二个即可用来判断通道是否已经关闭。</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"strconv"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">makeCakeAndSend</span><span class="params">(cs <span class="keyword">chan</span> <span class="keyword">string</span>, flavor <span class="keyword">string</span>, count <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt;= count; i++ &#123;</span><br><span class="line">        cakeName := flavor + <span class="string">" Cake "</span> + strconv.Itoa(i)</span><br><span class="line">        cs &lt;- cakeName <span class="comment">//send a strawberry cake</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">close</span>(cs)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">receiveCakeAndPack</span><span class="params">(strbry_cs <span class="keyword">chan</span> <span class="keyword">string</span>, choco_cs <span class="keyword">chan</span> <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">    strbry_closed, choco_closed := <span class="literal">false</span>, <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="comment">//if both channels are closed then we can stop</span></span><br><span class="line">        <span class="keyword">if</span> strbry_closed &amp;&amp; choco_closed &#123;</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        fmt.Println(<span class="string">"Waiting for a new cake ..."</span>)</span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> cakeName, strbry_ok := &lt;-strbry_cs:</span><br><span class="line">            <span class="keyword">if</span> !strbry_ok &#123;</span><br><span class="line">                strbry_closed = <span class="literal">true</span></span><br><span class="line">                fmt.Println(<span class="string">" ... Strawberry channel closed!"</span>)</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                fmt.Println(<span class="string">"Received from Strawberry channel.  Now packing"</span>, cakeName)</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="keyword">case</span> cakeName, choco_ok := &lt;-choco_cs:</span><br><span class="line">            <span class="keyword">if</span> !choco_ok &#123;</span><br><span class="line">                choco_closed = <span class="literal">true</span></span><br><span class="line">                fmt.Println(<span class="string">" ... Chocolate channel closed!"</span>)</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                fmt.Println(<span class="string">"Received from Chocolate channel.  Now packing"</span>, cakeName)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    strbry_cs := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>)</span><br><span class="line">    choco_cs := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">//two cake makers</span></span><br><span class="line">    <span class="keyword">go</span> makeCakeAndSend(choco_cs, <span class="string">"Chocolate"</span>, <span class="number">3</span>)   <span class="comment">//make 3 chocolate cakes and send</span></span><br><span class="line">    <span class="keyword">go</span> makeCakeAndSend(strbry_cs, <span class="string">"Strawberry"</span>, <span class="number">4</span>) <span class="comment">//make 3 strawberry cakes and send</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//one cake receiver and packer</span></span><br><span class="line">    receiveCakeAndPack(strbry_cs, choco_cs) <span class="comment">//pack all cakes received on these cake channels</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>现在有两种蛋糕，只有两个通道都关闭，包装的for select才会结束。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;for-range&quot;&gt;&lt;a href=&quot;#for-range&quot; class=&quot;headerlink&quot; title=&quot;for range&quot;&gt;&lt;/a&gt;for range&lt;/h1&gt;&lt;p&gt;for range 对于channel是一个阻塞式的行为，如果拿不到数据，会被阻塞，
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="go" scheme="http://yoursite.com/blog/tags/go/"/>
+    
+  </entry>
   
   <entry>
     <title>go.context</title>
@@ -495,32 +520,6 @@
     
     
       <category term="dubbo" scheme="http://yoursite.com/blog/tags/dubbo/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>threadLocal原理和内存泄漏</title>
-    <link href="http://yoursite.com/blog/2019/05/07/5-7%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/05/07/5-7技术笔记/</id>
-    <published>2019-05-07T06:47:23.000Z</published>
-    <updated>2019-05-20T07:04:18.000Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="threadLocal原理"><a href="#threadLocal原理" class="headerlink" title="threadLocal原理"></a>threadLocal原理</h1><ol><li><p>Thread类中有一个ThreadLocalMap，就是ThreadLocal的Map。这个Map是自己实现的，其实就是Entry的数组，而Entry是弱引用，键是ThreadLocal，值就是其中存的值。初始容量16，数量到达2/3扩容。</p><p>可以想像到，每个线程对应很多ThreadLocal，把它们都放在这个ThreadLocalMap中，是Thread的成员变量。</p></li><li><p>get()方法先拿到当前线程，然后拿到当前线程的成员变量ThreadLocalMap，再从Map中，通过哈希运算，找到对应的key。</p></li><li><p>set()方法，没有map，先建立map，有map，就放入map中，位置是哈希法，哈希冲突怎么办，找数组中的下一个位置。</p></li></ol><h1 id="threadLocal内存泄漏"><a href="#threadLocal内存泄漏" class="headerlink" title="threadLocal内存泄漏"></a>threadLocal内存泄漏</h1><pre><code>ThreadLocal 本身并不存储值，它只是作为一个 key保存到ThreadLocalMap中，但是这里要注意的是它作为一个key用的是弱引用。 因为没有强引用链，弱引用在GC的时候可能会被回收。这样就会在ThreadLocalMap中存在一些key为null的键值对（Entry）。 因为key变成null了，我们是没法访问这些Entry的，但是这些Entry本身是不会被清除的，为什么呢？因为存在一条强引用链。即线程本身-&gt;ThreadLocalMap-&gt;Entry 也就是说，恰恰我们在使用线程池的时候，线程使用完了是会放回到线程池循环使用的。由于ThreadLocalMap的生命周期和线程一样长，如果没有手动删除对应key就会导致这块内存即不会回收也无法访问，也就是内存泄漏。 其实，ThreadLocalMap的设计中已经考虑到这种情况，也加上了一些防护措施：在ThreadLocal的get(),set(),remove()的时候都会清除线程ThreadLocalMap里所有key为null的value。但是这些举动不能保证内存就一定会回收,因为可能这条线程被放回到线程池里后再也没有使用，或者使用的时候没有调用其get(),set(),remove()方法。</code></pre>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;threadLocal原理&quot;&gt;&lt;a href=&quot;#threadLocal原理&quot; class=&quot;headerlink&quot; title=&quot;threadLocal原理&quot;&gt;&lt;/a&gt;threadLocal原理&lt;/h1&gt;&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;Thread类中有一个Thread
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="多线程" scheme="http://yoursite.com/blog/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/"/>
     
   </entry>
   
