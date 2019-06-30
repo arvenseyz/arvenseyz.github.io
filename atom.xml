@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-06-27T02:38:59.723Z</updated>
+  <updated>2019-06-30T08:51:44.578Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -17,11 +17,36 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>kafka入门</title>
+    <link href="http://yoursite.com/blog/2019/06/30/6-30%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2019/06/30/6-30技术笔记/</id>
+    <published>2019-06-30T06:31:51.000Z</published>
+    <updated>2019-06-30T08:51:44.578Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="vs-rocketMQ"><a href="#vs-rocketMQ" class="headerlink" title="vs rocketMQ"></a>vs rocketMQ</h1><p>之前用的rocketMq，所以对消息队列有了初步了解，这里简单比较下两者。</p><ol><li><p>rocketMQ有nameserver，Kafka没有，因为Kafka的broker管理相当于托管给了zookeeper，既然用了zookeeper，其broker就有了主从切换/选举等概念。</p></li><li><p>kafka在消息存储过程中会根据topic和partition的数量创建物理文件，也就是说我们创建一个topic并指定了3个partition，那么就会有3个物理文件目录，也就说说partition的数量和对应的物理文件是一一对应的。而rocketMQ用的是commitLog的方式，</p></li></ol><h1 id="partition"><a href="#partition" class="headerlink" title="partition"></a>partition</h1><p>partition其实相当于topic下的分区，一个topic 可以配置几个partition，而每个partition在物理上对应一个文件夹，该文件夹下存储这个Partition的所有消息和索引文件。produce发送的消息分发到不同的partition中，一方面随机发送可以实现负载均衡，另一方面发布订阅指定的partition某种程度实现了顺序消息。</p><h1 id="消息级别"><a href="#消息级别" class="headerlink" title="消息级别"></a>消息级别</h1><p>从消息传递的角度来看，消息级别有个有这三种：</p><p>（1）至多消费一次，生产者保证自己发出消息，就不管了。生产者只需要异步发送，在发送失败或者消费失败的时候不做任何处理即可。MQ 在消费者拉走消息后，就直接将消息标记为已经消费或者删除消息。在监控系统和日志系统中，丢失部分信息是可以接受的。</p><p>（2）至少消费一次，那就需要确认机制，生产者发消息到 MQ，MQ 收到消息后返回确认信息（ACK）给生产者，生产者收到确认信息后生产过程完成，如果在一定时间内，生产者没有收到确认信息，生产者重新发送消息。消费者同理。至少消费一次就副作用是重复消费，因为确认的消息可能没收到导致重复。解决消息重复的方法是消费者这边做幂等。</p><p>（3）正好消费一次，实现很复杂，一般运用于物联网。</p><p>ji qi</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;vs-rocketMQ&quot;&gt;&lt;a href=&quot;#vs-rocketMQ&quot; class=&quot;headerlink&quot; title=&quot;vs rocketMQ&quot;&gt;&lt;/a&gt;vs rocketMQ&lt;/h1&gt;&lt;p&gt;之前用的rocketMq，所以对消息队列有了初步了解，这里简单比较下
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="消息队列" scheme="http://yoursite.com/blog/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
+    
+  </entry>
+  
+  <entry>
     <title>for range和select</title>
     <link href="http://yoursite.com/blog/2019/06/27/6-27%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>http://yoursite.com/blog/2019/06/27/6-27技术笔记/</id>
     <published>2019-06-27T02:29:54.000Z</published>
-    <updated>2019-06-27T02:38:59.723Z</updated>
+    <updated>2019-06-30T08:51:31.913Z</updated>
     
     <content type="html"><![CDATA[<h1 id="for-range"><a href="#for-range" class="headerlink" title="for range"></a>for range</h1><p>for range 对于channel是一个阻塞式的行为，如果拿不到数据，会被阻塞，直到通道关闭或者拿到数据。</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"strconv"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">makeCakeAndSend</span><span class="params">(cs <span class="keyword">chan</span> <span class="keyword">string</span>, count <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt;= count; i++ &#123;</span><br><span class="line">        cakeName := <span class="string">"Strawberry Cake "</span> + strconv.Itoa(i)</span><br><span class="line">        cs &lt;- cakeName <span class="comment">//send a strawberry cake</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">close</span>(cs)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">receiveCakeAndPack</span><span class="params">(cs <span class="keyword">chan</span> <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> s := <span class="keyword">range</span> cs &#123;</span><br><span class="line">        fmt.Println(<span class="string">"Packing received cake: "</span>, s)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    cs := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>)</span><br><span class="line">    <span class="keyword">go</span> makeCakeAndSend(cs, <span class="number">5</span>)</span><br><span class="line">    receiveCakeAndPack(cs)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>蛋糕制作函数制作五个蛋糕，然后发给通道，最后关闭通道。</p><p>接受程序遍历通道，for s:=range cs ,就相当于从通道接受了数据s。</p><p>主函数里申请了一个无缓存的通道。</p><h1 id="select"><a href="#select" class="headerlink" title="select"></a>select</h1><p>select也是阻塞的，如果没有可用通道，则阻塞。</p><p>从通道接受数据可以是两个返回值，第二个即可用来判断通道是否已经关闭。</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"strconv"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">makeCakeAndSend</span><span class="params">(cs <span class="keyword">chan</span> <span class="keyword">string</span>, flavor <span class="keyword">string</span>, count <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt;= count; i++ &#123;</span><br><span class="line">        cakeName := flavor + <span class="string">" Cake "</span> + strconv.Itoa(i)</span><br><span class="line">        cs &lt;- cakeName <span class="comment">//send a strawberry cake</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">close</span>(cs)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">receiveCakeAndPack</span><span class="params">(strbry_cs <span class="keyword">chan</span> <span class="keyword">string</span>, choco_cs <span class="keyword">chan</span> <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">    strbry_closed, choco_closed := <span class="literal">false</span>, <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="comment">//if both channels are closed then we can stop</span></span><br><span class="line">        <span class="keyword">if</span> strbry_closed &amp;&amp; choco_closed &#123;</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        fmt.Println(<span class="string">"Waiting for a new cake ..."</span>)</span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> cakeName, strbry_ok := &lt;-strbry_cs:</span><br><span class="line">            <span class="keyword">if</span> !strbry_ok &#123;</span><br><span class="line">                strbry_closed = <span class="literal">true</span></span><br><span class="line">                fmt.Println(<span class="string">" ... Strawberry channel closed!"</span>)</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                fmt.Println(<span class="string">"Received from Strawberry channel.  Now packing"</span>, cakeName)</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="keyword">case</span> cakeName, choco_ok := &lt;-choco_cs:</span><br><span class="line">            <span class="keyword">if</span> !choco_ok &#123;</span><br><span class="line">                choco_closed = <span class="literal">true</span></span><br><span class="line">                fmt.Println(<span class="string">" ... Chocolate channel closed!"</span>)</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                fmt.Println(<span class="string">"Received from Chocolate channel.  Now packing"</span>, cakeName)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    strbry_cs := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>)</span><br><span class="line">    choco_cs := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">//two cake makers</span></span><br><span class="line">    <span class="keyword">go</span> makeCakeAndSend(choco_cs, <span class="string">"Chocolate"</span>, <span class="number">3</span>)   <span class="comment">//make 3 chocolate cakes and send</span></span><br><span class="line">    <span class="keyword">go</span> makeCakeAndSend(strbry_cs, <span class="string">"Strawberry"</span>, <span class="number">4</span>) <span class="comment">//make 3 strawberry cakes and send</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//one cake receiver and packer</span></span><br><span class="line">    receiveCakeAndPack(strbry_cs, choco_cs) <span class="comment">//pack all cakes received on these cake channels</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>现在有两种蛋糕，只有两个通道都关闭，包装的for select才会结束。</p>]]></content>
     
@@ -37,7 +62,7 @@
       <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="go" scheme="http://yoursite.com/blog/tags/go/"/>
+      <category term="o" scheme="http://yoursite.com/blog/tags/o/"/>
     
   </entry>
   
@@ -495,31 +520,6 @@
     
     
       <category term="多线程" scheme="http://yoursite.com/blog/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Dubbo调用链</title>
-    <link href="http://yoursite.com/blog/2019/05/08/5-8%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/05/08/5-8技术笔记/</id>
-    <published>2019-05-08T11:12:16.000Z</published>
-    <updated>2019-05-17T06:01:16.000Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="Dubbo调用链"><a href="#Dubbo调用链" class="headerlink" title="Dubbo调用链"></a>Dubbo调用链</h1><p>简单来说：读取配置、拼装url、创建Invoker、服务导出、服务注册以及消费者通过动态代理、filter、获取Invoker列表、负载均衡。</p><p>配置可以以各种形式，比如api，注解，XML。而Dubbo服务在Zookeeper中的形式是URL，所以读取配置就是把各种属性，变成URL.</p><p>protocol://username:password@host:port/path?key=value&amp;key=value</p><p>服务端和客户端交互的核心是Invoker。Invoker是由代理工厂生成的，而Exportor要做的第一就是把Invoker注册到zookeeper中，Protocol是协议层，相当于应用层实现。</p><p> 集群容错和负载均衡都是在消费者这边实现的，集群容错而言，就是组装的Invoker参数不一样，对结果的处理不同，负载均衡而言，每次取回多个地址，根据策略选用哪个。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;Dubbo调用链&quot;&gt;&lt;a href=&quot;#Dubbo调用链&quot; class=&quot;headerlink&quot; title=&quot;Dubbo调用链&quot;&gt;&lt;/a&gt;Dubbo调用链&lt;/h1&gt;&lt;p&gt;简单来说：读取配置、拼装url、创建Invoker、服务导出、服务注册以及消费者通过动态代理
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="dubbo" scheme="http://yoursite.com/blog/tags/dubbo/"/>
     
   </entry>
   

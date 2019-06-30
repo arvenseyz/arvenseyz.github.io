@@ -251,6 +251,158 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/12/12/12-12技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/12/12/12-12技术笔记/" itemprop="url">zookeeper使用场景</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-12T19:31:12+08:00">
+                2018-12-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="数据发布与订阅（配置中心）"><a href="#数据发布与订阅（配置中心）" class="headerlink" title="数据发布与订阅（配置中心）"></a>数据发布与订阅（配置中心）</h1><p>发布与订阅模型，即所谓的配置中心，顾名思义就是发布者将数据发布到ZK节点上，供订阅者动态获取数据，实现配置信息的集中式管理和动态更新。例如全局的配置信息，服务式服务框架的服务地址列表等就非常适合使用。</p>
+<p>这类场景通常是这样：应用在启动的时候会主动来获取一次配置，同时，在节点上注册一个Watcher，这样一来，以后每次配置有更新的时候，都会实时通知到订阅的客户端，从来达到获取最新配置信息的目的。</p>
+<h1 id="负载均衡"><a href="#负载均衡" class="headerlink" title="负载均衡"></a>负载均衡</h1><p>这里说的负载均衡是指软负载均衡。在分布式环境中，为了保证高可用性，通常同一个应用或同一个服务的提供方都会部署多份，达到对等服务。而消费者就须要在这些对等的服务器中选择一个来执行相关的业务逻辑，其中比较典型的是消息中间件中的生产者，消费者负载均衡。</p>
+<p>命名服务也是分布式系统中比较常见的一类场景。在分布式系统中，通过使用命名服务，客户端应用能够根据指定名字来获取资源或服务的地址，提供者等信息。被命名的实体通常可以是集群中的机器，提供的服务地址，远程对象等等——这些我们都可以统称他们为名字（Name）。其中较为常见的就是一些分布式服务框架中的服务地址列表。通过调用ZK提供的创建节点的API，能够很容易创建一个全局唯一的path，这个path就可以作为一个名称。</p>
+<p>Dubbo中使用ZooKeeper来作为其命名服务，维护全局的服务地址列表。</p>
+<p><strong>服务提供者</strong>在启动的时候，向ZK上的指定节点/dubbo/${serviceName}/providers目录下写入自己的URL地址，这个操作就完成了服务的发布。</p>
+<p><strong>服务消费者</strong>启动的时候，订阅/dubbo/${serviceName}/providers目录下的提供者URL地址， 并向/dubbo/${serviceName} /consumers目录下写入自己的URL地址。</p>
+<h1 id="分布式锁"><a href="#分布式锁" class="headerlink" title="分布式锁"></a>分布式锁</h1><p>基于zookeeper的强一致性，通常的做法是把zk上的一个znode看作是一把锁，通过create znode的方式来实现。所有客户端都去创建 /distribute_lock 节点，最终成功创建的那个客户端也即拥有了这把锁。</p>
+<p>也可以保持时序执行，做法和上面基本类似，只是这里 /distribute_lock 已经预先存在，客户端在它下面创建临时有序节点（这个可以通过节点的属性控制：CreateMode.EPHEMERAL_SEQUENTIAL来指定）。Zk的父节点（/distribute_lock）维持一份sequence,保证子节点创建的时序性，从而也形成了每个客户端的全局时序。</p>
+<h1 id="分布通知-协调"><a href="#分布通知-协调" class="headerlink" title="分布通知/协调"></a>分布通知/协调</h1><p> 使用方法通常是不同系统都对ZK上同一个znode进行注册，监听znode的变化(包括znode本身内容及子节点的)，其中一个系统update了znode，那么另一个系统能够收到通知，并作出相应处理。</p>
+<h1 id="集群管理与Master选举"><a href="#集群管理与Master选举" class="headerlink" title="集群管理与Master选举"></a>集群管理与Master选举</h1><p>集群中，可以监控在线，动态上下线，以及选举master。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/12/12/leetcode20-21-28/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1683,178 +1835,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/27/11-27技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/11/27/11-27技术笔记/" itemprop="url">Netty技术杂记</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-27T14:14:31+08:00">
-                2018-11-27
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <ol>
-<li>netty中的操作返回的大多是ChannelFuture，比如bind(),connect(),write()。ChannelFuture继承自Future，可以addListener,isSuccess等方法。同时ChannelFuture 还持有Channel的引用。   </li>
-<li>ChannelFuture提供了几种额外的方法，这些方法使得我们能够注册一个或者多个ChannelFutureListener实例。监听器的回调方法operationComplete()，将会在对应的操作完成时被调用。</li>
-<li>sync()是阻塞的，和await()差异在于它返回异常，因为netty中所有的操作都是异步的，而返回的ChannelFuture是同步的，如果方法后加sync()，意味着阻塞并等待该操作的完成。实际上，最好还是加个Listener，等返回了再处理，而不是等它返回。</li>
-<li>EventLoop是和线程绑定的，与Channel是一对多的关系，一个 EventLoopGroup 包含一个或者多个 EventLoop；一个 EventLoopGroup 包含一个或者多个 EventLoop；</li>
-<li>ChannelInitializer先注册自己，然后安装其他的ChannelHandler,最后移除自己。</li>
-<li>为服务器需要两组不同的 Channel。第一组将只包含一个 ServerChannel，代表服务器自身的已绑定到某个本地端口的正在监听的套接字。而第二组将包含所有已创建的用来处理传入客户端连接（对于每个服务器已经接受的连接都有一个）的 Channel。</li>
-<li><p>池化的用法，当引用计数等于0的时候，Netty将Buffer回收致池中，在下一次申请Buffer的没某个时刻会被复用。为了降低分配和释放内存的开销，Netty 通过 interface ByteBufAllocator 实现了（ByteBuf 的）池化，它可以用来分配我们所描述过的任意类型的 ByteBuf 实例。可以通过 Channel（每个都可以有一个不同的 ByteBufAllocator 实例）或者绑定到ChannelHandler 的 ChannelHandlerContext 获取一个到 ByteBufAllocator 的引用。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Channel channel = ...;</span><br><span class="line">ByteBufAllocator allocator = channel.alloc();</span><br><span class="line">ChannelHandlerContext ctx = ...;</span><br><span class="line">ByteBufAllocator allocator2 = ctx.alloc();</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>Bytebuf的最佳实践是在IO通信线程的读写缓冲区使用DirectByteBuf，后端业务使用HeapByteBuf。</p>
-</li>
-<li><p>复合缓冲区可以组合.</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">CompositeByteBuf messageBuf = Unpooled.compositeBuffer();</span><br><span class="line">ByteBuf headerBuf = ...; // can be backing or direct</span><br><span class="line">ByteBuf bodyBuf = ...; // can be backing or direct</span><br><span class="line">messageBuf.addComponents(headerBuf, bodyBuf);</span><br><span class="line">.....</span><br><span class="line">messageBuf.removeComponent(0); // remove the header</span><br><span class="line">for (ByteBuf buf : messageBuf) &#123;</span><br><span class="line">System.out.println(buf.toString());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>每当通过调用 ChannelInboundHandler.channelRead()或者 ChannelOutboundHandler.write()方法来处理数据时，你都需要确保没有任何的资源泄漏。通过调用 ReferenceCountUtil.release()方法释放资源,在出站方向这边，如果你处理了 write()操作并丢弃了一个消息，那么你也应该负责释放它。重要的是，不仅要释放资源，还要通知 ChannelPromise。否则可能会出现 ChannelFutureListener收不到某个消息已经被处理了的通知的情况。</p>
-</li>
-<li>ChannelPromise接口扩展了Promise和ChannelFuture，绑定了Channel，又可写异步执行结构，又具备了监听者的功能，是Netty实际编程使用的表示异步执行的接口</li>
-<li>ChannelHandlerContext的writeAndFlush()方法是从当前handler开始的，Channel的writeAndFlush()方法是从头开始的。</li>
-<li><p>EventLoop是和线程绑定的，多线程有关操作应该通过EventLoop实现，定时任务：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Channel ch = ...</span><br><span class="line">ScheduledFuture&lt;?&gt; future = ch.eventLoop().scheduleAtFixedRate(</span><br><span class="line">  new Runnable() &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void run() &#123;</span><br><span class="line">      System.out.println(&quot;Run every 60 seconds&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;, 60, 60, TimeUnit.Seconds);</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>客户端用bootstrap，服务端用ServerBootstrap进行引导，至少需要三部分，EventLoopGroup,channel或者channelFactory,Handler。</p>
-</li>
-<li><p>优雅地关闭</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Future&lt;?&gt; future = group.shutdownGracefully();</span><br><span class="line">// block until the group has shutdown</span><br><span class="line">future.syncUninterruptibly();</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>线程池，永远不要再IO你应该永远不要在 Netty 的 I/O 线程上执行任何非 CPU 限定的代码,这样会阻塞IO线程，正确的方法是放在线程池中，netty有继承了线程池的实现类。EventExecutorGroup默认实现类为DefaultEventExecutorGroup(int size),参数为线程数。使用时，在addlast()方法的重载方法中，第一个参数指定线程池就好。<br>应该使用类静态成员变量，这样各个连接共享线程池。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">static final EventExecutor executor = new DefaultEventExecutorGroup(16);</span><br><span class="line">//blabla</span><br><span class="line">pipeline.addlast(executor, new myhandler());</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1905,7 +1885,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">166</span>
+                  <span class="site-state-item-count">167</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1927,7 +1907,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/blog/tags/index.html">
-                  <span class="site-state-item-count">76</span>
+                  <span class="site-state-item-count">78</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
