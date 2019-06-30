@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="go,">
+  <meta name="keywords" content="Go,">
 
 
 
@@ -82,14 +82,14 @@
 
 
 <meta name="description" content="go环境变量GOROOT：Golang的安装路径。 GOPATH：可以理解为工作目录或者工作区，也是平时接触最多的一个变量。它可以是一个目录，可以是多个目录路径，每个目录代表一个工作区。这些目录用于放置Go语言的源码文件（src），以及安装（命令go install）后的归档文件（pkg目录）和可执行文件（bin目录）。 GOBIN：GOROOT目录下的可执行文件放置目录，一般指bin。 go命令">
-<meta name="keywords" content="go">
+<meta name="keywords" content="Go">
 <meta property="og:type" content="article">
 <meta property="og:title" content="go环境变量，命令，命令行参数">
 <meta property="og:url" content="http://yoursite.com/blog/2019/06/11/6-11技术笔记/index.html">
 <meta property="og:site_name" content="Arvense">
 <meta property="og:description" content="go环境变量GOROOT：Golang的安装路径。 GOPATH：可以理解为工作目录或者工作区，也是平时接触最多的一个变量。它可以是一个目录，可以是多个目录路径，每个目录代表一个工作区。这些目录用于放置Go语言的源码文件（src），以及安装（命令go install）后的归档文件（pkg目录）和可执行文件（bin目录）。 GOBIN：GOROOT目录下的可执行文件放置目录，一般指bin。 go命令">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-06-11T07:51:30.000Z">
+<meta property="og:updated_time" content="2019-06-30T08:55:12.816Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="go环境变量，命令，命令行参数">
 <meta name="twitter:description" content="go环境变量GOROOT：Golang的安装路径。 GOPATH：可以理解为工作目录或者工作区，也是平时接触最多的一个变量。它可以是一个目录，可以是多个目录路径，每个目录代表一个工作区。这些目录用于放置Go语言的源码文件（src），以及安装（命令go install）后的归档文件（pkg目录）和可执行文件（bin目录）。 GOBIN：GOROOT目录下的可执行文件放置目录，一般指bin。 go命令">
@@ -354,7 +354,7 @@
 <h1 id="flag包和init-函数"><a href="#flag包和init-函数" class="headerlink" title="flag包和init()函数"></a>flag包和init()函数</h1><p>flag包可以获取命令行参数，比如</p>
 <p>var name = flag.String(“name”, “everyone”, “The greeting object.”)</p>
 <p>则可以获取将命令行的name参数，(后两个参数分别为默认值和参数说明)，获取到变量name。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"flag"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> name <span class="keyword">string</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	flag.StringVar(&amp;name, <span class="string">"name"</span>, <span class="string">"everyone"</span>, <span class="string">"The greeting object."</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	flag.Parse()</span><br><span class="line">	fmt.Printf(<span class="string">"Hello, %s!\n"</span>, name)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"flag"</span></span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> name <span class="keyword">string</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">    flag.StringVar(&amp;name, <span class="string">"name"</span>, <span class="string">"everyone"</span>, <span class="string">"The greeting object."</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    flag.Parse()</span><br><span class="line">    fmt.Printf(<span class="string">"Hello, %s!\n"</span>, name)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>命令go run demo2.go -name=”Robert”，即可输出Hello，Robert</p>
 <p>init()函数会在每个包完成初始化后自动执行，并且执行优先级比main函数高。所以init()一般来做些初始化动作。</p>
 <p>init函数不需要传入参数，也不会返回任何值。与main相比而言，init没有被声明，因此也不能被引用。</p>
@@ -375,7 +375,7 @@
       
         <div class="post-tags">
           
-            <a href="/blog/tags/go/" rel="tag"># go</a>
+            <a href="/blog/tags/Go/" rel="tag"># Go</a>
           
         </div>
       
