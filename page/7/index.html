@@ -251,6 +251,152 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/02/14/2-14技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/02/14/2-14技术笔记/" itemprop="url">HashMap,ConcurrentHashMap</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-14T16:08:07+08:00">
+                2019-02-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="HashMap线程不安全"><a href="#HashMap线程不安全" class="headerlink" title="HashMap线程不安全"></a>HashMap线程不安全</h1><h2 id="resize死循环"><a href="#resize死循环" class="headerlink" title="resize死循环"></a>resize死循环</h2><p>resize转移的时候链表是逆序的。假如转移前链表顺序是1-&gt;2-&gt;3，那么转移后就会变成3-&gt;2-&gt;1。</p>
+<p>如果两个线程同时做该操作，就会形成环形链表，即有死循环。</p>
+<h2 id="fail-fast"><a href="#fail-fast" class="headerlink" title="fail-fast"></a>fail-fast</h2><p>如果在使用迭代器的过程中有其他线程修改了map，那么将抛出ConcurrentModificationException，这就是所谓fail-fast策略。</p>
+<h1 id="ConcurrentHashMap"><a href="#ConcurrentHashMap" class="headerlink" title="ConcurrentHashMap"></a><strong>ConcurrentHashMap</strong></h1><h2 id="1-7"><a href="#1-7" class="headerlink" title="1.7"></a>1.7</h2><p>和hashmap类似，不过采用了segment，每次segment内部加锁，所以支持segment数的并发，更多并发将被锁阻塞。</p>
+<h2 id="1-8"><a href="#1-8" class="headerlink" title="1.8"></a>1.8</h2><p>用了CAS无锁。节点加锁，用CAS的方式，先赋-1，表示正在操作，其他线程读到-1就知道并发。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/02/13/2-13技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1784,169 +1930,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/01/21/1-21技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/01/21/1-21技术笔记/" itemprop="url">缓存相关</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-21T16:23:38+08:00">
-                2019-01-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="缓存更新策略"><a href="#缓存更新策略" class="headerlink" title="缓存更新策略"></a>缓存更新策略</h1><p>有三种，一致性依次增强，维护成本也依次变高。</p>
-<p>第一种是操作系统算法策略，LRU/LIRS/FIFO算法剔除，即缓存大小有上限，缓存永远是满的，按照算法剔除老数据，不用维护，算法的实现是由缓存服务器实现的。</p>
-<p>第二种是设置过期时间，需要业务可以容忍一段时间内（例如一个小时），缓存数据和真实数据（即数据库）数据不一致。</p>
-<p>第三种就是主动更新，即每次更新数据库时，都主动同步缓存。但主动更新可能会出问题，所以结合过期时间兜底。</p>
-<h1 id="缓存穿透"><a href="#缓存穿透" class="headerlink" title="缓存穿透"></a>缓存穿透</h1><p>如果缓存里没有，就要查数据库。如果大量查询缓存里没有，数据库也没有的数据，这时缓存就起不到作用，数据库压力很大。</p>
-<p>解决方法，一是缓存储存空对象，也就是即使数据库返回为空，缓存也储存，为了避免储存过多，空对象储存时间较短即可。</p>
-<p>二是布隆过滤器，布隆过滤器不会误判已经见过的元素，这里用来过滤效果极好。</p>
-<h1 id="缓存雪崩"><a href="#缓存雪崩" class="headerlink" title="缓存雪崩"></a>缓存雪崩</h1><p>一是大量数据同时失效，解决方法是，缓存时间加一个随机值，大幅度的减少缓存在同一时间过期。</p>
-<p>二是缓存挂了，redis主从和集群模式，都能减小挂了的概率。</p>
-<p>如果还是挂了，<strong>Hystrix</strong>是解决方案。</p>
-<h1 id="缓存与数据库双写一致"><a href="#缓存与数据库双写一致" class="headerlink" title="缓存与数据库双写一致"></a>缓存与数据库双写一致</h1><p>一般我们都是采取<strong>删除缓存</strong>缓存策略的，原因如下：</p>
-<ol>
-<li><p>高并发环境下，无论是先操作数据库还是后操作数据库而言，如果加上更新缓存，那就<strong>更加容易</strong>导致数据库与缓存数据不一致问题。(删除缓存<strong>直接和简单</strong>很多)</p>
-</li>
-<li><p>如果每次更新了数据库，都要更新缓存【这里指的是频繁更新的场景，这会耗费一定的性能】，倒不如直接删除掉。等再次读取时，缓存里没有，那我到数据库找，在数据库找到再写到缓存里边(体现<strong>懒加载</strong>)</p>
-</li>
-</ol>
-<p>基于这两点，对于缓存在更新时而言，都是执行<strong>删除</strong>操作。</p>
-<p><strong>并发下解决数据库与缓存不一致的思路</strong>：</p>
-<ul>
-<li>将删除缓存、修改数据库、读取缓存等的操作积压到<strong>队列</strong>里边，实现<strong>串行化</strong>。</li>
-</ul>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1997,7 +1980,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">167</span>
+                  <span class="site-state-item-count">168</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -2019,7 +2002,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/blog/tags/index.html">
-                  <span class="site-state-item-count">78</span>
+                  <span class="site-state-item-count">73</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
