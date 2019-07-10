@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-07-09T06:42:01.008Z</updated>
+  <updated>2019-07-10T12:03:39.972Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -17,11 +17,36 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>GO的MPG模型</title>
+    <link href="http://yoursite.com/blog/2019/07/10/7-10%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2019/07/10/7-10技术笔记/</id>
+    <published>2019-07-10T06:36:08.000Z</published>
+    <updated>2019-07-10T12:03:39.972Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="用户态VS内核态"><a href="#用户态VS内核态" class="headerlink" title="用户态VS内核态"></a>用户态VS内核态</h1><p>内核从本质上看是一种软件——控制计算机的硬件资源，并提供上层应用程序运行的环境。用户态即上层应用程序的活动空间，应用程序的执行必须依托于内核提供的资源，包括CPU资源、存储资源、I/O资源等。为了使上层应用能够访问到这些资源，内核必须为上层应用提供访问的接口：即系统调用。</p><ul><li>内核态：CPU可以访问内存所有数据,包括外围设备（硬盘、网卡），CPU也可以将自己从一个程序切换到另一个程序；</li><li>用户态：只能受限的访问内存，且不允许访问外围设备，占用CPU的能力被剥夺，CPU资源可以被其他程序获取</li></ul><p>用户态的应用程序可以通过三种方式来访问内核态的资源：</p><p>1）系统调用</p><p>2）库函数</p><p>3）Shell脚本</p><p>系统调用类似于操作系统的原子操作，而库函数就是对其封装，其实shell也是，不过shell可以交互。</p><p>由于资源有限，大部分进程都在用户态，只有需要访问资源，才进入内核态。进入内核态手段即是中断。具体来说，中断分软硬，有三种：</p><p>1）当然就是系统调用：即软中断</p><p>2）异常事件： 当CPU正在执行运行在用户态的程序时，突然发生某些预先不可知的异常事件，这个时候就会触发从当前用户态执行的进程转向内核态执行相关的异常事件，典型的如缺页异常。</p><p>3）外围设备的中断：当外围设备完成用户的请求操作后，会像CPU发出中断信号，此时，CPU就会暂停执行下一条即将要执行的指令，转而去执行中断信号对应的处理程序，如果先前执行的指令是在用户态下，则自然就发生从用户态到内核态的转换。</p><h1 id="用户线程VS核心线程"><a href="#用户线程VS核心线程" class="headerlink" title="用户线程VS核心线程"></a>用户线程VS核心线程</h1><p>linux其实没有线程，是通过共享资源的单线程进程模拟了线程的概念。</p><p><strong>用户线程</strong>指不需要内核支持而在用户程序中实现的线程，其不依赖于操作系统核心，应 用进程利用线程库提供创建、同步、调度和管理线程的函数来控制用户线程。不需要用户态/核心态切换，速度快，操作系统内核不知道多线程的存在，因此一个线 程阻塞将使得整个进程（包括它的所有线程）阻塞。单纯的用户线程是建立在用户空间，其对内核是透明的，因此其所属进程单独参与处理器的竞争，而进程的所有线程参与竞争该进程的资源。</p><p><strong>内核线程</strong>：由操作系统内核创建和撤销。内核维护进程及线程的上下文信息以及线程切换。一个内核线程由于I/O操作而阻塞，不会影响其它线程的运行。内核线程只运行在内核态，不受用户态上下文的拖累。</p><h1 id="线程模型"><a href="#线程模型" class="headerlink" title="线程模型"></a>线程模型</h1><p>核心线程和用户线程显然有以下三种关系，一对一，一对多，多对多。</p><p>一对一而言，用户线程的操作，等价于对核心线程的操作，这种模型直接调用操作系统的内核线程，所有线程的创建、终止、切换、同步等操作，都由内核来完成。C++就是这种。</p><p>一对多而言，多个用户态的线程对应着一个内核线程，也对应同一个进程，程序线程的创建、终止、切换或者同步等线程工作必须自身来完成。一旦一个线程发生阻塞，整个进程下的其他线程也会被阻塞。不能利用多核系统的优势。</p><p>多对多是比较复杂的实现，  这种模型是介于用户级线程模型和内核级线程模型之间的一种线程模型。这种模型的实现非常复杂，和内核级线程模型类似，一个进程中可以对应多个内核级线程，但是进程中的线程不和内核线程一一对应；这种线程模型会先创建多个内核级线程，然后用自身的用户级线程去对应创建的多个内核级线程，自身的用户级线程需要本身程序去调度，内核级的线程交给操作系统内核去调度。</p><p>Go语言的线程模型就是一种特殊的两级线程模型。即“MPG”模型。</p><p># </p><h1 id="MPG"><a href="#MPG" class="headerlink" title="MPG"></a>MPG</h1><p><code>M</code>指的是<code>Machine</code>，一个<code>M</code>直接关联了一个内核线程。<br><code>P</code>指的是”processor”，代表了<code>M</code>所需的上下文环境，也是处理用户级代码逻辑的处理器。<br><code>G</code>指的是<code>Goroutine</code>，其实本质上也是一种轻量级的线程。</p><p><img src="https://i.loli.net/2019/07/10/5d25d292c0df547301.png" alt="5d25d292c0df547301"></p><p><img src="https://i.loli.net/2019/07/10/5d25d322985ce39721.png" alt="5d25d322985ce39721"></p><p>调度的本质是将G尽量均匀合理地安排给M来执行，其中P的作用就是来实现合理安排逻辑。</p><ul><li>P的数量通过  <code>GOMAXPROCS()</code>  来设置，一般等于CPU的核数，对于一次代码执行设置好一般不会变。</li><li>P维护了一个本地的G队列（runqueue），包括正在执行和待执行的G，尽量保证所有的P都匹配一个M同时在执行G。</li><li>当P本地goroutine队列消费完，会从全局的goroutine队列（global runqueue）中拿goroutine到本地队列。P也会定期检查全局的goroutine队列，避免存在全局的goroutine没有被执行而”饿死”的现象。</li><li>P和M是动态形式的一对一的关系，P和G是动态形式的一对多的关系。</li></ul><p>当goroutine发生阻塞的时候，可以通过P将剩余的G切换给新的M来执行，而不会导致剩余的G无法执行，如果没有M则创建M来匹配P。</p><p>当阻塞的goroutine返回后，进程会尝试获取一个上下文（Context）来执行这个goroutine。一般是先从其他进程中”偷取”一个Context，如果”偷取”不成功，则将goroutine放入全局的goroutine中。</p><p>P可以偷任务即goroutine，当某个P的本地G执行完，且全局没有G需要执行的时候，P可以去偷别的P还没有执行完的一半的G来给M执行，提高了G的执行效率。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;用户态VS内核态&quot;&gt;&lt;a href=&quot;#用户态VS内核态&quot; class=&quot;headerlink&quot; title=&quot;用户态VS内核态&quot;&gt;&lt;/a&gt;用户态VS内核态&lt;/h1&gt;&lt;p&gt;内核从本质上看是一种软件——控制计算机的硬件资源，并提供上层应用程序运行的环境。用户态即上层
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="Go" scheme="http://yoursite.com/blog/tags/Go/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Go编译原理简析</title>
     <link href="http://yoursite.com/blog/2019/07/09/7-9%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>http://yoursite.com/blog/2019/07/09/7-9技术笔记/</id>
     <published>2019-07-09T06:09:42.000Z</published>
-    <updated>2019-07-09T06:42:01.008Z</updated>
+    <updated>2019-07-10T06:38:08.740Z</updated>
     
     <content type="html"><![CDATA[<p>go和c一脉相承，其实编译原理和c差不多。无非分为以下步骤。</p><h1 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h1><p>编译器将文本转化为汇编文件的过程。</p><h2 id="编译器前端"><a href="#编译器前端" class="headerlink" title="编译器前端"></a>编译器前端</h2><p>第一步是词法分析，因为go是支持 Unicode 编码的，所以应该是按字节读取，想象下词法分析器，其实很简单，无非就是类似于正则表达式匹配，用switch语句，把文本拆成关键字/运算符/变量名的过程。</p><p>第二步是语法分析，就是把这些单词变成语法树的过程。比如slice[i]=i*(2+6)，整个语句被看作是一个赋值表达式，左子树是一个数组表达式，右子树是一个乘法表达式；数组表达式由 2 个符号表达式组成；乘号表达式则是由一个符号表达式和一个加号表达式组成；加号表达式则是由两个数字组成。符号和数字是最小的表达式，它们不能再被分解，通常作为树的叶子节点。</p><p>第三步是语义分析，编译期所能检查的是静态语义，可以认为这是在“代码”阶段，包括变量类型的匹配、转换等。例如，将一个浮点值赋给一个指针变量的时候，明显的类型不匹配，就会报编译错误。而对于运行期间才会出现的错误：不小心除了一个 0 ，语义分析是没办法检测的。</p><p><strong>语义分析阶段完成之后，会在每个节点上标注上类型。</strong></p><h2 id="编译器后端"><a href="#编译器后端" class="headerlink" title="编译器后端"></a>编译器后端</h2><p>前端生成和平台无关的中间代码，后端会针对不同的平台，生成不同的机器码。</p><p>目标机器硬件底层不同，主要体现在cpu架构不同，所以机器字长、寄存器等等都不一样，意味着在不同机器上跑的机器码是不一样的。</p><p>当然生成机器码之前，需要先优化一下。</p><p>比如把乘法运算变成位移运算，中间变量先计算出来。</p><p>而之后中间代码的生成过程其实就是从 AST 抽象语法树到 SSA 中间代码的转换过程，在这期间会对语法树中的关键字在进行一次更新，更新后的语法树会经过多轮处理转变最后的 SSA 中间代码。</p><h1 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h1><p>编译的过程是针对单文件的，但运行时需要互相引用。</p><p>链接过程就是要把编译器生成的一个个目标文件链接成可执行文件。最终得到的文件是分成各种段的，比如数据段、代码段、BSS段等等，运行时会被装载到内存中。各个段具有不同的读写、执行属性，保护了程序的安全运行。</p><h1 id="Go-程序启动"><a href="#Go-程序启动" class="headerlink" title="Go 程序启动"></a>Go 程序启动</h1><ol><li><p>检查运行平台的CPU，设置好程序运行需要相关标志。</p></li><li><p>TLS（线程局部数据）的初始化。</p></li><li><p>runtime.args（保存二进制文件的绝对路径）、runtime.osinit（获取cpu核）、runtime.schedinit（初始化程序运行的环境） 三个方法做好程序运行需要的各种变量与调度器。</p></li><li><p>runtime.newproc创建新的goroutine用于绑定用户写的main方法。</p></li><li><p>runtime.mstart开始goroutine的调度。</p></li></ol><p>main 函数里执行的一些重要的操作包括：新建一个线程执行 sysmon 函数，定期垃圾回收和调度抢占；启动 gc；执行所有的 init 函数等等。</p><h1 id="Go程序退出"><a href="#Go程序退出" class="headerlink" title="Go程序退出"></a>Go程序退出</h1><p>当 main 函数执行结束之后，会执行 exit(0) 来退出进程。若执行 exit(0) 后，进程没有退出，main 函数最后的代码会一直访问非法地址：正常情况下，一旦出现非法地址访问，系统会把进程杀死，用这样的方法确保进程退出。</p>]]></content>
     
@@ -39,7 +64,7 @@
       <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="go" scheme="http://yoursite.com/blog/tags/go/"/>
+      <category term="Go" scheme="http://yoursite.com/blog/tags/Go/"/>
     
   </entry>
   
@@ -496,32 +521,6 @@
     
     
       <category term="rocketMQ" scheme="http://yoursite.com/blog/tags/rocketMQ/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>CMS与G1</title>
-    <link href="http://yoursite.com/blog/2019/05/09/5-9%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>http://yoursite.com/blog/2019/05/09/5-9技术笔记-1/</id>
-    <published>2019-05-09T07:26:02.000Z</published>
-    <updated>2019-05-10T01:47:42.000Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="CMS"><a href="#CMS" class="headerlink" title="CMS"></a>CMS</h1><ol><li><p>初试标记，需要stop the world(STP)。找到GCroots对象（图中的1），以及年轻代中，引用到的老年代的对象（图中的2和3）<img src="https://i.loli.net/2019/05/09/5cd3dbbd524ac.png" alt="5cd3dbbd524ac"></p></li><li><p>并发标记：从“初始标记”阶段标记的对象开始找出所有存活的对象;</p><p>因为是并发运行的，在运行期间会发生新生代的对象晋升到老年代、或者是直接在老年代分配对象、或者更新老年代对象的引用关系等等，对于这些对象，都是需要进行重新标记的，否则有些对象就会被遗漏，发生漏标的情况。为了提高重新标记的效率，该阶段会把上述对象所在的Card标识为Dirty，后续只需扫描这些Dirty Card的对象，避免扫描整个老年代； 并发标记阶段只负责将引用发生改变的Card标记为Dirty状态，不负责处理；</p><p><img src="https://i.loli.net/2019/05/09/5cd3e00235ca3.png" alt="5cd3e00235ca3"></p><p>如6本来可以回收的，3就是所说的脏节点，3在并发标记阶段发生了变化，指向了6。</p></li><li><p>预清理阶段</p><p>简单来说，就是为第二步后续工作的，把6也标记为可达节点。</p></li><li><p>重新标记：会导致过程中的第二次STP</p><p>扫描整个堆，此时新生代也可作为GCroots节点。为了避免新生代对象过多，可以先进行一次young gc。</p></li><li><p>并发清理，清理阶段，此时由于线程还在工作，所以可能产生浮动垃圾。</p></li><li><p>并发重置</p></li></ol><h1 id="G1"><a href="#G1" class="headerlink" title="G1"></a>G1</h1><p>cms只能回收老年代，年轻代得用ParNew，G1均可回收。</p><p>年轻代回收很简单，复制回收即可。</p><p>G1区别在于，堆不是物理分区的，是逻辑分区的。即物理分块，不同的块属于不同的区，很合理。</p><p>老年代垃圾清理流程和cms类似，区别在于，并不是每次同时回收所有老年代的块，而是垃圾优先，这就是G1的名字（garbage first）。</p><p>有一个问题在于，对象是互相引用依赖的，对象a在region(块)a，他持有引用的对象不一定也在块a，为了标记，岂不是还得扫描全堆。</p><p>解决方法是remember set。</p><p>这是个反向指针集合，反向的意思是，a引用b，反而把a写在b的集合中。</p><p>进行垃圾回收时，如果Region1有根对象A引用了Region2的对象B，显然对象B是活的，如果没有Rset，就需要扫描整个Region1或者其它Region，才能确定对象B是活跃的，有了Rset可以避免对整个堆进行扫描。</p><p>实现大致靠写内存屏障。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;CMS&quot;&gt;&lt;a href=&quot;#CMS&quot; class=&quot;headerlink&quot; title=&quot;CMS&quot;&gt;&lt;/a&gt;CMS&lt;/h1&gt;&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;初试标记，需要stop the world(STP)。找到GCroots对象（图中的1），以及年轻代中，引用到的老
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="jvm" scheme="http://yoursite.com/blog/tags/jvm/"/>
     
   </entry>
   
