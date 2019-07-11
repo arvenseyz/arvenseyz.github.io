@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-07-10T12:03:39.972Z</updated>
+  <updated>2019-07-11T10:37:41.524Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,31 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>kafka技术杂记</title>
+    <link href="http://yoursite.com/blog/2019/07/11/7-11%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2019/07/11/7-11技术笔记/</id>
+    <published>2019-07-11T08:59:15.000Z</published>
+    <updated>2019-07-11T10:37:41.524Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="发送方式"><a href="#发送方式" class="headerlink" title="发送方式"></a>发送方式</h1><p>kafka有同步（sync）、异步（async）以及oneway这三种发送方式，某些概念上区分也可以分为同步和异步两种，同步和异步的发送方式通过“producer.type”参数指定，而oneway由“request.require.acks”参数指定。</p><ol><li><p>同步就是每次发一条，然后刷盘，确认后再发第二条。</p></li><li><p>异步是生产者先把消息缓存起来，指定缓存的时间条数等，然后批量一起发送。</p></li><li><p>oneway就是只管发，不需要收到broker的消息确认。</p></li></ol><h1 id="zookeeper"><a href="#zookeeper" class="headerlink" title="zookeeper"></a>zookeeper</h1><p>zookeeper主要用来管理broker，一个是broker的信息，另一方面是broker上下线的管理。因为zookeeper写性能不好，所以现在生产和消费者一般不连接zookeeper。生产者和消费者直接连接broker。</p><h1 id="推vs拉"><a href="#推vs拉" class="headerlink" title="推vs拉"></a>推vs拉</h1><p>生产者把消息推向broker，消费者从broker拉消息。</p><h1 id="重试"><a href="#重试" class="headerlink" title="重试"></a>重试</h1><p>生产者消息发送失败会重试，重试失败达到指定次数返回异常。</p><p>问题在于，重试会破坏顺序性，如果要求顺序性，可以参数指定，重试时相当于阻塞。max.in.flight.requests.per.connection=1</p><h1 id="消息分区"><a href="#消息分区" class="headerlink" title="消息分区"></a>消息分区</h1><p>如果不指定key，那么消息会随机分配到各个partition，相当于负载均衡。</p><p>然而可以指定 partitioner 分区器，这样消息和partition就关联。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;发送方式&quot;&gt;&lt;a href=&quot;#发送方式&quot; class=&quot;headerlink&quot; title=&quot;发送方式&quot;&gt;&lt;/a&gt;发送方式&lt;/h1&gt;&lt;p&gt;kafka有同步（sync）、异步（async）以及oneway这三种发送方式，某些概念上区分也可以分为同步和异步两种，同步
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="消息队列" scheme="http://yoursite.com/blog/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
+    
+  </entry>
   
   <entry>
     <title>GO的MPG模型</title>
@@ -496,31 +521,6 @@
     
     
       <category term="数据库" scheme="http://yoursite.com/blog/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>RocketMQ</title>
-    <link href="http://yoursite.com/blog/2019/05/15/5-15%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/05/15/5-15技术笔记/</id>
-    <published>2019-05-15T03:03:24.000Z</published>
-    <updated>2019-07-11T06:33:34.988Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="消费模式"><a href="#消费模式" class="headerlink" title="消费模式"></a>消费模式</h1><p>广播消费指的是：一条消息被多个consumer消费，即使这些consumer属于同一个ConsumerGroup,消息也会被ConsumerGroup中的每个Consumer都消费一次，广播消费中ConsumerGroup概念可以认为在消息划分方面无意义。</p><p>集群消费模式：一个ConsumerGroup中的Consumer实例平均分摊消费消息。例如某个Topic有9条消息，其中一个ConsumerGroup有3个实例（可能是3个进程，或者3台机器），那么每个实例只消费其中部分，消费完的消息不能被其他实例消费。</p><h1 id="顺序消息"><a href="#顺序消息" class="headerlink" title="顺序消息"></a>顺序消息</h1><p>严格的顺序消息的三要素： 消息有序发送、有序存储在一个Queue里面、客户端有序消费<br>可能乱序的情况：</p><ol><li><p>异步发送会导致消息抵达和完成存储在Broker的时间不一致，编号大的消息可能先完成发送</p><p>解决方案：只能采取同步消息的方式按照编号发送消息</p></li><li><p>默认消息的发送是同步的，但是默认是轮询的方式发送到该Topic下的所有Queue里面，顺序发送的消息会存储到不同的Queue里面，会乱序</p><p>解决方案：通过同步消息+ selectMessageQueue实现消息的顺序发送和顺序存储在一个ConsumerQueue里面</p></li><li><p>客户端负载均衡是20s更新一次，ConsumerA 收到一个OrderlyQueue，pull了5条消息后，由于ConsumerA的负载过高，不能及时消费这些消息，消费堆积在内存中。此时重新更新了负载策略，该OrderlyQueue分给了ConsumerB，pull了第6到10条消息，ConsumerB负载低，直接消费编号6到10的消息，而编号1-5的消息还堆积在ConsumerA的内存中</p><p>解决方案：分布式锁+每次OrderlyQueue变更Consumer时必须确保消息全部被消费完了，才可以释放锁。</p></li></ol><h2 id="顺序发送代码"><a href="#顺序发送代码" class="headerlink" title="顺序发送代码"></a>顺序发送代码</h2><p>同步消息 + selectMessageQueue</p><p>使用相同的orderId实现该业务的所有消息发送到一个Queue里面，因为默认RMQ是 同步消息，阻塞的，只有前面的消息发送成功了，后面的消息才可以发送，最终确保，消息按照顺序发送到MQ Server的一个Topic的一个Queue里面，因为参数是0，求余还是0</p><h2 id="顺序消费实现原理"><a href="#顺序消费实现原理" class="headerlink" title="顺序消费实现原理"></a>顺序消费实现原理</h2><p>消费端通过加锁的方式，实现顺序消费：</p><ol><li>当Consumer负载均衡Assign一个OrderlyQueue的时候，首先要给该Queue加分布式锁，加锁成功才会添加到本地的pullRequestQueue里面，否则直接忽略该OrderlyQueue</li><li>当Consumer想要释放该Queue的时候(比如负载均衡重新分配），必须要消费完该Queue所有消息，才可以释放锁，否则20s重试一次</li><li>为了防止Consumer异常宕机未解锁，导致该OrderlyQueue失效，引入了Broker端30s过期，Consumer端20s，定时更新时间戳的方式</li></ol><h1 id="重复消息"><a href="#重复消息" class="headerlink" title="重复消息"></a>重复消息</h1><p>造成消息重复的根本原因是：网络不可达。只要通过网络交换数据，就无法避免这个问题。所以解决这个问题的办法就是绕过这个问题。那么问题就变成了：如果消费端收到两条一样的消息，应该怎样处理？</p><ol><li>消费端处理消息的业务逻辑保持幂等性</li><li>保证每条消息都有唯一编号且保证消息处理成功与去重表的日志同时出现</li></ol><p>第1条很好理解，只要保持幂等性，不管来多少条重复消息，最后处理的结果都一样。第2条原理就是利用一张日志表来记录已经处理成功的消息的ID，如果新到的消息ID已经在日志表中，那么就不再处理这条消息。</p><p>第1条解决方案，很明显应该在消费端实现，不属于消息系统要实现的功能。第2条可以消息系统实现，也可以业务端实现。正常情况下出现重复消息的概率其实很小，如果由消息系统来实现的话，肯定会对消息系统的吞吐量和高可用有影响，所以最好还是由业务端自己处理消息重复的问题，这也是RocketMQ不解决消息重复的问题的原因。</p><p><strong>RocketMQ不保证消息不重复，如果你的业务需要保证严格的不重复消息，需要你自己在业务端去重。</strong></p><h1 id="延时消息"><a href="#延时消息" class="headerlink" title="延时消息"></a>延时消息</h1><p>消息延时是在broker端完成的，broker发现是延时消息，解析其延时级别。</p><p>存储消息时，延迟消息进入 <code>Topic</code> 为 <code>SCHEDULE_TOPIC_XXXX</code> 。</p><p>对 <code>SCHEDULE_TOPIC_XXXX</code> 每条消费队列对应<strong>单独一个</strong>定时任务进行轮询，发送 <strong>到达投递时间【计划消费时间】</strong> 的消息，并且持久化发送进度。</p><h1 id="消费重试"><a href="#消费重试" class="headerlink" title="消费重试"></a>消费重试</h1><p><code>Consumer</code> 将消费失败的消息发回 <code>Broker</code>，进入<strong>延迟消息队列</strong>。即，消费失败的消息，不会立即消费</p><h1 id="事务消息"><a href="#事务消息" class="headerlink" title="事务消息"></a>事务消息</h1><p>通过消息的异步事务，可以保证本地事务和消息发送同时执行成功或失败，从而保证了数据的最终一致性。</p><ul><li>发送prepare消息，该消息对Consumer不可见</li><li>执行本地事务</li><li>若本地事务执行成功，则向MQ提交消息确认发送指令；若本地事务执行失败，则向MQ发送取消指令</li><li>若MQ长时间未收到确认发送或取消发送的指令，则向业务系统询问本地事务状态，并做补偿处理</li></ul>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;消费模式&quot;&gt;&lt;a href=&quot;#消费模式&quot; class=&quot;headerlink&quot; title=&quot;消费模式&quot;&gt;&lt;/a&gt;消费模式&lt;/h1&gt;&lt;p&gt;广播消费指的是：一条消息被多个consumer消费，即使这些consumer属于同一个ConsumerGroup,消息也会被
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="消息队列" scheme="http://yoursite.com/blog/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
     
   </entry>
   
