@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="springboot,JPA,">
+  <meta name="keywords" content="数据库,springboot,">
 
 
 
@@ -82,14 +82,14 @@
 
 
 <meta name="description" content="JPA注解 @Table(name=”数据库名”) @Entity   //实体类的注解 @GeneratedValue(strategy=GenerationType.AUTO)        //主键生成策略，不填则默认为AUTO，会根据数据库 @Id      //主键 @Column(name = “列名”, nullable = true, unique = true, insertab">
-<meta name="keywords" content="springboot,JPA">
+<meta name="keywords" content="数据库,springboot">
 <meta property="og:type" content="article">
 <meta property="og:title" content="springboot+JPA">
 <meta property="og:url" content="http://yoursite.com/blog/2018/09/13/9-13技术笔记/index.html">
 <meta property="og:site_name" content="Arvense">
 <meta property="og:description" content="JPA注解 @Table(name=”数据库名”) @Entity   //实体类的注解 @GeneratedValue(strategy=GenerationType.AUTO)        //主键生成策略，不填则默认为AUTO，会根据数据库 @Id      //主键 @Column(name = “列名”, nullable = true, unique = true, insertab">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2018-09-27T02:55:14.000Z">
+<meta property="og:updated_time" content="2019-07-11T06:27:16.260Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="springboot+JPA">
 <meta name="twitter:description" content="JPA注解 @Table(name=”数据库名”) @Entity   //实体类的注解 @GeneratedValue(strategy=GenerationType.AUTO)        //主键生成策略，不填则默认为AUTO，会根据数据库 @Id      //主键 @Column(name = “列名”, nullable = true, unique = true, insertab">
@@ -365,13 +365,13 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Page&lt;User&gt; findByName(String name, Pageable pageable);</span><br><span class="line">List&lt;User&gt; findByName(String name, Sort sort);</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">userRepository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC,&quot;id&quot;)));</span><br></pre></td></tr></table></figure>
+   <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">userRepository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC,&quot;id&quot;)));</span><br></pre></td></tr></table></figure>
 <ol start="3">
 <li><p>使用Example</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">User user = new User();</span><br><span class="line">user.setUserName(&quot;aaa123456&quot;);</span><br><span class="line">List&lt;User&gt; res=userRepository.findAll(Example.of(user));</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>@Query注解</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@Query(&quot;select a from AccountInfo a where a.accountId = ?1&quot;)</span><br><span class="line"> public AccountInfo findByAccountId(Long accountId);</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@Query(&quot;select a from AccountInfo a where a.accountId = ?1&quot;)</span><br><span class="line">public AccountInfo findByAccountId(Long accountId);</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
 
@@ -391,9 +391,9 @@
       
         <div class="post-tags">
           
-            <a href="/blog/tags/springboot/" rel="tag"># springboot</a>
+            <a href="/blog/tags/数据库/" rel="tag"># 数据库</a>
           
-            <a href="/blog/tags/JPA/" rel="tag"># JPA</a>
+            <a href="/blog/tags/springboot/" rel="tag"># springboot</a>
           
         </div>
       

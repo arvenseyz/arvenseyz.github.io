@@ -346,11 +346,15 @@
           
             <h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>springboot配置使用mongodb并不复杂，大体参考这篇博文<a href="http://blog.720ui.com/2016/springboot_02_data_mongodb/" target="_blank" rel="noopener">http://blog.720ui.com/2016/springboot_02_data_mongodb/</a></p>
 <h1 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h1><p>mongodb是数据库-集合-文档三级结构。大体相当于关系型数据库的数据库-表-行。<br>文档格式类似于<br> {“title”:”hello!”,”recommend”:5,”author”:{“firstname”:”paul”,”lastname”:”frank”}}<br> 可见，有点像json，是一组一组的键值对组成，并且可以嵌套。<br> 集合中的文档，不要求格式统一，可以各有各的键值对。但相对统一的格式显然有性能优势。</p>
-<h1 id="mongoTemplate"><a href="#mongoTemplate" class="headerlink" title="mongoTemplate"></a>mongoTemplate</h1><p> springboot封装了对mongodb的操作，为mongoTemplate。使用其中的Query，Criter完成操作。<br> <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Query query = new Query(Criteria.byExample(author));</span><br><span class="line">List&lt;Author&gt; authorList = mongoTemplate.find(query, Author.class);</span><br></pre></td></tr></table></figure></p>
-<p> //“$gt” 、”$gte”、 “$lt”、 “$lte”(分别对应”&gt;”、 “&gt;=” 、”&lt;” 、”&lt;=”)<br> <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Query query=new Query(Criteria.where(&quot;operationCode&quot;).is(&quot;c1&quot;).and(&quot;recordTime&quot;).gte(startDate).lte(endDate));</span><br></pre></td></tr></table></figure></p>
+<h1 id="mongoTemplate"><a href="#mongoTemplate" class="headerlink" title="mongoTemplate"></a>mongoTemplate</h1><p> springboot封装了对mongodb的操作，为mongoTemplate。使用其中的Query，Criter完成操作。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Query query = new Query(Criteria.byExample(author));</span><br><span class="line">List&lt;Author&gt; authorList = mongoTemplate.find(query, Author.class);</span><br></pre></td></tr></table></figure>
+<p> //“$gt” 、”$gte”、 “$lt”、 “$lte”(分别对应”&gt;”、 “&gt;=” 、”&lt;” 、”&lt;=”)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Query query=new Query(Criteria.where(&quot;operationCode&quot;).is(&quot;c1&quot;).and(&quot;recordTime&quot;).gte(startDate).lte(endDate));</span><br></pre></td></tr></table></figure>
 <p>insert插入，save更新，remove删除以外，还有aggregate聚合操作和bulkOPS批量操作。  </p>
 <h1 id="注解"><a href="#注解" class="headerlink" title="注解"></a>注解</h1><ul>
-<li>@ID 主键，不可重复，自带索引，可以在定义的列名上标注，需要自己生成并维护不重复的约束。如果自己不设置@Id主键，mongo会自动生成一个唯一主键，并且插入时效率远高于自己设置主键。<br>在实际业务中不建议自己设置主键，应交给mongo自己生成，自己可以设置一个业务id，如int型字段，用自己设置的业务id来维护相关联的表。</li>
+<li><p>@ID 主键，不可重复，自带索引，可以在定义的列名上标注，需要自己生成并维护不重复的约束。如果自己不设置@Id主键，mongo会自动生成一个唯一主键，并且插入时效率远高于自己设置主键。</p>
+<p>在实际业务中不建议自己设置主键，应交给mongo自己生成，自己可以设置一个业务id，如int型字段，用自己设置的业务id来维护相关联的表。</p>
+</li>
 <li>@Document 标注在实体类上，类似于hibernate的entity注解，标明由mongo来维护该表。</li>
 <li>@Indexed 声明该字段需要加索引，加索引后以该字段为条件检索将大大提高速度。</li>
 <li>@CompoundIndex 复合索引</li>
@@ -824,13 +828,13 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Page&lt;User&gt; findByName(String name, Pageable pageable);</span><br><span class="line">List&lt;User&gt; findByName(String name, Sort sort);</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">userRepository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC,&quot;id&quot;)));</span><br></pre></td></tr></table></figure>
+   <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">userRepository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC,&quot;id&quot;)));</span><br></pre></td></tr></table></figure>
 <ol start="3">
 <li><p>使用Example</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">User user = new User();</span><br><span class="line">user.setUserName(&quot;aaa123456&quot;);</span><br><span class="line">List&lt;User&gt; res=userRepository.findAll(Example.of(user));</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>@Query注解</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@Query(&quot;select a from AccountInfo a where a.accountId = ?1&quot;)</span><br><span class="line"> public AccountInfo findByAccountId(Long accountId);</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@Query(&quot;select a from AccountInfo a where a.accountId = ?1&quot;)</span><br><span class="line">public AccountInfo findByAccountId(Long accountId);</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
 
