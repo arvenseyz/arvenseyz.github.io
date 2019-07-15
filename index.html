@@ -330,7 +330,9 @@
 <h1 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h1><p>help输入帮助，b建立断点使用 <code>&lt;package&gt;.&lt;function&gt;</code>或是 <code>&lt;filename&gt;:&lt;line number&gt;</code>的格式。bp查看断点。</p>
 <p>c开始运行程序。</p>
 <p>單部執行： n<br>步入： s<br>步出：stepout  </p>
-<p>看参数：args</p>
+<p>看函数参数：args</p>
+<p>看协程：goroutine</p>
+<p>看变量：print</p>
 <h1 id="然而"><a href="#然而" class="headerlink" title="然而"></a>然而</h1><p>1.如果写的是服务端程序，测试的时候是模拟rpc请求，这时自己的身份是rpc的消费者，生产者处打断点没用，生产者似乎无法在启动服务时打断点。</p>
 <p>2.goland有个go remote,可以输入开发机主机，但没有输密码的地方，当然连接不上。</p>
 
