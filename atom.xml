@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-07-11T10:37:41.524Z</updated>
+  <updated>2019-07-15T09:51:35.385Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,29 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Delve开发机调试</title>
+    <link href="http://yoursite.com/blog/2019/07/15/7-15%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2019/07/15/7-15技术笔记/</id>
+    <published>2019-07-15T09:41:53.000Z</published>
+    <updated>2019-07-15T09:51:35.385Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go get github.com/derekparker/delve/cmd/dlv</span><br></pre></td></tr></table></figure><p>一键安装，可能由于网速等原因，需要等待很久。</p><p>输入dlv version验证安装成功</p><h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><p>dlv debug delve-demo.go</p><p>dlv test – -test.run <test function> </test></p><h1 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h1><p>help输入帮助，b建立断点使用 <code>&lt;package&gt;.&lt;function&gt;</code>或是 <code>&lt;filename&gt;:&lt;line number&gt;</code>的格式。bp查看断点。</p><p>c开始运行程序。</p><p>單部執行： n<br>步入： s<br>步出：stepout  </p><p>看参数：args</p><h1 id="然而"><a href="#然而" class="headerlink" title="然而"></a>然而</h1><p>1.如果写的是服务端程序，测试的时候是模拟rpc请求，这时自己的身份是rpc的消费者，生产者处打断点没用，生产者似乎无法在启动服务时打断点。</p><p>2.goland有个go remote,可以输入开发机主机，但没有输密码的地方，当然连接不上。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;安装&quot;&gt;&lt;a href=&quot;#安装&quot; class=&quot;headerlink&quot; title=&quot;安装&quot;&gt;&lt;/a&gt;安装&lt;/h1&gt;&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span 
+      
+    
+    </summary>
+    
+    
+      <category term="go" scheme="http://yoursite.com/blog/tags/go/"/>
+    
+  </entry>
   
   <entry>
     <title>kafka技术杂记</title>
@@ -496,31 +519,6 @@
     
     
       <category term="redis" scheme="http://yoursite.com/blog/tags/redis/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>mysql锁和事务原理</title>
-    <link href="http://yoursite.com/blog/2019/05/17/5-17%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/05/17/5-17技术笔记/</id>
-    <published>2019-05-17T01:29:29.000Z</published>
-    <updated>2019-05-17T06:01:06.000Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="共享锁与排它锁"><a href="#共享锁与排它锁" class="headerlink" title="共享锁与排它锁"></a>共享锁与排它锁</h1><p>其实前者相当于读锁，后者相当于写锁。而实际上，除非声明，select语句不加锁，而update（包括delect和insert）会加排它锁。意向共享锁和意向排他锁锁定的是表。意向锁是InnoDB自动加的，不需用户干预。</p><h1 id="行锁和表锁"><a href="#行锁和表锁" class="headerlink" title="行锁和表锁"></a>行锁和表锁</h1><p>行锁锁行，表锁锁表。对于Innodb，只有走索引才会行锁，其他都是表锁。</p><p>因为行锁锁的是索引。</p><h1 id="间隙锁和next-key锁"><a href="#间隙锁和next-key锁" class="headerlink" title="间隙锁和next_key锁"></a>间隙锁和next_key锁</h1><p>间隙锁锁附近的区域，以防止幻读，next-key锁其实包含了记录锁和间隙锁，即锁定一个范围，并且锁定记录本身，InnoDB默认加锁方式是next-key 锁。</p><p>间隙锁防止其他事务在间隔中插入数据。</p><p>MySQL在<code>REPEATABLE READ</code>隔离级别实际上就已经解决了<code>幻读</code>问题。就是通过这个实现的。</p><h1 id="MVCC"><a href="#MVCC" class="headerlink" title="MVCC"></a>MVCC</h1><p>mqsql读不加锁，所以很快，为了保证可重复读，是通过MVCC实现的，基于版本的，</p><ul><li><p>每次一个事务对某条聚簇索引记录进行改动时，都会把该事务的<code>事务id</code>赋值给<code>trx_id</code>隐藏列。</p></li><li><p><code>roll_pointer</code>：每次对某条聚簇索引记录进行改动时，都会把旧的版本写入到<code>undo日志</code>中，然后这个隐藏列就相当于一个指针，可以通过它来找到该记录修改前的信息。</p></li></ul><p>这样一条记录和它的历史，成了类似链表连接的多版本。这样读找到自己的版本即可。</p><p>即读取数据时生成一个ReadView。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;共享锁与排它锁&quot;&gt;&lt;a href=&quot;#共享锁与排它锁&quot; class=&quot;headerlink&quot; title=&quot;共享锁与排它锁&quot;&gt;&lt;/a&gt;共享锁与排它锁&lt;/h1&gt;&lt;p&gt;其实前者相当于读锁，后者相当于写锁。而实际上，除非声明，select语句不加锁，而update（包括
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="数据库" scheme="http://yoursite.com/blog/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
     
   </entry>
   
