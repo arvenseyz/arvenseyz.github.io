@@ -251,6 +251,180 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/08/8-8技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/08/08/8-8技术笔记/" itemprop="url">多线程</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-08T15:25:18+08:00">
+                2018-08-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="wait和sleep"><a href="#wait和sleep" class="headerlink" title="wait和sleep"></a>wait和sleep</h1><h2 id="wait"><a href="#wait" class="headerlink" title="wait"></a>wait</h2><p>wait是object类的方法，在当前线程持有对象锁的情况下，暂时放弃锁，并释放资源，等待其他线程调用同一对象的notify()或者notifyAll()。<br>注意，即使只有一个线程在等待，并且有其它线程调用了notify或者notifyAll方法，等待的线程只是被激活，但是它必须得再次获得锁才能继续往下执行。换言之，即使notify被调用，但只要锁没有被释放，原等待线程因为未获得锁仍然无法继续执行。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">import java.util.Date;</span><br><span class="line">public class Wait &#123;</span><br><span class="line">  public static void main(String[] args) &#123;</span><br><span class="line">    Thread thread1 = new Thread(() -&gt; &#123;</span><br><span class="line">      synchronized (Wait.class) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">          System.out.println(new Date() + &quot; Thread1 is running&quot;);</span><br><span class="line">          Wait.class.wait();</span><br><span class="line">          System.out.println(new Date() + &quot; Thread1 ended&quot;);</span><br><span class="line">        &#125; catch (Exception ex) &#123;</span><br><span class="line">          ex.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    thread1.start();</span><br><span class="line"></span><br><span class="line">    Thread thread2 = new Thread(() -&gt; &#123;</span><br><span class="line">      synchronized (Wait.class) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">          System.out.println(new Date() + &quot; Thread2 is running&quot;);</span><br><span class="line">          Wait.class.notify();</span><br><span class="line">          // Don&apos;t use sleep method to avoid confusing</span><br><span class="line">          for(long i = 0; i &lt; 200000; i++) &#123;</span><br><span class="line">            for(long j = 0; j &lt; 100000; j++) &#123;&#125;</span><br><span class="line">          &#125;</span><br><span class="line">          System.out.println(new Date() + &quot; Thread2 release lock&quot;);</span><br><span class="line">        &#125; catch (Exception ex) &#123;</span><br><span class="line">          ex.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      for(long i = 0; i &lt; 200000; i++) &#123;</span><br><span class="line">        for(long j = 0; j &lt; 100000; j++) &#123;&#125;</span><br><span class="line">      &#125;</span><br><span class="line">      System.out.println(new Date() + &quot; Thread2 ended&quot;);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    // Don&apos;t use sleep method to avoid confusing</span><br><span class="line">    for(long i = 0; i &lt; 200000; i++) &#123;</span><br><span class="line">      for(long j = 0; j &lt; 100000; j++) &#123;&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    thread2.start();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>结果<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Tue Jun 14 22:51:11 CST 2016 Thread1 is running</span><br><span class="line">Tue Jun 14 22:51:23 CST 2016 Thread2 is running</span><br><span class="line">Tue Jun 14 22:51:36 CST 2016 Thread2 release lock</span><br><span class="line">Tue Jun 14 22:51:36 CST 2016 Thread1 ended</span><br><span class="line">Tue Jun 14 22:51:49 CST 2016 Thread2 ended</span><br></pre></td></tr></table></figure></p>
+<p>可以看出，线程一执行-&gt;线程一wait()-&gt;线程二执行-&gt;线程二notify()-&gt;此时线程一并不会接着执行，而是等线程二释放锁，之后线程一获得资源，线程一结束-&gt;线程二结束</p>
+<h2 id="sleep"><a href="#sleep" class="headerlink" title="sleep"></a>sleep</h2><p>sleep()是Thread类的方法，实际上sleep和锁没有关系，仅仅是一定时间内不占用资源。</p>
+<h1 id="synchronized和volatile和Atomic"><a href="#synchronized和volatile和Atomic" class="headerlink" title="synchronized和volatile和Atomic"></a>synchronized和volatile和Atomic</h1><p>实际使用上，功能上synchronized是后两者的超集。只有考虑性能时，使用后两者。</p>
+<h2 id="多线程三大特性"><a href="#多线程三大特性" class="headerlink" title="多线程三大特性"></a>多线程三大特性</h2><ol>
+<li>原子性</li>
+<li>可见性</li>
+<li>有序性  </li>
+</ol>
+<h2 id="synchronized"><a href="#synchronized" class="headerlink" title="synchronized"></a>synchronized</h2><ol>
+<li>修饰实例方法，作用于当前实例加锁，进入同步代码前要获得当前实例的锁</li>
+<li>修饰静态方法，作用于当前类对象加锁，进入同步代码前要获得当前类对象的锁</li>
+<li>修饰代码块，指定加锁对象，对给定对象加锁，进入同步代码库前要获得给定对象的锁。<br>实际上是一致的，即synchronized锁的是对象，即｛｝内代码对（）内对象的访问加锁。<br>synchronized保证了三大特性  </li>
+</ol>
+<h2 id="volatile"><a href="#volatile" class="headerlink" title="volatile"></a>volatile</h2><p>当一个共享变量被volatile修饰时，它会保证修改的值会立即被更新到主存，当有其他线程需要读取时，它会去内存中读取新值。<br>一旦一个共享变量（类的成员变量、类的静态成员变量）被volatile修饰之后，那么就具备了两层语义：</p>
+<ol>
+<li>保证了不同线程对这个变量进行操作时的可见性，即一个线程修改了某个变量的值，这新值对其他线程来说是立即可见的。</li>
+<li>禁止进行指令重排序。  </li>
+</ol>
+<p>volatile保证了可见性和有序性</p>
+<h2 id="Atomic"><a href="#Atomic" class="headerlink" title="Atomic"></a>Atomic</h2><p>Atomic保证了原子性<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AtomicInteger atomic = new AtomicInteger(0);</span><br></pre></td></tr></table></figure></p>
+<p>boolean compareAndSet(int expect, int update)”方法，API上解释的比较清楚了，是说“如果当前值 == 预期值，则以原子方式将该设置为给定的更新值”，并且，它内部是调用的一个native方法。</p>
+<h1 id="ReentrantLock"><a href="#ReentrantLock" class="headerlink" title="ReentrantLock"></a>ReentrantLock</h1><h2 id="获得和释放"><a href="#获得和释放" class="headerlink" title="获得和释放"></a>获得和释放</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ReentrantLock lock = new ReentrantLock();</span><br><span class="line">       try &#123;</span><br><span class="line">           lock.lock();</span><br><span class="line">           System.out.println(&quot;do&quot;);</span><br><span class="line">       &#125; catch (Exception e) &#123;</span><br><span class="line">       &#125; finally &#123;</span><br><span class="line">           lock.unlock();</span><br><span class="line">       &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="休眠和唤醒"><a href="#休眠和唤醒" class="headerlink" title="休眠和唤醒"></a>休眠和唤醒</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[] args) &#123;</span><br><span class="line">    ReentrantLock lock = new ReentrantLock();</span><br><span class="line">    Condition condition =lock.newCondition();</span><br><span class="line">    Thread thread1=new Thread(()-&gt;&#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            lock.lock();</span><br><span class="line">            System.out.println(&quot;1&quot;);</span><br><span class="line">            condition.await();</span><br><span class="line">            System.out.println(&quot;2&quot;);</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">        &#125; finally &#123;</span><br><span class="line">            lock.unlock();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    thread1.start();</span><br><span class="line">    Thread thread2=new Thread(()-&gt;&#123;</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            lock.lock();</span><br><span class="line">            System.out.println(&quot;3&quot;);</span><br><span class="line">            condition.signal();</span><br><span class="line">            System.out.println(&quot;4&quot;);</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">        &#125; finally &#123;</span><br><span class="line">            lock.unlock();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    thread2.start();</span><br></pre></td></tr></table></figure>
+<h2 id="公平锁和非公平锁"><a href="#公平锁和非公平锁" class="headerlink" title="公平锁和非公平锁"></a>公平锁和非公平锁</h2><p>公平锁指的是线程获取锁的顺序是按照加锁顺序来的，而非公平锁指的是抢锁机制，先lock的线程不一定先获得锁。<br>ReentrantLock默认非公平锁<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Lock lock=new ReentrantLock(true);//公平锁</span><br><span class="line">Lock lock=new ReentrantLock(false);//非公平锁</span><br></pre></td></tr></table></figure></p>
+<h2 id="读写锁"><a href="#读写锁" class="headerlink" title="读写锁"></a>读写锁</h2><p>lock.readLock().lock();<br>lock.writeLock().lock();<br>读读共享，写写互斥，读写互斥</p>
+<h2 id="加锁方式"><a href="#加锁方式" class="headerlink" title="加锁方式"></a>加锁方式</h2><ol>
+<li>lock(), 如果获取了锁立即返回，如果别的线程持有锁，当前线程则一直处于休眠状态，直到获取锁</li>
+<li>tryLock(), 如果获取了锁立即返回true，如果别的线程正持有锁，立即返回false；</li>
+<li>tryLock(long timeout,TimeUnit unit)，   如果获取了锁定立即返回true，如果别的线程正持有锁，会等待参数给定的时间，在等待的过程中，如果获取了锁定，就返回true，如果等待超时，返回false；</li>
+<li>lockInterruptibly:如果获取了锁定立即返回，如果没有获取锁定，当前线程处于休眠状态，直到或者锁定，或者当前线程被别的线程中断</li>
+</ol>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/07/8-7技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1650,148 +1824,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/07/30/7-30技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/07/30/7-30技术笔记/" itemprop="url">RSA加密</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-07-30T19:55:14+08:00">
-                2018-07-30
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>1.公钥与私钥<br>密钥是接受密文一方即乙方生成的，生成一对公钥和私钥，他将公钥发送给甲方，甲方使用公钥加密，将密文传送回乙方，乙方使用私钥解密。<br>2.加密算法<br>基于np问题，大的合数分解质因数不可解。<br>3.密钥生成过程<br>//加密基础，选质数<br>乙方选一对质数p=3.q=11;<br>//加密过程<br>则N=Pq=33,r=（p-1)(q-1)=20;<br>计算模反元素，即选一个数e，寻找一个数d，使得ed%r=1,这里选定e=3,求d的过程即解不定方程3d-20k=1，其一组解是d=7,k=1。求得e=3,d=7;<br>//获得公私钥<br>则公钥为（33，3）,私钥为(33,7)<br>4.加密过程<br>//加解密原理是费马小定理:假如p是质数，且gcd(a,p)=1，那么 a^(p-1)≡1（mod p)<br>加密公式c = (n^e)%N<br>甲方想对数字24进行加密，计算c = (24^3)%33 = 30，则加密后的结果为30<br>5.解密过程<br>解密公式<br>乙方解密，n = (c^d)%N，n = (30^7)%33 = 24，解密成功，结果为24.</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1842,7 +1874,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">171</span>
+                  <span class="site-state-item-count">172</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

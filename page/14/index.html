@@ -251,6 +251,156 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/21/9-21技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/09/21/9-21技术笔记-1/" itemprop="url">Springboot+事务</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-21T19:37:47+08:00">
+                2018-09-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>Spring Boot 默认集成事务，只需用在service层注解@Transactional即可进行事务管理。</p>
+<ol>
+<li>数据库引擎需要是InnoDB，这样数据库才支持事务。</li>
+<li>异常需要是RuntimeException异常。</li>
+<li>需显式抛出异常，即没有处理。</li>
+<li>@Transactional可以是类注解，也能注解到方法层面。</li>
+<li>@Transactional属性包括事务管理器，隔离级别等等。   </li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@Transactional</span><br><span class="line">public void add3(Paper paper) &#123;</span><br><span class="line">    this.paperDao.save(paper);</span><br><span class="line">    if(paper.getNews().length() &lt; 5)&#123;</span><br><span class="line">        throw new RuntimeException(&quot;author real name is too long.&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/21/9-21技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1718,159 +1868,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/06/9-6技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/09/06/9-6技术笔记/" itemprop="url">原型模式</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-06T10:56:33+08:00">
-                2018-09-06
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="原型模式"><a href="#原型模式" class="headerlink" title="原型模式"></a>原型模式</h1><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>通过一个原型对象克隆出多个一模一样的对象，该模式称之为原型模式。</p>
-<h2 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h2><p>java支持克隆，Object类下有clone()方法，只有实体类实现Cloneable接口，然后重载Clone()方法，则实现其可克隆。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">public class CloneMode implements Cloneable&#123;</span><br><span class="line">    private int a;</span><br><span class="line">    CloneMode(int a)&#123;</span><br><span class="line">        this.a=a;</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public String toString() &#123;</span><br><span class="line">        return a+&quot;&quot;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public Object Clone()&#123;</span><br><span class="line">        Object o=null;</span><br><span class="line">        try</span><br><span class="line">        &#123;</span><br><span class="line">            o=super.clone();</span><br><span class="line">        &#125;</span><br><span class="line">        catch(CloneNotSupportedException e)</span><br><span class="line">        &#123;</span><br><span class="line">            System.out.println(e.toString());</span><br><span class="line">        &#125;</span><br><span class="line">        return o;</span><br><span class="line">    &#125;</span><br><span class="line">    public static void main(String args[]) &#123;</span><br><span class="line">        CloneMode cloneMode=new CloneMode(1);</span><br><span class="line">        CloneMode cloneModeCopy=(CloneMode)cloneMode.Clone();</span><br><span class="line">        System.out.println(cloneModeCopy.toString());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="深克隆与浅克隆"><a href="#深克隆与浅克隆" class="headerlink" title="深克隆与浅克隆"></a>深克隆与浅克隆</h2><p>Java中的克隆为浅克隆，即：对于值属性，赋值了属性的值；对于引用对象属性，只复制了对象的引用，没有复制引用的对象。<br>即，如果b是a的复制体，a中有引用对象c，则(b.c==a.c)是true，即b和a中c的引用指向了同一个对象。<br>如果要实现引用对象的复制，即为深克隆。有两种方法。  </p>
-<ol>
-<li><p>如果被克隆对象中的引用对象实现了Clone()方法，Clone函数里复制引用对象即可。<br><em>可能会涉及迭代克隆深度问题</em></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">public class CloneMode implements Cloneable&#123;</span><br><span class="line">    private int a;</span><br><span class="line">    private C c;</span><br><span class="line">    CloneMode(int a,C c)&#123;</span><br><span class="line">        this.a=a;</span><br><span class="line">        this.c=c;</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public String toString() &#123;</span><br><span class="line">        return a+&quot;&quot;+c;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public CloneMode Clone()&#123;</span><br><span class="line">        CloneMode o=null;</span><br><span class="line">        try</span><br><span class="line">        &#123;</span><br><span class="line">            o=(CloneMode) super.clone();</span><br><span class="line">            o.c=(C)c.Clone();</span><br><span class="line">        &#125;</span><br><span class="line">        catch(CloneNotSupportedException e)</span><br><span class="line">        &#123;</span><br><span class="line">            System.out.println(e.toString());</span><br><span class="line">        &#125;</span><br><span class="line">        return o;</span><br><span class="line">    &#125;</span><br><span class="line">    public static void main(String args[]) &#123;</span><br><span class="line">        C c=new C();</span><br><span class="line">        CloneMode cloneMode=new CloneMode(1,c);</span><br><span class="line">        CloneMode cloneModeCopy=(CloneMode)cloneMode.Clone();</span><br><span class="line">        System.out.println(cloneModeCopy.toString());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>如果被克隆对象中的引用对象实现了序列化的接口，通过序列化和流的方式。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">public class CloneMode implements Cloneable,Serializable&#123;</span><br><span class="line">    private int a;</span><br><span class="line">    private C c;</span><br><span class="line"></span><br><span class="line">    CloneMode(int a, C c) &#123;</span><br><span class="line">        this.a = a;</span><br><span class="line">        this.c = c;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String toString() &#123;</span><br><span class="line">        return a + &quot;&quot; + c;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public Object Clone() throws IOException, ClassNotFoundException &#123;</span><br><span class="line">        //将对象写到流里</span><br><span class="line">        ByteArrayOutputStream bo = new ByteArrayOutputStream();</span><br><span class="line">        ObjectOutputStream oo = new ObjectOutputStream(bo);</span><br><span class="line">        oo.writeObject(this);</span><br><span class="line">        //从流里读出来</span><br><span class="line">        ByteArrayInputStream bi = new ByteArrayInputStream(bo.toByteArray());</span><br><span class="line">        ObjectInputStream oi = new ObjectInputStream(bi);</span><br><span class="line">        return (oi.readObject());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void main(String args[]) throws IOException, ClassNotFoundException &#123;</span><br><span class="line">        C c = new C();</span><br><span class="line">        CloneMode cloneMode = new CloneMode(1, c);</span><br><span class="line">        CloneMode cloneModeCopy = (CloneMode) cloneMode.Clone();</span><br><span class="line">        System.out.println(cloneModeCopy.toString());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<h2 id="原型管理器"><a href="#原型管理器" class="headerlink" title="原型管理器"></a>原型管理器</h2><p>存在很多原型时，可用工厂模式来管理原型，提供原型工厂即原型管理器，同时用将这些原型用单例模式在原型管理器创建，有需要时克隆这些单例即可。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1921,7 +1918,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">171</span>
+                  <span class="site-state-item-count">172</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

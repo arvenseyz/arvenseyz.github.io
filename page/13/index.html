@@ -251,6 +251,168 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/10/09/10-9技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/10/09/10-9技术笔记/" itemprop="url">访问者模式</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-10-09T11:53:20+08:00">
+                2018-10-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="访问者模式"><a href="#访问者模式" class="headerlink" title="访问者模式"></a>访问者模式</h1><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>当多个不同逻辑的操作者（并且可能不稳定有变化)操作一个稳定的数据的结构时，将数据的结构和操作分离，使用访问者模式。</p>
+<h2 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h2><ol>
+<li><p>数据元素基类，有一个接受访问的方法，参数是访问者。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Element &#123;</span><br><span class="line">    abstract void accept(Vistor vistor);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>具体数据类，对接受访问方法的基础实现方法是，调用访问者的访问方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">public class ConcreteElementA extends Element&#123;</span><br><span class="line">    private int a;</span><br><span class="line">    @Override</span><br><span class="line">    void accept(Vistor vistor) &#123;</span><br><span class="line">        vistor.visit(this);</span><br><span class="line">    &#125;</span><br><span class="line">    public int getA() &#123;</span><br><span class="line">        return a;</span><br><span class="line">    &#125;</span><br><span class="line">    public void setA(int a) &#123;</span><br><span class="line">        this.a = a;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">public class ConcreteElementB extends Element&#123;</span><br><span class="line">    private int b;</span><br><span class="line">    @Override</span><br><span class="line">    void accept(Vistor vistor) &#123;</span><br><span class="line">        vistor.visit(this);</span><br><span class="line">    &#125;</span><br><span class="line">    public int getB() &#123;</span><br><span class="line">        return b;</span><br><span class="line">    &#125;</span><br><span class="line">    public void setB(int b) &#123;</span><br><span class="line">        this.b = b;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>访问者基类，有对各元素的访问方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Vistor &#123;</span><br><span class="line">    abstract void visit(ConcreteElementA concreteElementA);</span><br><span class="line">    abstract void visit(ConcreteElementB concreteElementB);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>具体访问者类，根据业务实际，进行访问操作</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">public class ConcreteVistorA extends Vistor &#123;</span><br><span class="line">    @Override</span><br><span class="line">    void visit(ConcreteElementA concreteElementA) &#123;</span><br><span class="line">        System.out.println(&quot;访问者A操作元素A&quot;+concreteElementA.getA());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    void visit(ConcreteElementB concreteElementB) &#123;</span><br><span class="line">        System.out.println(&quot;访问者A操作元素B&quot;+concreteElementB.getB());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">public class ConcreteVistorB extends Vistor&#123;</span><br><span class="line">    @Override</span><br><span class="line">    void visit(ConcreteElementA concreteElementA) &#123;</span><br><span class="line">        System.out.println(&quot;访问者B操作元素A&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    void visit(ConcreteElementB concreteElementB) &#123;</span><br><span class="line">        System.out.println(&quot;访问者B操作元素B&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>数据的结构类，添加元素，依次访问</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public class ObjectStruture &#123;</span><br><span class="line">    private List&lt;Element&gt; elements = new ArrayList&lt;&gt;();</span><br><span class="line">    public void addElement(Element element)&#123;</span><br><span class="line">        elements.add(element);</span><br><span class="line">    &#125;</span><br><span class="line">    public void show(Vistor vistor)&#123;</span><br><span class="line">        for (Element e:elements)&#123;</span><br><span class="line">            e.accept(vistor);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>客户端操作</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">public class Client &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        ObjectStruture objectStruture = new ObjectStruture();</span><br><span class="line">        Element elementa = new ConcreteElementA();</span><br><span class="line">        Element elementb = new ConcreteElementB();</span><br><span class="line">        objectStruture.addElement(elementa);</span><br><span class="line">        objectStruture.addElement(elementb);</span><br><span class="line">        Vistor vistora = new ConcreteVistorA();</span><br><span class="line">        Vistor vistorb = new ConcreteVistorB();</span><br><span class="line">        objectStruture.show(vistora);</span><br><span class="line">        objectStruture.show(vistorb);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/10/08/10-8技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1712,156 +1874,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/21/9-21技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/09/21/9-21技术笔记-1/" itemprop="url">Springboot+事务</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-21T19:37:47+08:00">
-                2018-09-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>Spring Boot 默认集成事务，只需用在service层注解@Transactional即可进行事务管理。</p>
-<ol>
-<li>数据库引擎需要是InnoDB，这样数据库才支持事务。</li>
-<li>异常需要是RuntimeException异常。</li>
-<li>需显式抛出异常，即没有处理。</li>
-<li>@Transactional可以是类注解，也能注解到方法层面。</li>
-<li>@Transactional属性包括事务管理器，隔离级别等等。   </li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@Transactional</span><br><span class="line">public void add3(Paper paper) &#123;</span><br><span class="line">    this.paperDao.save(paper);</span><br><span class="line">    if(paper.getNews().length() &lt; 5)&#123;</span><br><span class="line">        throw new RuntimeException(&quot;author real name is too long.&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1912,7 +1924,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">171</span>
+                  <span class="site-state-item-count">172</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
