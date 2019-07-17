@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Arvense, NexT">
+  <meta name="keywords" content="设计模式,go,">
 
 
 
@@ -81,14 +81,18 @@
 
 
 
+<meta name="description" content="传统策略模式传统(Java)策略模式依赖于继承，简单来说，各策略里面的实现封装一次，共同继承一个基类或者实现一个接口，然后一个策略工厂持有基类/接口对象，根据输入进行策略选择，得到对应的策略。业务方在使用时，应该首先用策略工厂获得需要的策略，然后调用策略的方法。 然而，第一，依然没有避免switch，只不过转移到了策略工厂里；第二，策略和策略工厂耦合。 GO实现GO没有继承，但有方法变量，不如把策">
+<meta name="keywords" content="设计模式,go">
 <meta property="og:type" content="article">
-<meta property="og:title" content="7-17技术笔记">
+<meta property="og:title" content="go实现策略模式">
 <meta property="og:url" content="http://yoursite.com/blog/2019/07/17/7-17技术笔记/index.html">
 <meta property="og:site_name" content="Arvense">
+<meta property="og:description" content="传统策略模式传统(Java)策略模式依赖于继承，简单来说，各策略里面的实现封装一次，共同继承一个基类或者实现一个接口，然后一个策略工厂持有基类/接口对象，根据输入进行策略选择，得到对应的策略。业务方在使用时，应该首先用策略工厂获得需要的策略，然后调用策略的方法。 然而，第一，依然没有避免switch，只不过转移到了策略工厂里；第二，策略和策略工厂耦合。 GO实现GO没有继承，但有方法变量，不如把策">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-07-17T09:02:28.272Z">
+<meta property="og:updated_time" content="2019-07-17T09:21:46.898Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="7-17技术笔记">
+<meta name="twitter:title" content="go实现策略模式">
+<meta name="twitter:description" content="传统策略模式传统(Java)策略模式依赖于继承，简单来说，各策略里面的实现封装一次，共同继承一个基类或者实现一个接口，然后一个策略工厂持有基类/接口对象，根据输入进行策略选择，得到对应的策略。业务方在使用时，应该首先用策略工厂获得需要的策略，然后调用策略的方法。 然而，第一，依然没有避免switch，只不过转移到了策略工厂里；第二，策略和策略工厂耦合。 GO实现GO没有继承，但有方法变量，不如把策">
 
 
 
@@ -124,7 +128,7 @@
 
 
 
-  <title>7-17技术笔记 | Arvense</title>
+  <title>go实现策略模式 | Arvense</title>
   
 
 
@@ -268,7 +272,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">7-17技术笔记</h1>
+          <h1 class="post-title" itemprop="name headline">go实现策略模式</h1>
         
 
         <div class="post-meta">
@@ -290,6 +294,28 @@
             
           </span>
 
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -318,7 +344,11 @@
       
 
       
-        
+        <h1 id="传统策略模式"><a href="#传统策略模式" class="headerlink" title="传统策略模式"></a>传统策略模式</h1><p>传统(Java)策略模式依赖于继承，简单来说，各策略里面的实现封装一次，共同继承一个基类或者实现一个接口，然后一个策略工厂持有基类/接口对象，根据输入进行策略选择，得到对应的策略。业务方在使用时，应该首先用策略工厂获得需要的策略，然后调用策略的方法。</p>
+<p>然而，第一，依然没有避免switch，只不过转移到了策略工厂里；第二，策略和策略工厂耦合。</p>
+<h1 id="GO实现"><a href="#GO实现" class="headerlink" title="GO实现"></a>GO实现</h1><p>GO没有继承，但有方法变量，不如把策略先存到一个Map里，即   [策略名]实现方法的映射，这样直接可以从map中取出方法进行调用</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"><span class="keyword">var</span> Strategy <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span></span><br><span class="line"><span class="function"><span class="title">func</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    Strategy := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span>)</span></span><br><span class="line"><span class="function">	<span class="title">Strategy</span>["<span class="title">update</span>"] = <span class="title">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"update table set ? = ?"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	Strategy[<span class="string">"insert"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"insert into table values(?,?,?,?)"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	Strategy[<span class="string">"delete"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"delete from table where ?=?"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	Strategy[<span class="string">"select"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"select ? from table where ?=?"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	Strategy[<span class="string">"insert"</span>]()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
       
     </div>
     
@@ -332,6 +362,14 @@
     
 
     <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/blog/tags/设计模式/" rel="tag"># 设计模式</a>
+          
+            <a href="/blog/tags/go/" rel="tag"># go</a>
+          
+        </div>
       
 
       
@@ -402,8 +440,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -470,6 +517,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#传统策略模式"><span class="nav-number">1.</span> <span class="nav-text">传统策略模式</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GO实现"><span class="nav-number">2.</span> <span class="nav-text">GO实现</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       

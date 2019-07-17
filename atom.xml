@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-07-17T09:02:28.272Z</updated>
+  <updated>2019-07-17T09:21:46.898Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -17,16 +17,29 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>7-17技术笔记</title>
+    <title>go实现策略模式</title>
     <link href="http://yoursite.com/blog/2019/07/17/7-17%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>http://yoursite.com/blog/2019/07/17/7-17技术笔记/</id>
     <published>2019-07-17T09:02:28.000Z</published>
-    <updated>2019-07-17T09:02:28.272Z</updated>
+    <updated>2019-07-17T09:21:46.898Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="传统策略模式"><a href="#传统策略模式" class="headerlink" title="传统策略模式"></a>传统策略模式</h1><p>传统(Java)策略模式依赖于继承，简单来说，各策略里面的实现封装一次，共同继承一个基类或者实现一个接口，然后一个策略工厂持有基类/接口对象，根据输入进行策略选择，得到对应的策略。业务方在使用时，应该首先用策略工厂获得需要的策略，然后调用策略的方法。</p><p>然而，第一，依然没有避免switch，只不过转移到了策略工厂里；第二，策略和策略工厂耦合。</p><h1 id="GO实现"><a href="#GO实现" class="headerlink" title="GO实现"></a>GO实现</h1><p>GO没有继承，但有方法变量，不如把策略先存到一个Map里，即   [策略名]实现方法的映射，这样直接可以从map中取出方法进行调用</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line"><span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"><span class="keyword">var</span> Strategy <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span></span><br><span class="line"><span class="function"><span class="title">func</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    Strategy := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span>)</span></span><br><span class="line"><span class="function"><span class="title">Strategy</span>["<span class="title">update</span>"] = <span class="title">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">fmt.Println(<span class="string">"update table set ? = ?"</span>)</span><br><span class="line">&#125;</span><br><span class="line">Strategy[<span class="string">"insert"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">fmt.Println(<span class="string">"insert into table values(?,?,?,?)"</span>)</span><br><span class="line">&#125;</span><br><span class="line">Strategy[<span class="string">"delete"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">fmt.Println(<span class="string">"delete from table where ?=?"</span>)</span><br><span class="line">&#125;</span><br><span class="line">Strategy[<span class="string">"select"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">fmt.Println(<span class="string">"select ? from table where ?=?"</span>)</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">Strategy[<span class="string">"insert"</span>]()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
     
     <summary type="html">
     
+      
+      
+        &lt;h1 id=&quot;传统策略模式&quot;&gt;&lt;a href=&quot;#传统策略模式&quot; class=&quot;headerlink&quot; title=&quot;传统策略模式&quot;&gt;&lt;/a&gt;传统策略模式&lt;/h1&gt;&lt;p&gt;传统(Java)策略模式依赖于继承，简单来说，各策略里面的实现封装一次，共同继承一个基类或者实现一个接口，然
+      
+    
     </summary>
     
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="设计模式" scheme="http://yoursite.com/blog/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"/>
+    
+      <category term="go" scheme="http://yoursite.com/blog/tags/go/"/>
     
   </entry>
   
