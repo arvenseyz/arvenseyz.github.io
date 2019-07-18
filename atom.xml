@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-07-17T09:21:46.898Z</updated>
+  <updated>2019-07-18T07:23:24.291Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,33 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>goMap和Slice细节</title>
+    <link href="http://yoursite.com/blog/2019/07/18/7-18%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2019/07/18/7-18技术笔记/</id>
+    <published>2019-07-18T06:08:30.000Z</published>
+    <updated>2019-07-18T07:23:24.291Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="Map实现"><a href="#Map实现" class="headerlink" title="Map实现"></a>Map实现</h1><h2 id="存储"><a href="#存储" class="headerlink" title="存储"></a>存储</h2><p>我看来go的Map综合了开放寻址法和拉链法。</p><p>核心在于分桶，存储kv数据的在两个桶的数组中，一个数据桶，一个额外数据桶。后者是用于拉链法来解决哈希冲突的。</p><p>每个桶中可以存八对kv，在桶中是使用开发寻址法，如果溢出，有指向对应的溢出桶的指针，这时是拉链法。</p><p>通过具体的访问过程可知。首先是计算哈希值，这样就找到了对应的桶（此处有旧桶新桶问题），然后进入桶中查找，和桶中已存的一一比较，如果没有，则看桶链接的下一个桶（如果存在）。</p><p>特色在于快速试错，桶中除了key和value的大小为8的各一个数组外，还有个topbits的数组，即该键值对哈希值的前八位，这样每次访问不用直接比较key，只用比较哈希值的前八位，就可以快速试错。</p><p>其实就像是一级缓存，它存储的是哈希最高的 8 位，而选择桶时使用了桶掩码使用的是最低的几位，这种方式能够帮助我们快速判断当前的键值对是否存在并且减少碰撞。</p><p>有一个问题，哪些类型可以作为key的类型，不能比较的比如函数当然不能，float64语法上能实际上不能吗，原因在于NAN（not a number)，NAN != NAN hash(NAN) != hash(NAN)，以及float64的不能精确存储。</p><h2 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h2><p>扩容就是新建一个两倍大的桶数组，然后数据搬迁过去。问题在于，哈希表过大时，搬迁成本很高，这里解决方法是，同时持有新旧两个数组，逐步搬迁。所以扩容是一个非阻塞的相对缓慢完成的一个过程。</p><p>扩容原因有两个，装载因子过大，或者溢出桶太多。两种情况下扩容方法不一样。</p><p>后者与其说扩容，不如说重整，即是<strong>不改变大小的扩容动作</strong>。而前者会扩容到两倍。</p><p>造成溢出桶数量过多的原因有两种：其一，反复进行插入再删除。先插入一些元素，溢出桶创建了一些，但还没到达负载因子，再把这些元素删了然后又插入一些元素，溢出桶又创建了一些，反复进行后，最后造成负载桶都很空旷，溢出桶中有元素。</p><p>这种情况下，原大小扩容，将老 bucket 中的元素移动到新 bucket。这样，原来在 overflow bucket 中的 key 可以移动到 负载的bucket 中来。</p><p>第二种情况，插入的元素的哈希取模都一样，也就是说，所有的扩容桶都是同一个桶扩的容，这样哈希表退化成了链表，并且该原地扩容无法解决该问题。但造成该问题的原因不在扩容或者负载上，是哈希函数不好。</p><p>扩容完后不会搬迁，真正的搬迁工作，在插入或修改、删除 key 的时候，都会尝试进行搬迁 buckets 的工作。主要是申请到了新的 buckets 空间，然后把相关的标志位都进行了处理：例如标志 nevacuate 被置为 0， 表示当前搬迁进度为 0。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;Map实现&quot;&gt;&lt;a href=&quot;#Map实现&quot; class=&quot;headerlink&quot; title=&quot;Map实现&quot;&gt;&lt;/a&gt;Map实现&lt;/h1&gt;&lt;h2 id=&quot;存储&quot;&gt;&lt;a href=&quot;#存储&quot; class=&quot;headerlink&quot; title=&quot;存储&quot;&gt;&lt;/a&gt;存
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="映射" scheme="http://yoursite.com/blog/tags/%E6%98%A0%E5%B0%84/"/>
+    
+      <category term="go" scheme="http://yoursite.com/blog/tags/go/"/>
+    
+  </entry>
   
   <entry>
     <title>go实现策略模式</title>
@@ -495,32 +522,6 @@
     
     
       <category term="Go" scheme="http://yoursite.com/blog/tags/Go/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>SSL工作原理</title>
-    <link href="http://yoursite.com/blog/2019/05/23/5-23%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/05/23/5-23技术笔记/</id>
-    <published>2019-05-23T05:50:31.000Z</published>
-    <updated>2019-05-23T06:17:26.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>SSL即HTTPS中的S，即在传输过程中对信息加密，简单来说用非对称加密的方式加密对称加密的密钥。</p><h2 id="加密方式"><a href="#加密方式" class="headerlink" title="加密方式"></a>加密方式</h2><p>信息采用对称加密的方式进行加密，采用对称加密，首先双方应该同时持有密钥。</p><p>保证双方安全的持有同一套密钥的方法是，将客户端将对称密钥，进行非对称加密后，发送给服务器，服务器用私钥进行解密即可。</p><h2 id="消息完整性验证"><a href="#消息完整性验证" class="headerlink" title="消息完整性验证"></a>消息完整性验证</h2><p>对了保证信息在传输过程中没有被篡改，使用MAC算法，即SHA或者MD5，算出消息的MAC值，双方需要核对MAC值。</p><h2 id="保证公钥的真实性"><a href="#保证公钥的真实性" class="headerlink" title="保证公钥的真实性"></a>保证公钥的真实性</h2><p>为了避免别人伪装告诉公钥，采用PKI保证公钥真实性。</p><p>PKI是即数字证书。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;SSL即HTTPS中的S，即在传输过程中对信息加密，简单来说用非对称加密的方式加密对称加密的密钥。&lt;/p&gt;
-&lt;h2 id=&quot;加密方式&quot;&gt;&lt;a href=&quot;#加密方式&quot; class=&quot;headerlink&quot; title=&quot;加密方式&quot;&gt;&lt;/a&gt;加密方式&lt;/h2&gt;&lt;p&gt;信息采用对
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="计算机网络" scheme="http://yoursite.com/blog/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
     
   </entry>
   

@@ -251,6 +251,168 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/06/9-6技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/09/06/9-6技术笔记-1/" itemprop="url">适配器模式，桥接模式</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-06T20:14:09+08:00">
+                2018-09-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="桥接模式"><a href="#桥接模式" class="headerlink" title="桥接模式"></a>桥接模式</h1><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>对象在分类或者说继承关系上有多个维度，比如说笔既可以分成铅笔钢笔毛笔，也可以分成黑色红色蓝色。这时用n*m中分类太过于复杂，则找出其中一个属性，做抽象类基类，其他属性做接口。  </p>
+<h2 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h2><p>就笔而言。  </p>
+<ol>
+<li><p>基类是笔，并且持有所有属性接口的对象，即有颜色接口。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Pen &#123;</span><br><span class="line">    protected Coler coler;</span><br><span class="line">    Pen(Coler coler)&#123;</span><br><span class="line">        this.coler=coler;</span><br><span class="line">    &#125;</span><br><span class="line">    public abstract void draw();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>钢笔，毛笔，铅笔分别继承笔类，实现其中抽象方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class GangPen extends Pen &#123;</span><br><span class="line">    GangPen(Coler coler)&#123;</span><br><span class="line">        super(coler);</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public void draw() &#123;</span><br><span class="line">        coler.point();</span><br><span class="line">        System.out.println(&quot;钢笔&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>颜色属性作为一个接口。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public interface Coler &#123;</span><br><span class="line">    public void point();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>各个颜色实现颜色接口</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public class RedColer implements Coler &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void point() &#123;</span><br><span class="line">        System.out.println(&quot;red&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用时接口对象和实体对象构造</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public class WeUse &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Coler coler = new RedColer();</span><br><span class="line">        Pen pen = new GangPen(coler);</span><br><span class="line">        pen.draw();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h1 id="适配器模式"><a href="#适配器模式" class="headerlink" title="适配器模式"></a>适配器模式</h1><h2 id="使用场景-1"><a href="#使用场景-1" class="headerlink" title="使用场景"></a>使用场景</h2><p>就是把别人的东西封装起来，变成自己的东西。用户使用适配器调用我们的方法，其实我们的方法里调用了别人的方法。</p>
+<h2 id="使用方法-1"><a href="#使用方法-1" class="headerlink" title="使用方法"></a>使用方法</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public class OpreateAdapter implements OperateMy&#123;</span><br><span class="line">    private OperateApi operateApi; //别人的实现方法类</span><br><span class="line">    @Override</span><br><span class="line">    public void oper() &#123;</span><br><span class="line">        operateApi=new OperateApi();</span><br><span class="line">        operateApi.operApi();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/06/9-6技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1613,154 +1775,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/23/8-23技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/08/23/8-23技术笔记/" itemprop="url">Go函数与接口</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-23T14:00:18+08:00">
-                2018-08-23
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="函数和方法"><a href="#函数和方法" class="headerlink" title="函数和方法"></a>函数和方法</h1><p>Go中，函数和方法是不同的，可以认为函数是没有接受者的方法，方法的接收者放在 func 关键字和函数名之间。接收者可以是结构体类型或非结构体类型。可以在方法内部访问接收者。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">func (t Type) methodName(parameter list) &#123;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>同名方法可以定义在不同的类型上</p>
-<h1 id="指针接收者-vs-值接收者"><a href="#指针接收者-vs-值接收者" class="headerlink" title="指针接收者 vs. 值接收者"></a>指针接收者 vs. 值接收者</h1><p>目前为止我们看到的都是以值作为接收者。以指针为接收者也是可以的。两者的区别在于，以指针作为接收者时，方法内部对其的修改对于调用者是可见的，但是以值作为接收者却不是。简单来说，就是按值传递和按指针传递。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">)</span><br><span class="line">type Employee struct &#123;</span><br><span class="line">	name string</span><br><span class="line">	age  int</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (e Employee) changeName(newName string) &#123;  //按值传递</span><br><span class="line">	e.name = newName</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (e *Employee) changeAge(newAge int) &#123;  //按值传递按应用传递</span><br><span class="line">	e.age = newAge</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	e := Employee&#123;</span><br><span class="line">		name: &quot;未修改&quot;,</span><br><span class="line">		age:  50,</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Printf(&quot;Employee name before change: %s&quot;, e.name)</span><br><span class="line">	e.changeName(&quot;修改&quot;)</span><br><span class="line">	fmt.Printf(&quot;\nEmployee name after change: %s&quot;, e.name)</span><br><span class="line"></span><br><span class="line">	fmt.Printf(&quot;\n\nEmployee age before change: %d&quot;, e.age)</span><br><span class="line">	(&amp;e).changeAge(51)</span><br><span class="line">	fmt.Printf(&quot;\nEmployee age after change: %d&quot;, e.age)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h1 id="类型等价定义"><a href="#类型等价定义" class="headerlink" title="类型等价定义"></a>类型等价定义</h1><p>意义在于，type绝不只是用于定义一系列的别名。还可以针对新类型定义方法。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">type name string</span><br><span class="line"></span><br><span class="line">func (n name) len() int &#123;</span><br><span class="line">	return len(n)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	var myname name = &quot;taozs&quot; //其实就是字符串类型</span><br><span class="line">	l := []byte(myname) //字符串转字节数组</span><br><span class="line">	fmt.Println(len(l)) //字节长度</span><br><span class="line">	fmt.Println(myname.len()) //调用对象的方法</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h2><p>如果一个方法实现了某接口，则视为其接受者实现了该接口。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">type info interface &#123;</span><br><span class="line">	CalculateSalary() int</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type Permanent struct &#123;</span><br><span class="line">	id1 int</span><br><span class="line">	id2 int</span><br><span class="line">&#125;</span><br><span class="line">type Contract struct &#123;</span><br><span class="line">	id int</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (p Permanent) CalculateSalary() int &#123;</span><br><span class="line">	return p.id1 + p.id2</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (c Contract) CalculateSalary() int &#123;</span><br><span class="line">	return c.id</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func totalExpense(s []info) &#123;</span><br><span class="line">	expense := 0</span><br><span class="line">	for _, v := range s &#123;</span><br><span class="line">		expense = expense + v.CalculateSalary()</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Printf(&quot;Total Expense  $%d&quot;, expense)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	pemp1 := Permanent&#123;1, 2&#125;</span><br><span class="line">	pemp2 := Permanent&#123;3, 1&#125;</span><br><span class="line">	cemp1 := Contract&#123;3&#125;</span><br><span class="line">	people := []info&#123;pemp1, pemp2, cemp1&#125;</span><br><span class="line">	totalExpense(people)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h1 id="空接口"><a href="#空接口" class="headerlink" title="空接口"></a>空接口</h1><p>一个没有声明任何方法的接口称为空接口。空接口表示为 interface{}。因为空接口没有方法，因此所有类都都实现了空接口。<br>使用空接口实现了重载的效果<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (  </span><br><span class="line">    &quot;fmt&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func describe(i interface&#123;&#125;) &#123;  </span><br><span class="line">    fmt.Printf(&quot;Type = %T, value = %v\n&quot;, i, i)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;  </span><br><span class="line">    s := &quot;Hello World&quot;</span><br><span class="line">    describe(s)</span><br><span class="line">    i := 55</span><br><span class="line">    describe(i)</span><br><span class="line">    strt := struct &#123;</span><br><span class="line">        name string</span><br><span class="line">    &#125;&#123;</span><br><span class="line">        name: &quot;Naveen R&quot;,</span><br><span class="line">    &#125;</span><br><span class="line">    describe(strt)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>上面程序的第7行，describe(i interface{}) 函数接受一个空接口作为参数，因此任何值都可以传递给它。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1811,7 +1825,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">172</span>
+                  <span class="site-state-item-count">173</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
