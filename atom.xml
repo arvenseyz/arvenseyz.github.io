@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-07-18T07:23:24.291Z</updated>
+  <updated>2019-07-23T13:20:09.386Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -17,11 +17,36 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>goMap和Slice细节</title>
+    <title>goSlcie细节</title>
+    <link href="http://yoursite.com/blog/2019/07/23/7-23%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2019/07/23/7-23技术笔记/</id>
+    <published>2019-07-23T13:18:59.000Z</published>
+    <updated>2019-07-23T13:20:09.386Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="List"><a href="#List" class="headerlink" title="List"></a>List</h1><h2 id="nil切片与空切片"><a href="#nil切片与空切片" class="headerlink" title="nil切片与空切片"></a>nil切片与空切片</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> s1 []<span class="keyword">int</span></span><br><span class="line"><span class="keyword">var</span> s2 = *<span class="built_in">new</span>([]<span class="keyword">int</span>)</span><br><span class="line"><span class="keyword">var</span> s3 = <span class="built_in">make</span>([]<span class="keyword">int</span>, <span class="number">0</span>)</span><br><span class="line"><span class="keyword">var</span> s4 = []<span class="keyword">int</span>&#123;&#125;</span><br></pre></td></tr></table></figure><p>前两者是nil切片，==nil。</p><p>后两者是空切片，!=nil，数据指针都指向同一个地址 <code>0xc42003bda0</code></p><p>四者的len都是0，所以应该用len(list)==0来判断返回值。</p><h2 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h2><p>扩容规则并不是网传的小于1024两倍，大于1024就1.25倍这么简单</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">s := []<span class="keyword">int</span>&#123;<span class="number">1</span>,<span class="number">2</span>&#125;</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">fmt.Printf(<span class="string">"%d %d    \n"</span>,<span class="built_in">len</span>(s),<span class="built_in">cap</span>(s))</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">fmt.Printf(<span class="string">"%d %d"</span>,<span class="built_in">len</span>(s),<span class="built_in">cap</span>(s))</span><br></pre></td></tr></table></figure><p>输出并不是5 8 11 16</p><p>而是5 6 11 12</p><h4 id="基于cap的增长规则"><a href="#基于cap的增长规则" class="headerlink" title="基于cap的增长规则"></a>基于cap的增长规则</h4><p>根本问题在于，可能扩容后依然不够装，为了避免这个问题，当简单规则计算后，仍不够装时，会采用基于cap的增长规则。</p><p>1.计算新cap,以例子为例，翻倍仍不够，新cap是2+3=5；</p><p>2.内存对齐，内存对齐，简单来说需要多少个8（小于1024）/128（大于1024）字节，可以内存对齐，这里是6个。具体来说，一共五个数，每个数的指针大小为8（64位机），先算出空间40，算出实际需要索引4，然后查一个内存对齐表，索引4处值为48，48即6。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;List&quot;&gt;&lt;a href=&quot;#List&quot; class=&quot;headerlink&quot; title=&quot;List&quot;&gt;&lt;/a&gt;List&lt;/h1&gt;&lt;h2 id=&quot;nil切片与空切片&quot;&gt;&lt;a href=&quot;#nil切片与空切片&quot; class=&quot;headerlink&quot; title=
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="go" scheme="http://yoursite.com/blog/tags/go/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>goMap细节</title>
     <link href="http://yoursite.com/blog/2019/07/18/7-18%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>http://yoursite.com/blog/2019/07/18/7-18技术笔记/</id>
     <published>2019-07-18T06:08:30.000Z</published>
-    <updated>2019-07-18T07:23:24.291Z</updated>
+    <updated>2019-07-23T13:20:23.593Z</updated>
     
     <content type="html"><![CDATA[<h1 id="Map实现"><a href="#Map实现" class="headerlink" title="Map实现"></a>Map实现</h1><h2 id="存储"><a href="#存储" class="headerlink" title="存储"></a>存储</h2><p>我看来go的Map综合了开放寻址法和拉链法。</p><p>核心在于分桶，存储kv数据的在两个桶的数组中，一个数据桶，一个额外数据桶。后者是用于拉链法来解决哈希冲突的。</p><p>每个桶中可以存八对kv，在桶中是使用开发寻址法，如果溢出，有指向对应的溢出桶的指针，这时是拉链法。</p><p>通过具体的访问过程可知。首先是计算哈希值，这样就找到了对应的桶（此处有旧桶新桶问题），然后进入桶中查找，和桶中已存的一一比较，如果没有，则看桶链接的下一个桶（如果存在）。</p><p>特色在于快速试错，桶中除了key和value的大小为8的各一个数组外，还有个topbits的数组，即该键值对哈希值的前八位，这样每次访问不用直接比较key，只用比较哈希值的前八位，就可以快速试错。</p><p>其实就像是一级缓存，它存储的是哈希最高的 8 位，而选择桶时使用了桶掩码使用的是最低的几位，这种方式能够帮助我们快速判断当前的键值对是否存在并且减少碰撞。</p><p>有一个问题，哪些类型可以作为key的类型，不能比较的比如函数当然不能，float64语法上能实际上不能吗，原因在于NAN（not a number)，NAN != NAN hash(NAN) != hash(NAN)，以及float64的不能精确存储。</p><h2 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h2><p>扩容就是新建一个两倍大的桶数组，然后数据搬迁过去。问题在于，哈希表过大时，搬迁成本很高，这里解决方法是，同时持有新旧两个数组，逐步搬迁。所以扩容是一个非阻塞的相对缓慢完成的一个过程。</p><p>扩容原因有两个，装载因子过大，或者溢出桶太多。两种情况下扩容方法不一样。</p><p>后者与其说扩容，不如说重整，即是<strong>不改变大小的扩容动作</strong>。而前者会扩容到两倍。</p><p>造成溢出桶数量过多的原因有两种：其一，反复进行插入再删除。先插入一些元素，溢出桶创建了一些，但还没到达负载因子，再把这些元素删了然后又插入一些元素，溢出桶又创建了一些，反复进行后，最后造成负载桶都很空旷，溢出桶中有元素。</p><p>这种情况下，原大小扩容，将老 bucket 中的元素移动到新 bucket。这样，原来在 overflow bucket 中的 key 可以移动到 负载的bucket 中来。</p><p>第二种情况，插入的元素的哈希取模都一样，也就是说，所有的扩容桶都是同一个桶扩的容，这样哈希表退化成了链表，并且该原地扩容无法解决该问题。但造成该问题的原因不在扩容或者负载上，是哈希函数不好。</p><p>扩容完后不会搬迁，真正的搬迁工作，在插入或修改、删除 key 的时候，都会尝试进行搬迁 buckets 的工作。主要是申请到了新的 buckets 空间，然后把相关的标志位都进行了处理：例如标志 nevacuate 被置为 0， 表示当前搬迁进度为 0。</p>]]></content>
     
@@ -488,32 +513,6 @@
       
       
         &lt;h2 id=&quot;并发获取多个网页内容&quot;&gt;&lt;a href=&quot;#并发获取多个网页内容&quot; class=&quot;headerlink&quot; title=&quot;并发获取多个网页内容&quot;&gt;&lt;/a&gt;并发获取多个网页内容&lt;/h2&gt;&lt;p&gt;首先是http包，使用其函数http.Get()，就可以直接进行http请求
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="Go" scheme="http://yoursite.com/blog/tags/Go/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>函数式编程</title>
-    <link href="http://yoursite.com/blog/2019/05/24/5-24%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/05/24/5-24技术笔记/</id>
-    <published>2019-05-24T06:14:00.000Z</published>
-    <updated>2019-06-30T08:56:08.173Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="一等公民"><a href="#一等公民" class="headerlink" title="一等公民"></a>一等公民</h1><p>“一等公民”意味着函数可以像普通的类型（整型、字符串等）一样进行赋值、作为函数的参数传递、作为函数的返回值等。</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> f = <span class="function"><span class="keyword">func</span><span class="params">(<span class="keyword">int</span>)</span></span> &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    f = <span class="function"><span class="keyword">func</span><span class="params">(i <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">        fmt.Println(i)</span><br><span class="line">    &#125;</span><br><span class="line">    f(<span class="number">2</span>)</span><br><span class="line">    f = <span class="function"><span class="keyword">func</span><span class="params">(i <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">        fmt.Println(i * i * i)</span><br><span class="line">    &#125;</span><br><span class="line">    f(<span class="number">2</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">输出:</span></span><br><span class="line"><span class="comment">2</span></span><br><span class="line"><span class="comment">8</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure><p>f是一个函数类型的变量，这样可以随时更改其函数功能。</p><h1 id="闭包"><a href="#闭包" class="headerlink" title="闭包"></a>闭包</h1><p>闭包是匿名函数与匿名函数所引用环境的<strong>组合</strong>。匿名函数有动态创建的特性，该特性使得匿名函数不用通过参数传递的方式，就可以直接引用外部的变量。这就类似于常规函数直接使用全局变量一样，个人理解为：匿名函数和它引用的变量以及环境，类似常规函数引用全局变量处于一个包的环境。</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    n := <span class="number">0</span></span><br><span class="line">    f := <span class="function"><span class="keyword">func</span><span class="params">()</span> <span class="title">int</span></span> &#123;</span><br><span class="line">        n += <span class="number">1</span></span><br><span class="line">        <span class="keyword">return</span> n</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(f())  <span class="comment">// 别忘记括号，不加括号相当于地址</span></span><br><span class="line">    fmt.Println(f())</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">输出：</span></span><br><span class="line"><span class="comment">1</span></span><br><span class="line"><span class="comment">2</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure><p>类似于常规函数持有全局变量，匿名函数f持有main()中的局部变量n，重要的是，同时对n可以有所操作。</p><h1 id="函数返回值"><a href="#函数返回值" class="headerlink" title="函数返回值"></a>函数返回值</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">adder</span><span class="params">()</span> <span class="title">func</span><span class="params">(<span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">    sum := <span class="number">0</span></span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(v <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">        sum += v</span><br><span class="line">        <span class="keyword">return</span> sum</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := adder() </span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">        <span class="keyword">var</span> s <span class="keyword">int</span></span><br><span class="line">        s, a = a(i)</span><br><span class="line">        fmt.Printf(<span class="string">"0 + 1 + ... + %d = %d\n"</span>,</span><br><span class="line">            i, s)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>a是函数变量adder()，其中持有匿名内部类闭包，a(i)即调用其闭包。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;一等公民&quot;&gt;&lt;a href=&quot;#一等公民&quot; class=&quot;headerlink&quot; title=&quot;一等公民&quot;&gt;&lt;/a&gt;一等公民&lt;/h1&gt;&lt;p&gt;“一等公民”意味着函数可以像普通的类型（整型、字符串等）一样进行赋值、作为函数的参数传递、作为函数的返回值等。&lt;/p&gt;
-&lt;f
       
     
     </summary>

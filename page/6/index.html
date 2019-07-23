@@ -251,6 +251,160 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/03/21/leetcode33-39/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/03/21/leetcode33-39/" itemprop="url">数组元素组成目标值，</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-03-21T14:04:10+08:00">
+                2019-03-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/leetcode/" itemprop="url" rel="index">
+                    <span itemprop="name">leetcode</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="39"><a href="#39" class="headerlink" title="39"></a>39</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>给一个目标值，和一个数组，数组里元素可以重复用，求所有构成目标值方法。</p>
+<p>其实实际场景就是，找钱问题啦。17块可以是10块+5块+2块，也可以是5块+5块+5块+2块，也可以是10块+5块+1块+1块。</p>
+<p><strong>Input:</strong> candidates = [2,3,6,7], target = 7,<br><strong>A solution set is:</strong><br>[<br>  [7],<br>  [2,2,3]<br>]</p>
+<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><p>求一个解是贪心，求所有解当然是搜索，那么是深搜还是广搜呢，这么想，每选择一个元素，下一步有再选个重复的和不选两种选择。深搜回溯可解。</p>
+<p>另一种深搜的写法，是从第几个开始取。</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> List&lt;List&lt;Integer&gt;&gt; combinationSum(<span class="keyword">int</span>[] candidates, <span class="keyword">int</span> target) &#123;</span><br><span class="line">    List&lt;List&lt;Integer&gt;&gt; res = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">    <span class="keyword">if</span> (candidates == <span class="keyword">null</span> || candidates.length == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> res;</span><br><span class="line">    &#125;</span><br><span class="line">    Arrays.sort(candidates);</span><br><span class="line">    List&lt;Integer&gt; comb = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">    dfs(res, comb, candidates, target, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">dfs</span><span class="params">(List&lt;List&lt;Integer&gt;&gt; res, List&lt;Integer&gt; comb, <span class="keyword">int</span>[] candidates, <span class="keyword">int</span> target, <span class="keyword">int</span> pos)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(pos&gt;candidates.length||target&lt;=<span class="number">0</span>)&#123;</span><br><span class="line">        <span class="keyword">if</span>(target==<span class="number">0</span>)&#123;</span><br><span class="line">            res.add(comb);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//不选这个元素</span></span><br><span class="line"></span><br><span class="line">    dfs(res,comb,candidates,target,pos+<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//选这个元素        </span></span><br><span class="line"></span><br><span class="line">    comb.add(candidates[pos]);</span><br><span class="line">    dfs(res,comb,candidates,target-candidates[pos],pos);</span><br><span class="line">    <span class="comment">//回溯</span></span><br><span class="line"></span><br><span class="line">    comb.remove(comb.size() - <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> List&lt;List&lt;Integer&gt;&gt; combinationSum(<span class="keyword">int</span>[] candidates, <span class="keyword">int</span> target) &#123;</span><br><span class="line">        List&lt;List&lt;Integer&gt;&gt; ans = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        dfsHelper(candidates, <span class="number">0</span>, target, <span class="keyword">new</span> ArrayList&lt;&gt;(), ans);</span><br><span class="line">        <span class="keyword">return</span> ans;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">dfsHelper</span><span class="params">(<span class="keyword">int</span>[] candidates, <span class="keyword">int</span> index, <span class="keyword">int</span> target, List&lt;Integer&gt; path,  List&lt;List&lt;Integer&gt;&gt; ans)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (index &gt;= candidates.length || target &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (target == <span class="number">0</span>) &#123;</span><br><span class="line">                ans.add(<span class="keyword">new</span> ArrayList&lt;&gt;(path));</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = index; i &lt; candidates.length; i++) &#123;</span><br><span class="line">            path.add(candidates[i]);</span><br><span class="line">            dfsHelper(candidates, i, target - candidates[i], path, ans);</span><br><span class="line">            path.remove(path.size() - <span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h1 id="33"><a href="#33" class="headerlink" title="33"></a>33</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>从一个先有序然后旋转后的数组，找到元素。</p>
+<p>定义下旋转，其实就是从中间截断，后面放前面，前面放后面。</p>
+<p>123456-》456123</p>
+<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>先找到旋转点，然后在旋转点左右分别二分查找即可。</p>
+<p>找到旋转点的过程本身就是二分搜索，旋转点所在的区间，有这样的特点，左端点比右断点大。通过这个可以二分找到。</p>
+<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">search</span><span class="params">(<span class="keyword">int</span>[] nums, <span class="keyword">int</span> target)</span> </span>&#123;</span><br><span class="line">       <span class="keyword">if</span> (nums.length==<span class="number">0</span>) <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">     <span class="keyword">int</span> flag = getIndex(nums);</span><br><span class="line">     <span class="keyword">int</span> l = <span class="number">0</span>,r = nums.length,mid;</span><br><span class="line">     <span class="keyword">if</span> (target &gt;= nums[<span class="number">0</span>])&#123; <span class="comment">//目标值落在左半递增区间</span></span><br><span class="line">         l = <span class="number">0</span>;</span><br><span class="line">         r = flag;</span><br><span class="line">     &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (target &lt; nums[<span class="number">0</span>])&#123;<span class="comment">//目标值落在右半递增区间</span></span><br><span class="line">         l = flag + <span class="number">1</span>;</span><br><span class="line">         r = nums.length - <span class="number">1</span>;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">while</span> (l &lt;= r)&#123;<span class="comment">//在递增区间内使用二分查找找到目标值</span></span><br><span class="line">         mid = l + (r - l) / <span class="number">2</span>;</span><br><span class="line">         <span class="keyword">if</span> (nums[mid] &gt; target) &#123;</span><br><span class="line">             r = mid - <span class="number">1</span>;</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="keyword">if</span> (nums[mid] &lt; target) &#123;</span><br><span class="line">             l = mid + <span class="number">1</span>;</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="keyword">if</span> (nums[mid] == target) &#123;</span><br><span class="line">             <span class="keyword">return</span> mid;</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">return</span> -<span class="number">1</span>;<span class="comment">//如果找不到的</span></span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">getIndex</span><span class="params">(<span class="keyword">int</span>[] nums)</span> </span>&#123;</span><br><span class="line">     <span class="keyword">int</span> l = <span class="number">0</span>, r = nums.length - <span class="number">1</span>, flag = -<span class="number">1</span>;</span><br><span class="line">     <span class="keyword">while</span> (l&lt;r)&#123;</span><br><span class="line">         <span class="keyword">if</span>(nums[l]&lt;nums[r])&#123;</span><br><span class="line">             <span class="keyword">break</span>;</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="keyword">else</span> &#123;</span><br><span class="line">             <span class="keyword">int</span> mid = l+(r-l)/<span class="number">2</span>;</span><br><span class="line">             <span class="keyword">if</span>(nums[mid]&gt;nums[l])&#123;</span><br><span class="line">                 l=mid;</span><br><span class="line">             &#125;</span><br><span class="line">             <span class="keyword">else</span> <span class="keyword">if</span>(nums[mid]&lt;=nums[l])&#123;</span><br><span class="line">                 r=mid-<span class="number">1</span>;</span><br><span class="line">             &#125;</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">return</span> (l &lt; r ? r : l);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/03/18/leetcode26-29/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1652,155 +1806,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/02/28/2-28技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/02/28/2-28技术笔记/" itemprop="url">手写AOP</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-28T15:12:44+08:00">
-                2019-02-28
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="注解"><a href="#注解" class="headerlink" title="注解"></a>注解</h1><p>首先当然是AOP的两个注解，一个@Aspect说明这个类是切面，第二个是@Pointcut来定义切点。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME) <span class="comment">//保留时间长短</span></span><br><span class="line"><span class="meta">@Target</span>(value = &#123;ElementType.TYPE&#125;)<span class="comment">//使用范围、接口、类、枚举、注解</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Aspect &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)<span class="comment">//保留时间长短</span></span><br><span class="line"><span class="meta">@Target</span>(value = &#123;ElementType.METHOD&#125;) <span class="comment">//使用范围 方法</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> PointCut &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 全类名_方法名</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function">String <span class="title">value</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>至于@before等注解，都是次级的。</p>
-<h1 id="ApplicationContext"><a href="#ApplicationContext" class="headerlink" title="ApplicationContext"></a>ApplicationContext</h1><p>具体怎么做呢？基本思想就是，为每一个切面所切入的类创建代理类，代理类来执行。那么区别就是，上下文里存放的不是被代理的类，而是操纵类。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationContext</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 存放代理类的集合</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> ConcurrentHashMap&lt;String,Object&gt; proxyBeanMap = <span class="keyword">new</span> ConcurrentHashMap&lt;String, Object&gt;();</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">            initAopBeanMap(<span class="string">"com.example.writeaopdemo.domain"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 初始化容器</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> basePath</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">initAopBeanMap</span><span class="params">(String basePath)</span></span>&#123;</span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            Set&lt;Class&lt;?&gt;&gt; classSet = ClassUtil.getClassSet(basePath);</span><br><span class="line">            <span class="keyword">for</span>(Class clazz : classSet)&#123;</span><br><span class="line">                <span class="keyword">if</span>(clazz.isAnnotationPresent(Aspect.class))&#123;</span><br><span class="line">                    Method[] methods = clazz.getMethods();</span><br><span class="line">                    <span class="keyword">for</span>(Method method : methods)&#123;</span><br><span class="line">                        <span class="keyword">if</span>(method.isAnnotationPresent(PointCut.class))&#123;</span><br><span class="line">                            <span class="comment">//找到切点</span></span><br><span class="line">                            PointCut pointCut = (PointCut)method.getAnnotations()[<span class="number">0</span>];</span><br><span class="line">                            String pointCutStr = pointCut.value();</span><br><span class="line">                            <span class="comment">//System.out.println("pointCutStr:" + pointCutStr);</span></span><br><span class="line">                            String[] pointCutArr = pointCutStr.split(<span class="string">"_"</span>);</span><br><span class="line">                            <span class="comment">//被代理的类名</span></span><br><span class="line">                            String className = pointCutArr[<span class="number">0</span>];</span><br><span class="line">                            <span class="comment">//System.out.println("className:" + className);</span></span><br><span class="line">                            <span class="comment">//被代理的方法名</span></span><br><span class="line">                            String methodName = pointCutArr[<span class="number">1</span>];</span><br><span class="line">                           <span class="comment">// System.out.println("methodName:" + methodName);</span></span><br><span class="line"></span><br><span class="line">                            <span class="comment">//根据切点 创建被代理对象</span></span><br><span class="line">                            Object targeObj = ReflectionUtil.newInstance(className);</span><br><span class="line">                            <span class="comment">//根据切面类创建代理者</span></span><br><span class="line">                            AbsMethodAdvance proxyer = (AbsMethodAdvance)ReflectionUtil.newInstance(clazz);</span><br><span class="line">                            <span class="comment">//设置代理的方法</span></span><br><span class="line">                            proxyer.setProxyMethodName(methodName);</span><br><span class="line"></span><br><span class="line">                            Object object = proxyer.createProxyObject(targeObj);</span><br><span class="line"></span><br><span class="line">                            <span class="keyword">if</span>(object != <span class="keyword">null</span>)&#123;</span><br><span class="line">                                proxyBeanMap.put(targeObj.getClass().getSimpleName().toLowerCase(),object);</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;<span class="keyword">catch</span> (Exception e)&#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="代理"><a href="#代理" class="headerlink" title="代理"></a>代理</h1><p>使用反射的方法，在被拦截方法的前后，执行切面的doAfter和doBefore方法。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbsMethodAdvance</span> <span class="keyword">implements</span> <span class="title">MethodInterceptor</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 要被代理的对象</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> Object targetObject;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 被代理的方法名</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> String proxyMethodName;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">createProxyObject</span><span class="params">(Object target)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.targetObject = target;</span><br><span class="line">        <span class="comment">//该类用于生成代理对象</span></span><br><span class="line">        Enhancer enhancer = <span class="keyword">new</span> Enhancer();</span><br><span class="line">        <span class="comment">//设置目标类为代理对象的父类</span></span><br><span class="line">        enhancer.setSuperclass(<span class="keyword">this</span>.targetObject.getClass());</span><br><span class="line">        <span class="comment">//设置回调用对象为本身</span></span><br><span class="line">        enhancer.setCallback(<span class="keyword">this</span>);</span><br><span class="line">        <span class="keyword">return</span> enhancer.create();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">intercept</span><span class="params">(Object proxy, Method method, Object[] args, MethodProxy methodProxy)</span> <span class="keyword">throws</span> Throwable</span>&#123;</span><br><span class="line">        Object result;</span><br><span class="line"></span><br><span class="line">        String proxyMethod = getProxyMethodName();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(StringUtils.isNotBlank(proxyMethod) &amp;&amp; proxyMethod.equals(method.getName()))&#123;</span><br><span class="line">            doBefore();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//执行拦截的方法</span></span><br><span class="line">        result = methodProxy.invokeSuper(proxy,args);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(StringUtils.isNotBlank(proxyMethod) &amp;&amp; proxyMethod.equals(method.getName()))&#123;</span><br><span class="line">            doAfter();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">doBefore</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">doAfter</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getProxyMethodName</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> proxyMethodName;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setProxyMethodName</span><span class="params">(String proxyMethodName)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.proxyMethodName = proxyMethodName;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1851,7 +1856,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">173</span>
+                  <span class="site-state-item-count">174</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

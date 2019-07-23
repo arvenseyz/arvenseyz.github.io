@@ -251,6 +251,181 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/07/9-7技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/09/07/9-7技术笔记/" itemprop="url">组合模式，装饰模式</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-07T15:10:58+08:00">
+                2018-09-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="组合模式"><a href="#组合模式" class="headerlink" title="组合模式"></a>组合模式</h1><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>实体对象是树状结构，比如文件目录，公司架构。即有分支节点，也有叶子节点。</p>
+<h2 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h2><ol>
+<li><p>抽象基类</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">abstract class Node &#123;</span><br><span class="line">    public abstract void add(Node c); //增加成员</span><br><span class="line">    public abstract void remove(Node c); //删除成员</span><br><span class="line">    public abstract Node getChild(int i); //获取成员</span><br><span class="line">    public abstract void operation();  //业务方法</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>叶子节点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">public class LeafNode extends Node&#123;</span><br><span class="line">    public void add(Node c) &#123;</span><br><span class="line">        //异常处理或错误提示</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void remove(Node c) &#123;</span><br><span class="line">        //异常处理或错误提示</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public Node getChild(int i) &#123;</span><br><span class="line">        //异常处理或错误提示</span><br><span class="line">        return null;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void operation() &#123;</span><br><span class="line">        //叶子构件具体业务方法的实现</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>分支节点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">public class BranchNode extends Node&#123;</span><br><span class="line">    private ArrayList&lt;Node&gt; list = new ArrayList&lt;Node&gt;();</span><br><span class="line"></span><br><span class="line">    public void add(Node c) &#123;</span><br><span class="line">        list.add(c);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void remove(Node c) &#123;</span><br><span class="line">        list.remove(c);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public Node getChild(int i) &#123;</span><br><span class="line">        return (Node)list.get(i);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void operation() &#123;</span><br><span class="line">        //容器构件具体业务方法的实现</span><br><span class="line">        //递归调用成员构件的业务方法</span><br><span class="line">        for(Node obj:list) &#123;</span><br><span class="line">            obj.operation();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>操作使用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[] args)&#123;</span><br><span class="line">Node node1,node2,node3;</span><br><span class="line">node1=new BranchNode();</span><br><span class="line">node2=new LeafNode();</span><br><span class="line">node3=new LeafNode();</span><br><span class="line">node1.add(node2);</span><br><span class="line">node1.operation();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="透明组合和安全组合模式"><a href="#透明组合和安全组合模式" class="headerlink" title="透明组合和安全组合模式"></a>透明组合和安全组合模式</h2><h3 id="安全组合"><a href="#安全组合" class="headerlink" title="安全组合"></a>安全组合</h3><p>叶子节点实际上不需要add(),remove(),和getChild()方法，如果我们把它们的实现放在Node基类中，叶子节点就只有业务代码。如果不希望出现任何错误提示，我们可以在客户端定义文件对象时不使用抽象层，而直接使用具体叶子构件本身。这样就产生了一种不透明的使用方式，即在客户端不能全部针对抽象构件类编程，需要使用具体叶子构件类型来定义叶子对象。</p>
+<h3 id="透明组合"><a href="#透明组合" class="headerlink" title="透明组合"></a>透明组合</h3><p>还有一种解决方法是在抽象构件基类中不声明任何用于访问和管理成员构件的方法， 由于在抽象构件基类中没有声明add()、remove()等访问和管理成员的方法，其叶子构件子类无须提供实现；而且无论客户端如何定义叶子构件对象都无法调用到这些方法，不需要做任何错误和异常处理，容器构件再根据需要增加访问和管理成员的方法，但这时候也存在一个问题：客户端不得不使用容器类本身来声明容器构件对象，否则无法访问其中新增的add()、remove()等方法，如果客户端一致性地对待叶子和容器，将会导致容器构件的新增对客户端不可见，客户端代码对于容器构件无法再使用抽象构件来定义。</p>
+<h1 id="装配模式"><a href="#装配模式" class="headerlink" title="装配模式"></a>装配模式</h1><h2 id="使用场景-1"><a href="#使用场景-1" class="headerlink" title="使用场景"></a>使用场景</h2><h2 id="使用方法-1"><a href="#使用方法-1" class="headerlink" title="使用方法"></a>使用方法</h2><ol>
+<li><p>基础抽象基类</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Shape &#123;</span><br><span class="line">    public void draw()&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>被装饰对象子类</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public class Circle extends Shape &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void draw() &#123;</span><br><span class="line">        System.out.println(&quot;Circle&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>装饰器抽象基类，继承基础抽象基类，持有基础抽象基类的对象，并在构造函数将其初始化。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">abstract class Color extends Shape &#123;</span><br><span class="line">    private Shape shape;</span><br><span class="line">    Color(Shape shape) &#123;</span><br><span class="line">        this.shape=shape;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void draw() &#123;</span><br><span class="line">        shape.draw();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>具体装饰器类，构造函数调用super方法进行构造。重写装饰器抽象基类中方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class RedColor extends Color&#123;</span><br><span class="line">    RedColor(Shape shape)&#123;</span><br><span class="line">        super(shape);</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public void draw() &#123;</span><br><span class="line">        super.draw();</span><br><span class="line">        System.out.println(&quot;red&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public class Weuse &#123;</span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">        Shape kuang=new Circle();</span><br><span class="line">        Shape zhuang= new RedColor(kuang);</span><br><span class="line">        zhuang.draw();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/06/9-6技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1633,148 +1808,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/27/Ti，房子，其它/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/08/27/Ti，房子，其它/" itemprop="url">Ti，电竞，其它</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-27T10:17:04+08:00">
-                2018-08-27
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/杂谈/" itemprop="url" rel="index">
-                    <span itemprop="name">杂谈</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>&emsp;&emsp;这届Ti依靠早起，居然看了不少，最后目睹了OG夺冠，本来对LGD和OG都无好感，所以也没什么百感交集，只是对ana决胜局火猫的表演叹为观止。后来看论坛都是骂LGD的，果然亚军注定被骂呀，想到了詹皇一个亚军值负几个冠军的笑话。<br>&emsp;&emsp;后来又听说，决赛AME的水人由于bug少了四十多点属性，但是他也自己利用了bug受益（变身猴子，幻象拥有大招），甚至不是他偶然发现的，而是他一开始就准备利用这个bug，早早预购了散失。<br>&emsp;&emsp;这Bug几个月了，v社也没有修复。但v社在玩家心目中声望似乎很高，我看来大概是玩家分不清冰蛙和G胖。我的观点，简单来说，玩家的青春回忆也好，欢乐也好，Dota的一切都是冰蛙给的，没必要爱屋及乌到G胖这个奸商。<br>&emsp;&emsp;但其实说到冰蛙，这两年的确有江郎才尽的感觉，路人的平衡性向来不管的，胜率超过60和低于40的英雄都有不少。而平衡比赛的策略更简单，谁夺冠了，就削弱谁的招牌英雄。导致最后走到Ti最后的，冠军季军都是赛前临时组的队伍，甚至EG在TI前的小比赛夺了冠，其英雄都被削弱了。最后夺冠的OG，他们的绝活在Ti前根本没被见过，当然不会被削弱了。<br>&emsp;&emsp;有人说，不学不会不练，但TopSon卡尔玩了上千盘，而卡尔正是在Ti前没有被削弱的英雄，别人能练习上千盘卡尔吗？<br>&emsp;&emsp;所以近来的每个Ti周期，都有在冬天和春天很厉害的队伍，取得了一些成绩，然后被冰蛙针对性削弱。Ti时就无力回天了。<br>&emsp;&emsp;当年ig夺DAC的时候，多强，所以血精石自杀队友不能回血了，所以剑圣这个并不imba只有ig这只队伍使用的英雄都被削弱了；当年ana在OG的时候，也是春秋霸主，一手中单转打野所向披靡，所以中路多个兵了，野区收益少了；今天的vp，你看noone的英雄，飞机DP龙骑，一个一个被砍的没法用了。<br>&emsp;&emsp;我在想这就是冰蛙心目中的平衡吗？谁强削弱谁，庄家轮流做，你在Ti夺冠不是因为你强，而是因为你的英雄池刚好被轮到了。我觉得这恐怕不算竞技吧？</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1825,7 +1858,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">173</span>
+                  <span class="site-state-item-count">174</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
