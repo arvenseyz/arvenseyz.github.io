@@ -251,6 +251,158 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/18/9-18技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/09/18/9-18技术笔记/" itemprop="url">springboot+redis</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-18T15:57:28+08:00">
+                2018-09-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="redis对比mongodb"><a href="#redis对比mongodb" class="headerlink" title="redis对比mongodb"></a>redis对比mongodb</h1><p>mongodb擅长处理类json格式的数据，适用于大的，日益增长的数据集，比如日志，通知等等。<br>redis擅长稳定的数据库，数据为key-value类型，检索时方式是通过key值找到value。</p>
+<h1 id="RedisTemplate"><a href="#RedisTemplate" class="headerlink" title="RedisTemplate"></a>RedisTemplate</h1><p>Springboot封装过了对redis的操作，先生成一个ops，然后操作。可以用bound先绑定key，再后续操作。<br>StringRedisTemplate继承RedisTemplate。但两者数据不共同。</p>
+<p>使用RedisTemplate实现定时锁<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">ValueOperations&lt;String,User&gt; valueOperations=redisTemplate.opsForValue();</span><br><span class="line">if(redisTemplate.hasKey(user.getUserId().toString())) &#123;</span><br><span class="line">    System.out.println(&quot;被锁&quot;);</span><br><span class="line">    return null;</span><br><span class="line">&#125;</span><br><span class="line">else &#123;</span><br><span class="line">    valueOperations.set(user.getUserId().toString(), user, 1, TimeUnit.MINUTES);</span><br><span class="line">    User as = (User) valueOperations.get(user.getUserId().toString());</span><br><span class="line">    return as;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="基于注解"><a href="#基于注解" class="headerlink" title="基于注解"></a>基于注解</h1><ul>
+<li>@CacheConfig(cacheNames = “user”)类注解，里面写了缓存名，这样方法注解可以不用制定缓存名。</li>
+<li>@Cacheable(value=”accountCache”)，这个注释的意思是，当调用这个方法的时候，会从一个名叫 accountCache 的缓存中查询，如果没有，则执行实际的方法（即查询数据库），并将执行的结果存入缓存中，否则返回缓存中的对象。这里的缓存中的 key 就是参数 userName，value 就是 Account 对象。</li>
+<li>@CachePut(key = “#user.userId”) #标识符，区别是一定执行，保证缓存和数据库同步</li>
+<li>@CacheEvict的作用主要针对方法配置，能够根据一定的条件对缓存进行清空</li>
+<li>@Caching有时候我们可能组合多个Cache注解使用；比如用户新增成功后，我们要添加id–&gt;user；username—&gt;user；email—&gt;user的缓存；此时就需要@Caching组合多个注解标签了  </li>
+</ul>
+<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>主要配置有key生成策略，缓存管理器，序列化方式<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">public class RedisConfig extends CachingConfigurerSupport&#123;</span><br><span class="line"></span><br><span class="line">    //缓存管理器</span><br><span class="line">    @Bean</span><br><span class="line">    public CacheManager cacheManager(RedisConnectionFactory factory) &#123;</span><br><span class="line">        return RedisCacheManager.builder(factory).build();</span><br><span class="line">    &#125;</span><br><span class="line">    //自定义缓存key生成策略</span><br><span class="line">    @Bean</span><br><span class="line">    public KeyGenerator keyGenerator() &#123;</span><br><span class="line">        return new KeyGenerator()&#123;</span><br><span class="line">            @Override</span><br><span class="line">            public Object generate(Object target, java.lang.reflect.Method method, Object... params) &#123;</span><br><span class="line">                StringBuffer sb = new StringBuffer();</span><br><span class="line">                sb.append(target.getClass().getName());</span><br><span class="line">                sb.append(method.getName());</span><br><span class="line">                for(Object obj:params)&#123;</span><br><span class="line">                    sb.append(obj.toString());</span><br><span class="line">                &#125;</span><br><span class="line">                System.out.println(&quot;调用Redis生成key：&quot;+sb.toString());</span><br><span class="line">                return sb.toString();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * RedisTemplate配置</span><br><span class="line">     *</span><br><span class="line">     * @param redisConnectionFactory</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    public RedisTemplate&lt;String, Object&gt; redisTemplate(RedisConnectionFactory redisConnectionFactory ) &#123;</span><br><span class="line">        //设置序列化</span><br><span class="line">        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);</span><br><span class="line">        ObjectMapper om = new ObjectMapper();</span><br><span class="line">        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);</span><br><span class="line">        om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);</span><br><span class="line">        jackson2JsonRedisSerializer.setObjectMapper(om);</span><br><span class="line">        //配置redisTemplate</span><br><span class="line">        RedisTemplate&lt;String, Object&gt; redisTemplate = new RedisTemplate&lt;String, Object&gt;();</span><br><span class="line">        redisTemplate.setConnectionFactory(redisConnectionFactory);</span><br><span class="line">        RedisSerializer stringSerializer = new StringRedisSerializer();</span><br><span class="line">        redisTemplate.setKeySerializer(stringSerializer);//key序列化</span><br><span class="line">        redisTemplate.setValueSerializer(jackson2JsonRedisSerializer);//value序列化</span><br><span class="line">        redisTemplate.setHashKeySerializer(stringSerializer);//Hash key序列化</span><br><span class="line">        redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer);//Hash value序列化</span><br><span class="line">        redisTemplate.afterPropertiesSet();</span><br><span class="line">        return redisTemplate;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/17/9-17技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1659,153 +1811,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/03/中国游戏行业现状之我见/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/09/03/中国游戏行业现状之我见/" itemprop="url">中国游戏行业现状之我见</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-03T10:18:32+08:00">
-                2018-09-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/杂谈/" itemprop="url" rel="index">
-                    <span itemprop="name">杂谈</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>&emsp;&emsp;最近想玩一个非对抗性的网络游戏，电脑或者手机端的都行，结果发现找了半天找不到有游玩意向的，于是最后玩了对抗性的手游QQ飞车:)<br>&emsp;&emsp;于是思考了下这个问题，为什么国内做不出好玩的网游。  </p>
-<h1 id="策划"><a href="#策划" class="headerlink" title="策划"></a>策划</h1><p>&emsp;&emsp;从天涯明月刀到逆水寒，似乎每一款网游玩家都在骂游戏策划，我曾经很疑惑，这些策划真的不懂游戏吗？他们真的这么蠢吗？后来我在求职时看了下各大厂策划都要哪些人，才明白了这个问题。<br>&emsp;&emsp;<strong>策划当然不蠢，但是策划的确不懂游戏</strong><br>&emsp;&emsp;策划都是哪些人呢？985学校的人文社科高才生，来自中文系，心理学等等。他/她们从小认真学习，当然没玩过几款游戏，遑论对游戏乐趣来源的理解。同时游戏设计是一门科学，什么《游戏设计技术》之类的学科中国大学不会开放，他/她们当然也没有学习过。所以策划们不懂游戏是真的。<br>&emsp;&emsp;能考上985当然不蠢，更何况策划们在策划时，有这大数据的支持，这个活动推出后日活涨了多少，这个礼包付费率多少，怎么结合才能完成KPI。策划们策划的动力正是这个。<br>&emsp;&emsp;所以聪明但是不懂游戏的人是怎么策划的呢？就像医学实验一样控制变量，“嗯，这个活动付费率太低，下次砍了”，“这个活动论坛反馈很好，下次推出相似的”。这么做初看很好，但有个问题在于，玩家的需求不一定是玩家需求：玩家可能感觉很爽猛肝一阵，然后索然无味再也不玩；参加活动的人获得的东西扰乱了市场和体系，游戏经济系统崩盘；的确吸引了大佬氪金，但贫民被虐的太惨，放弃了游戏。<strong>这些都是KPI和一时的统计数字反映不出来的</strong>。  </p>
-<h1 id="厂商"><a href="#厂商" class="headerlink" title="厂商"></a>厂商</h1><p>&emsp;&emsp;我想过，厂商真的不在乎杀鸡取卵吗？策划的KPI是上面来的，上面真的没有想过，这么严苛的KPI，直接结果是涸泽而渔吗？<br>&emsp;&emsp;现在我看，他们是想过的，但是他们 <strong>不在乎</strong>，现在是IP时代，文化知识产权就这么多，不抢就没了，抢到就要开发，杀鸡取卵拿到蛋就行，没时间慢慢地等鸡长大，换个皮换个IP，又是一款新游戏了，养鸡的成本小于拿到的蛋，杀鸡取卵再换新鸡的方式，是周期又短来钱又快的。</p>
-<h1 id="有关部门"><a href="#有关部门" class="headerlink" title="有关部门"></a>有关部门</h1><p>&emsp;&emsp;最近出了一个限制网游数量的新规，名字居然是《综合防控儿童青少年近视实施方案》，可见这块蛋糕太大了，谁都想来分一杯羹。这里不用多说，从这个文件名，管中窥豹，可见一斑。<br>&emsp;&emsp;<em>顺便说一下，似乎需要下载的就算网游，这么看来steam中的游戏也是网游，而贪玩蓝月并不是网游。</em></p>
-<h1 id="玩家"><a href="#玩家" class="headerlink" title="玩家"></a>玩家</h1><p>&emsp;&emsp;很多人写文章动辄大谈中国人的劣根性什么的，其实老外也一样，他不了解外国而已。这里国内外网游都是这样，但中国玩家的特点是喜欢玩电脑游戏，国外没有这么大的市场。<br>&emsp;&emsp;大家肯定都发现了啊，就是不喜欢直接购买，喜欢抽奖。什么开箱子，收集碎片，积攒进度，许愿池，抽卡，反正我玩的QQ飞车手游里，货币种类估计有十几种，什么紫水晶蓝宝石绿钥匙，什么金币点券兑换卡，我都放弃知道哪个是哪个了。但是玩家吃这一套呀。推出这些肯定是基础大数据的，玩家喜欢才会推出呀。</p>
-<h1 id="失败的文章2-0"><a href="#失败的文章2-0" class="headerlink" title="失败的文章2.0"></a>失败的文章2.0</h1><p>&emsp;&emsp;好气，回头看，除了策划这一点写的稍有一点意思，后面写的全是浮于表面的东西，胸中千万言，提笔即忘字，现在已经不会写东西了么？我不服，看来是要继续练习。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1856,7 +1861,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">177</span>
+                  <span class="site-state-item-count">178</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
