@@ -251,6 +251,162 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/07/11/7-11技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/07/11/7-11技术笔记/" itemprop="url">kafka技术杂记</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-11T16:59:15+08:00">
+                2019-07-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="发送方式"><a href="#发送方式" class="headerlink" title="发送方式"></a>发送方式</h1><p>kafka有同步（sync）、异步（async）以及oneway这三种发送方式，某些概念上区分也可以分为同步和异步两种，同步和异步的发送方式通过“producer.type”参数指定，而oneway由“request.require.acks”参数指定。</p>
+<ol>
+<li><p>同步就是每次发一条，然后刷盘，确认后再发第二条。</p>
+</li>
+<li><p>异步是生产者先把消息缓存起来，指定缓存的时间条数等，然后批量一起发送。</p>
+</li>
+<li><p>oneway就是只管发，不需要收到broker的消息确认。</p>
+</li>
+</ol>
+<h1 id="zookeeper"><a href="#zookeeper" class="headerlink" title="zookeeper"></a>zookeeper</h1><p>zookeeper主要用来管理broker，一个是broker的信息，另一方面是broker上下线的管理。因为zookeeper写性能不好，所以现在生产和消费者一般不连接zookeeper。生产者和消费者直接连接broker。</p>
+<h1 id="推vs拉"><a href="#推vs拉" class="headerlink" title="推vs拉"></a>推vs拉</h1><p>生产者把消息推向broker，消费者从broker拉消息。</p>
+<h1 id="重试"><a href="#重试" class="headerlink" title="重试"></a>重试</h1><p>生产者消息发送失败会重试，重试失败达到指定次数返回异常。</p>
+<p>问题在于，重试会破坏顺序性，如果要求顺序性，可以参数指定，重试时相当于阻塞。max.in.flight.requests.per.connection=1</p>
+<h1 id="消息分区"><a href="#消息分区" class="headerlink" title="消息分区"></a>消息分区</h1><p>如果不指定key，那么消息会随机分配到各个partition，相当于负载均衡。</p>
+<p>然而可以指定 partitioner 分区器，这样消息和partition就关联。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/07/10/7-10技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1670,154 +1826,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/06/11/6-11技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/06/11/6-11技术笔记-1/" itemprop="url">go类型推断</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-11T15:54:56+08:00">
-                2019-06-11
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="类型推断"><a href="#类型推断" class="headerlink" title="类型推断"></a>类型推断</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fmt.Sprintf(<span class="string">"%T"</span>, v)</span><br></pre></td></tr></table></figure>
-<p>用%T甚至可以直接输出其类型，其实其内部还是用了反射的方法。</p>
-<p>reflect.TypeOf()即可获得类型。</p>
-<p>另一种方法是类型断言，语法是变量名.(类型名)，比如name.(string)。有两个返回值，第一个是目的类型的值，第二个是参数。比如</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">test6</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> i <span class="keyword">interface</span>&#123;&#125; = <span class="string">"TT"</span></span><br><span class="line">    j, b := i.(<span class="keyword">int</span>)</span><br><span class="line">    <span class="keyword">if</span> b &#123;</span><br><span class="line">        fmt.Printf(<span class="string">"%T-&gt;%d\n"</span>, j, j)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        fmt.Println(<span class="string">"类型不匹配"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>类型推断只能推断一种，想知道什么类型，只能用swith咯，以及关键字type</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    v := <span class="string">"hello world"</span></span><br><span class="line">    fmt.Println(typeof(v))</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">typeof</span><span class="params">(v <span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">    <span class="keyword">switch</span> t := v.(<span class="keyword">type</span>) &#123;</span><br><span class="line">    <span class="keyword">case</span> <span class="keyword">int</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"int"</span></span><br><span class="line">    <span class="keyword">case</span> <span class="keyword">float64</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"float64"</span></span><br><span class="line">    <span class="comment">//... etc</span></span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        _ = t</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"unknown"</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1868,7 +1876,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">179</span>
+                  <span class="site-state-item-count">180</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

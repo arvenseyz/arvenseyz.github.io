@@ -251,6 +251,162 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/02/19/2-19技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/02/19/2-19技术笔记/" itemprop="url">LinkedHashMap与缓存算法</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-19T11:16:08+08:00">
+                2019-02-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="LinkedHashMap"><a href="#LinkedHashMap" class="headerlink" title="LinkedHashMap"></a>LinkedHashMap</h1><p>原来一直以为LinkedHashMap就是用链表法的哈希表，也没有意识到哈希表本来就是用链表法的，那linked什么。</p>
+<p>是指，哈希表中所有元素，都用同时用一个双向链表储存起来。</p>
+<p>1</p>
+<p>2-&gt;3</p>
+<p>4-&gt;5</p>
+<p>这是链表法的哈希表。他们的插入顺序21345。那么还同时维护着2\<->1\<->3\<->4\<->5的双向链表。两者同时存在。实际结构。</-></-></-></-></p>
+<p><img src="https://i.loli.net/2019/02/19/5c6bc235219f0.png" alt="5c6bc235219f0"></p>
+<p>这样做的意义是。查询时走哈希，插入删除走链表，速度都达到了o(1)。</p>
+<p>那么代价呢，一是结构复杂，空间占用大。二是操作麻烦，增加删除都得同时考虑这两个数据结构。</p>
+<h1 id="LRU与FIFO"><a href="#LRU与FIFO" class="headerlink" title="LRU与FIFO"></a>LRU与FIFO</h1><p>LRU是缓存替换算法，最近最少使用，但他是基于使用而不是添加，也就是get()操作会影响。</p>
+<p>其实LinkedHashMap也是支持的，首先有个protected方法removeEldestEntry()，基类返回false，什么意思呢，是讲什么时候删除最老的元素（怎么定义最老下文说），其实本来是因为不删除的，因为hashMap会自动扩容，满了扩容即可，所以基类永远返回false。但用于LRU需要删除最近最少使用的元素，并且不想让缓存扩容，所以重写该方法，快达到负载因子密度就删除。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">LinkedHashMap map = <span class="keyword">new</span> LinkedHashMap&lt;K, V&gt;(capacity, DEFAULT_LOAD_FACTORY, <span class="keyword">true</span>) &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">removeEldestEntry</span><span class="params">(Map.Entry&lt;K, V&gt; eldest)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> size() &gt; MAX_CACHE_SIZE;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<p>第二个问题是初始容量，int capacity = (int)Math.ceil(MAX_CACHE_SIZE / DEFAULT_LOAD_FACTORY) + 1;很容易理解，初始容量=缓存大小/负载因子+1；</p>
+<p>第三个问题是，LRU中的最老并不是最早put进hashMap的，而是哈希表中最久没被get的。LinkedHashMap的构造函数第三个参数accessOrder，是boolean类型，它影响了get()操作，如果为ture，get元素时会将改元素重置到双向链表的头部。</p>
+<p>FIFO其实和LRU一样，区别在于最老元素的定义，get不影响，所以accessOrder为false，其他都一样。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/02/18/2-18技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1751,160 +1907,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/01/24/1-24技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/01/24/1-24技术笔记/" itemprop="url">排序与第k大数</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-24T19:10:03+08:00">
-                2019-01-24
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="选择和插入"><a href="#选择和插入" class="headerlink" title="选择和插入"></a>选择和插入</h1><p>都很简单是n^2算法，选择是指，选出最小的，放在第一位，选出第二小的，放在第二位。</p>
-<p>插入是指，先让前n个元素有序，第n+1个元素，插入到合适的位置，继续有序。</p>
-<h1 id="快排"><a href="#快排" class="headerlink" title="快排"></a>快排</h1><p>之前只知道快排是，选一个标志，比它小的放左边，大的放右边。左右递归执行该过程。</p>
-<p>具体是怎么放左边呢？是双指针交换位置的方法。</p>
-<p>左指针不断右移动，右指针不断左移。如果，左指针找到比标志大的元素，或者右指针找到比标志小的元素，就交换这两个元素，继续移动，直到两个指针相遇。这样遍历一趟数组，就完成了小的左边大的右边。</p>
-<p>34521-&gt;1比3小，交换，14523-&gt;4比3大，交换，13524-&gt;2比3小，交换，12534-&gt;5比3大，交换，12354。</p>
-<p>则完成了，比3小的在3左边，比3大的在3右边。</p>
-<h1 id="无序数组第k大元素"><a href="#无序数组第k大元素" class="headerlink" title="无序数组第k大元素"></a>无序数组第k大元素</h1><p>快排的思想，O(n)算法（实际是2n），即可找到。</p>
-<p>随便选一个标志，进行一次双指针交换的过程。这时有a个元素在标志左，b个元素在标志右。</p>
-<p>如果a+1=k。意味着标志就是第k大元素。</p>
-<p>如果a+1&lt;k，意味着第k大元素在标志右边，问题转化为，在k右边的n-a-1个元素中，找到第k大元素。</p>
-<p>如果a+1&gt;k，意味着第k大元素在标志左边，问题转化为，在k左边的a个元素中，找到k-(n-a-1)大的元素。</p>
-<p>为什么这个过程不是nlgn，而是2n，因为第一次过了一次数组，第二次过了1/2次，第三次过了1/4次，求和为2。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1955,7 +1957,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">179</span>
+                  <span class="site-state-item-count">180</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-08-22T07:01:37.222Z</updated>
+  <updated>2019-08-29T10:29:08.250Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,33 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>重定向与文件描述符</title>
+    <link href="http://yoursite.com/blog/2019/08/26/8-26%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2019/08/26/8-26技术笔记/</id>
+    <published>2019-08-26T02:31:51.000Z</published>
+    <updated>2019-08-29T10:29:08.250Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="重定向"><a href="#重定向" class="headerlink" title="重定向"></a>重定向</h1><p>标准输出是键盘，标准输出是屏幕，标准错误输出是屏幕。</p><p>但是可以重定向，改变输入和输出的位置。</p><h2 id="简单重定向"><a href="#简单重定向" class="headerlink" title="简单重定向"></a>简单重定向</h2><ul><li>cmd &gt; file</li></ul><p>把cmd命令的输出重定向到文件file中。如果file已经存在，则清空原有文件，使用bash的<a href="http://linux-wiki.cn/index.php?title=Noclobber&amp;action=edit&amp;redlink=1" title="Noclobber（尚未撰写）" target="_blank" rel="noopener">noclobber</a>选项可以防止覆盖原有文件。</p><ul><li>cmd &gt;&gt; file</li></ul><p>把cmd命令的输出重定向到文件file中，如果file已经存在，则把信息加在原有文件后面。</p><ul><li>cmd &lt; file</li></ul><p>使cmd命令从file读入</p><h2 id="文件描述符"><a href="#文件描述符" class="headerlink" title="文件描述符"></a>文件描述符</h2><p>Shell 中对文件描述符的操作由三部分组成:  <code>(Left, Operation, Right)</code>:</p><ul><li>Left 可以是 0-9 的数字, 代表第 n 号文件描述符;<ul><li>Left 还可以为  <code>&amp;</code>, 表示同时操作  <code>stdout</code>  和  <code>stderr</code></li></ul></li><li>Right 可以是文件名或 0-9 的数字, 当 Right 是数字时必须要加上  <code>&amp;</code>  符号, 表示引用第 n 号文件描述符;<ul><li>Right 还可以为  <code>&amp;-</code>, 此时表示关闭 Left 描述符, 例如  <code>2&lt;&amp;-</code>  表示关闭 stderr;</li></ul></li><li>Operation 可以为  <code>&lt;</code>  或  <code>&gt;</code>;<ul><li>为  <code>&lt;</code>  时表示以读模式复制 Right 到 Left, 此时如果没有指定 Left 的话, 则为默认值 0;</li><li>当为  <code>&gt;</code>  表示以写模式复制 Right 到 Left, 此时如果没有指定 Left 的话, 则为默认值 1;</li><li>Operation 和 Left 之间不能有空格;</li><li>当 Right 为文件名时, Operation 和 Right 可以有空格, 否则也不能有空格;</li></ul></li></ul><pre><code>可以使用exec命令创建自定义的描述符。</code></pre><p>   创建一个文件a，其内容是hello。实验如下</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ cat 0&lt;a</span><br><span class="line">hello</span><br></pre></td></tr></table></figure><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ ls &amp;&gt;a</span><br><span class="line">yangzhuo@n224-019-077:~/file$ cat a</span><br><span class="line">0703老清北线下发货明细 - 填写模板.csv</span><br><span class="line">7-8赠课.csv</span><br><span class="line">a</span><br><span class="line">buyGift.csv</span><br><span class="line">giftSheet.csv</span><br><span class="line">userInfo.csv</span><br><span class="line">换新单号表格.csv</span><br></pre></td></tr></table></figure><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ ls noexist &amp;&gt;a</span><br><span class="line">yangzhuo@n224-019-077:~/file$ cat a</span><br><span class="line">ls: cannot access <span class="string">'noexist'</span>: No such file or directory</span><br></pre></td></tr></table></figure><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ <span class="built_in">exec</span> 3&lt; a</span><br><span class="line">yangzhuo@n224-019-077:~/file$ cat &lt;&amp;3</span><br><span class="line">ls: cannot access <span class="string">'noexist'</span>: No such file or directory</span><br></pre></td></tr></table></figure><p>如果要再次读取，我们就不能再继续使用文件描述符3了，而是需要用exec重新分配文件描述符3以便用于读取。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;重定向&quot;&gt;&lt;a href=&quot;#重定向&quot; class=&quot;headerlink&quot; title=&quot;重定向&quot;&gt;&lt;/a&gt;重定向&lt;/h1&gt;&lt;p&gt;标准输出是键盘，标准输出是屏幕，标准错误输出是屏幕。&lt;/p&gt;
+&lt;p&gt;但是可以重定向，改变输入和输出的位置。&lt;/p&gt;
+&lt;h2 id=&quot;
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="linux" scheme="http://yoursite.com/blog/tags/linux/"/>
+    
+  </entry>
   
   <entry>
     <title>shell入门</title>
@@ -497,31 +524,6 @@
     
       <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
     
-    
-  </entry>
-  
-  <entry>
-    <title>go类型推断</title>
-    <link href="http://yoursite.com/blog/2019/06/11/6-11%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>http://yoursite.com/blog/2019/06/11/6-11技术笔记-1/</id>
-    <published>2019-06-11T07:54:56.000Z</published>
-    <updated>2019-06-30T08:54:57.724Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="类型推断"><a href="#类型推断" class="headerlink" title="类型推断"></a>类型推断</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fmt.Sprintf(<span class="string">"%T"</span>, v)</span><br></pre></td></tr></table></figure><p>用%T甚至可以直接输出其类型，其实其内部还是用了反射的方法。</p><p>reflect.TypeOf()即可获得类型。</p><p>另一种方法是类型断言，语法是变量名.(类型名)，比如name.(string)。有两个返回值，第一个是目的类型的值，第二个是参数。比如</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">test6</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> i <span class="keyword">interface</span>&#123;&#125; = <span class="string">"TT"</span></span><br><span class="line">    j, b := i.(<span class="keyword">int</span>)</span><br><span class="line">    <span class="keyword">if</span> b &#123;</span><br><span class="line">        fmt.Printf(<span class="string">"%T-&gt;%d\n"</span>, j, j)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        fmt.Println(<span class="string">"类型不匹配"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>类型推断只能推断一种，想知道什么类型，只能用swith咯，以及关键字type</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    v := <span class="string">"hello world"</span></span><br><span class="line">    fmt.Println(typeof(v))</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">typeof</span><span class="params">(v <span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">    <span class="keyword">switch</span> t := v.(<span class="keyword">type</span>) &#123;</span><br><span class="line">    <span class="keyword">case</span> <span class="keyword">int</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"int"</span></span><br><span class="line">    <span class="keyword">case</span> <span class="keyword">float64</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"float64"</span></span><br><span class="line">    <span class="comment">//... etc</span></span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        _ = t</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"unknown"</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;类型推断&quot;&gt;&lt;a href=&quot;#类型推断&quot; class=&quot;headerlink&quot; title=&quot;类型推断&quot;&gt;&lt;/a&gt;类型推断&lt;/h1&gt;&lt;figure class=&quot;highlight go&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="Go" scheme="http://yoursite.com/blog/tags/Go/"/>
     
   </entry>
   

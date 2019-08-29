@@ -251,6 +251,150 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/10/26/10-26技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/10/26/10-26技术笔记/" itemprop="url">push，pull，长轮询</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-10-26T19:12:06+08:00">
+                2018-10-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="push，pull，长轮询"><a href="#push，pull，长轮询" class="headerlink" title="push，pull，长轮询"></a>push，pull，长轮询</h1><h2 id="push"><a href="#push" class="headerlink" title="push"></a>push</h2><p>push模式就是服务器和客户端保持连接，服务器一旦有信息，就“推送”至客户端。但实际上，由于tcp协议的原因，保持连接几乎不可能。问题在于：第一服务端一直在工作压力大，第二客户端处理能力各不相同且不受客户端控制，有客户端堆积的风险。  </p>
+<h2 id="pull"><a href="#pull" class="headerlink" title="pull"></a>pull</h2><p>pull就是，客户端一直在工作，不断从服务端拉取数据保存在本地，只要满足设定的条件，就一直向服务端索取数据。</p>
+<h2 id="长轮询"><a href="#长轮询" class="headerlink" title="长轮询"></a>长轮询</h2><p>服务端不一定一直有消息，每隔一秒问一次有没有数据，结果都没有，这样就很浪费，不如派一个委托，在那里等着，一旦有数据就返回，或者等太久了也返回。这就是长轮询。实际上现在的push一般都是由长轮询实现。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/10/25/10-25技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1688,154 +1832,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/10/08/文艺作品与装逼艺术/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/10/08/文艺作品与装逼艺术/" itemprop="url">文艺作品与装逼艺术</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-10-08T10:37:46+08:00">
-                2018-10-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/杂谈/" itemprop="url" rel="index">
-                    <span itemprop="name">杂谈</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>国庆节看了两部电影和半部动漫，《影》《让子弹飞》《钢之炼金术师》。尤其是前两部，然我深觉装逼艺术也有其风采。</p>
-<h1 id="《影》"><a href="#《影》" class="headerlink" title="《影》"></a>《影》</h1><h2 id="国师"><a href="#国师" class="headerlink" title="国师"></a>国师</h2><p>张艺谋当年是拍文艺片的，《活着》，《红高粱》什么的，水平颇高，后来大概是从《英雄》起，其艺术见解和追求似乎换了个方向。用一个词来概括，“形式主义”。具体表现大抵有“整齐划一”，“大块夸张的色彩运用”，“中国风（？）”。<br>《影》给我的感觉就是这样，大块的水墨，场景很好看，衣服也好看。整个前半段，我的脑海里，出现的最多的一句话是，“这逼装的可以”。  </p>
-<h2 id="形式艺术"><a href="#形式艺术" class="headerlink" title="形式艺术"></a>形式艺术</h2><p>其实我看来，对于导演这个行业，或者说文艺工作者。装逼并不是个贬义词，形式主义也不是。关键在于装逼要装到底。比如说要是一个三流武侠小说作家，文中突然有一段古龙式的段落，反而会降低其作品评价，因为太装逼了。但古龙从头装到尾，所以是大家。<br>那张艺谋的《影》是三流还是古龙的，我觉得两者之间吧，或者说前半段古龙。</p>
-<h2 id="影"><a href="#影" class="headerlink" title="影"></a>影</h2><p>一屋子的毛笔字，水墨的衣服，水城中的宫殿，太极图练武场，这些都很好，很“形式主义”，我觉得要是能坚持到尾，我觉得《影》可以堪称水墨风中国风电影开宗立派之作，张艺谋大师风范。<br>可惜后面一来显得经费不足，攻城场景人数太少没有《英雄》中万箭齐发的范儿，境州城池设计的也没什么创意没什么特色，最后的阴谋显得张艺谋没怎么创作过阴谋，还是“哈哈，我是故意让你看穿我的计谋，这才是我计谋的一部分”这种俄罗斯套娃式套路，我后面还可以帮张艺谋继续套娃，“宫殿里被杀死的主公其实是主公的影，这都是主公的计谋”，无限循环下去。</p>
-<h2 id="对照"><a href="#对照" class="headerlink" title="对照"></a>对照</h2><p>其实前两年台湾名导侯孝贤也有部类似的作品，《刺客聂隐娘》，想来其许多艺术的地方不如《影》，但整体观感还是比《影》要好一点，可能是因为同一种风格从头到尾了吧。</p>
-<h1 id="《让子弹飞》"><a href="#《让子弹飞》" class="headerlink" title="《让子弹飞》"></a>《让子弹飞》</h1><h2 id="《邪不压正》"><a href="#《邪不压正》" class="headerlink" title="《邪不压正》"></a>《邪不压正》</h2><p>我是之前先看的《邪不压正》，国庆在家无聊，又看了《让子弹飞》，其实之前已经听说过不少其中的金句，“让子弹飞一会”，“吃着火锅唱着歌”，“三七分账，如数退回”之类，看完之后，觉得《让子弹飞》可能就是《邪不压正》的升级版了。<br>拍同一类型的片子，或者放眼文艺界，创作同一类型的作品，一代不如一代，是在普遍不过得事情了，江郎才尽的故事当代知名作家都有不少，所以《让子弹飞》比《邪不压正》好再自然不过了。</p>
-<h2 id="风格"><a href="#风格" class="headerlink" title="风格"></a>风格</h2><p>姜文的电影没怎么看过，他什么风格我不敢说，就这两部来说，有一定的一致性，黑色幽默，硬桥硬马，场景转换快，台词痛快。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1886,7 +1882,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">179</span>
+                  <span class="site-state-item-count">180</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
