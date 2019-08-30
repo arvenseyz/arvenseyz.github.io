@@ -251,6 +251,164 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/03/14/leetcode5-19/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/03/14/leetcode5-19/" itemprop="url">最长回文连续子串，移除链表倒数第n个元素</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-03-14T17:12:57+08:00">
+                2019-03-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/leetcode/" itemprop="url" rel="index">
+                    <span itemprop="name">leetcode</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="5"><a href="#5" class="headerlink" title="5"></a>5</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>求最长回文连续子串</p>
+<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><p>动态规划。</p>
+<p>S[i,j]表示S从i到j的子串。</p>
+<p>那么S[i,j]是回文串取决于什么呢?</p>
+<p>1.第i位字符和第j位字符相等。</p>
+<p>2.S[i+1,j-1]即这个串去掉i、j两个元素，也是回文串。</p>
+<p>这样就可以写出动规方程。</p>
+<p>但还是有两点，第一，S[i,i]是长度为1的回文。第二，S[i+1,j-1]不一定存在，比如说caad，aa相同，但去掉这两个元素，已经成空串了。</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">longestPalindrome</span><span class="params">(String s)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">if</span>(Objects.equals(s, <span class="string">""</span>))&#123;</span><br><span class="line">               <span class="keyword">return</span> <span class="string">""</span>;</span><br><span class="line">           &#125;</span><br><span class="line">           <span class="keyword">char</span>[] s1=s.toCharArray();</span><br><span class="line">           <span class="keyword">int</span> ai=<span class="number">0</span>,aj=<span class="number">0</span>,max=<span class="number">0</span>;</span><br><span class="line">           <span class="keyword">int</span>[][] ans =<span class="keyword">new</span> <span class="keyword">int</span>[s1.length][s1.length];</span><br><span class="line">           <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;s1.length;i++)&#123;</span><br><span class="line">               <span class="keyword">for</span>(<span class="keyword">int</span> j =<span class="number">0</span>;j&lt;s1.length;j++)&#123;</span><br><span class="line">                   <span class="keyword">if</span>(i==j)&#123;</span><br><span class="line">                       ans[i][j]=<span class="number">1</span>;</span><br><span class="line">                       <span class="keyword">continue</span>;</span><br><span class="line">                   &#125;</span><br><span class="line">                   <span class="keyword">if</span>(i&lt;j)&#123;</span><br><span class="line">                       <span class="keyword">continue</span>;</span><br><span class="line">                   &#125;</span><br><span class="line">                   <span class="keyword">if</span>(i&gt;j)&#123;</span><br><span class="line">                       <span class="keyword">if</span>(s1[i]==s1[j])&#123;</span><br><span class="line">                           <span class="keyword">if</span>(i-j==<span class="number">1</span>)&#123;</span><br><span class="line">                               ans[i][j]=<span class="number">2</span>;</span><br><span class="line">                               <span class="keyword">if</span>(max &lt; ans[i][j]) &#123;</span><br><span class="line">                               ai = i;</span><br><span class="line">                               aj = j;</span><br><span class="line">                               max = ans[i][j];</span><br><span class="line">                           &#125;</span><br><span class="line">                           &#125;</span><br><span class="line">                           <span class="keyword">else</span> <span class="keyword">if</span>(ans[i-<span class="number">1</span>][j+<span class="number">1</span>]!=<span class="number">0</span>)&#123;</span><br><span class="line">                               ans[i][j]=ans[i-<span class="number">1</span>][j+<span class="number">1</span>]+<span class="number">2</span>;</span><br><span class="line">                               <span class="keyword">if</span>(max &lt; ans[i][j]) &#123;</span><br><span class="line">                               ai = i;</span><br><span class="line">                               aj = j;</span><br><span class="line">                               max = ans[i][j];</span><br><span class="line">                           &#125;</span><br><span class="line">                           &#125;</span><br><span class="line">                       &#125;</span><br><span class="line">                   &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">                       ans[i][j]=<span class="number">0</span>;</span><br><span class="line">                   &#125;</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">           <span class="keyword">return</span> s.substring(aj,ai+<span class="number">1</span>);</span><br><span class="line">       &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h2><p>这道题，我本以为，只需要把字符串倒过来，然后和原串的最长公共连续子序列就是答案。</p>
+<p>最长公共连续子序列怎么求，最长公共子序列就是LCS问题，是动态规划，连续的区别是动规方程不一样，如果i不等于j，dp[i][j]为0。</p>
+<p>但是这个解法不对，比如”aacdefcaa”和它的倒序串的最长公共连续子序列是”aac”，它最长连续回文子串是”aa”。</p>
+<p>有个神奇的，O(n)的算法， Manacher’s Algorithm。</p>
+<h1 id="19"><a href="#19" class="headerlink" title="19"></a>19</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>移除链表倒数第n个元素。</p>
+<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>双指针法，一个提前移动即可。先走n步，等待第二个，然后一起行动。</p>
+<p>倒数第n个，就是正数第m-n个，first先走n步，距离终点还剩m-n步，然后一起走m-n步，second到了倒数第n个。</p>
+<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> ListNode <span class="title">removeNthFromEnd</span><span class="params">(ListNode head, <span class="keyword">int</span> n)</span> </span>&#123;</span><br><span class="line">       ListNode d = <span class="keyword">new</span> ListNode(<span class="number">0</span>);</span><br><span class="line">       d.next=head;</span><br><span class="line">       ListNode f = d;</span><br><span class="line">       ListNode s = d;</span><br><span class="line">       <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;n;i++)&#123;</span><br><span class="line">           f=f.next;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">while</span> (f.next!=<span class="keyword">null</span>)&#123;</span><br><span class="line">           f=f.next;</span><br><span class="line">           s=s.next;</span><br><span class="line">       &#125;</span><br><span class="line">       s.next=s.next.next;</span><br><span class="line">       <span class="keyword">return</span> d.next;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/03/13/leetcode75-127/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1667,164 +1825,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/02/20/2-20技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/02/20/2-20技术笔记/" itemprop="url">一致性哈希</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-20T17:08:13+08:00">
-                2019-02-20
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="为什么需要哈希"><a href="#为什么需要哈希" class="headerlink" title="为什么需要哈希"></a>为什么需要哈希</h2><p>比如过redis集群，多个主机共同存数据，存的时候随机还行，并且靠随机实现了负载均衡。但读取的时候不知道存在哪台服务器中，得遍历一遍。这是哈希的需求。</p>
-<p>哈希算法是固定的，查找时进行一次哈希运算，就知道存在哪台服务器了。</p>
-<p>比如说取模哈希，hash(a) % n ，有几台服务器就模几。</p>
-<h2 id="哈希的缺点"><a href="#哈希的缺点" class="headerlink" title="哈希的缺点"></a>哈希的缺点</h2><p>缺点在于无法应对服务器数量的变化。</p>
-<p>第一是增多，业务发展增加服务器。第二是减少，某服务器故障暂时下线。都会导致之前的余数不对。此时所有缓存的位置都要发生改变！换句话说，当服务器数量发生改变时，所有缓存在一定时间内是失效的。</p>
-<h2 id="一致性哈希"><a href="#一致性哈希" class="headerlink" title="一致性哈希"></a>一致性哈希</h2><p>一致性Hash算法也是使用取模的方法，只是，刚才描述的取模法是对服务器的数量进行取模，而一致性Hash算法是对2^32取模，什么意思呢？简单来说，一致性Hash算法将整个哈希值空间组织成一个虚拟的圆环，如假设某哈希函数H的值空间为0-2^32-1。然后首位相连就形成了一个环。</p>
-<p>将各个服务器使用Hash进行一个哈希，具体可以选择服务器的IP或主机名作为关键字进行哈希，这样每台机器就能确定其在哈希环上的位置。</p>
-<p>接下来使用如下算法定位数据访问到相应服务器：将数据key使用相同的函数Hash计算出哈希值，并确定此数据在环上的位置，从此位置沿环顺时针“行走”，第一台遇到的服务器就是其应该定位到的服务器。</p>
-<h2 id="一致性哈希如何解决哈希的缺点"><a href="#一致性哈希如何解决哈希的缺点" class="headerlink" title="一致性哈希如何解决哈希的缺点"></a>一致性哈希如何解决哈希的缺点</h2><p>现一般的，在一致性Hash算法中，如果一台服务器不可用，则受影响的数据仅仅是此服务器到其环空间中前一台服务器（即沿着逆时针方向行走遇到的第一台服务器）之间数据，其它不会受到影响。如果增加一台服务器，则受影响的数据仅仅是新服务器到其环空间中前一台服务器（即沿着逆时针方向行走遇到的第一台服务器）之间数据，其它数据也不会受到影响。</p>
-<h2 id="一致性哈希的问题与解决"><a href="#一致性哈希的问题与解决" class="headerlink" title="一致性哈希的问题与解决"></a>一致性哈希的问题与解决</h2><p>问题很简单，如果较多服务器，概率上来说，他们会均匀的分布在环上。如果较少，很有可能服务器分布不均匀。</p>
-<p>解决方法是虚拟节点。即对每一个服务节点计算多个哈希，每个计算结果位置都放置一个此服务节点，称为虚拟节点。具体做法可以在服务器IP或主机名的后面增加编号来实现。</p>
-<p>同时数据定位算法不变，只是多了一步虚拟节点到实际节点的映射。这样就解决了服务节点少时数据倾斜的问题。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/blog/page/6/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/blog/">1</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/6/">6</a><span class="page-number current">7</span><a class="page-number" href="/blog/page/8/">8</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/18/">18</a><a class="extend next" rel="next" href="/blog/page/8/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/blog/page/6/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/blog/">1</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/6/">6</a><span class="page-number current">7</span><a class="page-number" href="/blog/page/8/">8</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/19/">19</a><a class="extend next" rel="next" href="/blog/page/8/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1870,7 +1875,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">180</span>
+                  <span class="site-state-item-count">181</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

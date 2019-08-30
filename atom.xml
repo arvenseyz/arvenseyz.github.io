@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-08-29T10:29:08.250Z</updated>
+  <updated>2019-08-30T08:20:53.039Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>grep与正则表达式</title>
+    <link href="http://yoursite.com/blog/2019/08/30/8-30%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2019/08/30/8-30技术笔记/</id>
+    <published>2019-08-30T07:19:09.000Z</published>
+    <updated>2019-08-30T08:20:53.039Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="加单引号、双引号和不加引号"><a href="#加单引号、双引号和不加引号" class="headerlink" title="加单引号、双引号和不加引号"></a>加单引号、双引号和不加引号</h2><p><strong>单引号：</strong></p><p>可以说是所见即所得：即将单引号内的内容原样输出，或者描述为单引号里面看到的是什么就会输出什么。单引号’’是全引用，被单引号括起的内容不管是常量还是变量者不会发生替换。</p><p><strong>双引号：</strong></p><p>把双引号内的内容输出出来；如果内容中有命令、变量等，会先把变量、命令解析出结果，然后在输出最终内容来。双引号””是部分引用，被双引号括起的内容常量还是常量，变量则会发生替换，替换成变量内容。</p><p><strong>不加引号：</strong></p><p>不会将含有空格的字符串视为一个整体输出, 如果内容中有命令、变量等，会先把变量、命令解析出结果，然后在输出最终内容来，如果字符串中带有空格等特殊字符，则不能完整的输出，需要改加双引号，一般连续的字符串，数字，路径等可以用。</p><h2 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h2><p>grep搜索的内容，可以输入正则表达式，如果不想输入正则表达式，即不想被解析，可以使用fgerp。</p><p>比如，有文件a，如下</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ cat a</span><br><span class="line">s</span><br><span class="line">dsa</span><br><span class="line">fasf</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fsaf</span><br><span class="line">fasdasdw</span><br><span class="line">da</span><br></pre></td></tr></table></figure><p>可以用[]来搜索集合字符，其中^表示不</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep l[sd] a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">yangzhuo@n224-019-077:~/file$ grep l[^<span class="built_in">cd</span>] a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br></pre></td></tr></table></figure><p>grep l[sd] a表示在a中搜索ls或者ld。</p><p>grep l[^cd] a表示a中搜索除了lc和ld其他。</p><p>正如正则表达式，[1-9][a-z][^A-Z]这些表达也是可以的。</p><h2 id="行首与行尾字符"><a href="#行首与行尾字符" class="headerlink" title="行首与行尾字符 ^ $"></a>行首与行尾字符 ^ $</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep ^f a</span><br><span class="line">fasf</span><br><span class="line">fsaf</span><br><span class="line">fasdasdw</span><br><span class="line">yangzhuo@n224-019-077:~/file$ grep w$ a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fasdasdw</span><br><span class="line">yangzhuo@n224-019-077:~/file$</span><br></pre></td></tr></table></figure><p>如上，^表示句首，$表示句尾。同时可以使用正则表达式</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep ^[^sd] a</span><br><span class="line">fasf</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fsaf</span><br><span class="line">fasdasdw</span><br><span class="line">yangzhuo@n224-019-077:~/file$</span><br></pre></td></tr></table></figure><p>表示不以s或者d开头的</p><h2 id="转义与egrep"><a href="#转义与egrep" class="headerlink" title="转义与egrep"></a>转义与egrep</h2><p>正则表达式中，.表示任意字符，*表示重复前面字符0到无穷次，{a,b}表示重复前面字符a到b次，但是在grep中，输入这种特殊符号需要转义.</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep w\* a</span><br><span class="line">s</span><br><span class="line">dsa</span><br><span class="line">fasf</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fsaf</span><br><span class="line">fasdasdw</span><br><span class="line">da</span><br></pre></td></tr></table></figure><p>再比如</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep <span class="string">'w\+'</span> a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fasdasdw</span><br><span class="line">yangzhuo@n224-019-077:~/file$ grep <span class="string">'w\&#123;2,\&#125;'</span> a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br></pre></td></tr></table></figure><p>没输一个字符都要转义，未免太麻烦了吧，可以使用egrep。</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ egrep <span class="string">'w+'</span> a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fasdasdw</span><br></pre></td></tr></table></figure><p>esay~~</p><p>还有fgrep，就是怎么输都是纯文本</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;加单引号、双引号和不加引号&quot;&gt;&lt;a href=&quot;#加单引号、双引号和不加引号&quot; class=&quot;headerlink&quot; title=&quot;加单引号、双引号和不加引号&quot;&gt;&lt;/a&gt;加单引号、双引号和不加引号&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;单引号：&lt;/strong&gt;&lt;/p&gt;
+
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="linux" scheme="http://yoursite.com/blog/tags/linux/"/>
+    
+  </entry>
   
   <entry>
     <title>重定向与文件描述符</title>
@@ -500,30 +526,6 @@
     
     
       <category term="Go" scheme="http://yoursite.com/blog/tags/Go/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>hexo博客迁移</title>
-    <link href="http://yoursite.com/blog/2019/06/18/6-18%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/06/18/6-18技术笔记/</id>
-    <published>2019-06-18T11:27:12.000Z</published>
-    <updated>2019-06-18T11:33:52.724Z</updated>
-    
-    <content type="html"><![CDATA[<p>1.保存文件，大概是讲就是历史博客</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">_config.yml</span><br><span class="line"> package.json</span><br><span class="line"> scaffolds/</span><br><span class="line"> source/</span><br><span class="line"> themes/</span><br></pre></td></tr></table></figure><p>2.在新的电脑搭建hexo</p><p>可随便参考网上教程，大概是安装nodejs，安装hexo，生成ssh并添加到github</p><p>3.新建个空目录，执行hexo init，新建一个</p><p>4.把复制的文件拷贝过来</p><p>5.安装各个模块</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">本地测试的时候需要用hexo server</span><br><span class="line">npm i hexo-server</span><br><span class="line">将文章部署到github上的模块</span><br><span class="line">npm install hexo-deployer-git --save</span><br><span class="line">安装RSS插件</span><br><span class="line">npm install hexo-generator-feed --save</span><br><span class="line">添加Sitemap,加速网页收录速度</span><br><span class="line">npm install hexo-generator-sitemap --save</span><br></pre></td></tr></table></figure><p>6.hexo d -g。可观测到成功</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;1.保存文件，大概是讲就是历史博客&lt;/p&gt;
-&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
     
   </entry>
   
