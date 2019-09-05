@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/blog/2019/04/19/leetcode503-895-687/</loc>
+    
+    <lastmod>2019-09-05T13:27:35.111Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/blog/2018/09/13/9-13%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/</loc>
     
     <lastmod>2019-09-05T13:20:53.220Z</lastmod>
@@ -411,13 +418,6 @@
     <loc>http://yoursite.com/blog/2019/03/14/leetcode5-19/</loc>
     
     <lastmod>2019-05-05T08:14:08.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/blog/2019/04/19/leetcode503-895-687/</loc>
-    
-    <lastmod>2019-05-05T08:12:26.000Z</lastmod>
     
   </url>
   
