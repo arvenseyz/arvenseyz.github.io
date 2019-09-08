@@ -251,6 +251,160 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/25/9-25技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/09/25/9-25技术笔记/" itemprop="url">springboot+过滤器</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-25T15:06:23+08:00">
+                2018-09-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h1><ol>
+<li>类注解@Configuration</li>
+<li>类注解@WebFilter(urlPatterns = “/*“) 和 @Order(1),，order数字越小，优先级越高。</li>
+<li><p>实现Filter接口，有三个方法，init()，doFilter()，destroy()。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">public class WebConfiguration implements Filter &#123;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>主要过滤操作在doFilter()的重写中</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public void doFilter(ServletRequest servletRequest, ServletRequest servletResponse, FilterChain filterChain) throws IOException, ServletException &#123;</span><br><span class="line">    HttpServletRequest request= (HttpServletRequest) servletRequest;</span><br><span class="line">//  XssHttpServletRequestWrapper xssRequest = new XssHttpServletRequestWrapper((HttpServletRequest)servletRequest);</span><br><span class="line">    HttpServletResponse response = (HttpServletResponse) servletResponse;</span><br><span class="line">    System.out.printf(&quot;过滤器实现&quot;);</span><br><span class="line">    filterChain.doFilter(request,response);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>对ServletRequest和ServletRequest进行修改，实现过滤操作，修改完成后，通过filterChain.doFilter(request,response)完成链式过滤。</p>
+<h1 id="xss攻击的防御"><a href="#xss攻击的防御" class="headerlink" title="xss攻击的防御"></a>xss攻击的防御</h1><h2 id="xss攻击"><a href="#xss攻击" class="headerlink" title="xss攻击"></a>xss攻击</h2><p>XSS攻击就是攻击者通过各种办法，在用户访问的网页中插入自己的脚本，让其在用户访问网页时在其浏览器中进行执行。攻击者通过插入的脚本的执行，来获得用户的信息，比如cookie，发送到攻击者自己的网站(跨站了)。所以称为跨站脚本攻击。</p>
+<h2 id="防御方法"><a href="#防御方法" class="headerlink" title="防御方法"></a>防御方法</h2><p>XSS 存在的根本原因是，对URL中的参数，对用户输入提交给web server的内容，没有进行充分的过滤。如果我们能够在web程序中，对用户提交的URL中的参数，和提交的所有内容，进行充分的过滤，将所有的不合法的参数和输入内容过滤掉，那么就不会导致“在用户的浏览器中执行攻击者自己定制的脚本”。<br>XSS防御的总体思路是：对输入(和URL参数)进行过滤，对输出进行编码。<br>其中输入过滤就是通过过滤器实现。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/21/9-21技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1706,168 +1860,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/06/9-6技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/09/06/9-6技术笔记-1/" itemprop="url">适配器模式，桥接模式</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-06T20:14:09+08:00">
-                2018-09-06
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="桥接模式"><a href="#桥接模式" class="headerlink" title="桥接模式"></a>桥接模式</h1><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>对象在分类或者说继承关系上有多个维度，比如说笔既可以分成铅笔钢笔毛笔，也可以分成黑色红色蓝色。这时用n*m中分类太过于复杂，则找出其中一个属性，做抽象类基类，其他属性做接口。  </p>
-<h2 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h2><p>就笔而言。  </p>
-<ol>
-<li><p>基类是笔，并且持有所有属性接口的对象，即有颜色接口。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Pen &#123;</span><br><span class="line">    protected Coler coler;</span><br><span class="line">    Pen(Coler coler)&#123;</span><br><span class="line">        this.coler=coler;</span><br><span class="line">    &#125;</span><br><span class="line">    public abstract void draw();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>钢笔，毛笔，铅笔分别继承笔类，实现其中抽象方法。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class GangPen extends Pen &#123;</span><br><span class="line">    GangPen(Coler coler)&#123;</span><br><span class="line">        super(coler);</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public void draw() &#123;</span><br><span class="line">        coler.point();</span><br><span class="line">        System.out.println(&quot;钢笔&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>颜色属性作为一个接口。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public interface Coler &#123;</span><br><span class="line">    public void point();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>各个颜色实现颜色接口</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public class RedColer implements Coler &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void point() &#123;</span><br><span class="line">        System.out.println(&quot;red&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>使用时接口对象和实体对象构造</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public class WeUse &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Coler coler = new RedColer();</span><br><span class="line">        Pen pen = new GangPen(coler);</span><br><span class="line">        pen.draw();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<h1 id="适配器模式"><a href="#适配器模式" class="headerlink" title="适配器模式"></a>适配器模式</h1><h2 id="使用场景-1"><a href="#使用场景-1" class="headerlink" title="使用场景"></a>使用场景</h2><p>就是把别人的东西封装起来，变成自己的东西。用户使用适配器调用我们的方法，其实我们的方法里调用了别人的方法。</p>
-<h2 id="使用方法-1"><a href="#使用方法-1" class="headerlink" title="使用方法"></a>使用方法</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public class OpreateAdapter implements OperateMy&#123;</span><br><span class="line">    private OperateApi operateApi; //别人的实现方法类</span><br><span class="line">    @Override</span><br><span class="line">    public void oper() &#123;</span><br><span class="line">        operateApi=new OperateApi();</span><br><span class="line">        operateApi.operApi();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1918,7 +1910,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">182</span>
+                  <span class="site-state-item-count">183</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1940,7 +1932,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/blog/tags/index.html">
-                  <span class="site-state-item-count">66</span>
+                  <span class="site-state-item-count">65</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
