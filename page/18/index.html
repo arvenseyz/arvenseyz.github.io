@@ -251,6 +251,160 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/09/8-9业务笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/08/09/8-9业务笔记/" itemprop="url">幂等性校验</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-09T18:22:47+08:00">
+                2018-08-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>我们都知道，http经常会执行失败，导致页面打不开，页面出错等等问题（原因可能是网络差、服务端延迟、服务端出错或挂掉等等）。然而，这就导致了用户发现这种情况了会不断尝试重试，那么问题就来了。</p>
+<p>试想这么一种情况，小明在淘宝买个东西，在付款页面提示了失败，他尝试刷新，这个时候往往会重新提交一次请求，后台会走扣款的逻辑来支付此订单。这个流程可以简单的表达如图：<br><img src="http://7xk4uk.com1.z0.glb.clouddn.com/wp-content/uploads/2015/07/20110810171503575.png" alt="业务流程图"><br>这个时候，我们发现虽然前台没有提示扣款成功，但是后台其实已经做了扣款操作，同样一笔订单，却发生了两次扣款，这当然是万万不能出现的事情咯。</p>
+<p>这篇文章讨论的幂等性就是为了解决此类问题。百度百科这个描述幂等性：在编程中，一个幂等操作的特点是其任意多次执行所产生的影响均与一次执行的影响相同。幂等函数，或幂等方法，是指可以使用相同参数重复执行，并能获得相同结果的函数。这些函数不会影响系统状态，也不用担心重复执行会对系统造成改变。套用到这里意思就是说：小明在此订单页面无论刷新多少次都只会有两种结果：1.付款失败（支付宝挂了，虽然不大可能），2.付款成功，扣款一次。</p>
+<p>然而在上图的逻辑中，由于并没有在后台对此订单付款做一些状态的设置，每次付款都是从总金额里扣款，就会导致“同一笔订单被多次支付，多次扣款”。要解决此问题，可在对应的付款订单中添加一个标识的枚举字段。每次付款请求过来，扣款操作之前，都先检查该订单是否“已支付”，是则直接返回，不用扣款啦，不是的话做扣款操作，同时扣完之后修改为“已支付”状态。</p>
+<p>修改之后的付款操作就变成了如下的流程：<br><img src="http://7xk4uk.com1.z0.glb.clouddn.com/wp-content/uploads/2015/07/QQ%E6%88%AA%E5%9B%BE20150727092818.png" alt="业务流程图改"></p>
+<p>1）网页在付款页面，发起支付订单创建</p>
+<p>1.1 如果订单成功后但客户端没有正常接收，则订单作废，重新创建订单（此订单为支付订单，跟购物清单的订单是绑定的）</p>
+<p>1.2 客户端成功收到的订单状态都是“未支付”</p>
+<p>2）客户端输入支付密码，发送订单号，后台对此订单进行扣款</p>
+<p>2.1 如果此订单已被扣款，则直接返回成功，否则做扣减操作，并将状态置为“已付款”</p>
+<p>2.2 如果客户端没有成功接收到扣款结果，则会重试（走2.1）</p>
+<p>3）客户端收到此订单支付成功的结果</p>
+<p>涉及到支付的环节往往是比较敏感、比较难把握的。操作不当就可能导致资金亏损，因此除了理论的分析，还需要做充值的模拟测试以及运维对账等进行辅助，甚至在出现问题时人工干预或者暂时关闭支付功能。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/09/8-9技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1658,170 +1812,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/01/8-1技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/08/01/8-1技术笔记/" itemprop="url">泛型+SpringMVC</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-01T11:14:09+08:00">
-                2018-08-01
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="泛型"><a href="#泛型" class="headerlink" title="泛型"></a>泛型</h1><ul>
-<li><p>类泛型</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">class Test&lt;T&gt;</span><br><span class="line">&#123;</span><br><span class="line">    private T t;</span><br><span class="line">    public void show(T t)</span><br><span class="line">    &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>方法泛型(&lt;T>是标识符，T表示返回类型为T)</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public &lt;T&gt; T show()</span><br><span class="line">&#123;</span><br><span class="line">    operation about T...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>泛型限定（此处用于限定T类型继承自Comparable,因为T类型可以调用compareTo方法。）</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public &lt;T extends Comparable&gt; shwo(T a, T b)</span><br><span class="line">&#123;</span><br><span class="line">    int num = a.compareTo(b);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>数组中不能泛型，泛型会类型擦除，实际上没有泛型，因此静态不能泛型</p>
-</li>
-</ul>
-<h1 id="SpringMVC"><a href="#SpringMVC" class="headerlink" title="SpringMVC"></a>SpringMVC</h1><ul>
-<li><p>@RestController = @RespondBody + @Controller</p>
-</li>
-<li><p>@ResponseBody 注解表示该方法的返回的结果直接写入HTTP 响应正文（ResponseBody）中，一般在异步获取数据时使用。<br>通常在使用 @RequestMapping 后，返回值通常解析为跳转路径，加上 @Responsebody 后返回结果不会被解析为跳转路径，而是直接写入HTTP 响应正文中。</p>
-</li>
-<li><p>@PathVariable 绑定URI模板变量值,用来获得请求url中的动态参数的,将请求URL中的模板变量映射到功能处理方法的参数上。<br>(配置url和方法的一个关系 @RequestMapping  (“item/{itemId}”))</p>
-</li>
-<li><p>@RequestParam 直接是传过来的参数，表单来的</p>
-</li>
-</ul>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1872,7 +1862,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">183</span>
+                  <span class="site-state-item-count">184</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

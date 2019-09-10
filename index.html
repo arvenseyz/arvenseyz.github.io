@@ -251,6 +251,179 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/09/10/9-10技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/09/10/9-10技术笔记/" itemprop="url">shellscript选择与循环</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-10T15:30:22+08:00">
+                2019-09-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="条件命令"><a href="#条件命令" class="headerlink" title="条件命令"></a>条件命令</h2><p>在bash脚本编程中，我们经常做一些条件判断， 我们主要用到了三种，test，单中括号，双中括号。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[ $? –eq 0 ]</span><br><span class="line"></span><br><span class="line">[[ $myvar == “mysql” ]]</span><br><span class="line"></span><br><span class="line">test 1 -eq 0</span><br></pre></td></tr></table></figure>
+<h3 id="test"><a href="#test" class="headerlink" title="test"></a>test</h3><p>test是bash内建命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ <span class="built_in">test</span> 1 -ne 0 &amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
+<p>ne是不等于的意思，即1不等于0，就输出ok.</p>
+<p>man test可以看见所有参数用法，摘录一点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">( EXPRESSION )</span><br><span class="line">       EXPRESSION is true</span><br><span class="line"></span><br><span class="line">! EXPRESSION</span><br><span class="line">       EXPRESSION is false</span><br><span class="line"></span><br><span class="line">EXPRESSION1 -a EXPRESSION2</span><br><span class="line">       both EXPRESSION1 and EXPRESSION2 are true</span><br><span class="line"></span><br><span class="line">EXPRESSION1 -o EXPRESSION2</span><br><span class="line">       either EXPRESSION1 or EXPRESSION2 is true</span><br><span class="line">       </span><br><span class="line">       STRING1 = STRING2</span><br><span class="line">       the strings are equal</span><br><span class="line"></span><br><span class="line">STRING1 != STRING2</span><br><span class="line">       the strings are not equal</span><br><span class="line"></span><br><span class="line">INTEGER1 -eq INTEGER2</span><br><span class="line">       INTEGER1 is equal to INTEGER2</span><br><span class="line"></span><br><span class="line">INTEGER1 -ge INTEGER2</span><br><span class="line">       INTEGER1 is greater than or equal to INTEGER2</span><br><span class="line"></span><br><span class="line">INTEGER1 -gt INTEGER2</span><br><span class="line">       INTEGER1 is greater than INTEGER2</span><br></pre></td></tr></table></figure>
+<h3 id="单中括号"><a href="#单中括号" class="headerlink" title="单中括号"></a>单中括号</h3><p>实际上[ 这个是个内建命令，可以执行which [查看。</p>
+<p>这样就可以理解奇怪的规定。即然是命令，那么命令与后面的参数就得用空格隔开，使用[时后面需要有一个空格的原因。所以[1=2]这样的写法将会报错。单中括号与test命令是等价的。</p>
+<p>这里有一个陷阱，既然 <code>都是以参数的形式传递给</code>test` 命令的， 那么如果参数解析的结果是空或者带空格，那么就会因为缺少参数或者参数数量不丢而崩掉。</p>
+<p>所以最好参数用双引号包起来。</p>
+<h3 id="双中括号"><a href="#双中括号" class="headerlink" title="双中括号"></a>双中括号</h3><p>双中括号不是命令，而是shell关键字。因为不是命令，因此不受制与 Shell 的 <strong>参数展开</strong>，比如 不需要用引号包裹所有变量，也支持类似 <code>&amp;&amp;</code>，<code>||</code> 这样的逻辑操作而不需要用类似 <code>-a</code>，<code>-o</code> 这样的参数。</p>
+<h3 id="双小括号"><a href="#双小括号" class="headerlink" title="双小括号"></a>双小括号</h3><p>算术展开的语法是  <code>$((expression))</code>，这是从其他编程语言来的人最顺手的算术操作方式。与  <code>test</code>  命令相比，</p>
+<ul>
+<li>C 风格的算术操作语法</li>
+<li>Shell 会把  <code>expression</code>  内容的每一项都当做就像被引号包裹了一样。</li>
+<li>会依次进行<strong>参数展开</strong>、<strong>命令替换</strong>，和  <strong>引号移除</strong>。</li>
+</ul>
+<p>因此可以不需要像  <code>test</code>  命令那样用引号包裹所有变量，也不需要注意空格，也可以写 C 风格的操作。</p>
+<p>然后，对于C，1是ture，0是false。bah相反。</p>
+<h3 id="逻辑运算符"><a href="#逻辑运算符" class="headerlink" title="逻辑运算符"></a>逻辑运算符</h3><p>因为test和[]是命令，所以逻辑运算符是以参数的形式体现。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [ 1 -ne 0 ]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br><span class="line">yangzhuo@n224-019-077:~/file$ [ 1 -ne 0 || 1 -gt 0 ]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">-bash: [: missing `]<span class="string">'</span></span><br><span class="line"><span class="string">-bash: 1: command not found</span></span><br></pre></td></tr></table></figure>
+<p>只能这样</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [ 1 -ne 0 ] || [ 1 -gt 0 ]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
+<p>当然[[]]就不受限制</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [[ 1 -ne 0  ||  1 -gt 0 ]]&amp;&amp;echo ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
+<p>甚至</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [[ 1 != 0  ||  1 &gt; 0 ]]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
+<h2 id="选择语句"><a href="#选择语句" class="headerlink" title="选择语句"></a>选择语句</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">read</span> -p <span class="string">"num?"</span> num</span><br><span class="line"><span class="keyword">if</span> [ <span class="variable">$&#123;num&#125;</span> -gt 10 ]; <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"big"</span></span><br><span class="line"><span class="keyword">elif</span> [ <span class="variable">$&#123;num&#125;</span> - eq 10]; <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"equal"</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"small"</span></span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+<h2 id="循环"><a href="#循环" class="headerlink" title="循环"></a>循环</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> [ <span class="string">"<span class="variable">$&#123;yn&#125;</span>"</span> != <span class="string">"yes"</span> -a <span class="string">"<span class="variable">$&#123;yn&#125;</span>"</span> != <span class="string">"YES"</span> ]</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line"><span class="built_in">read</span> -p <span class="string">"Please input yes/YES to stop this program: "</span> yn </span><br><span class="line"><span class="keyword">done</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"OK! you input the correct answer."</span></span><br></pre></td></tr></table></figure>
+<p>while do done结构，也有until do done，直到。。。其实没啥用</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">s=0 <span class="comment"># 这是加总的数值变量</span></span><br><span class="line">i=0 <span class="comment"># 这是累计的数值，亦即是 1, 2, 3....</span></span><br><span class="line"><span class="keyword">while</span> [ <span class="string">"<span class="variable">$&#123;i&#125;</span>"</span> != <span class="string">"100"</span> ]</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line">i=$（（<span class="variable">$i</span>+1）） <span class="comment"># 每次 i 都会增加 1</span></span><br><span class="line">s=$（（<span class="variable">$s</span>+<span class="variable">$i</span>）） <span class="comment"># 每次都会加总一次！</span></span><br><span class="line"><span class="keyword">done</span> <span class="built_in">echo</span> <span class="string">"The result of '1+2+3+...+100' is ==&gt; <span class="variable">$s</span>"</span></span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/09/08/9-8技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1758,158 +1931,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/07/23/7-23技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/07/23/7-23技术笔记/" itemprop="url">goSlcie细节</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-23T21:18:59+08:00">
-                2019-07-23
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="List"><a href="#List" class="headerlink" title="List"></a>List</h1><h2 id="nil切片与空切片"><a href="#nil切片与空切片" class="headerlink" title="nil切片与空切片"></a>nil切片与空切片</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> s1 []<span class="keyword">int</span></span><br><span class="line"><span class="keyword">var</span> s2 = *<span class="built_in">new</span>([]<span class="keyword">int</span>)</span><br><span class="line"><span class="keyword">var</span> s3 = <span class="built_in">make</span>([]<span class="keyword">int</span>, <span class="number">0</span>)</span><br><span class="line"><span class="keyword">var</span> s4 = []<span class="keyword">int</span>&#123;&#125;</span><br></pre></td></tr></table></figure>
-<p>前两者是nil切片，==nil。</p>
-<p>后两者是空切片，!=nil，数据指针都指向同一个地址 <code>0xc42003bda0</code></p>
-<p>四者的len都是0，所以应该用len(list)==0来判断返回值。</p>
-<h2 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h2><p>扩容规则并不是网传的小于1024两倍，大于1024就1.25倍这么简单</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">s := []<span class="keyword">int</span>&#123;<span class="number">1</span>,<span class="number">2</span>&#125;</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">fmt.Printf(<span class="string">"%d %d    \n"</span>,<span class="built_in">len</span>(s),<span class="built_in">cap</span>(s))</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">fmt.Printf(<span class="string">"%d %d"</span>,<span class="built_in">len</span>(s),<span class="built_in">cap</span>(s))</span><br></pre></td></tr></table></figure>
-<p>输出并不是5 8 11 16</p>
-<p>而是5 6 11 12</p>
-<h4 id="基于cap的增长规则"><a href="#基于cap的增长规则" class="headerlink" title="基于cap的增长规则"></a>基于cap的增长规则</h4><p>根本问题在于，可能扩容后依然不够装，为了避免这个问题，当简单规则计算后，仍不够装时，会采用基于cap的增长规则。</p>
-<p>1.计算新cap,以例子为例，翻倍仍不够，新cap是2+3=5；</p>
-<p>2.内存对齐，内存对齐，简单来说需要多少个8（小于1024）/128（大于1024）字节，可以内存对齐，这里是6个。具体来说，一共五个数，每个数的指针大小为8（64位机），先算出空间40，算出实际需要索引4，然后查一个内存对齐表，索引4处值为48，48即6。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1960,7 +1981,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">183</span>
+                  <span class="site-state-item-count">184</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
