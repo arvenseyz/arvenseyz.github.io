@@ -251,6 +251,156 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/06/27/6-27技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/06/27/6-27技术笔记/" itemprop="url">for range和select</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-27T10:29:54+08:00">
+                2019-06-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="for-range"><a href="#for-range" class="headerlink" title="for range"></a>for range</h1><p>for range 对于channel是一个阻塞式的行为，如果拿不到数据，会被阻塞，直到通道关闭或者拿到数据。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"strconv"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">makeCakeAndSend</span><span class="params">(cs <span class="keyword">chan</span> <span class="keyword">string</span>, count <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt;= count; i++ &#123;</span><br><span class="line">        cakeName := <span class="string">"Strawberry Cake "</span> + strconv.Itoa(i)</span><br><span class="line">        cs &lt;- cakeName <span class="comment">//send a strawberry cake</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">close</span>(cs)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">receiveCakeAndPack</span><span class="params">(cs <span class="keyword">chan</span> <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> s := <span class="keyword">range</span> cs &#123;</span><br><span class="line">        fmt.Println(<span class="string">"Packing received cake: "</span>, s)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    cs := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>)</span><br><span class="line">    <span class="keyword">go</span> makeCakeAndSend(cs, <span class="number">5</span>)</span><br><span class="line">    receiveCakeAndPack(cs)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>蛋糕制作函数制作五个蛋糕，然后发给通道，最后关闭通道。</p>
+<p>接受程序遍历通道，for s:=range cs ,就相当于从通道接受了数据s。</p>
+<p>主函数里申请了一个无缓存的通道。</p>
+<h1 id="select"><a href="#select" class="headerlink" title="select"></a>select</h1><p>select也是阻塞的，如果没有可用通道，则阻塞。</p>
+<p>从通道接受数据可以是两个返回值，第二个即可用来判断通道是否已经关闭。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"strconv"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">makeCakeAndSend</span><span class="params">(cs <span class="keyword">chan</span> <span class="keyword">string</span>, flavor <span class="keyword">string</span>, count <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">1</span>; i &lt;= count; i++ &#123;</span><br><span class="line">        cakeName := flavor + <span class="string">" Cake "</span> + strconv.Itoa(i)</span><br><span class="line">        cs &lt;- cakeName <span class="comment">//send a strawberry cake</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">close</span>(cs)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">receiveCakeAndPack</span><span class="params">(strbry_cs <span class="keyword">chan</span> <span class="keyword">string</span>, choco_cs <span class="keyword">chan</span> <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">    strbry_closed, choco_closed := <span class="literal">false</span>, <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="comment">//if both channels are closed then we can stop</span></span><br><span class="line">        <span class="keyword">if</span> strbry_closed &amp;&amp; choco_closed &#123;</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        fmt.Println(<span class="string">"Waiting for a new cake ..."</span>)</span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> cakeName, strbry_ok := &lt;-strbry_cs:</span><br><span class="line">            <span class="keyword">if</span> !strbry_ok &#123;</span><br><span class="line">                strbry_closed = <span class="literal">true</span></span><br><span class="line">                fmt.Println(<span class="string">" ... Strawberry channel closed!"</span>)</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                fmt.Println(<span class="string">"Received from Strawberry channel.  Now packing"</span>, cakeName)</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="keyword">case</span> cakeName, choco_ok := &lt;-choco_cs:</span><br><span class="line">            <span class="keyword">if</span> !choco_ok &#123;</span><br><span class="line">                choco_closed = <span class="literal">true</span></span><br><span class="line">                fmt.Println(<span class="string">" ... Chocolate channel closed!"</span>)</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                fmt.Println(<span class="string">"Received from Chocolate channel.  Now packing"</span>, cakeName)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    strbry_cs := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>)</span><br><span class="line">    choco_cs := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">//two cake makers</span></span><br><span class="line">    <span class="keyword">go</span> makeCakeAndSend(choco_cs, <span class="string">"Chocolate"</span>, <span class="number">3</span>)   <span class="comment">//make 3 chocolate cakes and send</span></span><br><span class="line">    <span class="keyword">go</span> makeCakeAndSend(strbry_cs, <span class="string">"Strawberry"</span>, <span class="number">4</span>) <span class="comment">//make 3 strawberry cakes and send</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//one cake receiver and packer</span></span><br><span class="line">    receiveCakeAndPack(strbry_cs, choco_cs) <span class="comment">//pack all cakes received on these cake channels</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>现在有两种蛋糕，只有两个通道都关闭，包装的for select才会结束。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/06/25/6-25技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1691,159 +1841,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/05/28/5-28技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/05/28/5-28技术笔记/" itemprop="url">在线聊天室</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-28T13:12:27+08:00">
-                2019-05-28
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="服务端"><a href="#服务端" class="headerlink" title="服务端"></a>服务端</h1><p>第一步是监听端口，使用net包的Listen方法。返回一个Listener，用于接受和关闭连接等。</p>
-<p>第二是，连接的建立，显然每个连接都应该有个channel，然后有个map来保存channel和连接的映射。</p>
-<p>第三是，用一个协程来进行广播，申请三个channel，分别用于传播：进入、离开和通讯的消息。使用轮询的方法，监控三个channel。连接建立即map加一个，离开即删除，发送消息则是遍历map，把消息发给所有的消息channel。</p>
-<p>第四就是，当一个连接建立，往连接的channel里添加来的人，来的人是谁，是listener的Accept()方法返回的conn对象的RemoteAddr()方法得知的；同样，读取客户端conn的所有文本，加入到消息队列里；离开和进入差不多。</p>
-<p>第五，消息channel里的消息来自于连接conn，需要一个协程先把会话channel里的消息写入连接conn。这里我认为应该调用conn.Write(msgbyte)方法，但是fmt.Fprintln()似乎起了相同的效果。</p>
-<p>第六，通过阻塞来同步，由于channel都是无缓冲的，写入操作会阻塞协程，所以需要别的协程来读channel，广播方法没有读取每个连接的channel，所以需要连接自己新申请一个协程来读取，读取后写入conn。</p>
-<p>第七，for    range chan和select操作都是阻塞的，不会循环退出。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"bufio"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"net"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	listener, err := net.Listen(<span class="string">"tcp"</span>, <span class="string">"localhost:8000"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatal(err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">go</span> broadcaster()</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		conn, err := listener.Accept()</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			log.Print(err)</span><br><span class="line">			<span class="keyword">continue</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">go</span> handleConn(conn)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">handleConn</span><span class="params">(conn net.Conn)</span></span> &#123;</span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>) <span class="comment">// outgoing client messages</span></span><br><span class="line">	<span class="keyword">defer</span> conn.Close()</span><br><span class="line">	<span class="keyword">go</span> clientWriter(conn, ch)</span><br><span class="line"></span><br><span class="line">	who := conn.RemoteAddr().String()</span><br><span class="line">	ch &lt;- <span class="string">"You are "</span> + who</span><br><span class="line">	messages &lt;- who + <span class="string">" has arrived"</span></span><br><span class="line">	entering &lt;- ch</span><br><span class="line"></span><br><span class="line">	input := bufio.NewScanner(conn)</span><br><span class="line">	<span class="keyword">for</span> input.Scan() &#123;</span><br><span class="line">		messages &lt;- who + <span class="string">": "</span> + input.Text()</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// <span class="doctag">NOTE:</span> ignoring potential errors from input.Err()</span></span><br><span class="line"></span><br><span class="line">	leaving &lt;- ch</span><br><span class="line">	messages &lt;- who + <span class="string">" has left"</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">clientWriter</span><span class="params">(conn net.Conn, ch &lt;-<span class="keyword">chan</span> <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> msg := <span class="keyword">range</span> ch &#123;</span><br><span class="line">		fmt.Fprintln(conn, msg) <span class="comment">// <span class="doctag">NOTE:</span> ignoring network errors</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> client <span class="keyword">chan</span>&lt;- <span class="keyword">string</span> <span class="comment">// an outgoing message channel</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> (</span><br><span class="line">	entering = <span class="built_in">make</span>(<span class="keyword">chan</span> client)</span><br><span class="line">	leaving  = <span class="built_in">make</span>(<span class="keyword">chan</span> client)</span><br><span class="line">	messages = <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>) <span class="comment">// all incoming client messages</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">broadcaster</span><span class="params">()</span></span> &#123;</span><br><span class="line">	clients := <span class="built_in">make</span>(<span class="keyword">map</span>[client]<span class="keyword">bool</span>) <span class="comment">// all connected clients</span></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> msg := &lt;-messages:</span><br><span class="line">			<span class="comment">// Broadcast incoming message to all</span></span><br><span class="line">			<span class="comment">// clients' outgoing message channels.</span></span><br><span class="line">			<span class="keyword">for</span> cli := <span class="keyword">range</span> clients &#123;</span><br><span class="line">				cli &lt;- msg</span><br><span class="line">			&#125;</span><br><span class="line">		<span class="keyword">case</span> cli := &lt;-entering:</span><br><span class="line">			clients[cli] = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">case</span> cli := &lt;-leaving:</span><br><span class="line">			<span class="built_in">delete</span>(clients, cli)</span><br><span class="line">			<span class="built_in">close</span>(cli)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h1><p>客户端相对简单，用net.Dial()，连接到端口。</p>
-<p>主协程把标准输入里的内容赋值到conn，一个新协程，将conn里收到的内容输出到标准输出。</p>
-<p>值得注意的是主协程和输出协程的同步，当手动停止标准输入时，主协程结束，conn关闭，这时输出协程可能还没结束。用一个无缓冲的chan，做阻塞队列即可，主协程读取，读不到会阻塞，直到输出协程结束，输入内容到chan，主协程读到消息，结束，输出协程也结束。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"io"</span></span><br><span class="line">	<span class="string">"log"</span></span><br><span class="line">	<span class="string">"net"</span></span><br><span class="line">	<span class="string">"os"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	conn, err := net.Dial(<span class="string">"tcp"</span>, <span class="string">"localhost:8000"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatal(err)</span><br><span class="line">	&#125;</span><br><span class="line">	done := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		io.Copy(os.Stdout, conn) <span class="comment">// <span class="doctag">NOTE:</span> ignoring errors</span></span><br><span class="line">		log.Println(<span class="string">"done"</span>)</span><br><span class="line">		done &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125; <span class="comment">// signal the main goroutine</span></span><br><span class="line">	&#125;()</span><br><span class="line">	mustCopy(conn, os.Stdin)</span><br><span class="line">	conn.Close()</span><br><span class="line">	&lt;-done <span class="comment">// wait for background goroutine to finish</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mustCopy</span><span class="params">(dst io.Writer, src io.Reader)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> _, err := io.Copy(dst, src); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatal(err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1894,7 +1891,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">185</span>
+                  <span class="site-state-item-count">186</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
