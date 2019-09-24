@@ -251,6 +251,173 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/08/14/8-14技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/08/14/8-14技术笔记-1/" itemprop="url">linux文件目录与链接</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-14T15:18:55+08:00">
+                2019-08-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="文件目录"><a href="#文件目录" class="headerlink" title="文件目录"></a>文件目录</h1><p><code>/ 根目录</code></p>
+<p><code>├── bin 存放用户二进制文件</code></p>
+<p><code>├── boot 存放内核引导配置文件</code></p>
+<p><code>├── dev 存放设备文件</code></p>
+<p><code>├── etc 存放系统配置文件</code></p>
+<p><code>├── home 用户主目录</code></p>
+<p><code>├── lib 动态共享库</code></p>
+<p><code>├── lost+found 文件系统恢复时的恢复文件</code></p>
+<p><code>├── media 可卸载存储介质挂载点</code></p>
+<p><code>├── mnt 文件系统临时挂载点</code></p>
+<p><code>├── opt 附加的应用程序包</code></p>
+<p><code>├── proc 系统内存的映射目录，提供内核与进程信息</code></p>
+<p><code>├── root root 用户主目录</code></p>
+<p><code>├── sbin 存放系统二进制文件</code></p>
+<p><code>├── srv 存放服务相关数据</code></p>
+<p><code>├── sys sys 虚拟文件系统挂载点</code></p>
+<p><code>├── tmp 存放临时文件</code></p>
+<p><code>├── usr 存放用户应用程序</code></p>
+<p><code>└── var 存放邮件、系统日志等变化文件</code></p>
+<p>Linux 与其他类 UNIX 系统一样并不区分文件与目录：目录是记录了其他文件名的文件。使用命令 mkdir 创建目录时，若期望创建的目录的名称与现有的文件名（或目录名）重复，则会创建失败。Linux 将设备当做文件进行处理。</p>
+<h1 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h1><p>我们知道文件都有文件名与数据，这在 Linux 上被分成两个部分：用户数据 (user data) 与元数据 (metadata)。用户数据，即文件数据块 (data block)，数据块是记录文件真实内容的地方；而元数据则是文件的附加属性，如文件大小、创建时间、所有者等信息。在 Linux 中，元数据中的 inode 号（inode 是文件元数据的一部分但其并不包含文件名，inode 号即索引节点号）才是文件的唯一标识而非文件名。文件名仅是为了方便人们的记忆和使用，系统或程序通过 inode 号寻找正确的文件数据块。</p>
+<p>为解决文件的共享使用，Linux 系统引入了两种链接：硬链接 (hard link) 与软链接（又称符号链接，即 soft link 或 symbolic link）。链接为 Linux 系统解决了文件的共享使用，还带来了隐藏文件路径、增加权限安全及节省存储等好处。</p>
+<h2 id="硬链接"><a href="#硬链接" class="headerlink" title="硬链接"></a>硬链接</h2><p>若一个 inode 号对应多个文件名，则称这些文件为硬链接。换言之，硬链接就是同一个文件使用了多个别名。硬链接可由命令 link 或 ln 创建。</p>
+<p>可以说，硬链接就是个文件名。</p>
+<h2 id="软链接"><a href="#软链接" class="headerlink" title="软链接"></a>软链接</h2><p>软链接则是真正的文件，但文件的内容即inode，是另一个文件的的路径名。</p>
+<p>使用 find 命令，其不仅可查找某文件的软链接，还可以用于查找相同 inode 的所有硬链接。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/08/12/8-12技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1654,160 +1821,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/06/30/6-30技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/06/30/6-30技术笔记/" itemprop="url">kafka入门</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-30T14:31:51+08:00">
-                2019-06-30
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="vs-rocketMQ"><a href="#vs-rocketMQ" class="headerlink" title="vs rocketMQ"></a>vs rocketMQ</h1><p>之前用的rocketMq，所以对消息队列有了初步了解，这里简单比较下两者。</p>
-<ol>
-<li><p>rocketMQ有nameserver，Kafka没有，因为Kafka的broker管理相当于托管给了zookeeper，既然用了zookeeper，其broker就有了主从切换/选举等概念。</p>
-</li>
-<li><p>kafka在消息存储过程中会根据topic和partition的数量创建物理文件，也就是说我们创建一个topic并指定了3个partition，那么就会有3个物理文件目录，也就说说partition的数量和对应的物理文件是一一对应的。而rocketMQ用的是commitLog的方式，</p>
-</li>
-</ol>
-<h1 id="partition"><a href="#partition" class="headerlink" title="partition"></a>partition</h1><p>partition其实相当于topic下的分区，一个topic 可以配置几个partition，而每个partition在物理上对应一个文件夹，该文件夹下存储这个Partition的所有消息和索引文件。produce发送的消息分发到不同的partition中，一方面随机发送可以实现负载均衡，另一方面发布订阅指定的partition某种程度实现了顺序消息。</p>
-<h1 id="消息级别"><a href="#消息级别" class="headerlink" title="消息级别"></a>消息级别</h1><p>从消息传递的角度来看，消息级别有个有这三种：</p>
-<p>（1）至多消费一次，生产者保证自己发出消息，就不管了。生产者只需要异步发送，在发送失败或者消费失败的时候不做任何处理即可。MQ 在消费者拉走消息后，就直接将消息标记为已经消费或者删除消息。在监控系统和日志系统中，丢失部分信息是可以接受的。</p>
-<p>（2）至少消费一次，那就需要确认机制，生产者发消息到 MQ，MQ 收到消息后返回确认信息（ACK）给生产者，生产者收到确认信息后生产过程完成，如果在一定时间内，生产者没有收到确认信息，生产者重新发送消息。消费者同理。至少消费一次就副作用是重复消费，因为确认的消息可能没收到导致重复。解决消息重复的方法是消费者这边做幂等。</p>
-<p>（3）正好消费一次，实现很复杂，一般运用于物联网。</p>
-<p>ji qi</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1858,7 +1871,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">186</span>
+                  <span class="site-state-item-count">187</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
