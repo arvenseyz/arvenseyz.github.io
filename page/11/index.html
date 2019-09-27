@@ -251,6 +251,181 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/12/13/12-13技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/12/13/12-13技术笔记/" itemprop="url">Dubbo功能和简单配置</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-13T17:35:55+08:00">
+                2018-12-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="Dubbo功能"><a href="#Dubbo功能" class="headerlink" title="Dubbo功能"></a>Dubbo功能</h1><h2 id="没有Dubbo的http"><a href="#没有Dubbo的http" class="headerlink" title="没有Dubbo的http"></a>没有Dubbo的http</h2><p>假设我们的系统非常简单，如何对外提供服务呢？</p>
+<p>服务方启动一个tomcat+springmvc，监听80端口，调用方通过httpclient发起http请求，服务方返回json或xml数据结果，调用方拿到http响应结果解析结果数据，一次服务调用结束。</p>
+<h2 id="注册中心与客户端负载均衡"><a href="#注册中心与客户端负载均衡" class="headerlink" title="注册中心与客户端负载均衡"></a>注册中心与客户端负载均衡</h2><p>随着服务的增多，一方面在配置中心，服务的内部域名化或url路径不断随业务变化；另一方面，服务器压力变大，这时也需要负载均衡。解决方法：</p>
+<p>服务方在启动tomcat后，向注册中心注册自己的服务列表，包括服务器ip、port，以及代表服务的唯一标识，比如以格式/a_service/ip_port,/b_service/ip_port存储在注册中心。<br>这样调用方在启动后，去注册中心寻找a服务的地址列表，并且订阅/a_service，当a服务列表变更就会将变更消息推给调用方。接下来地址列表得到了，调用方创建多个httpClient实例，每个实例对应一个服务器ip_port，每次发起调用，从httpclient实例列表中随机选择一个，发起调用请求。当服务方某台服务器出现宕机或者网络故障，调用方会从收到由注册中心推送过来的通知消息，进而将出现故障的ip_port对应的httpclient从列表中移出；当服务方新增加服务器时，调用方同样会收到通知消息，进而新建httpclient实例，加入httpclient列表。  </p>
+<h2 id="服务端负载均衡模块"><a href="#服务端负载均衡模块" class="headerlink" title="服务端负载均衡模块"></a>服务端负载均衡模块</h2><p>服务端也希望设置负载均衡的权重，权重高的服务器的收到更多的请求，这时服务端也向注册中心注册权重信息。</p>
+<h2 id="集群容错"><a href="#集群容错" class="headerlink" title="集群容错"></a>集群容错</h2><p>对于不同的服务，容错机制也应该不同。非幂等操作-&gt;失败立刻报错；要求结果的-&gt;重试其他服务器；无所谓的-&gt;失败忽略；消息通知-&gt;失败重发。</p>
+<h2 id="路由规则"><a href="#路由规则" class="headerlink" title="路由规则"></a>路由规则</h2><p>路由机制，Dubbo的路由机制主要解决的目的就是服务调用时，从已知的所有服务提供者中根据路由规则刷选服务提供者。多个业务系统都实现了同一个服务，在调用中通过读取相关配置可以知道此次调用是限制请求到哪几个服务提供者上，而不是所有提供者中任取一个，这个就需要在dubbo上自定义自己的路由规则。</p>
+<h2 id="管理和监控"><a href="#管理和监控" class="headerlink" title="管理和监控"></a>管理和监控</h2><p>可视化管理中心，管理和监控各种性能。</p>
+<h2 id="动态代理"><a href="#动态代理" class="headerlink" title="动态代理"></a>动态代理</h2><p>consumer向注册中心注册，并获取服务端相应的信息后，代理工厂创建的远程服务代理，完成了RPC调用。</p>
+<h1 id="Dubbo配置"><a href="#Dubbo配置" class="headerlink" title="Dubbo配置"></a>Dubbo配置</h1><h2 id="基本配置"><a href="#基本配置" class="headerlink" title="基本配置"></a>基本配置</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">&lt;dubbo:service/&gt; 服务配置，用于暴露一个服务，定义服务的元信息，一个服务可以用多个协议暴露，一个服务也可以注册到多个注册中心。</span><br><span class="line">eg、&lt;dubbo:service ref=<span class="string">"demoService"</span> <span class="class"><span class="keyword">interface</span></span>=<span class="string">"com.unj.dubbotest.provider.DemoService"</span> /&gt;</span><br><span class="line"></span><br><span class="line">&lt;dubbo:reference/&gt; 引用服务配置，用于创建一个远程服务代理，一个引用可以指向多个注册中心。</span><br><span class="line">eg、&lt;dubbo:reference id=<span class="string">"demoService"</span> <span class="class"><span class="keyword">interface</span></span>=<span class="string">"com.unj.dubbotest.provider.DemoService"</span> /&gt;</span><br><span class="line"></span><br><span class="line">&lt;dubbo:protocol/&gt; 协议配置，用于配置提供服务的协议信息，协议由提供方指定，消费方被动接受。</span><br><span class="line">eg、&lt;dubbo:protocol name=<span class="string">"dubbo"</span> port=<span class="string">"20880"</span> /&gt;</span><br><span class="line"></span><br><span class="line">&lt;dubbo:application/&gt; 应用配置，用于配置当前应用信息，不管该应用是提供者还是消费者。</span><br><span class="line">eg、&lt;dubbo:application name=<span class="string">"xixi_provider"</span> /&gt;</span><br><span class="line">    &lt;dubbo:application name=<span class="string">"hehe_consumer"</span> /&gt;</span><br><span class="line"></span><br><span class="line">&lt;dubbo:<span class="keyword">module</span>/&gt; 模块配置，用于配置当前模块信息，可选。</span><br><span class="line">&lt;dubbo:registry/&gt; 注册中心配置，用于配置连接注册中心相关信息。</span><br><span class="line">eg、&lt;dubbo:registry address=<span class="string">"zookeeper://192.168.2.249:2181"</span> /&gt;</span><br><span class="line"></span><br><span class="line">&lt;dubbo:monitor/&gt; 监控中心配置，用于配置连接监控中心相关信息，可选。</span><br><span class="line">&lt;dubbo:provider/&gt; 提供方的缺省值，当ProtocolConfig和ServiceConfig某属性没有配置时，采用此缺省值，可选。</span><br><span class="line">&lt;dubbo:consumer/&gt; 消费方缺省配置，当ReferenceConfig某属性没有配置时，采用此缺省值，可选。</span><br><span class="line">&lt;dubbo:method/&gt; 方法配置，用于ServiceConfig和ReferenceConfig指定方法级的配置信息。</span><br><span class="line">&lt;dubbo:argument/&gt; 用于指定方法参数配置。</span><br></pre></td></tr></table></figure>
+<h2 id="集群容错方案"><a href="#集群容错方案" class="headerlink" title="集群容错方案"></a>集群容错方案</h2><ol>
+<li><p>Failover Cluster失败自动切换，当出现失败，重试其它服务器。(缺省)通常用于读操作，但重试会带来更长延迟。可通过retries=”2”来设置重试次数(不含第一次)。</p>
+</li>
+<li><p>Failfast Cluster 快速失败，只发起一次调用，失败立即报错。通常用于非幂等性的写操作，比如新增记录。</p>
+</li>
+<li><p>Failsafe Cluster失败安全，出现异常时，直接忽略。通常用于写入审计日志等操作。</p>
+</li>
+<li><p>Failback Cluster，失败自动恢复，后台记录失败请求，定时重发。通常用于消息通知操作。</p>
+</li>
+<li><p>Forking Cluster并行调用多个服务器，只要一个成功即返回。通常用于实时性要求较高的读操作，但需要浪费更多服务资源。可通过forks=”2”来设置最大并行数。</p>
+</li>
+<li><p>Broadcast Cluster，广播调用所有提供者，逐个调用，任意一台报错则报错。(2.1.0开始支持)通常用于通知所有提供者更新缓存或日志等本地资源信息。</p>
+</li>
+</ol>
+<h2 id="负载均衡策略"><a href="#负载均衡策略" class="headerlink" title="负载均衡策略"></a>负载均衡策略</h2><ol>
+<li><p>Random LoadBalance（默认），随机，其实最后就会平均。</p>
+</li>
+<li><p>RoundRobin LoadBalance，轮询，适用于机器性能有差异，能者多劳。但实际上，自己加的权不一定是真正的性能个差异，导致慢的积累。</p>
+</li>
+<li><p>LeastActive LoadBalance， 最少活跃调用数，相同活跃数的随机，活跃数指调用前后计数差。使慢的提供者收到更少请求，因为越慢的提供者的调用前后计数差会越大。</p>
+</li>
+<li><p>ConsistentHash LoadBalance，一致性哈希。一致性Hash，相同参数的请求总是发到同一提供者。当某一台提供者挂时，原本发往该提供者的请求，基于虚拟节点，平摊到其它提供者，不会引起剧烈变动。</p>
+</li>
+</ol>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/12/12/12-12技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1685,156 +1860,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/29/11-29技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/11/29/11-29技术笔记/" itemprop="url">redis五种数据结构</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-29T16:55:17+08:00">
-                2018-11-29
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="五种数据结构"><a href="#五种数据结构" class="headerlink" title="五种数据结构"></a>五种数据结构</h1><h2 id="String"><a href="#String" class="headerlink" title="String"></a>String</h2><p>实际上也是键值对，因为每个都有名字。其内部数据结构有点像ArrayList，有空余空间，满了翻倍，达到1M后，每次满了+1M。<br>如果value值是数字，还可以自增。</p>
-<h3 id="分布式锁"><a href="#分布式锁" class="headerlink" title="分布式锁"></a>分布式锁</h3><p>可以设置过期时间，这样就变成了一个分布式锁：问题在于，存入和设置过期时间之间的这一小段时间有风险，即set后expire前挂了或者并发危险。为了解决这个问题，redis有相当于原子性业务，即set有个参数。<br>另一个问题是超时问题，即已经过期了，业务还没有完成，另一个线程持有了锁，就失去了锁的意义。Redis不能解决这个问题，简陋解决方案的给value加个参数，删除锁先匹配参数，但匹配和删除两个操作之间也有时间。 想要完美解决需要Lua,成本太大，不如从业务的角度，不要把这么长时间才能完成的业务用redis分布式锁，或者鸵鸟策略。<br>可重入锁需要自己封装，就是用TheadLocal记录使用次数。</p>
-<h2 id="List"><a href="#List" class="headerlink" title="List"></a>List</h2><p>List是链表，意味着增减很快，意味着链表实现的功能如队列和栈，都是用List实现。即左右push和pop。</p>
-<h3 id="阻塞队列"><a href="#阻塞队列" class="headerlink" title="阻塞队列"></a>阻塞队列</h3><p>队列空了反复读有性能问题，所以有阻塞读：blpop，brpop，即blockingLeftPop的简写，会阻塞直到队列里有信息。<br>空连接会自动断开。</p>
-<h2 id="哈希"><a href="#哈希" class="headerlink" title="哈希"></a>哈希</h2><p>哈希和String似乎区别不大，在使用中，即可以把实体序列化整体存入String，也可以把实体的各个属性存入哈希，取决于是使用实体还是实体的某个属性频率。<br>hash结构和Java中的hashMap一样，数组加链表，把哈希碰撞的元素用链表连起来。区别在于reHash,Redis 为了高性能，不能堵塞服务，所以采用了渐进式 rehash 策略。渐进式 rehash 会在 rehash 的同时，保留新旧两个 hash 结构，查询时会同时查询两个 hash 结构，然后在后续的定时任务中以及 hash 操作指令中，循序渐进地将旧 hash 的内容一点点迁移到新的 hash 结构中。当搬迁完成了，就会使用新的hash结构取而代之。</p>
-<h2 id="set"><a href="#set" class="headerlink" title="set"></a>set</h2><p>set的意义在于去重，而且是单值的，加进去后，一般意义在于查在不在集合里。</p>
-<h2 id="zset"><a href="#zset" class="headerlink" title="zset"></a>zset</h2><p>有序集合，也是键值对，根据值排序，所以有点像优先队列。通过跳表实现。</p>
-<h3 id="延时队列"><a href="#延时队列" class="headerlink" title="延时队列"></a>延时队列</h3><p>延时队列可以通过 Redis 的 zset(有序列表) 来实现。我们将消息序列化成一个字符串作为 zset 的value，这个消息的到期处理时间作为score，然后用多个线程轮询 zset 获取到期的任务进行处理，多个线程是为了保障可用性，万一挂了一个线程还有其它线程可以继续处理。因为有多个线程，所以需要考虑并发争抢任务，确保任务不能被多次执行。</p>
-<h3 id="滑动窗口"><a href="#滑动窗口" class="headerlink" title="滑动窗口"></a>滑动窗口</h3><p>用时间做key值，行为做value值，就成了一个滑动窗口。比如说要限制用户行为，每分钟只能操作三次，每次操作前，移除时间窗口之前的行为记录 pipe.zremrangebyscore(key, 0, now_ts - period * 1000)，剩下的都是时间窗口内的，然后计数pipe.zcard(key)，如果达到了限制次数，则不能执行。同时应该设置过期时间，避免冷用户长期占用内存，pipe.expire(key, period + 1)。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1885,7 +1910,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">187</span>
+                  <span class="site-state-item-count">188</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

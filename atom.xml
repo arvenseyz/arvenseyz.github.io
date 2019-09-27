@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-09-24T11:56:51.564Z</updated>
+  <updated>2019-09-27T12:15:56.971Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -17,11 +17,36 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>kafka序列化、分区器、拦截器</title>
+    <link href="http://yoursite.com/blog/2019/09/27/9-27%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-2/"/>
+    <id>http://yoursite.com/blog/2019/09/27/9-27技术笔记-2/</id>
+    <published>2019-09-27T10:24:57.000Z</published>
+    <updated>2019-09-27T12:15:56.971Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h1><p>生产者需要用序列化器（Serializer）把对象转换成字节数组才能通过网络发送给 Kafka。而在对侧，消费者需要用反序列化器（Deserializer）把从 Kafka 中收到的字节数组转换成相应的对象。</p><p><strong>待学习</strong>：公司kafka封装的sarama，是怎么序列化的。</p><h1 id="分区器"><a href="#分区器" class="headerlink" title="分区器"></a>分区器</h1><p>如果消息 ProducerRecord 中指定了 partition 字段，那么就不需要分区器的作用，因为 partition 代表的就是所要发往的分区号。如果消息 ProducerRecord 中没有指定 partition 字段，那么就需要依赖分区器，根据 key 这个字段来计算 partition 的值。分区器的作用就是为消息分配分区。</p><h1 id="拦截器"><a href="#拦截器" class="headerlink" title="拦截器"></a>拦截器</h1><p>Kafka 一共有两种拦截器：生产者拦截器和消费者拦截器。</p><p>生产者拦截器既可以用来在消息发送前做一些准备工作，比如按照某个规则过滤不符合要求的消息、修改消息的内容等，也可以用来在发送回调逻辑前做一些定制化的需求，比如统计类工作。</p><h1 id="发送方式"><a href="#发送方式" class="headerlink" title="发送方式"></a>发送方式</h1><p>1.发送并忘记 2.同步发送 3.异步发送+回调函数。</p><p>效率大概1:10:15</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;序列化&quot;&gt;&lt;a href=&quot;#序列化&quot; class=&quot;headerlink&quot; title=&quot;序列化&quot;&gt;&lt;/a&gt;序列化&lt;/h1&gt;&lt;p&gt;生产者需要用序列化器（Serializer）把对象转换成字节数组才能通过网络发送给 Kafka。而在对侧，消费者需要用反序列化器（D
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="消息队列" scheme="http://yoursite.com/blog/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
+    
+  </entry>
+  
+  <entry>
     <title>kafka多副本同步机制</title>
     <link href="http://yoursite.com/blog/2019/09/24/9-24%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>http://yoursite.com/blog/2019/09/24/9-24技术笔记/</id>
     <published>2019-09-24T02:36:35.000Z</published>
-    <updated>2019-09-24T11:56:51.564Z</updated>
+    <updated>2019-09-27T03:42:28.327Z</updated>
     
     <content type="html"><![CDATA[<h1 id="主题和分区"><a href="#主题和分区" class="headerlink" title="主题和分区"></a>主题和分区</h1><p>kafka发消息是需要指定主题的，也可以手动指定分区，不指定的话，可以指定或许自制分区选择策略，也可以用默认的，即有key则hash，没有key则随机。</p><p>只要如果分区规则设置的合理，那么所有的消息将会被均匀的分布到不同的分区中，这样就实现了负载均衡和水平扩展。另外，多个订阅者可以从一个或者多个分区中同时消费数据，以支撑海量数据处理能力。</p><h1 id="分区和副本"><a href="#分区和副本" class="headerlink" title="分区和副本"></a>分区和副本</h1><p>为了提高可靠性，分区引入了多副本（Replica）机制，通过增加副本数量可以提升容灾能力。但是副本并不提供读写功能，只有备份能力。副本处于不同的 broker 中，当 leader 副本出现故障时，从 follower 副本中重新选举新的 leader 副本对外提供服务。</p><p><img src="https://i.loli.net/2019/09/24/oAb9LGOnCaVFkec.png" alt="oAb9LGOnCaVFkec"></p><p>如图，一个三个分区，每个分区有三个副本，分布在4个broker中。</p><h1 id="消费容灾"><a href="#消费容灾" class="headerlink" title="消费容灾"></a>消费容灾</h1><p>offset 是消息在分区中的唯一标识，Kafka 通过它来保证消息在分区内的顺序性，不过 offset 并不跨越分区，也就是说，Kafka 保证的是分区有序而不是主题有序。Consumer 使用拉（Pull）模式从服务端拉取消息，并且保存消费的具体位置，当消费者宕机后恢复上线时可以根据之前保存的消费位置重新拉取需要的消息进行消费，这样就不会造成消息丢失。</p><h1 id="ISR与高水位"><a href="#ISR与高水位" class="headerlink" title="ISR与高水位"></a>ISR与高水位</h1><p>分区中的所有副本统称为 AR（Assigned Replicas）。所有与 leader 副本保持一定程度同步的副本（包括 leader 副本在内）组成ISR（In-Sync Replicas），ISR 集合是 AR 集合中的一个子集。消息会先发送到 leader 副本，然后 follower 副本才能从 leader 副本中拉取消息进行同步，同步期间内 follower 副本相对于 leader 副本而言会有一定程度的滞后。</p><p>高水位，HW，即ISR中同步最慢的那个，所同步到的位置。</p><p><img src="https://i.loli.net/2019/09/24/inU1oKQAL6WtNv2.png" alt="inU1oKQAL6WtNv2"></p><p>如图，该分区有两个副本，同步进度不同，都在ISR中，则可读到的消息，是0123，因为4还没完全同步。</p>]]></content>
     
@@ -493,33 +518,6 @@
       
       
         &lt;h1 id=&quot;用户态VS内核态&quot;&gt;&lt;a href=&quot;#用户态VS内核态&quot; class=&quot;headerlink&quot; title=&quot;用户态VS内核态&quot;&gt;&lt;/a&gt;用户态VS内核态&lt;/h1&gt;&lt;p&gt;内核从本质上看是一种软件——控制计算机的硬件资源，并提供上层应用程序运行的环境。用户态即上层
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="Go" scheme="http://yoursite.com/blog/tags/Go/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Go编译原理简析</title>
-    <link href="http://yoursite.com/blog/2019/07/09/7-9%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/07/09/7-9技术笔记/</id>
-    <published>2019-07-09T06:09:42.000Z</published>
-    <updated>2019-09-05T13:21:18.257Z</updated>
-    
-    <content type="html"><![CDATA[<p>go和c一脉相承，其实编译原理和c差不多。无非分为以下步骤。</p><h1 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h1><p>编译器将文本转化为汇编文件的过程。</p><h2 id="编译器前端"><a href="#编译器前端" class="headerlink" title="编译器前端"></a>编译器前端</h2><p>第一步是词法分析，因为go是支持 Unicode 编码的，所以应该是按字节读取，想象下词法分析器，其实很简单，无非就是类似于正则表达式匹配，用switch语句，把文本拆成关键字/运算符/变量名的过程。</p><p>第二步是语法分析，就是把这些单词变成语法树的过程。比如slice[i]=i*(2+6)，整个语句被看作是一个赋值表达式，左子树是一个数组表达式，右子树是一个乘法表达式；数组表达式由 2 个符号表达式组成；乘号表达式则是由一个符号表达式和一个加号表达式组成；加号表达式则是由两个数字组成。符号和数字是最小的表达式，它们不能再被分解，通常作为树的叶子节点。</p><p>第三步是语义分析，编译期所能检查的是静态语义，可以认为这是在“代码”阶段，包括变量类型的匹配、转换等。例如，将一个浮点值赋给一个指针变量的时候，明显的类型不匹配，就会报编译错误。而对于运行期间才会出现的错误：不小心除了一个 0 ，语义分析是没办法检测的。</p><p><strong>语义分析阶段完成之后，会在每个节点上标注上类型。</strong></p><h2 id="编译器后端"><a href="#编译器后端" class="headerlink" title="编译器后端"></a>编译器后端</h2><p>前端生成和平台无关的中间代码，后端会针对不同的平台，生成不同的机器码。</p><p>目标机器硬件底层不同，主要体现在cpu架构不同，所以机器字长、寄存器等等都不一样，意味着在不同机器上跑的机器码是不一样的。</p><p>当然生成机器码之前，需要先优化一下。</p><p>比如把乘法运算变成位移运算，中间变量先计算出来。</p><p>而之后中间代码的生成过程其实就是从 AST 抽象语法树到 SSA 中间代码的转换过程，在这期间会对语法树中的关键字在进行一次更新，更新后的语法树会经过多轮处理转变最后的 SSA 中间代码。</p><h1 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h1><p>编译的过程是针对单文件的，但运行时需要互相引用。</p><p>链接过程就是要把编译器生成的一个个目标文件链接成可执行文件。最终得到的文件是分成各种段的，比如数据段、代码段、BSS段等等，运行时会被装载到内存中。各个段具有不同的读写、执行属性，保护了程序的安全运行。</p><h1 id="Go-程序启动"><a href="#Go-程序启动" class="headerlink" title="Go 程序启动"></a>Go 程序启动</h1><ol><li><p>检查运行平台的CPU，设置好程序运行需要相关标志。</p></li><li><p>TLS（线程局部数据）的初始化。</p></li><li><p>runtime.args（保存二进制文件的绝对路径）、runtime.osinit（获取cpu核）、runtime.schedinit（初始化程序运行的环境） 三个方法做好程序运行需要的各种变量与调度器。</p></li><li><p>runtime.newproc创建新的goroutine用于绑定用户写的main方法。</p></li><li><p>runtime.mstart开始goroutine的调度。</p></li></ol><p>main 函数里执行的一些重要的操作包括：新建一个线程执行 sysmon 函数，定期垃圾回收和调度抢占；启动 gc；执行所有的 init 函数等等。</p><h1 id="Go程序退出"><a href="#Go程序退出" class="headerlink" title="Go程序退出"></a>Go程序退出</h1><p>当 main 函数执行结束之后，会执行 exit(0) 来退出进程。若执行 exit(0) 后，进程没有退出，main 函数最后的代码会一直访问非法地址：正常情况下，一旦出现非法地址访问，系统会把进程杀死，用这样的方法确保进程退出。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;go和c一脉相承，其实编译原理和c差不多。无非分为以下步骤。&lt;/p&gt;
-&lt;h1 id=&quot;编译&quot;&gt;&lt;a href=&quot;#编译&quot; class=&quot;headerlink&quot; title=&quot;编译&quot;&gt;&lt;/a&gt;编译&lt;/h1&gt;&lt;p&gt;编译器将文本转化为汇编文件的过程。&lt;/p&gt;
-&lt;h2 id=&quot;编译
       
     
     </summary>
