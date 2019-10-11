@@ -251,6 +251,183 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/07/10/7-10技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/07/10/7-10技术笔记/" itemprop="url">GO的MPG模型</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-10T14:36:08+08:00">
+                2019-07-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="用户态VS内核态"><a href="#用户态VS内核态" class="headerlink" title="用户态VS内核态"></a>用户态VS内核态</h1><p>内核从本质上看是一种软件——控制计算机的硬件资源，并提供上层应用程序运行的环境。用户态即上层应用程序的活动空间，应用程序的执行必须依托于内核提供的资源，包括CPU资源、存储资源、I/O资源等。为了使上层应用能够访问到这些资源，内核必须为上层应用提供访问的接口：即系统调用。</p>
+<ul>
+<li>内核态：CPU可以访问内存所有数据,包括外围设备（硬盘、网卡），CPU也可以将自己从一个程序切换到另一个程序；</li>
+<li>用户态：只能受限的访问内存，且不允许访问外围设备，占用CPU的能力被剥夺，CPU资源可以被其他程序获取</li>
+</ul>
+<p>用户态的应用程序可以通过三种方式来访问内核态的资源：</p>
+<p>1）系统调用</p>
+<p>2）库函数</p>
+<p>3）Shell脚本</p>
+<p>系统调用类似于操作系统的原子操作，而库函数就是对其封装，其实shell也是，不过shell可以交互。</p>
+<p>由于资源有限，大部分进程都在用户态，只有需要访问资源，才进入内核态。进入内核态手段即是中断。具体来说，中断分软硬，有三种：</p>
+<p>1）当然就是系统调用：即软中断</p>
+<p>2）异常事件： 当CPU正在执行运行在用户态的程序时，突然发生某些预先不可知的异常事件，这个时候就会触发从当前用户态执行的进程转向内核态执行相关的异常事件，典型的如缺页异常。</p>
+<p>3）外围设备的中断：当外围设备完成用户的请求操作后，会像CPU发出中断信号，此时，CPU就会暂停执行下一条即将要执行的指令，转而去执行中断信号对应的处理程序，如果先前执行的指令是在用户态下，则自然就发生从用户态到内核态的转换。</p>
+<h1 id="用户线程VS核心线程"><a href="#用户线程VS核心线程" class="headerlink" title="用户线程VS核心线程"></a>用户线程VS核心线程</h1><p>linux其实没有线程，是通过共享资源的单线程进程模拟了线程的概念。</p>
+<p><strong>用户线程</strong>指不需要内核支持而在用户程序中实现的线程，其不依赖于操作系统核心，应 用进程利用线程库提供创建、同步、调度和管理线程的函数来控制用户线程。不需要用户态/核心态切换，速度快，操作系统内核不知道多线程的存在，因此一个线 程阻塞将使得整个进程（包括它的所有线程）阻塞。单纯的用户线程是建立在用户空间，其对内核是透明的，因此其所属进程单独参与处理器的竞争，而进程的所有线程参与竞争该进程的资源。</p>
+<p><strong>内核线程</strong>：由操作系统内核创建和撤销。内核维护进程及线程的上下文信息以及线程切换。一个内核线程由于I/O操作而阻塞，不会影响其它线程的运行。内核线程只运行在内核态，不受用户态上下文的拖累。</p>
+<h1 id="线程模型"><a href="#线程模型" class="headerlink" title="线程模型"></a>线程模型</h1><p>核心线程和用户线程显然有以下三种关系，一对一，一对多，多对多。</p>
+<p>一对一而言，用户线程的操作，等价于对核心线程的操作，这种模型直接调用操作系统的内核线程，所有线程的创建、终止、切换、同步等操作，都由内核来完成。C++就是这种。</p>
+<p>一对多而言，多个用户态的线程对应着一个内核线程，也对应同一个进程，程序线程的创建、终止、切换或者同步等线程工作必须自身来完成。一旦一个线程发生阻塞，整个进程下的其他线程也会被阻塞。不能利用多核系统的优势。</p>
+<p>多对多是比较复杂的实现，  这种模型是介于用户级线程模型和内核级线程模型之间的一种线程模型。这种模型的实现非常复杂，和内核级线程模型类似，一个进程中可以对应多个内核级线程，但是进程中的线程不和内核线程一一对应；这种线程模型会先创建多个内核级线程，然后用自身的用户级线程去对应创建的多个内核级线程，自身的用户级线程需要本身程序去调度，内核级的线程交给操作系统内核去调度。</p>
+<p>Go语言的线程模型就是一种特殊的两级线程模型。即“MPG”模型。</p>
+<p># </p>
+<h1 id="MPG"><a href="#MPG" class="headerlink" title="MPG"></a>MPG</h1><p><code>M</code>指的是<code>Machine</code>，一个<code>M</code>直接关联了一个内核线程。<br><code>P</code>指的是”processor”，代表了<code>M</code>所需的上下文环境，也是处理用户级代码逻辑的处理器。<br><code>G</code>指的是<code>Goroutine</code>，其实本质上也是一种轻量级的线程。</p>
+<p><img src="https://i.loli.net/2019/07/10/5d25d292c0df547301.png" alt="5d25d292c0df547301"></p>
+<p><img src="https://i.loli.net/2019/07/10/5d25d322985ce39721.png" alt="5d25d322985ce39721"></p>
+<p>调度的本质是将G尽量均匀合理地安排给M来执行，其中P的作用就是来实现合理安排逻辑。</p>
+<ul>
+<li>P的数量通过  <code>GOMAXPROCS()</code>  来设置，一般等于CPU的核数，对于一次代码执行设置好一般不会变。</li>
+<li>P维护了一个本地的G队列（runqueue），包括正在执行和待执行的G，尽量保证所有的P都匹配一个M同时在执行G。</li>
+<li>当P本地goroutine队列消费完，会从全局的goroutine队列（global runqueue）中拿goroutine到本地队列。P也会定期检查全局的goroutine队列，避免存在全局的goroutine没有被执行而”饿死”的现象。</li>
+<li>P和M是动态形式的一对一的关系，P和G是动态形式的一对多的关系。</li>
+</ul>
+<p>当goroutine发生阻塞的时候，可以通过P将剩余的G切换给新的M来执行，而不会导致剩余的G无法执行，如果没有M则创建M来匹配P。</p>
+<p>当阻塞的goroutine返回后，进程会尝试获取一个上下文（Context）来执行这个goroutine。一般是先从其他进程中”偷取”一个Context，如果”偷取”不成功，则将goroutine放入全局的goroutine中。</p>
+<p>P可以偷任务即goroutine，当某个P的本地G执行完，且全局没有G需要执行的时候，P可以去偷别的P还没有执行完的一半的G来给M执行，提高了G的执行效率。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/07/09/7-9技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1641,161 +1818,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/06/11/6-11技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/06/11/6-11技术笔记/" itemprop="url">go环境变量，命令，命令行参数</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-11T14:48:36+08:00">
-                2019-06-11
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="go环境变量"><a href="#go环境变量" class="headerlink" title="go环境变量"></a>go环境变量</h1><p><strong>GOROOT</strong>：Golang的安装路径。</p>
-<p><strong>GOPATH</strong>：可以理解为工作目录或者工作区，也是平时接触最多的一个变量。它可以是一个目录，可以是多个目录路径，每个目录代表一个工作区。这些目录用于放置Go语言的源码文件（src），以及安装（命令go install）后的归档文件（pkg目录）和可执行文件（bin目录）。</p>
-<p><strong>GOBIN</strong>：GOROOT目录下的可执行文件放置目录，一般指bin。</p>
-<h1 id="go命令"><a href="#go命令" class="headerlink" title="go命令"></a>go命令</h1><p>go env 可以打印出go语言的通用环境信息  </p>
-<p>go build 编译代码，  </p>
-<p>go install 编译并安装代码。二进制会存放于GOBIN环境下</p>
-<p>go get，相当于整合了git，从git将包自动下载到本地并对它进行编译</p>
-<h1 id="flag包和init-函数"><a href="#flag包和init-函数" class="headerlink" title="flag包和init()函数"></a>flag包和init()函数</h1><p>flag包可以获取命令行参数，比如</p>
-<p>var name = flag.String(“name”, “everyone”, “The greeting object.”)</p>
-<p>则可以获取将命令行的name参数，(后两个参数分别为默认值和参数说明)，获取到变量name。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"flag"</span></span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> name <span class="keyword">string</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">    flag.StringVar(&amp;name, <span class="string">"name"</span>, <span class="string">"everyone"</span>, <span class="string">"The greeting object."</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    flag.Parse()</span><br><span class="line">    fmt.Printf(<span class="string">"Hello, %s!\n"</span>, name)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>命令go run demo2.go -name=”Robert”，即可输出Hello，Robert</p>
-<p>init()函数会在每个包完成初始化后自动执行，并且执行优先级比main函数高。所以init()一般来做些初始化动作。</p>
-<p>init函数不需要传入参数，也不会返回任何值。与main相比而言，init没有被声明，因此也不能被引用。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1846,7 +1868,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">188</span>
+                  <span class="site-state-item-count">189</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
