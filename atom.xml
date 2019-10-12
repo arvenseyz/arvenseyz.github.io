@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-10-11T11:50:43.455Z</updated>
+  <updated>2019-10-12T12:06:17.424Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -17,11 +17,36 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>kafka磁盘存储</title>
+    <link href="http://yoursite.com/blog/2019/10/12/10-12%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2019/10/12/10-12技术笔记/</id>
+    <published>2019-10-12T10:21:46.000Z</published>
+    <updated>2019-10-12T12:06:17.424Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="顺序写"><a href="#顺序写" class="headerlink" title="顺序写"></a>顺序写</h1><p>一个由6块 7200r/min 的 RAID-5 阵列组成的磁盘簇的线性（顺序）写入速度可以达到 600MB/s，而随机写入速度只有 100KB/s，两者性能相差6000倍。操作系统可以针对线性读写做深层次的优化，比如预读（read-ahead，提前将一个比较大的磁盘块读入内存）和后写（write-behind，将很多小的逻辑写操作合并起来组成一个大的物理写操作）技术。</p><p><strong>顺序写盘的速度不仅比随机写盘的速度快，而且也比随机写内存的速度快</strong></p><p>kafka只在文件末尾追加数据，并且不能修改之前的数据，所以是顺序写盘，速度很快。</p><h1 id="页缓存"><a href="#页缓存" class="headerlink" title="页缓存"></a>页缓存</h1><p>页缓存技术基于局部性，相当于内存是磁盘热点数据的备份，要读写时先读写内存。</p><p>linux系统可以设置，当内存脏页比例达到多少时，写回磁盘。</p><p>Kafka 中大量使用了页缓存，这是 Kafka 实现高吞吐的重要因素之一。虽然消息都是先被写入页缓存，然后由操作系统负责具体的刷盘任务的，但在 Kafka 中同样提供了同步刷盘及间断性强制刷盘（fsync）的功能，这些功能可以通过参数来控制。</p><p>显然这是个代价问题，同步刷盘可以提高消息的可靠性，防止由于机器掉电等异常造成处于页缓存而没有及时写入磁盘的消息丢失，但是性能会变低，取决于业务来取舍。</p><h1 id="零拷贝"><a href="#零拷贝" class="headerlink" title="零拷贝"></a>零拷贝</h1><p>考虑这样一种常用的情形：你需要将静态内容（类似图片、文件）展示给用户。这个情形就意味着需要先将静态内容从磁盘中复制出来放到一个内存 buf 中，然后将这个 buf 通过套接字（Socket）传输给用户，进而用户获得静态内容。</p><p>在这个过程中，文件 A 经历了4次复制的过程：</p><ol><li>调用 read() 时，文件 A 中的内容被复制到了内核模式下的 Read Buffer 中。</li><li>CPU 控制将内核模式数据复制到用户模式下。</li><li>调用 write() 时，将用户模式下的内容复制到内核模式下的 Socket Buffer 中。</li><li>将内核模式下的 Socket Buffer 的数据复制到网卡设备中传送</li></ol><p>如果采用了零拷贝技术，那么应用程序可以直接请求内核把磁盘中的数据传输给 Socket。</p><p>零拷贝技术通过 DMA（Direct Memory Access）技术将文件内容复制到内核模式下的 Read Buffer 中。不过没有数据被复制到 Socket Buffer，相反只有包含数据的位置和长度的信息的文件描述符被加到 Socket Buffer 中。DMA 引擎直接将数据从内核模式中传递到网卡设备（协议引擎）。这里数据只经历了2次复制就从磁盘中传送出去了，并且上下文切换也变成了2次。零拷贝是针对内核模式而言的，数据在内核模式下实现了零拷贝。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;顺序写&quot;&gt;&lt;a href=&quot;#顺序写&quot; class=&quot;headerlink&quot; title=&quot;顺序写&quot;&gt;&lt;/a&gt;顺序写&lt;/h1&gt;&lt;p&gt;一个由6块 7200r/min 的 RAID-5 阵列组成的磁盘簇的线性（顺序）写入速度可以达到 600MB/s，而随机写入速度只有
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="消息队列" scheme="http://yoursite.com/blog/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
+    
+  </entry>
+  
+  <entry>
     <title>kafka日志格式与索引</title>
     <link href="http://yoursite.com/blog/2019/10/10/10-10%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>http://yoursite.com/blog/2019/10/10/10-10技术笔记/</id>
     <published>2019-10-10T02:34:23.000Z</published>
-    <updated>2019-10-11T11:50:43.455Z</updated>
+    <updated>2019-10-12T10:20:39.745Z</updated>
     
     <content type="html"><![CDATA[<h1 id="日志格式"><a href="#日志格式" class="headerlink" title="日志格式"></a>日志格式</h1><p>Log 和 LogSegment 也不是纯粹物理意义上的概念，Log 在物理上只以文件夹的形式存储，而每个 LogSegment 对应于磁盘上的一个日志文件和两个索引文件，以及可能的其他文件（比如以“.txnindex”为后缀的事务索引文件）。</p><p>为了便于消息的检索，每个 LogSegment 中的日志文件（以“.log”为文件后缀）都有对应的两个索引文件：偏移量索引文件（以“.index”为文件后缀）和时间戳索引文件（以“.timeindex”为文件后缀）。每个 LogSegment 都有一个基准偏移量 baseOffset，用来表示当前 LogSegment 中第一条消息的 offset。偏移量是一个64位的长整型数，日志文件和两个索引文件都是根据基准偏移量（baseOffset）命名的，名称固定为20位数字，没有达到的位数则用0填充。</p><p>消费者提交的位移是保存在 Kafka 内部的主题__consumer_offsets中的，初始情况下这个主题并不存在，当第一次有消费者消费消息时会自动创建这个主题。</p><p><img src="https://i.loli.net/2019/10/10/N7OlAxwmCsgvbMB.png" alt="N7OlAxwmCsgvbMB"></p><ul><li>crc32（4B）：crc32 校验值。校验范围为 magic 至 value 之间。</li><li>magic（1B）：消息格式版本号，此版本的 magic 值为0。</li><li>attributes（1B）：消息的属性。总共占1个字节，低3位表示压缩类型：0表示 NONE、1表示 GZIP、2表示 SNAPPY、3表示 LZ4（LZ4 自 Kafka 0.9.x引入），其余位保留。</li><li>key length（4B）：表示消息的 key 的长度。如果为-1，则表示没有设置 key，即 key = null。</li><li>key：可选，如果没有 key 则无此字段。</li><li>value length（4B）：实际消息体的长度。如果为-1，则表示消息为空。</li><li>value：消息体。可以为空，比如墓碑（tombstone）消息。</li></ul><h1 id="日志索引"><a href="#日志索引" class="headerlink" title="日志索引"></a>日志索引</h1><p>每个日志分段文件对应了两个索引文件，主要用来提高查找消息的效率。偏移量索引文件用来建立消息偏移量（offset）到物理地址之间的映射关系，方便快速定位消息所在的物理文件位置；时间戳索引文件则根据指定的时间戳（timestamp）来查找对应的偏移量信息。</p><p>Kafka 中的索引文件以稀疏索引（sparse index）的方式构造消息的索引，它并不保证每个消息在索引文件中都有对应的索引项。每当写入一定量（由 broker 端参数 log.index.interval.bytes 指定，默认值为4096，即 4KB）的消息时，偏移量索引文件和时间戳索引文件分别增加一个偏移量索引项和时间戳索引项，增大或减小 log.index.interval.bytes 的值，对应地可以增加或缩小索引项的密度。</p><p>稀疏索引通过 MappedByteBuffer 将索引文件映射到内存中，以加快索引的查询速度。偏移量索引文件中的偏移量是单调递增的，查询指定偏移量时，使用二分查找法来快速定位偏移量的位置，如果指定的偏移量不在索引文件中，则会返回小于指定偏移量的最大偏移量。</p><p>时间戳索引类似。</p><p>索引会切分，规则较多，日志大小，偏移量，时间等，容易理解。</p>]]></content>
     
@@ -501,31 +526,6 @@
     
     
       <category term="go" scheme="http://yoursite.com/blog/tags/go/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>kafka技术杂记</title>
-    <link href="http://yoursite.com/blog/2019/07/11/7-11%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/07/11/7-11技术笔记/</id>
-    <published>2019-07-11T08:59:15.000Z</published>
-    <updated>2019-07-11T10:37:41.524Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="发送方式"><a href="#发送方式" class="headerlink" title="发送方式"></a>发送方式</h1><p>kafka有同步（sync）、异步（async）以及oneway这三种发送方式，某些概念上区分也可以分为同步和异步两种，同步和异步的发送方式通过“producer.type”参数指定，而oneway由“request.require.acks”参数指定。</p><ol><li><p>同步就是每次发一条，然后刷盘，确认后再发第二条。</p></li><li><p>异步是生产者先把消息缓存起来，指定缓存的时间条数等，然后批量一起发送。</p></li><li><p>oneway就是只管发，不需要收到broker的消息确认。</p></li></ol><h1 id="zookeeper"><a href="#zookeeper" class="headerlink" title="zookeeper"></a>zookeeper</h1><p>zookeeper主要用来管理broker，一个是broker的信息，另一方面是broker上下线的管理。因为zookeeper写性能不好，所以现在生产和消费者一般不连接zookeeper。生产者和消费者直接连接broker。</p><h1 id="推vs拉"><a href="#推vs拉" class="headerlink" title="推vs拉"></a>推vs拉</h1><p>生产者把消息推向broker，消费者从broker拉消息。</p><h1 id="重试"><a href="#重试" class="headerlink" title="重试"></a>重试</h1><p>生产者消息发送失败会重试，重试失败达到指定次数返回异常。</p><p>问题在于，重试会破坏顺序性，如果要求顺序性，可以参数指定，重试时相当于阻塞。max.in.flight.requests.per.connection=1</p><h1 id="消息分区"><a href="#消息分区" class="headerlink" title="消息分区"></a>消息分区</h1><p>如果不指定key，那么消息会随机分配到各个partition，相当于负载均衡。</p><p>然而可以指定 partitioner 分区器，这样消息和partition就关联。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;发送方式&quot;&gt;&lt;a href=&quot;#发送方式&quot; class=&quot;headerlink&quot; title=&quot;发送方式&quot;&gt;&lt;/a&gt;发送方式&lt;/h1&gt;&lt;p&gt;kafka有同步（sync）、异步（async）以及oneway这三种发送方式，某些概念上区分也可以分为同步和异步两种，同步
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="消息队列" scheme="http://yoursite.com/blog/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
     
   </entry>
   
