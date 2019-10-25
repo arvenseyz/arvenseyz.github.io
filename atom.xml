@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-10-12T12:06:17.424Z</updated>
+  <updated>2019-10-25T03:02:04.342Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -17,11 +17,36 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>kafka协议设计</title>
+    <link href="http://yoursite.com/blog/2019/10/25/10-25%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>http://yoursite.com/blog/2019/10/25/10-25技术笔记-1/</id>
+    <published>2019-10-25T02:16:09.000Z</published>
+    <updated>2019-10-25T03:02:04.342Z</updated>
+    
+    <content type="html"><![CDATA[<p>kafka有很多种协议类型，但遵循同一种协议模式，在该协议模式下，不同协议类型的请求，请求体可以不同，但请求头是一致的。</p><p><strong>request的请求头由以下四部分组成。</strong></p><p>api_key：即请求类型，PRODUCE、FETCH标示发消息，拉消息等。</p><p>api_version：API版本号。</p><p>correlation_id：本次请求的id，由客户端指定的一个数字来唯一地标识这次请求的id，服务端在处理完请求后也会把同样的coorelation_id写到Response中，这样客户端就能把某个请求和响应对应起来了。</p><p>client_id：客户端id。</p><p><strong>response的请求头只有correlation_id。</strong></p><p>实际上，每次请求除了数据，还有一些其他属性数据，比如客户端acks，请求超时时间，分区编号，事务id等，这些内容是放在请求体中的，<img src="https://i.loli.net/2019/10/25/VkPvDW6XoOwTM4m.png" alt="VkPvDW6XoOwTM4m"></p><p>常见的协议还有response的，拉取消息的，相对没这么常见的还有几十种，其实大体类似，指定一些参数，以及指定topic\:partition\:offset，就可以指定到具体想要的一条消息</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;kafka有很多种协议类型，但遵循同一种协议模式，在该协议模式下，不同协议类型的请求，请求体可以不同，但请求头是一致的。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;request的请求头由以下四部分组成。&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;api_key：即请求类型，PRODUCE、FE
+      
+    
+    </summary>
+    
+    
+      <category term="消息队列" scheme="http://yoursite.com/blog/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
+    
+  </entry>
+  
+  <entry>
     <title>kafka磁盘存储</title>
     <link href="http://yoursite.com/blog/2019/10/12/10-12%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>http://yoursite.com/blog/2019/10/12/10-12技术笔记/</id>
     <published>2019-10-12T10:21:46.000Z</published>
-    <updated>2019-10-12T12:06:17.424Z</updated>
+    <updated>2019-10-12T12:07:19.529Z</updated>
     
     <content type="html"><![CDATA[<h1 id="顺序写"><a href="#顺序写" class="headerlink" title="顺序写"></a>顺序写</h1><p>一个由6块 7200r/min 的 RAID-5 阵列组成的磁盘簇的线性（顺序）写入速度可以达到 600MB/s，而随机写入速度只有 100KB/s，两者性能相差6000倍。操作系统可以针对线性读写做深层次的优化，比如预读（read-ahead，提前将一个比较大的磁盘块读入内存）和后写（write-behind，将很多小的逻辑写操作合并起来组成一个大的物理写操作）技术。</p><p><strong>顺序写盘的速度不仅比随机写盘的速度快，而且也比随机写内存的速度快</strong></p><p>kafka只在文件末尾追加数据，并且不能修改之前的数据，所以是顺序写盘，速度很快。</p><h1 id="页缓存"><a href="#页缓存" class="headerlink" title="页缓存"></a>页缓存</h1><p>页缓存技术基于局部性，相当于内存是磁盘热点数据的备份，要读写时先读写内存。</p><p>linux系统可以设置，当内存脏页比例达到多少时，写回磁盘。</p><p>Kafka 中大量使用了页缓存，这是 Kafka 实现高吞吐的重要因素之一。虽然消息都是先被写入页缓存，然后由操作系统负责具体的刷盘任务的，但在 Kafka 中同样提供了同步刷盘及间断性强制刷盘（fsync）的功能，这些功能可以通过参数来控制。</p><p>显然这是个代价问题，同步刷盘可以提高消息的可靠性，防止由于机器掉电等异常造成处于页缓存而没有及时写入磁盘的消息丢失，但是性能会变低，取决于业务来取舍。</p><h1 id="零拷贝"><a href="#零拷贝" class="headerlink" title="零拷贝"></a>零拷贝</h1><p>考虑这样一种常用的情形：你需要将静态内容（类似图片、文件）展示给用户。这个情形就意味着需要先将静态内容从磁盘中复制出来放到一个内存 buf 中，然后将这个 buf 通过套接字（Socket）传输给用户，进而用户获得静态内容。</p><p>在这个过程中，文件 A 经历了4次复制的过程：</p><ol><li>调用 read() 时，文件 A 中的内容被复制到了内核模式下的 Read Buffer 中。</li><li>CPU 控制将内核模式数据复制到用户模式下。</li><li>调用 write() 时，将用户模式下的内容复制到内核模式下的 Socket Buffer 中。</li><li>将内核模式下的 Socket Buffer 的数据复制到网卡设备中传送</li></ol><p>如果采用了零拷贝技术，那么应用程序可以直接请求内核把磁盘中的数据传输给 Socket。</p><p>零拷贝技术通过 DMA（Direct Memory Access）技术将文件内容复制到内核模式下的 Read Buffer 中。不过没有数据被复制到 Socket Buffer，相反只有包含数据的位置和长度的信息的文件描述符被加到 Socket Buffer 中。DMA 引擎直接将数据从内核模式中传递到网卡设备（协议引擎）。这里数据只经历了2次复制就从磁盘中传送出去了，并且上下文切换也变成了2次。零拷贝是针对内核模式而言的，数据在内核模式下实现了零拷贝。</p>]]></content>
     
@@ -501,29 +526,6 @@
     
     
       <category term="设计模式" scheme="http://yoursite.com/blog/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"/>
-    
-      <category term="go" scheme="http://yoursite.com/blog/tags/go/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Delve开发机调试</title>
-    <link href="http://yoursite.com/blog/2019/07/15/7-15%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/07/15/7-15技术笔记/</id>
-    <published>2019-07-15T09:41:53.000Z</published>
-    <updated>2019-07-15T09:53:28.888Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go get github.com/derekparker/delve/cmd/dlv</span><br></pre></td></tr></table></figure><p>一键安装，可能由于网速等原因，需要等待很久。</p><p>输入dlv version验证安装成功</p><h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><p>dlv debug delve-demo.go</p><p>dlv test – -test.run <test function> </test></p><h1 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h1><p>help输入帮助，b建立断点使用 <code>&lt;package&gt;.&lt;function&gt;</code>或是 <code>&lt;filename&gt;:&lt;line number&gt;</code>的格式。bp查看断点。</p><p>c开始运行程序。</p><p>單部執行： n<br>步入： s<br>步出：stepout  </p><p>看函数参数：args</p><p>看协程：goroutine</p><p>看变量：print</p><h1 id="然而"><a href="#然而" class="headerlink" title="然而"></a>然而</h1><p>1.如果写的是服务端程序，测试的时候是模拟rpc请求，这时自己的身份是rpc的消费者，生产者处打断点没用，生产者似乎无法在启动服务时打断点。</p><p>2.goland有个go remote,可以输入开发机主机，但没有输密码的地方，当然连接不上。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;安装&quot;&gt;&lt;a href=&quot;#安装&quot; class=&quot;headerlink&quot; title=&quot;安装&quot;&gt;&lt;/a&gt;安装&lt;/h1&gt;&lt;figure class=&quot;highlight plain&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span 
-      
-    
-    </summary>
-    
     
       <category term="go" scheme="http://yoursite.com/blog/tags/go/"/>
     
