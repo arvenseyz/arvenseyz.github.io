@@ -322,13 +322,15 @@
       
         
           
-            <p>定时任务常规实现方法是优先队列</p>
+            <p>定时任务常规实现方法是延时队列DelayQueue，它的时间复杂度nlgn，不适合太多的延时任务，而时间轮时间复杂度1。</p>
 <p><img src="https://i.loli.net/2019/10/28/Fwm5HZi2BSRQgVr.png" alt="Fwm5HZi2BSRQgVr"></p>
 <p>Kafka 中的时间轮（TimingWheel）是一个存储定时任务的环形队列，底层采用数组实现，数组中的每个元素可以存放一个定时任务列表（TimerTaskList）。TimerTaskList 是一个环形的双向链表，链表中的每一项表示的都是定时任务项（TimerTaskEntry），其中封装了真正的定时任务（TimerTask）。</p>
 <p>时间轮由多个时间格组成，每个时间格代表当前时间轮的基本时间跨度（tickMs）。时间轮的时间格个数是固定的，可用 wheelSize 来表示，那么整个时间轮的总体时间跨度（interval）可以通过公式 tickMs×wheelSize 计算得出。</p>
 <p>时间轮还有一个表盘指针（currentTime），用来表示时间轮当前所处的时间，currentTime 是 tickMs 的整数倍。currentTime 可以将整个时间轮划分为到期部分和未到期部分，currentTime 当前指向的时间格也属于到期部分，表示刚好到期，需要处理此时间格所对应的 TimerTaskList 中的所有任务。</p>
 <p>我们常见的钟表就是一种具有三层结构的时间轮，第一层时间轮 tickMs=1s、wheelSize=60、interval=1min，此为秒钟；第二层 tickMs=1min、wheelSize=60、interval=1hour，此为分钟；第三层 tickMs=1hour、wheelSize=12、interval=12hours，此为时钟。</p>
 <p>Kafka 中会有一个线程来获取 DelayQueue 中到期的任务列表，有意思的是这个线程所对应的名称叫作“ExpiredOperationReaper”，可以直译为“过期操作收割机”，和第4节的“SkimpyOffsetMap”的取名有异曲同工之妙。当“收割机”线程获取 DelayQueue 中超时的任务列表 TimerTaskList 之后，既可以根据 TimerTaskList 的 expiration 来推进时间轮的时间，也可以就获取的 TimerTaskList 执行相应的操作，对里面的 TimerTaskEntry 该执行过期操作的就执行过期操作，该降级时间轮的就降级时间轮。</p>
+<p>问题在于，时间是怎么推进的，方法是延时队列DelayQueue，那么为什么又绕了回来，区别在于延时队列DelayQueue里放的不再是具体的任务TimerTaskEntry，而是真正有任务的TimerTaskList，而对于时间轮来说，它只需要往delayQueue里面扔各种槽即可，这样的话，比如我们的定时任务长短不一，最长的跨度到了24年，这个delayQueue也仅仅只有300个元素。</p>
+<p>而这个槽到期后，也就是被我们从delayQueue中poll出来后，我们只需要将槽中的所有任务循环一次，重新加到新的槽中（添加失败则直接执行）即可。</p>
 
           
         
