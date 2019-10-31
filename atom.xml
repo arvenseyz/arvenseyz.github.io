@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-10-28T03:18:31.606Z</updated>
+  <updated>2019-10-31T12:40:28.646Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -17,11 +17,25 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>10-30技术笔记</title>
+    <link href="http://yoursite.com/blog/2019/10/31/10-30%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>http://yoursite.com/blog/2019/10/31/10-30技术笔记-1/</id>
+    <published>2019-10-31T12:40:28.000Z</published>
+    <updated>2019-10-31T12:40:28.646Z</updated>
+    
+    <summary type="html">
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
     <title>kafka时间轮</title>
     <link href="http://yoursite.com/blog/2019/10/28/10-28%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>http://yoursite.com/blog/2019/10/28/10-28技术笔记/</id>
     <published>2019-10-28T02:11:56.000Z</published>
-    <updated>2019-10-28T03:18:31.606Z</updated>
+    <updated>2019-10-31T12:40:38.371Z</updated>
     
     <content type="html"><![CDATA[<p>定时任务常规实现方法是延时队列DelayQueue，它的时间复杂度nlgn，不适合太多的延时任务，而时间轮时间复杂度1。</p><p><img src="https://i.loli.net/2019/10/28/Fwm5HZi2BSRQgVr.png" alt="Fwm5HZi2BSRQgVr"></p><p>Kafka 中的时间轮（TimingWheel）是一个存储定时任务的环形队列，底层采用数组实现，数组中的每个元素可以存放一个定时任务列表（TimerTaskList）。TimerTaskList 是一个环形的双向链表，链表中的每一项表示的都是定时任务项（TimerTaskEntry），其中封装了真正的定时任务（TimerTask）。</p><p>时间轮由多个时间格组成，每个时间格代表当前时间轮的基本时间跨度（tickMs）。时间轮的时间格个数是固定的，可用 wheelSize 来表示，那么整个时间轮的总体时间跨度（interval）可以通过公式 tickMs×wheelSize 计算得出。</p><p>时间轮还有一个表盘指针（currentTime），用来表示时间轮当前所处的时间，currentTime 是 tickMs 的整数倍。currentTime 可以将整个时间轮划分为到期部分和未到期部分，currentTime 当前指向的时间格也属于到期部分，表示刚好到期，需要处理此时间格所对应的 TimerTaskList 中的所有任务。</p><p>我们常见的钟表就是一种具有三层结构的时间轮，第一层时间轮 tickMs=1s、wheelSize=60、interval=1min，此为秒钟；第二层 tickMs=1min、wheelSize=60、interval=1hour，此为分钟；第三层 tickMs=1hour、wheelSize=12、interval=12hours，此为时钟。</p><p>Kafka 中会有一个线程来获取 DelayQueue 中到期的任务列表，有意思的是这个线程所对应的名称叫作“ExpiredOperationReaper”，可以直译为“过期操作收割机”，和第4节的“SkimpyOffsetMap”的取名有异曲同工之妙。当“收割机”线程获取 DelayQueue 中超时的任务列表 TimerTaskList 之后，既可以根据 TimerTaskList 的 expiration 来推进时间轮的时间，也可以就获取的 TimerTaskList 执行相应的操作，对里面的 TimerTaskEntry 该执行过期操作的就执行过期操作，该降级时间轮的就降级时间轮。</p><p>问题在于，时间是怎么推进的，方法是延时队列DelayQueue，那么为什么又绕了回来，区别在于延时队列DelayQueue里放的不再是具体的任务TimerTaskEntry，而是真正有任务的TimerTaskList，而对于时间轮来说，它只需要往delayQueue里面扔各种槽即可，这样的话，比如我们的定时任务长短不一，最长的跨度到了24年，这个delayQueue也仅仅只有300个元素。</p><p>而这个槽到期后，也就是被我们从delayQueue中poll出来后，我们只需要将槽中的所有任务循环一次，重新加到新的槽中（添加失败则直接执行）即可。</p>]]></content>
     
@@ -496,33 +510,6 @@
     
       <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
     
-    
-      <category term="go" scheme="http://yoursite.com/blog/tags/go/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>goMap细节</title>
-    <link href="http://yoursite.com/blog/2019/07/18/7-18%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/07/18/7-18技术笔记/</id>
-    <published>2019-07-18T06:08:30.000Z</published>
-    <updated>2019-07-23T13:20:23.593Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="Map实现"><a href="#Map实现" class="headerlink" title="Map实现"></a>Map实现</h1><h2 id="存储"><a href="#存储" class="headerlink" title="存储"></a>存储</h2><p>我看来go的Map综合了开放寻址法和拉链法。</p><p>核心在于分桶，存储kv数据的在两个桶的数组中，一个数据桶，一个额外数据桶。后者是用于拉链法来解决哈希冲突的。</p><p>每个桶中可以存八对kv，在桶中是使用开发寻址法，如果溢出，有指向对应的溢出桶的指针，这时是拉链法。</p><p>通过具体的访问过程可知。首先是计算哈希值，这样就找到了对应的桶（此处有旧桶新桶问题），然后进入桶中查找，和桶中已存的一一比较，如果没有，则看桶链接的下一个桶（如果存在）。</p><p>特色在于快速试错，桶中除了key和value的大小为8的各一个数组外，还有个topbits的数组，即该键值对哈希值的前八位，这样每次访问不用直接比较key，只用比较哈希值的前八位，就可以快速试错。</p><p>其实就像是一级缓存，它存储的是哈希最高的 8 位，而选择桶时使用了桶掩码使用的是最低的几位，这种方式能够帮助我们快速判断当前的键值对是否存在并且减少碰撞。</p><p>有一个问题，哪些类型可以作为key的类型，不能比较的比如函数当然不能，float64语法上能实际上不能吗，原因在于NAN（not a number)，NAN != NAN hash(NAN) != hash(NAN)，以及float64的不能精确存储。</p><h2 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h2><p>扩容就是新建一个两倍大的桶数组，然后数据搬迁过去。问题在于，哈希表过大时，搬迁成本很高，这里解决方法是，同时持有新旧两个数组，逐步搬迁。所以扩容是一个非阻塞的相对缓慢完成的一个过程。</p><p>扩容原因有两个，装载因子过大，或者溢出桶太多。两种情况下扩容方法不一样。</p><p>后者与其说扩容，不如说重整，即是<strong>不改变大小的扩容动作</strong>。而前者会扩容到两倍。</p><p>造成溢出桶数量过多的原因有两种：其一，反复进行插入再删除。先插入一些元素，溢出桶创建了一些，但还没到达负载因子，再把这些元素删了然后又插入一些元素，溢出桶又创建了一些，反复进行后，最后造成负载桶都很空旷，溢出桶中有元素。</p><p>这种情况下，原大小扩容，将老 bucket 中的元素移动到新 bucket。这样，原来在 overflow bucket 中的 key 可以移动到 负载的bucket 中来。</p><p>第二种情况，插入的元素的哈希取模都一样，也就是说，所有的扩容桶都是同一个桶扩的容，这样哈希表退化成了链表，并且该原地扩容无法解决该问题。但造成该问题的原因不在扩容或者负载上，是哈希函数不好。</p><p>扩容完后不会搬迁，真正的搬迁工作，在插入或修改、删除 key 的时候，都会尝试进行搬迁 buckets 的工作。主要是申请到了新的 buckets 空间，然后把相关的标志位都进行了处理：例如标志 nevacuate 被置为 0， 表示当前搬迁进度为 0。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;Map实现&quot;&gt;&lt;a href=&quot;#Map实现&quot; class=&quot;headerlink&quot; title=&quot;Map实现&quot;&gt;&lt;/a&gt;Map实现&lt;/h1&gt;&lt;h2 id=&quot;存储&quot;&gt;&lt;a href=&quot;#存储&quot; class=&quot;headerlink&quot; title=&quot;存储&quot;&gt;&lt;/a&gt;存
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="映射" scheme="http://yoursite.com/blog/tags/%E6%98%A0%E5%B0%84/"/>
     
       <category term="go" scheme="http://yoursite.com/blog/tags/go/"/>
     
