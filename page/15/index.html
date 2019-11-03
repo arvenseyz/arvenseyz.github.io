@@ -251,6 +251,169 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/10/15/10-15技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/10/15/10-15技术笔记/" itemprop="url">多线程</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-10-15T15:49:46+08:00">
+                2018-10-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="并发级别"><a href="#并发级别" class="headerlink" title="并发级别"></a>并发级别</h1><h2 id="阻塞"><a href="#阻塞" class="headerlink" title="阻塞"></a>阻塞</h2><p>阻塞是指一个线程进入临界区后，其它线程就必须在临界区外等待，待进去的线程执行完任务离开临界区后，其它线程才能再进去。</p>
+<h2 id="无障碍"><a href="#无障碍" class="headerlink" title="无障碍"></a>无障碍</h2><ul>
+<li>自由出入临界区</li>
+<li>无竞争时，有限步内完成操作</li>
+<li>有竞争时，回滚数据  </li>
+</ul>
+<p>乐观锁？<br>无障碍并不要求一个线程进入临界区之后，其它线程在临界区外等待。所有线程都可以自由地进入临界区，它是一种最弱的非阻塞调度。<br>跟阻塞调度比较，阻塞调度可以认为是一种悲观的策略，它会认为多个线程一起修改数据会使数据损坏，所以阻塞调度每次只能允许一个线程去修改数据。而非阻塞调度相对来说比较乐观，它认为如果多个线程一起修改也未必会把造成数据损坏，所以它允许多个线程同时进入临界区，但无障碍是一种宽进严出的策略，进的时候不作限制，所有的线程都能进入临界区做其想做的事情，包括读与写，但是出来的时候就不那么宽松了，如果一个线程在临界区中的操作遇到了数据竞争，跟其它线程产生了冲突，它就会回滚这条数据，然后重试自己的操作。比如读取x与y的值，这个操作是分步进行的先读x，再读y,当读完x，发现别的线程修改了y，再读y就已经没有意义了，因为可能会读到一个错误的数据，所以该线程会重试，再去读取一次，直到自己读到的x、y没有问题为止，所以无障碍是一种会不断重试的调度策略，但它会保证没有数据竞争时，线程必然能在有限的步骤内执行完任务。</p>
+<p>在无障碍的调度方式当中，所有的线程都相当于在拿取一个系统当前的快照，它们会一直重试，直到拿到的快照有效为止</p>
+<h2 id="无锁"><a href="#无锁" class="headerlink" title="无锁"></a>无锁</h2><ul>
+<li>保证有一个线程可以胜出  </li>
+</ul>
+<p>前面说的无障碍是指所有的线程都能进入临界区，但如果发生了竞争，无障碍并不保证临界区的线程能够顺利的出来，因为如果线程发现自己的数据每次去读取或者去操作，总是跟其它线程产生冲突，它就会不停地重试，如果在临界区当中有10个线程，线程1修改了部分数据，结果它被线程2干扰了，线程2又被线程3干扰，依此类推，最后线程1它又可能去干扰线程10，如果它们之间是彼此干扰的，最终会导致所有的线程都卡死在里面，系统的性能会受到比较严重的影响，因此，无锁必须在无障碍的基础上加一个约束，保证在竞争当中有一个线程是必然能够胜出的，这样就能保证在临界区的线程当中至少有一个是能顺利走出去的，而不至于全部在里面阵亡掉，如果至少有一个线程能够出去，那么就有第二个线程能够出去，假设里面有一百个线程，第一个线程竞争胜利，走出了临界区，剩下99个再竞争又必然能胜利一个，因为每次竞争它必然保证能有一个胜利，使得系统至少是能够顺畅的执行下去的，这就是无锁。</p>
+<h2 id="无等待"><a href="#无等待" class="headerlink" title="无等待"></a>无等待</h2><ul>
+<li>要求所有的线程都必须在有限步内完成</li>
+<li>无饥饿的  </li>
+</ul>
+<p>无锁是能保证至少有一个线程能够在有限步当中完成它的操作，所有的线程在不停地竞争直到有一个胜出为止。无等待相比于无锁更进一步，它首先要求是无锁的，保证所有线程能进并且至少有一个线程能出来，同时无等待它在提高要求，它要求所有进入临界区的线程都能够在有限步当中完成其操作，这个要求很高，因为任何线程都能够无障碍进入临界区，并且任何线程都能够在有限步当中完成操作后离开临界区，这就会使得整个系统的运行变得非常顺畅，无等待可以说是并行最高级别了，它基本上能使整个系统发挥到最好佳效率。</p>
+<p>无等待必须然也是无饥饿的，因为所有的线程都能在有限步当中完成，因此必然不会有线程永久地呆在临界区内出不去，所以它一定是无饥饿的。</p>
+<p>无等待的一个典型案例是，有读写两个线程，如果说只有读线程没有写线程，那么所有的读线程之间必然是无等待的，因为读不会修改数据，如果有一个写线程在里面，由于会修改数据 ，写线程必然会导致读线程不是无等待。因此可以提出一种算法去作一点改进，比如说有一种算法它会这样做，因为写可能会影响到读，所以每次写之前先把数据拷贝一份副本，线程修改的是这个副本而非原始数据，修改数据的过程可能需要一点时间，因为修改的是副本数据而不是原始数据，所以这个修改的过程也不影响线程读，因此在这个过程当中所有的读线程一样是无等待的，它们都能够在有限的步骤当中完成自己的操作，而所有的写线程相对来讲，因为每个写线程它都是写自己的副本，因此它们的写也是无等待的，所以它们都不需要去跟彼此作同步，最后需要同步的只是将写完之后的数据覆盖原始数据，而这个覆盖原始数据的动作是非常快的，因为我们并不需要作大量的写操作，只不过是一个指针或引用作一个替换而已，不管哪个写线程胜出，总是能够保证替换上去的数据是一致的，并不像其它的算法一样，可能会把数据写坏，因为大家都写的是副本，最后是一个指针指向谁的问题，这样数据必然是安全的，这种方式它就是无等待的一个典型的实现。</p>
+<h1 id="CompletableFuture：异步多线程"><a href="#CompletableFuture：异步多线程" class="headerlink" title="CompletableFuture：异步多线程"></a>CompletableFuture：异步多线程</h1><h2 id="任务方法"><a href="#任务方法" class="headerlink" title="任务方法"></a>任务方法</h2><p>有supplyAsync和runAsync两个方法，分别适用于有无返回值，各有两个重载方法，可手动指定线程池。</p>
+<h2 id="获得结果"><a href="#获得结果" class="headerlink" title="获得结果"></a>获得结果</h2><p>completableFuture.get();</p>
+<h2 id="简单示例，不用CompletionStage"><a href="#简单示例，不用CompletionStage" class="headerlink" title="简单示例，不用CompletionStage"></a>简单示例，不用CompletionStage</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ExecutorService executorService = Executors.newFixedThreadPool(10);</span><br><span class="line">CompletableFuture&lt;Integer&gt; f1 = CompletableFuture.supplyAsync(()-&gt;cal(),executorService);</span><br><span class="line">System.out.println(f1.get());</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/10/11/10-11技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1777,163 +1940,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/26/9-26技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/09/26/9-26技术笔记/" itemprop="url">springboot+定时任务</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-26T15:18:41+08:00">
-                2018-09-26
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="定时任务"><a href="#定时任务" class="headerlink" title="定时任务"></a>定时任务</h1><p>springboot内嵌了定时任务的简单实现，而使用Quartz可以实现较复杂的定时任务。</p>
-<h1 id="springboot实现"><a href="#springboot实现" class="headerlink" title="springboot实现"></a>springboot实现</h1><ol>
-<li>在Application启动类上使用@EnableScheduling注解，表示使用定时任务。</li>
-<li>定时任务方法上使用注解 @Scheduled(cron = “0/5 <em> </em> <em> </em> *“)，则为定时任务。</li>
-<li>定时任务是单线程的，多线程多任务需要注册线程池。  </li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">@Configuration</span><br><span class="line">@EnableAsync</span><br><span class="line">public class AsyncConfig &#123;</span><br><span class="line">    private int corePoolSize = 10;</span><br><span class="line">    private int maxPoolSize = 200;</span><br><span class="line">    private int queueCapacity = 10;</span><br><span class="line">    @Bean</span><br><span class="line">    public Executor taskExecutor() &#123;</span><br><span class="line">        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();</span><br><span class="line">        executor.setCorePoolSize(corePoolSize);</span><br><span class="line">        executor.setMaxPoolSize(maxPoolSize);</span><br><span class="line">        executor.setQueueCapacity(queueCapacity);</span><br><span class="line">        executor.initialize();</span><br><span class="line">        return executor;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<ol start="4">
-<li>之后在定时任务类上，使用@Async注解，多定时任务异步多线程。  </li>
-</ol>
-<h1 id="Quartz"><a href="#Quartz" class="headerlink" title="Quartz"></a>Quartz</h1><p>1.定时任务类应继承自QuartzJobBean<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class QuartzTestTask extends QuartzJobBean&#123;</span><br><span class="line">    private String name;</span><br><span class="line">    public void setName(String name)&#123;</span><br><span class="line">        this.name = name;</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    protected void executeInternal(org.quartz.JobExecutionContext jobExecutionContext) throws JobExecutionException &#123;</span><br><span class="line">        System.out.println(String.format(&quot;Hello %s!&quot;, name));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<ol start="2">
-<li>其配置类中设置其属性和定时时间等设置  </li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">@Configuration</span><br><span class="line">public class QuartzTestScheduler &#123;</span><br><span class="line">    @Bean</span><br><span class="line">    public JobDetail QuartzTestTaskDetail()&#123;</span><br><span class="line">        return JobBuilder.newJob(QuartzTestTask.class).withIdentity(&quot;QuartzTestTask&quot;)</span><br><span class="line">                .usingJobData(&quot;name&quot;, &quot;World&quot;).storeDurably().build();</span><br><span class="line">    &#125;</span><br><span class="line">    @Bean</span><br><span class="line">    public Trigger sampleJobTrigger() &#123;</span><br><span class="line">        CronScheduleBuilder cronScheduleBuilder = CronScheduleBuilder.cronSchedule(&quot;0/6 * * * * ?&quot;);</span><br><span class="line">        SimpleScheduleBuilder scheduleBuilder = SimpleScheduleBuilder.simpleSchedule()</span><br><span class="line">                .withIntervalInSeconds(2).repeatForever();</span><br><span class="line"></span><br><span class="line">        return TriggerBuilder.newTrigger().forJob(QuartzTestTaskDetail())</span><br><span class="line">                .withIdentity(&quot;QuartzTestTrigger&quot;).withSchedule(scheduleBuilder).build();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="cron表达式"><a href="#cron表达式" class="headerlink" title="cron表达式"></a>cron表达式</h1><p>在线生成器<a href="http://cron.qqe2.com/" target="_blank" rel="noopener">http://cron.qqe2.com/</a><br>具体细节<a href="https://www.cnblogs.com/javahr/p/8318728.html" target="_blank" rel="noopener">https://www.cnblogs.com/javahr/p/8318728.html</a></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1984,7 +1990,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">193</span>
+                  <span class="site-state-item-count">194</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

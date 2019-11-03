@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-10-31T13:01:33.049Z</updated>
+  <updated>2019-11-03T10:46:03.033Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,30 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>kafka-admin</title>
+    <link href="http://yoursite.com/blog/2019/11/03/11-3%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2019/11/03/11-3技术笔记/</id>
+    <published>2019-11-03T10:11:45.000Z</published>
+    <updated>2019-11-03T10:46:03.033Z</updated>
+    
+    <content type="html"><![CDATA[<p>常见的有kafka manager和 eagle</p><p>大致是kafka从0.11.0.0版本开始， 提供了一个工具类 org.apache.kafka.clients.admin.KafkaAdminClient，不仅可以用来管理 broker、配置和 ACL（Access Control List），还可以用来管理主题，KafkaAdminClient 继承了 org.apache.kafka.clients.admin.AdminClient 抽象类，并提供了多种方法。诸如，</p><ul><li>创建主题：CreateTopicsResult createTopics(Collection newTopics)。</li><li>删除主题：DeleteTopicsResult deleteTopics(Collection topics)。</li><li>列出所有可用的主题：ListTopicsResult listTopics()。</li><li>查看主题的信息：DescribeTopicsResult describeTopics(Collection topicNames)。</li><li>查询配置信息：DescribeConfigsResult describeConfigs(Collection resources)。</li><li>修改配置信息：AlterConfigsResult alterConfigs(Map&lt;ConfigResource, Config&gt; configs)。</li><li>增加分区：CreatePartitionsResult createPartitions(Map&lt;String, NewPartitions&gt; newPartitions)。</li></ul><p>把这个做成一个可视化的，即admin的基础。</p><p>edge功能如下</p><p><img src="https://i.loli.net/2019/11/03/mT6oKS9ZWdiUELJ.png" alt="mT6oKS9ZWdiUELJ"></p><p>甚至还可以看消息发送和消费情况</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;常见的有kafka manager和 eagle&lt;/p&gt;
+&lt;p&gt;大致是kafka从0.11.0.0版本开始， 提供了一个工具类 org.apache.kafka.clients.admin.KafkaAdminClient，不仅可以用来管理 broker、配置和 ACL（A
+      
+    
+    </summary>
+    
+    
+      <category term="消息队列" scheme="http://yoursite.com/blog/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
+    
+  </entry>
   
   <entry>
     <title>kafka可靠性</title>
@@ -490,31 +514,6 @@
       
       
         &lt;h1 id=&quot;channel内存泄漏&quot;&gt;&lt;a href=&quot;#channel内存泄漏&quot; class=&quot;headerlink&quot; title=&quot;channel内存泄漏&quot;&gt;&lt;/a&gt;channel内存泄漏&lt;/h1&gt;&lt;p&gt;造成channel泄漏的原因很简单，协程持有channel，一直阻塞
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="go" scheme="http://yoursite.com/blog/tags/go/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>goSlcie细节</title>
-    <link href="http://yoursite.com/blog/2019/07/23/7-23%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/07/23/7-23技术笔记/</id>
-    <published>2019-07-23T13:18:59.000Z</published>
-    <updated>2019-07-23T13:20:09.386Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="List"><a href="#List" class="headerlink" title="List"></a>List</h1><h2 id="nil切片与空切片"><a href="#nil切片与空切片" class="headerlink" title="nil切片与空切片"></a>nil切片与空切片</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> s1 []<span class="keyword">int</span></span><br><span class="line"><span class="keyword">var</span> s2 = *<span class="built_in">new</span>([]<span class="keyword">int</span>)</span><br><span class="line"><span class="keyword">var</span> s3 = <span class="built_in">make</span>([]<span class="keyword">int</span>, <span class="number">0</span>)</span><br><span class="line"><span class="keyword">var</span> s4 = []<span class="keyword">int</span>&#123;&#125;</span><br></pre></td></tr></table></figure><p>前两者是nil切片，==nil。</p><p>后两者是空切片，!=nil，数据指针都指向同一个地址 <code>0xc42003bda0</code></p><p>四者的len都是0，所以应该用len(list)==0来判断返回值。</p><h2 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h2><p>扩容规则并不是网传的小于1024两倍，大于1024就1.25倍这么简单</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">s := []<span class="keyword">int</span>&#123;<span class="number">1</span>,<span class="number">2</span>&#125;</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">fmt.Printf(<span class="string">"%d %d    \n"</span>,<span class="built_in">len</span>(s),<span class="built_in">cap</span>(s))</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">fmt.Printf(<span class="string">"%d %d"</span>,<span class="built_in">len</span>(s),<span class="built_in">cap</span>(s))</span><br></pre></td></tr></table></figure><p>输出并不是5 8 11 16</p><p>而是5 6 11 12</p><h4 id="基于cap的增长规则"><a href="#基于cap的增长规则" class="headerlink" title="基于cap的增长规则"></a>基于cap的增长规则</h4><p>根本问题在于，可能扩容后依然不够装，为了避免这个问题，当简单规则计算后，仍不够装时，会采用基于cap的增长规则。</p><p>1.计算新cap,以例子为例，翻倍仍不够，新cap是2+3=5；</p><p>2.内存对齐，内存对齐，简单来说需要多少个8（小于1024）/128（大于1024）字节，可以内存对齐，这里是6个。具体来说，一共五个数，每个数的指针大小为8（64位机），先算出空间40，算出实际需要索引4，然后查一个内存对齐表，索引4处值为48，48即6。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;List&quot;&gt;&lt;a href=&quot;#List&quot; class=&quot;headerlink&quot; title=&quot;List&quot;&gt;&lt;/a&gt;List&lt;/h1&gt;&lt;h2 id=&quot;nil切片与空切片&quot;&gt;&lt;a href=&quot;#nil切片与空切片&quot; class=&quot;headerlink&quot; title=
       
     
     </summary>
