@@ -89,7 +89,7 @@
 <meta property="og:site_name" content="Arvense">
 <meta property="og:description" content="mysql自5.7开始支持json。 数据库建表12345678CREATE TABLE `json_test` (  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,  `user_id` bigint(20) NOT NULL DEFAULT &apos;1&apos; COMMENT &apos;用户ID &apos;,  `attr` json NOT NULL COMMENT">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-12-11T06:37:55.392Z">
+<meta property="og:updated_time" content="2019-12-11T06:39:24.383Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="mysql支持json">
 <meta name="twitter:description" content="mysql自5.7开始支持json。 数据库建表12345678CREATE TABLE `json_test` (  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,  `user_id` bigint(20) NOT NULL DEFAULT &apos;1&apos; COMMENT &apos;用户ID &apos;,  `attr` json NOT NULL COMMENT">
@@ -352,6 +352,7 @@
 <figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">id	user_id	 attr                               update_time create_time</span><br><span class="line">2	1	     &#123;"color": "red", "height": 1.5&#125;	2019-12-11 11:54:44	2019-12-11 11:54:44</span><br></pre></td></tr></table></figure>
 <p>也可以查key存在</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> json_test <span class="keyword">WHERE</span> JSON_CONTAINS_PATH(<span class="keyword">attr</span>,<span class="string">'all'</span>,<span class="string">'$.color'</span>)</span><br></pre></td></tr></table></figure>
+<p>或者用 JSON_EXTRACT查value存在</p>
 <h2 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h2><p>全部更新和插入类似。</p>
 <p>也可以指定key，更新value</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">UPDATE</span> json_test <span class="keyword">SET</span> <span class="keyword">attr</span> = JSON_SET(<span class="keyword">attr</span>, <span class="string">'$.color'</span>, <span class="string">'blue'</span>) <span class="keyword">WHERE</span> <span class="keyword">id</span> = <span class="number">2</span>;</span><br></pre></td></tr></table></figure>
