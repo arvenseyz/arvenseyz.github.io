@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-12-08T14:15:59.771Z</updated>
+  <updated>2019-12-11T06:37:55.392Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>mysql支持json</title>
+    <link href="http://yoursite.com/blog/2019/12/11/12-11%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>http://yoursite.com/blog/2019/12/11/12-11技术笔记-1/</id>
+    <published>2019-12-11T06:16:54.000Z</published>
+    <updated>2019-12-11T06:37:55.392Z</updated>
+    
+    <content type="html"><![CDATA[<p>mysql自5.7开始支持json。</p><h2 id="数据库建表"><a href="#数据库建表" class="headerlink" title="数据库建表"></a>数据库建表</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`json_test`</span> (</span><br><span class="line">  <span class="string">`id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">unsigned</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  <span class="string">`user_id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'1'</span> <span class="keyword">COMMENT</span> <span class="string">'用户ID '</span>,</span><br><span class="line">  <span class="string">`attr`</span> <span class="keyword">json</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">'属性类型'</span>,</span><br><span class="line">  <span class="string">`update_time`</span> <span class="built_in">timestamp</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="keyword">CURRENT_TIMESTAMP</span>,</span><br><span class="line">  <span class="string">`create_time`</span> <span class="built_in">timestamp</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="keyword">CURRENT_TIMESTAMP</span> <span class="keyword">ON</span> <span class="keyword">UPDATE</span> <span class="keyword">CURRENT_TIMESTAMP</span>,</span><br><span class="line">  PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> AUTO_INCREMENT=<span class="number">3</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8mb4;</span><br></pre></td></tr></table></figure><h2 id="数组中查询"><a href="#数组中查询" class="headerlink" title="数组中查询"></a>数组中查询</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="string">`json_test`</span> (<span class="keyword">attr</span>) <span class="keyword">VALUES</span> (<span class="string">'[1, 2, 3]'</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> json_test <span class="keyword">WHERE</span> JSON_CONTAINS(<span class="keyword">attr</span>, <span class="string">'2'</span>)</span><br></pre></td></tr></table></figure><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">iduser_idattr    update_time        create_time</span><br><span class="line">11    [1, 2, 3]2019-12-11 11:45:062019-12-11 11:45:06</span><br></pre></td></tr></table></figure><h2 id="key-value查询"><a href="#key-value查询" class="headerlink" title="key-value查询"></a>key-value查询</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="string">`json_test`</span> (<span class="keyword">attr</span>) <span class="keyword">VALUES</span> (<span class="string">'&#123;"color":"red","height":1.5&#125;'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> json_test <span class="keyword">WHERE</span> <span class="keyword">attr</span>-&gt;<span class="string">'$.color'</span> = <span class="string">'red'</span></span><br></pre></td></tr></table></figure><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">iduser_id attr                               update_time create_time</span><br><span class="line">21     &#123;"color": "red", "height": 1.5&#125;2019-12-11 11:54:442019-12-11 11:54:44</span><br></pre></td></tr></table></figure><p>也可以查key存在</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> json_test <span class="keyword">WHERE</span> JSON_CONTAINS_PATH(<span class="keyword">attr</span>,<span class="string">'all'</span>,<span class="string">'$.color'</span>)</span><br></pre></td></tr></table></figure><h2 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h2><p>全部更新和插入类似。</p><p>也可以指定key，更新value</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">UPDATE</span> json_test <span class="keyword">SET</span> <span class="keyword">attr</span> = JSON_SET(<span class="keyword">attr</span>, <span class="string">'$.color'</span>, <span class="string">'blue'</span>) <span class="keyword">WHERE</span> <span class="keyword">id</span> = <span class="number">2</span>;</span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;mysql自5.7开始支持json。&lt;/p&gt;
+&lt;h2 id=&quot;数据库建表&quot;&gt;&lt;a href=&quot;#数据库建表&quot; class=&quot;headerlink&quot; title=&quot;数据库建表&quot;&gt;&lt;/a&gt;数据库建表&lt;/h2&gt;&lt;figure class=&quot;highlight sql&quot;&gt;&lt;tabl
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="数据库" scheme="http://yoursite.com/blog/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
   
   <entry>
     <title>NTP协议</title>
@@ -490,31 +516,6 @@
         &lt;h1 id=&quot;文件目录&quot;&gt;&lt;a href=&quot;#文件目录&quot; class=&quot;headerlink&quot; title=&quot;文件目录&quot;&gt;&lt;/a&gt;文件目录&lt;/h1&gt;&lt;p&gt;&lt;code&gt;/ 根目录&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;├── bin 存放用户二进制文件&lt;/code&gt;&lt;/p&gt;
 &lt;
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="linux" scheme="http://yoursite.com/blog/tags/linux/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>linux文件权限和管理</title>
-    <link href="http://yoursite.com/blog/2019/08/12/8-12%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/08/12/8-12技术笔记/</id>
-    <published>2019-08-12T07:36:01.000Z</published>
-    <updated>2019-08-13T03:19:53.298Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="文件权限"><a href="#文件权限" class="headerlink" title="文件权限"></a>文件权限</h1><p>linux文件系统，权限和用户有关，linux是多用户系统，在用户之上还有一层分组的概念，很容易理解。所以任何一个理解，都有三种不同不同的权限，文件拥有者的权限，群组的权限，其他人的权限。</p><p>进入一个文件目录，输入ls -al，其中一行返回如下。</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-rw-r--r--.  1    root     root     176  Dec 29  2013 .bash_profile</span><br></pre></td></tr></table></figure><p>返回值一共有7个，分别是权限，链接数，拥有者，群组，文件大小，修改日期，文件名。</p><p>其中权限一共十个字符，可以分为4组，即1-3-3-3.</p><p>第一组，一个字符，表示文件类型</p><ul><li>当为[ d ]则是目录；</li><li>当为[ - ]则是文件；</li><li>若是[ l ]则表示为链接文件（link file）；</li><li>若是[ b ]则表示为设备文件里面的可供储存的周边设备（可随机存取设备）；</li><li>若是[ c ]则表示为设备文件里面的序列埠设备，例如键盘、鼠标（一次性读取设备）。</li></ul><p>第二组，三个字符，表示拥有者权限，分别表示可读，可写，可执行。如果有就有相应字符，没有就是减号。</p><p>比如rwx表示可读可写可执行，r-x表示可读不可写可执行。</p><p>其中目录的x权限，是指进入该目录的权限。通常要开放的目录， 至少会具备 rx 这两个权限</p><p>第三组，三个字符，表示群组权限。</p><p>第四组，三个字符，表示其他人权限。</p><p>链接数，有多少文件名链接到此节点（i-node）</p><h2 id="改变文件权限"><a href="#改变文件权限" class="headerlink" title="改变文件权限"></a>改变文件权限</h2><ul><li>chgrp ：改变文件所属群组</li><li>chown ：改变文件拥有者</li><li>chmod ：改变文件的权限,</li></ul><p>chgrp和chown类似，其中有个参数-R，指递归得进行改变，用于目录。</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chgrp users initial-setup-ks.cfg</span><br></pre></td></tr></table></figure><p>把initial-setup-ks.cfg的群组改变成了users。</p><p>chmod，可以用数字和符号两种写法，数字就是二进制加，参数-R，指递归得进行改变，用于目录。</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod 740 .bashrc</span><br></pre></td></tr></table></figure><p>表示把.bashrc的用户权限变成4+2+1:rwx;群组权限4:r–;其他权限0:—。</p><p>也可以直接写</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod u=rwx,g=rx,o=r filename</span><br></pre></td></tr></table></figure><p>或者写一起；也可以用加减号表示增减</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">chmod  u=rwx,go=rx  .bashrc</span><br><span class="line">chmod  a-x  .bashrc</span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;文件权限&quot;&gt;&lt;a href=&quot;#文件权限&quot; class=&quot;headerlink&quot; title=&quot;文件权限&quot;&gt;&lt;/a&gt;文件权限&lt;/h1&gt;&lt;p&gt;linux文件系统，权限和用户有关，linux是多用户系统，在用户之上还有一层分组的概念，很容易理解。所以任何一个理解，都有
       
     
     </summary>
