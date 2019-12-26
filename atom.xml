@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2019-12-11T06:39:24.383Z</updated>
+  <updated>2019-12-26T03:09:37.685Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -17,11 +17,37 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>分布式对时</title>
+    <link href="http://yoursite.com/blog/2019/12/19/12-19%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2019/12/19/12-19技术笔记/</id>
+    <published>2019-12-19T06:34:56.000Z</published>
+    <updated>2019-12-26T03:09:37.685Z</updated>
+    
+    <content type="html"><![CDATA[<p><a href="https://docs.qq.com/pdf/DT1VSaFBvSGx3RWxi" target="_blank" rel="noopener">https://docs.qq.com/pdf/DT1VSaFBvSGx3RWxi</a></p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;&lt;a href=&quot;https://docs.qq.com/pdf/DT1VSaFBvSGx3RWxi&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;https://docs.qq.com/pdf/DT1VSaFBvSGx3RWxi&lt;/a&gt;&lt;/p&gt;
+
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="分布式" scheme="http://yoursite.com/blog/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"/>
+    
+  </entry>
+  
+  <entry>
     <title>mysql支持json</title>
     <link href="http://yoursite.com/blog/2019/12/11/12-11%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
     <id>http://yoursite.com/blog/2019/12/11/12-11技术笔记-1/</id>
     <published>2019-12-11T06:16:54.000Z</published>
-    <updated>2019-12-11T06:39:24.383Z</updated>
+    <updated>2019-12-26T03:07:23.915Z</updated>
     
     <content type="html"><![CDATA[<p>mysql自5.7开始支持json。</p><h2 id="数据库建表"><a href="#数据库建表" class="headerlink" title="数据库建表"></a>数据库建表</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`json_test`</span> (</span><br><span class="line">  <span class="string">`id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">unsigned</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  <span class="string">`user_id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'1'</span> <span class="keyword">COMMENT</span> <span class="string">'用户ID '</span>,</span><br><span class="line">  <span class="string">`attr`</span> <span class="keyword">json</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">'属性类型'</span>,</span><br><span class="line">  <span class="string">`update_time`</span> <span class="built_in">timestamp</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="keyword">CURRENT_TIMESTAMP</span>,</span><br><span class="line">  <span class="string">`create_time`</span> <span class="built_in">timestamp</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="keyword">CURRENT_TIMESTAMP</span> <span class="keyword">ON</span> <span class="keyword">UPDATE</span> <span class="keyword">CURRENT_TIMESTAMP</span>,</span><br><span class="line">  PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> AUTO_INCREMENT=<span class="number">3</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8mb4;</span><br></pre></td></tr></table></figure><h2 id="数组中查询"><a href="#数组中查询" class="headerlink" title="数组中查询"></a>数组中查询</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="string">`json_test`</span> (<span class="keyword">attr</span>) <span class="keyword">VALUES</span> (<span class="string">'[1, 2, 3]'</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> json_test <span class="keyword">WHERE</span> JSON_CONTAINS(<span class="keyword">attr</span>, <span class="string">'2'</span>)</span><br></pre></td></tr></table></figure><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">iduser_idattr    update_time        create_time</span><br><span class="line">11    [1, 2, 3]2019-12-11 11:45:062019-12-11 11:45:06</span><br></pre></td></tr></table></figure><h2 id="key-value查询"><a href="#key-value查询" class="headerlink" title="key-value查询"></a>key-value查询</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="string">`json_test`</span> (<span class="keyword">attr</span>) <span class="keyword">VALUES</span> (<span class="string">'&#123;"color":"red","height":1.5&#125;'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> json_test <span class="keyword">WHERE</span> <span class="keyword">attr</span>-&gt;<span class="string">'$.color'</span> = <span class="string">'red'</span></span><br></pre></td></tr></table></figure><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">iduser_id attr                               update_time create_time</span><br><span class="line">21     &#123;"color": "red", "height": 1.5&#125;2019-12-11 11:54:442019-12-11 11:54:44</span><br></pre></td></tr></table></figure><p>也可以查key存在</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> json_test <span class="keyword">WHERE</span> JSON_CONTAINS_PATH(<span class="keyword">attr</span>,<span class="string">'all'</span>,<span class="string">'$.color'</span>)</span><br></pre></td></tr></table></figure><p>或者用 JSON_EXTRACT查value存在</p><h2 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h2><p>全部更新和插入类似。</p><p>也可以指定key，更新value</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">UPDATE</span> json_test <span class="keyword">SET</span> <span class="keyword">attr</span> = JSON_SET(<span class="keyword">attr</span>, <span class="string">'$.color'</span>, <span class="string">'blue'</span>) <span class="keyword">WHERE</span> <span class="keyword">id</span> = <span class="number">2</span>;</span><br></pre></td></tr></table></figure>]]></content>
     
@@ -489,33 +515,6 @@
       
         &lt;h1 id=&quot;打包和压缩&quot;&gt;&lt;a href=&quot;#打包和压缩&quot; class=&quot;headerlink&quot; title=&quot;打包和压缩&quot;&gt;&lt;/a&gt;打包和压缩&lt;/h1&gt;&lt;p&gt;常见的压缩文件，都是.tar.gz结尾的，有双重含义，即打包并压缩。&lt;/p&gt;
 &lt;p&gt;原因在于，压缩文件，压缩的是一个
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="linux" scheme="http://yoursite.com/blog/tags/linux/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>linux文件目录与链接</title>
-    <link href="http://yoursite.com/blog/2019/08/14/8-14%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>http://yoursite.com/blog/2019/08/14/8-14技术笔记-1/</id>
-    <published>2019-08-14T07:18:55.000Z</published>
-    <updated>2019-08-15T02:18:05.550Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="文件目录"><a href="#文件目录" class="headerlink" title="文件目录"></a>文件目录</h1><p><code>/ 根目录</code></p><p><code>├── bin 存放用户二进制文件</code></p><p><code>├── boot 存放内核引导配置文件</code></p><p><code>├── dev 存放设备文件</code></p><p><code>├── etc 存放系统配置文件</code></p><p><code>├── home 用户主目录</code></p><p><code>├── lib 动态共享库</code></p><p><code>├── lost+found 文件系统恢复时的恢复文件</code></p><p><code>├── media 可卸载存储介质挂载点</code></p><p><code>├── mnt 文件系统临时挂载点</code></p><p><code>├── opt 附加的应用程序包</code></p><p><code>├── proc 系统内存的映射目录，提供内核与进程信息</code></p><p><code>├── root root 用户主目录</code></p><p><code>├── sbin 存放系统二进制文件</code></p><p><code>├── srv 存放服务相关数据</code></p><p><code>├── sys sys 虚拟文件系统挂载点</code></p><p><code>├── tmp 存放临时文件</code></p><p><code>├── usr 存放用户应用程序</code></p><p><code>└── var 存放邮件、系统日志等变化文件</code></p><p>Linux 与其他类 UNIX 系统一样并不区分文件与目录：目录是记录了其他文件名的文件。使用命令 mkdir 创建目录时，若期望创建的目录的名称与现有的文件名（或目录名）重复，则会创建失败。Linux 将设备当做文件进行处理。</p><h1 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h1><p>我们知道文件都有文件名与数据，这在 Linux 上被分成两个部分：用户数据 (user data) 与元数据 (metadata)。用户数据，即文件数据块 (data block)，数据块是记录文件真实内容的地方；而元数据则是文件的附加属性，如文件大小、创建时间、所有者等信息。在 Linux 中，元数据中的 inode 号（inode 是文件元数据的一部分但其并不包含文件名，inode 号即索引节点号）才是文件的唯一标识而非文件名。文件名仅是为了方便人们的记忆和使用，系统或程序通过 inode 号寻找正确的文件数据块。</p><p>为解决文件的共享使用，Linux 系统引入了两种链接：硬链接 (hard link) 与软链接（又称符号链接，即 soft link 或 symbolic link）。链接为 Linux 系统解决了文件的共享使用，还带来了隐藏文件路径、增加权限安全及节省存储等好处。</p><h2 id="硬链接"><a href="#硬链接" class="headerlink" title="硬链接"></a>硬链接</h2><p>若一个 inode 号对应多个文件名，则称这些文件为硬链接。换言之，硬链接就是同一个文件使用了多个别名。硬链接可由命令 link 或 ln 创建。</p><p>可以说，硬链接就是个文件名。</p><h2 id="软链接"><a href="#软链接" class="headerlink" title="软链接"></a>软链接</h2><p>软链接则是真正的文件，但文件的内容即inode，是另一个文件的的路径名。</p><p>使用 find 命令，其不仅可查找某文件的软链接，还可以用于查找相同 inode 的所有硬链接。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;文件目录&quot;&gt;&lt;a href=&quot;#文件目录&quot; class=&quot;headerlink&quot; title=&quot;文件目录&quot;&gt;&lt;/a&gt;文件目录&lt;/h1&gt;&lt;p&gt;&lt;code&gt;/ 根目录&lt;/code&gt;&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;├── bin 存放用户二进制文件&lt;/code&gt;&lt;/p&gt;
-&lt;
       
     
     </summary>
