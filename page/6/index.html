@@ -251,6 +251,175 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/05/09/5-9技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/05/09/5-9技术笔记-1/" itemprop="url">CMS与G1</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-09T15:26:02+08:00">
+                2019-05-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="CMS"><a href="#CMS" class="headerlink" title="CMS"></a>CMS</h1><ol>
+<li><p>初试标记，需要stop the world(STP)。找到GCroots对象（图中的1），以及年轻代中，引用到的老年代的对象（图中的2和3）<img src="https://i.loli.net/2019/05/09/5cd3dbbd524ac.png" alt="5cd3dbbd524ac"></p>
+</li>
+<li><p>并发标记：从“初始标记”阶段标记的对象开始找出所有存活的对象;</p>
+<p>因为是并发运行的，在运行期间会发生新生代的对象晋升到老年代、或者是直接在老年代分配对象、或者更新老年代对象的引用关系等等，对于这些对象，都是需要进行重新标记的，否则有些对象就会被遗漏，发生漏标的情况。为了提高重新标记的效率，该阶段会把上述对象所在的Card标识为Dirty，后续只需扫描这些Dirty Card的对象，避免扫描整个老年代； 并发标记阶段只负责将引用发生改变的Card标记为Dirty状态，不负责处理；</p>
+<p><img src="https://i.loli.net/2019/05/09/5cd3e00235ca3.png" alt="5cd3e00235ca3"></p>
+<p>如6本来可以回收的，3就是所说的脏节点，3在并发标记阶段发生了变化，指向了6。</p>
+</li>
+<li><p>预清理阶段</p>
+<p>简单来说，就是为第二步后续工作的，把6也标记为可达节点。</p>
+</li>
+<li><p>重新标记：会导致过程中的第二次STP</p>
+<p>扫描整个堆，此时新生代也可作为GCroots节点。为了避免新生代对象过多，可以先进行一次young gc。</p>
+</li>
+<li><p>并发清理，清理阶段，此时由于线程还在工作，所以可能产生浮动垃圾。</p>
+</li>
+<li><p>并发重置</p>
+</li>
+</ol>
+<h1 id="G1"><a href="#G1" class="headerlink" title="G1"></a>G1</h1><p>cms只能回收老年代，年轻代得用ParNew，G1均可回收。</p>
+<p>年轻代回收很简单，复制回收即可。</p>
+<p>G1区别在于，堆不是物理分区的，是逻辑分区的。即物理分块，不同的块属于不同的区，很合理。</p>
+<p>老年代垃圾清理流程和cms类似，区别在于，并不是每次同时回收所有老年代的块，而是垃圾优先，这就是G1的名字（garbage first）。</p>
+<p>有一个问题在于，对象是互相引用依赖的，对象a在region(块)a，他持有引用的对象不一定也在块a，为了标记，岂不是还得扫描全堆。</p>
+<p>解决方法是remember set。</p>
+<p>这是个反向指针集合，反向的意思是，a引用b，反而把a写在b的集合中。</p>
+<p>进行垃圾回收时，如果Region1有根对象A引用了Region2的对象B，显然对象B是活的，如果没有Rset，就需要扫描整个Region1或者其它Region，才能确定对象B是活跃的，有了Rset可以避免对整个堆进行扫描。</p>
+<p>实现大致靠写内存屏障。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/05/09/5-9技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1749,176 +1918,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/04/19/leetcode503-895-687/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/04/19/leetcode503-895-687/" itemprop="url">循环数组中的下一个更大元素，频率栈，树的最长的同值路径</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-19T17:59:30+08:00">
-                2019-04-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/leetcode/" itemprop="url" rel="index">
-                    <span itemprop="name">leetcode</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="503"><a href="#503" class="headerlink" title="503"></a>503</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>给定一个循环数组（最后一个元素的下一个元素是数组的第一个元素），输出每个元素的下一个更大元素。数字 x 的下一个更大的元素是按数组遍历顺序，这个数字之后的第一个比它更大的数，这意味着你应该循环地搜索它的下一个更大的数。如果不存在，则输出 -1。</p>
-<p><strong>示例 1:</strong></p>
-<p><strong>输入:</strong> [1,2,1]<br><strong>输出:</strong> [2,-1,2]<br><strong>解释:</strong> 第一个 1 的下一个更大的数是 2；<br>数字 2 找不到下一个更大的数；<br>第二个 1 的下一个最大的数需要循环搜索，结果也是 2。</p>
-<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><p>先看这个题简单版本，假设没有循环的，比如说3，1，2，4，5。答案是多少。</p>
-<p>第一个比3大的是4，第一个比1大的是2，第一个比2大的是4……</p>
-<p>结果是4，2，4，5，-1。</p>
-<p>怎么得到，方法是单调栈，维持一个单调递减栈，每当有比栈顶大的，意味着，这个新元素就是栈顶元素的下一个元素，记录下来，栈顶元素出栈。直到完成。</p>
-<p>这个循环数组问题，其实规模也不会更复杂，解决方法很简答，把数组重复两遍，那么第一遍后面的就可以在第二遍找到。</p>
-<p>其实不需要申请个两倍大小的数组，再填进去。重复两次，取模就可以了。</p>
-<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">int</span>[] nextGreaterElements(<span class="keyword">int</span>[] nums) &#123;</span><br><span class="line">        <span class="keyword">int</span>[] res = <span class="keyword">new</span> <span class="keyword">int</span>[nums.length];</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i =<span class="number">0</span> ;i &lt;nums.length;i++) &#123;</span><br><span class="line">            res[i]=-<span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        Stack&lt;Integer&gt; st = <span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">2</span> * nums.length; ++i) &#123;</span><br><span class="line">            <span class="keyword">int</span> num = nums[i % nums.length];</span><br><span class="line">            <span class="keyword">while</span> (!st.empty() &amp;&amp; nums[st.peek()] &lt; num) &#123;</span><br><span class="line">                res[st.peek()] = num; st.pop();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (i &lt; nums.length)&#123;</span><br><span class="line">                st.push(i);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> res;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<h1 id="895"><a href="#895" class="headerlink" title="895"></a>895</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>频率栈。</p>
-<p>实现<code>FreqStack</code>，模拟类似栈的数据结构的操作的一个类。</p>
-<p><code>FreqStack</code> 有两个函数：</p>
-<ul>
-<li><code>push(int x)</code>，将整数 <code>x</code> 推入栈中。</li>
-<li><code>pop()</code>，它<strong>移除</strong>并返回栈中出现最频繁的元素。<ul>
-<li>如果最频繁的元素不只一个，则移除并返回最接近栈顶的元素。</li>
-</ul>
-</li>
-</ul>
-<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>对于一个元素而言，它有三个维度，大小，出现次数，入栈时间。</p>
-<p>找栈顶元素，那就是找到出现次数最多的元素，如果次数相同，则是入栈时间最晚的。</p>
-<p>最多的，直接想到优先队列，重写比较函数，先比次数再比入栈时间。</p>
-<p>那么如何知道元素出现多少次，同时维持一个哈希表，值和次数的映射。</p>
-<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">FreqStack</span> </span>&#123;</span><br><span class="line">        <span class="class"><span class="keyword">class</span> <span class="title">Key</span></span>&#123;</span><br><span class="line">            <span class="keyword">int</span> value;</span><br><span class="line">            <span class="keyword">int</span> count;</span><br><span class="line">            <span class="keyword">int</span> time;</span><br><span class="line">            Key(<span class="keyword">int</span> value, <span class="keyword">int</span> count, <span class="keyword">int</span> time) &#123;</span><br><span class="line">                <span class="keyword">this</span>.value = value;</span><br><span class="line">                <span class="keyword">this</span>.count = count;</span><br><span class="line">                <span class="keyword">this</span>.time = time;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        PriorityQueue&lt;Key&gt; queue;</span><br><span class="line">        HashMap&lt;Integer, Integer&gt; map;</span><br><span class="line">        <span class="keyword">int</span> time;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">FreqStack</span><span class="params">()</span> </span>&#123;</span><br><span class="line">             queue = <span class="keyword">new</span> PriorityQueue&lt;&gt;(<span class="keyword">new</span> Comparator&lt;Key&gt;() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compare</span><span class="params">(Key o1, Key o2)</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">if</span>(o1.count==o2.count)&#123;</span><br><span class="line">                        <span class="keyword">return</span> o2.time-o1.time;</span><br><span class="line">                    &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="keyword">return</span> o2.count-o1.count;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            map = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">            time=<span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">push</span><span class="params">(<span class="keyword">int</span> x)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">int</span> cnt;</span><br><span class="line">            <span class="keyword">if</span>(!map.containsKey(x))&#123;</span><br><span class="line">                map.put(x,<span class="number">1</span>);</span><br><span class="line">                cnt=<span class="number">1</span>;</span><br><span class="line">            &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">                cnt=map.get(x)+<span class="number">1</span>;</span><br><span class="line">                map.put(x,cnt);</span><br><span class="line">            &#125;</span><br><span class="line">            time++;</span><br><span class="line">            queue.offer(<span class="keyword">new</span> Key(x,cnt,time));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">pop</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">            Key res = queue.poll();</span><br><span class="line">            <span class="keyword">int</span> cnt =res.count;</span><br><span class="line">            <span class="keyword">int</span> num =res.value;</span><br><span class="line">            map.put(num,cnt-<span class="number">1</span>);</span><br><span class="line">            <span class="keyword">return</span> res.value;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<h1 id="687"><a href="#687" class="headerlink" title="687"></a>687</h1><h2 id="题目-2"><a href="#题目-2" class="headerlink" title="题目"></a>题目</h2><p>一棵树，找到最长的同值路径，这里路径不是说从根到叶子，而是把树看成图，任意节点到任意节点。</p>
-<p>搜索的过程有点像找树的深度，左的，右的，左+右+自己的。</p>
-<h2 id="解答-2"><a href="#解答-2" class="headerlink" title="解答"></a>解答</h2><p>由于这条路径不一定路过树根，但需要从树根开始搜索，定义一个全局变量，一边搜索一边同步。</p>
-<h2 id="代码-2"><a href="#代码-2" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> ans;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">longestUnivaluePath</span><span class="params">(TreeNode root)</span> </span>&#123;</span><br><span class="line">        search(root);</span><br><span class="line">        <span class="keyword">return</span> ans;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">search</span><span class="params">(TreeNode root)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(root == <span class="keyword">null</span>)&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> l=<span class="number">0</span>,r=<span class="number">0</span>;</span><br><span class="line">        <span class="keyword">if</span>(root.left!=<span class="keyword">null</span>)&#123;</span><br><span class="line">            <span class="keyword">int</span> left = search(root.left);</span><br><span class="line">            <span class="keyword">if</span>(root.val==root.left.val)&#123;</span><br><span class="line">                l+=left+<span class="number">1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span>(root.right!=<span class="keyword">null</span>)&#123;</span><br><span class="line">            <span class="keyword">int</span> right = search(root.right);</span><br><span class="line">            <span class="keyword">if</span>(root.val==root.right.val)&#123;</span><br><span class="line">                r+=right+<span class="number">1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        ans = Math.max(ans,l+r);</span><br><span class="line">        <span class="keyword">return</span> Math.max(l, r);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1969,7 +1968,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">198</span>
+                  <span class="site-state-item-count">199</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

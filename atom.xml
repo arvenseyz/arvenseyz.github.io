@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2020-02-03T08:47:22.988Z</updated>
+  <updated>2020-02-04T09:49:35.887Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,35 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>进程调度算法</title>
+    <link href="http://yoursite.com/blog/2020/02/04/2-4%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2020/02/04/2-4技术笔记/</id>
+    <published>2020-02-04T09:14:24.000Z</published>
+    <updated>2020-02-04T09:49:35.887Z</updated>
+    
+    <content type="html"><![CDATA[<p>cpu调度算法有六种，我觉得可以分为两类，四种基础思路，两种复杂的真正使用的。</p><ol><li><p>先到先得，很简单，但不现实，长作业到了，一直持有cpu，其他的傻眼了。</p></li><li><p>按优先级，这个也可以细分为抢占式和非抢占式，就是说有更高优先级的来了，立刻执行还是等当先任务结束。</p></li><li><p>短作业优先，一直有短作业插入，长作业无限等。</p></li><li><p>时间片轮转，把所有就绪的进程按先进先出的原则排成队列，进程以时间片q位单位轮流使用CPU，进程循环轮转使用CPU。缺点在于时间片长短难以确定，如果q太大,则交互性差，设置退化位FCFS调度方法；如果q太小，进程切换频繁，系统开销增加。</p></li><li><p>响应比优先，这样兼顾了等得久的先执行，时间短的先执行。优点是兼顾长短作业，缺点是计算响应比开销大，适用于批处理系统。</p></li><li><p>多级反馈队列调度算法：将时间片轮转与优先级调度相结合，把进程按优先级分成不同的队列，先按优先级调度，优先级相同的，按时间片轮转。优点是兼顾长短作业，有较好的响应时间，可行性强，适用于各种作业环境。</p></li></ol>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;cpu调度算法有六种，我觉得可以分为两类，四种基础思路，两种复杂的真正使用的。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;先到先得，很简单，但不现实，长作业到了，一直持有cpu，其他的傻眼了。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;按优先级，这个也可以细分为抢占式和非抢占式，就是说有更高
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="操作系统" scheme="http://yoursite.com/blog/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
+    
+  </entry>
   
   <entry>
     <title>进程间通信的方式</title>
@@ -490,31 +519,6 @@
         &lt;h1 id=&quot;重定向&quot;&gt;&lt;a href=&quot;#重定向&quot; class=&quot;headerlink&quot; title=&quot;重定向&quot;&gt;&lt;/a&gt;重定向&lt;/h1&gt;&lt;p&gt;标准输出是键盘，标准输出是屏幕，标准错误输出是屏幕。&lt;/p&gt;
 &lt;p&gt;但是可以重定向，改变输入和输出的位置。&lt;/p&gt;
 &lt;h2 id=&quot;
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="linux" scheme="http://yoursite.com/blog/tags/linux/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>shell入门</title>
-    <link href="http://yoursite.com/blog/2019/08/22/8-22%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>http://yoursite.com/blog/2019/08/22/8-22技术笔记-1/</id>
-    <published>2019-08-22T02:26:10.000Z</published>
-    <updated>2019-08-22T07:01:37.222Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="名字"><a href="#名字" class="headerlink" title="名字"></a>名字</h1><p>第一个流行的 shell 是由 Steven Bourne 发展出来的，为了纪念他所以就称为 Bourne shell ，或直接简称为 sh。。至于 Linux 使用的这一种版本就称为“ Bourne Again SHell （简称 bash） ”，这个 Shell 是 Bourne Shell 的增强版本，也是基准于 GNU 的架构下发展出来的</p><h1 id="echo"><a href="#echo" class="headerlink" title="echo"></a>echo</h1><p>echo不但能输出字符串，还能显示变量，或者重定向到文件</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line"><span class="built_in">read</span> name </span><br><span class="line"><span class="built_in">echo</span> <span class="string">"<span class="variable">$name</span> It is a test"</span></span><br></pre></td></tr></table></figure><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">"It is a test"</span> &gt; myfile</span><br></pre></td></tr></table></figure><p>如果使用单引号，表示不转义，不取变量</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">'$name\"'</span></span><br><span class="line"><span class="comment">#输出结果：$name\"</span></span><br></pre></td></tr></table></figure><h1 id="参数"><a href="#参数" class="headerlink" title="参数"></a>参数</h1><p>我们可以在执行 Shell 脚本时，向脚本传递参数，脚本内获取参数的格式为：<strong>$n</strong>。<strong>n</strong> 代表一个数字。第0个参数是文件名，后面的第1，第2，第3个参数就是传入的。</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"Shell 传递参数实例！"</span>;</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"执行的文件名：<span class="variable">$0</span>"</span>;</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"第一个参数为：<span class="variable">$1</span>"</span>;</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"第二个参数为：<span class="variable">$2</span>"</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">#输出结果</span></span><br><span class="line"><span class="comment">#$ ./test.sh 1 2 </span></span><br><span class="line"><span class="comment">#Shell 传递参数实例！</span></span><br><span class="line"><span class="comment">#执行的文件名：./test.sh</span></span><br><span class="line"><span class="comment">#第一个参数为：1</span></span><br><span class="line"><span class="comment">#第二个参数为：2</span></span><br></pre></td></tr></table></figure><h1 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h1><p>定义变量时，直接申明并赋值即可</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">name=<span class="string">"xx"</span></span><br></pre></td></tr></table></figure><p>使用时，\$变量名，或者\${变量名}</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">name=<span class="string">"ww"</span></span><br><span class="line"><span class="built_in">echo</span> <span class="variable">$your_name</span></span><br><span class="line"><span class="built_in">echo</span> <span class="variable">$&#123;your_name&#125;</span></span><br></pre></td></tr></table></figure><p>已定义的变量，可以被重新定义，但可以readonly 命令可以将变量定义为只读变量，只读变量的值不能被改变。用unset可以删除变量。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;名字&quot;&gt;&lt;a href=&quot;#名字&quot; class=&quot;headerlink&quot; title=&quot;名字&quot;&gt;&lt;/a&gt;名字&lt;/h1&gt;&lt;p&gt;第一个流行的 shell 是由 Steven Bourne 发展出来的，为了纪念他所以就称为 Bourne shell ，或直接简称为 sh
       
     
     </summary>
