@@ -251,6 +251,167 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/12/18/leetcode70-141-142/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/12/18/leetcode70-141-142/" itemprop="url">爬楼梯走法数，链表是否有环，找到链表环的起点</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-18T17:34:46+08:00">
+                2018-12-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/leetcode/" itemprop="url" rel="index">
+                    <span itemprop="name">leetcode</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="70"><a href="#70" class="headerlink" title="70"></a>70</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>爬楼梯,每次可以走一步或者两步,走n步一共有多少种走法.</p>
+<h1 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h1><p>走n步走法数=走n-1步走法数(再一次走一步)+走n-2步走法数(再一次走两步).递归求解</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">step</span><span class="params">(<span class="keyword">int</span> num)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(num==<span class="number">1</span>) </span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span>(num==<span class="number">2</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">return</span> step(num<span class="number">-1</span>)+step(num<span class="number">-2</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n;</span><br><span class="line">    <span class="keyword">while</span>(<span class="built_in">cin</span>&gt;&gt;n)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;step(n)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>然而递归会超时.解决方法是动态规划,f(n)=f(n-1)+f(n-2)</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">climbStairs</span><span class="params">(<span class="keyword">int</span> n)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span>[] A=<span class="keyword">new</span> <span class="keyword">int</span>[n]; <span class="comment">//用来记录到每一步有多少种走法</span></span><br><span class="line">    A[<span class="number">0</span>]=<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span>(n==<span class="number">1</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    A[<span class="number">1</span>]=<span class="number">2</span>;</span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">2</span>;i&lt;n;i++)&#123;</span><br><span class="line">        A[i]=A[i-<span class="number">1</span>]+A[i-<span class="number">2</span>];</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> A[n-<span class="number">1</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="感想"><a href="#感想" class="headerlink" title="感想"></a>感想</h2><p>窃以为,如果要向学生介绍递归算法,爬楼梯是最好的例子.而不是很多课本中的汉诺塔.</p>
+<p>同样,这个问题的状态转移方程也很简单.</p>
+<h1 id="141"><a href="#141" class="headerlink" title="141"></a>141</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>判断链表是否有环</p>
+<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>两个指针,一个快一个慢,快的每次两步,慢的每次一步.如果链表有环,Node.next将不会为空,而是在环里兜圈子,而一个快,一个慢,在兜圈过程中,快的终将把慢的套圈.此时两者相遇.</p>
+<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public boolean hasCycle(ListNode head) &#123;</span><br><span class="line">        if(head==null||head.next==null)&#123;</span><br><span class="line">            return false;</span><br><span class="line">        &#125;</span><br><span class="line">        ListNode f =head.next;</span><br><span class="line">        ListNode s =head;</span><br><span class="line">        while ((f!=s))&#123;</span><br><span class="line">            if(f==null||f.next==null)&#123;</span><br><span class="line">                return false;</span><br><span class="line">            &#125;</span><br><span class="line">            f=f.next.next;</span><br><span class="line">            s=s.next;</span><br><span class="line">        &#125;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h1 id="142"><a href="#142" class="headerlink" title="142"></a>142</h1><h2 id="题目-2"><a href="#题目-2" class="headerlink" title="题目"></a>题目</h2><p>找到链表环的起点.</p>
+<h2 id="解答-2"><a href="#解答-2" class="headerlink" title="解答"></a>解答</h2><p>这里有个数学公式,</p>
+<p>假设从head到环入口entry步数为x，环路长度为y，快慢指针相遇时离entry的距离为m。</p>
+<p>则fast：x+ay+m，slow：x+by+m  (a &gt; b)</p>
+<p>x+ay+m = 2(x+by+m)</p>
+<p>整理得x+m = (a-2b)y</p>
+<p>以上式子的含义是，相遇时的位置(m)再前进x步，正好是y的整倍数即整圈。</p>
+<p>也就是说,当他们相遇时,把快的再放到开始的位置,然后速度变为和慢的一样,当他们再次相遇,就是环的起点.</p>
+<h2 id="代码-2"><a href="#代码-2" class="headerlink" title="代码"></a>代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">public ListNode detectCycle(ListNode head) &#123;</span><br><span class="line">        if(head == null || head.next == null)</span><br><span class="line">            return null;</span><br><span class="line">        else if(head.next == head)</span><br><span class="line">            return head;</span><br><span class="line"></span><br><span class="line">        ListNode slow = head;</span><br><span class="line">        ListNode fast = head;</span><br><span class="line"></span><br><span class="line">        while (fast != null) &#123;</span><br><span class="line">            fast = fast.next;</span><br><span class="line">            if(fast != null) &#123;</span><br><span class="line">                fast = fast.next;</span><br><span class="line">                slow = slow.next;</span><br><span class="line">            &#125;</span><br><span class="line">            if(fast == slow) &#123;</span><br><span class="line">                break;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if(fast == null)</span><br><span class="line">            return null;</span><br><span class="line"></span><br><span class="line">        fast = head;</span><br><span class="line">        while (fast != slow) &#123;</span><br><span class="line">            fast = fast.next;</span><br><span class="line">            slow = slow.next;</span><br><span class="line">        &#125;</span><br><span class="line">        return fast;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="感想-1"><a href="#感想-1" class="headerlink" title="感想"></a>感想</h2><p>其实141题挺有意思,142题这数学关系,一般人很难瞬间发现的,</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/12/18/leetcode2-3-56/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1663,170 +1824,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/12/04/12-4技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/12/04/12-4技术笔记/" itemprop="url">redis原理</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-04T15:57:17+08:00">
-                2018-12-04
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="单线程"><a href="#单线程" class="headerlink" title="单线程"></a>单线程</h1><p>redis是单线程的，内存的，但仍然很快，原因是多路复用技术。即事件轮询，select，NIO啊。</p>
-<h1 id="通信协议"><a href="#通信协议" class="headerlink" title="通信协议"></a>通信协议</h1><p>redis用的自己的通信协议，是基于分隔符的，即回车换行符。</p>
-<h1 id="持久化"><a href="#持久化" class="headerlink" title="持久化"></a>持久化</h1><p>持久化有两种方式，存量的RBD，增量的AOF。</p>
-<h2 id="快照"><a href="#快照" class="headerlink" title="快照"></a>快照</h2><p>RDB是快照的形式每隔一段时间，新起一个<strong>进程</strong>，数据集快照写入磁盘。简单来说，fork一个子进程，先将数据集写入临时文件，写入成功后，再替换之前的文件，用二进制压缩存储。</p>
-<h2 id="日志"><a href="#日志" class="headerlink" title="日志"></a>日志</h2><p>AOF是日志的形式，就是记录每一个对数据有改变的操作，存在日志里。以文本的方式记录，可以打开文件看到详细的操作记录。实际上文件在内存里，还需要写回磁盘，写回磁盘有三种策略，每次操作：性能很差；每秒：意味着秒级别的数据丢失；从无：依赖于操作系统，不安全。这么看一般都是用折中的每秒。<br>对于日益增长的AOF文件，还可以瘦身，即AOF重写，开辟一个子进程对内存进行遍历转换成一系列 Redis 的操作指令，序列化到一个新的 AOF 日志文件中。</p>
-<h2 id="对比"><a href="#对比" class="headerlink" title="对比"></a>对比</h2><p>RDB缺点有两个，一是每隔一段时间，要是宕机，隔的时间里没了。比如说，每1分钟快照一次，第2分30秒挂了，那第2分钟到第二分钟30秒这三十秒的数据丢失了。二是新起一个进程，数据集较大时，备份会卡顿<br>AOF缺点在于，备份文件较大，重放耗时较长。<br>现在支持混合持久化，将 rdb 文件的内容和增量的 AOF 日志文件存在一起。这里的 AOF 日志不再是全量的日志，而是自持久化开始到持久化结束的这段时间发生的增量 AOF 日志，通常这部分 AOF 日志很小。</p>
-<h1 id="管道"><a href="#管道" class="headerlink" title="管道"></a>管道</h1><p>管道实际上不是redis的技术，而是来自于客户端的操作。管道简单来说，就是把多次读写请求放一起。<br>没有管道，客户端与服务端交互是：写“读数据1”请求，读“数据1”回应。写“读数据2”请求，读“数据2”回应。写“读数据2”请求，读“数据2”回应。这样来回操作。<br>使用管道，就是把请求放在一起，变成：写“读数据123”请求，读“数据123”回应。这样就节省了时间。<br>就像批处理请求，这样，使用管道的场景应该是，这些交互都是独立的，他们之间没有先后互不依赖，这样才可以放一起。</p>
-<h1 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h1><h2 id="无原子性"><a href="#无原子性" class="headerlink" title="无原子性"></a>无原子性</h2><p>redis的事务和数据库事务并不是同义词，即使使用了事务，也不能保证原子性，仅仅是满足了事务的「隔离性」，隔离性中的串行化——当前执行的事务有着不被其它事务打断的权利。<br>形式上和一般事务差不多，multi 指示事务的开始，exec 指示事务的执行，discard 指示事务的丢弃。但这里没有回滚。</p>
-<h2 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h2><p>为了性能，事务应该和管道一起进行。</p>
-<h2 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h2><p>分布式锁是悲观锁，redis也有乐观锁机制，即watch。乐观锁就是监测变量在事务过程中有没有变化，要是没有，说明没有并发问题，就提交。<br>watch应该在multi之前。操作顺序应该是，watch 变量-&gt;变量操作-&gt;multi-&gt;set提交修改-&gt;exec；<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">    jedis.watch(key); //watch 变量</span><br><span class="line">    int value = Integer.parseInt(jedis.get(key));</span><br><span class="line">    value *= 2; // 变量操作</span><br><span class="line">    Transaction tx = jedis.multi(); //multi</span><br><span class="line">    tx.set(key, String.valueOf(value)); //set提交修改</span><br><span class="line">    List&lt;Object&gt; res = tx.exec(); //exec</span><br><span class="line">    if (res != null) &#123;</span><br><span class="line">      break; // 成功了</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  return Integer.parseInt(jedis.get(key)); // 重新获取余额</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h1 id="消息队列"><a href="#消息队列" class="headerlink" title="消息队列"></a>消息队列</h1><p>redis做的消息队列PubSub基本已经凉了，有个新的未发布的Disque。Redis5.0 新增了 Stream 数据结构，这个功能给 Redis 带来了持久化消息队列.</p>
-<h1 id="小对象压缩"><a href="#小对象压缩" class="headerlink" title="小对象压缩"></a>小对象压缩</h1><h2 id="32位编译"><a href="#32位编译" class="headerlink" title="32位编译"></a>32位编译</h2><p>如果占用内存不超过4G，可以采用更快的32位编译，指令更短。</p>
-<h2 id="内存管理"><a href="#内存管理" class="headerlink" title="内存管理"></a>内存管理</h2><p>当数据较少时，使用ziplist，将稀疏二维矩阵一维化，节省空间。<br>采用了类似池化的技术，并不直接回收内存，而是分页的方式留待下次使用。<br>内存分配没有自己做，用的第三方的，有facebook家的jemalloc，谷歌家的tcmalloc，默认的前者性能好。</p>
-<h1 id="主从同步"><a href="#主从同步" class="headerlink" title="主从同步"></a>主从同步</h1><p>根据CAP定理，在网络分区下，一致性和可用性无法同时获得。白话来说，如果主机和从机之间的网络断开了，如果主机继续运行，从机无法备份，那么主从数据将不一致；如果主机暂时停机，等从机再连上，那么服务将暂时不可用。<br>在这种情况下，redis的取舍是牺牲一致性，也就是等连上了，从机再追回数据。</p>
-<h2 id="增量同步"><a href="#增量同步" class="headerlink" title="增量同步"></a>增量同步</h2><p>主机将影响状态的增量操作存在缓存中，等连上了后，传给从机，从机同步数据。然而缓存有限，后面的数据会覆盖前面的，如果数据太多，有特别久的操作将无法同步。</p>
-<h2 id="存量同步"><a href="#存量同步" class="headerlink" title="存量同步"></a>存量同步</h2><p>用快照将内存所有数据存在磁盘，再传给从库，从库复制数据。时间较长。</p>
-<h2 id="同步死循环"><a href="#同步死循环" class="headerlink" title="同步死循环"></a>同步死循环</h2><p>存量同步时间较长，期间又产生了数据，如果此时的数据又太多溢出了，则同步失败。</p>
-<h2 id="同步复制"><a href="#同步复制" class="headerlink" title="同步复制"></a>同步复制</h2><p>redis也支持放弃可用性，得到一致性。以同步阻塞的方式同步，wait指令。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/blog/page/11/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/blog/">1</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/11/">11</a><span class="page-number current">12</span><a class="page-number" href="/blog/page/13/">13</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/20/">20</a><a class="extend next" rel="next" href="/blog/page/13/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/blog/page/11/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/blog/">1</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/11/">11</a><span class="page-number current">12</span><a class="page-number" href="/blog/page/13/">13</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/21/">21</a><a class="extend next" rel="next" href="/blog/page/13/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1872,7 +1874,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">200</span>
+                  <span class="site-state-item-count">201</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

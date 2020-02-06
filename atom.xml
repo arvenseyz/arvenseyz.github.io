@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2020-02-05T11:57:04.974Z</updated>
+  <updated>2020-02-06T09:35:27.789Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,33 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>原子操作原理</title>
+    <link href="http://yoursite.com/blog/2020/02/06/2-6%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2020/02/06/2-6技术笔记/</id>
+    <published>2020-02-06T07:55:58.000Z</published>
+    <updated>2020-02-06T09:35:27.789Z</updated>
+    
+    <content type="html"><![CDATA[<p>原子操作是什么略过。</p><p>目前实现方式有两种，总线锁和缓存锁。前者其实已被淘汰</p><h2 id="总线锁"><a href="#总线锁" class="headerlink" title="总线锁"></a>总线锁</h2><p>假设多个处理器同时处理一个共享变量，如果没有锁机制，就会出现同一个共享变量同一时刻被多个处理器同时处理的情况，就会造成结果的不一致性，例如i=1，我们要进行2次i++，就会出现i=2和i=3两种结果情况。很明显这不是我们要的结果，所以要想保证读写共享变量的操作是原子性的，就必须保证当处理器1在操作共享变量时，处理器2不能操作缓存了该共享变量内存地址的缓存。</p><p>因此引出了总线锁，<strong>总线锁</strong>就是使用处理器提供的一个LOCK#信号，当一个处理器在总线上输出此信号，其他处理器的请求将被阻塞，那么该处理器就能独占共享内存；</p><p>可以想象为：公司有一个会议室（共享内存），各个部门（处理器）开会都在会议室进行，当有一个部门占用会议室时，就会在会议室门口或者公司群里通知会议室此时被占用，那么其他部门的会议就得先等着（阻塞），等该部门结束会议才能开始下一个会议。</p><p><strong>总线锁的缺点</strong>：总线锁把CPU和内存之间的通信锁住了，在锁期间，其他处理器不能操作其他内存地址的数据，开销比较大。    </p><h2 id="缓存锁"><a href="#缓存锁" class="headerlink" title="缓存锁"></a>缓存锁</h2><h3 id="缓存一致性"><a href="#缓存一致性" class="headerlink" title="缓存一致性"></a>缓存一致性</h3><p>缓存一致性机制就整体来说，是当某块CPU对缓存中的数据进行操作了之后，就通知其他CPU放弃储存在它们内部的缓存，或者从主内存中重新读取。</p><h3 id="MESI协议"><a href="#MESI协议" class="headerlink" title="MESI协议"></a>MESI协议</h3><p>是以缓存行(缓存的基本数据单位，在Intel的CPU上一般是64字节)的几个状态来命名的(全名是Modified、Exclusive、 Share or Invalid)。该协议要求在每个缓存行上维护两个状态位，使得每个数据单位可能处于M、E、S和I这四种状态之一，各种状态含义如下：</p><pre><code>M：被修改的。处于这一状态的数据，只在本CPU中有缓存数据，而其他CPU中没有。同时其状态相对于内存中的值来说，是已经被修改的，且没有更新到内存中。 E：独占的。处于这一状态的数据，只有在本CPU中有缓存，且其数据没有修改，即与内存中一致。 S：共享的。处于这一状态的数据在多个CPU中都有缓存，且与内存一致。 I：无效的。本CPU中的这份缓存已经无效。</code></pre><p> 一个处于M状态的缓存行，必须时刻监听所有试图读取该缓存行对应的主存地址的操作，如果监听到，则必须在此操作执行前把其缓存行中的数据写回CPU。<br>        一个处于S状态的缓存行，必须时刻监听使该缓存行无效或者独享该缓存行的请求，如果监听到，则必须把其缓存行状态设置为I。<br>        一个处于E状态的缓存行，必须时刻监听其他试图读取该缓存行对应的主存地址的操作，如果监听到，则必须把其缓存行状态设置为S。</p><pre><code>当CPU需要读取数据时，如果其缓存行的状态是I的，则需要从内存中读取，并把自己状态变成S，如果不是I，则可以直接读取缓存中的值，但在此之前，必须要等待其他CPU的监听结果，如其他CPU也有该数据的缓存且状态是M，则需要等待其把缓存更新到内存之后，再读取。 当CPU需要写数据时，只有在其缓存行是M或者E的时候才能执行，否则需要发出特殊的RFO指令(Read Or Ownership，这是一种总线事务)，通知其他CPU置缓存无效(I)，这种情况下性能开销是相对较大的。在写入完成后，修改其缓存状态为M。 所以如果一个变量在某段时间只被一个线程频繁地修改，则使用其内部缓存就完全可以办到，不涉及到总线事务，如果缓存一会被这个CPU独占、一会被那个CPU 独占，这时才会不断产生RFO指令影响到并发性能。这里说的缓存频繁被独占并不是指线程越多越容易触发，而是这里的CPU协调机制，这有点类似于有时多线程并不一定提高效率，原因是线程挂起、调度的开销比执行任务的开销还要大，这里的多CPU也是一样，如果在CPU间调度不合理，也会形成RFO指令的开销比任务开销还要大。当然，这不是编程者需要考虑的事，操作系统会有相应的内存地址的相关判断</code></pre>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;原子操作是什么略过。&lt;/p&gt;
+&lt;p&gt;目前实现方式有两种，总线锁和缓存锁。前者其实已被淘汰&lt;/p&gt;
+&lt;h2 id=&quot;总线锁&quot;&gt;&lt;a href=&quot;#总线锁&quot; class=&quot;headerlink&quot; title=&quot;总线锁&quot;&gt;&lt;/a&gt;总线锁&lt;/h2&gt;&lt;p&gt;假设多个处理器同时处理一个共
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="操作系统" scheme="http://yoursite.com/blog/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
+    
+  </entry>
   
   <entry>
     <title>线程同步方法</title>
@@ -493,32 +520,6 @@
         &lt;h1 id=&quot;print&quot;&gt;&lt;a href=&quot;#print&quot; class=&quot;headerlink&quot; title=&quot;print&quot;&gt;&lt;/a&gt;print&lt;/h1&gt;&lt;p&gt;print其实和C差不多.&lt;/p&gt;
 &lt;p&gt;比如先来个文件&lt;/p&gt;
 &lt;figure class=&quot;highlight 
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="linux" scheme="http://yoursite.com/blog/tags/linux/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>grep与正则表达式</title>
-    <link href="http://yoursite.com/blog/2019/08/30/8-30%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/08/30/8-30技术笔记/</id>
-    <published>2019-08-30T07:19:09.000Z</published>
-    <updated>2019-08-30T08:20:53.039Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="加单引号、双引号和不加引号"><a href="#加单引号、双引号和不加引号" class="headerlink" title="加单引号、双引号和不加引号"></a>加单引号、双引号和不加引号</h2><p><strong>单引号：</strong></p><p>可以说是所见即所得：即将单引号内的内容原样输出，或者描述为单引号里面看到的是什么就会输出什么。单引号’’是全引用，被单引号括起的内容不管是常量还是变量者不会发生替换。</p><p><strong>双引号：</strong></p><p>把双引号内的内容输出出来；如果内容中有命令、变量等，会先把变量、命令解析出结果，然后在输出最终内容来。双引号””是部分引用，被双引号括起的内容常量还是常量，变量则会发生替换，替换成变量内容。</p><p><strong>不加引号：</strong></p><p>不会将含有空格的字符串视为一个整体输出, 如果内容中有命令、变量等，会先把变量、命令解析出结果，然后在输出最终内容来，如果字符串中带有空格等特殊字符，则不能完整的输出，需要改加双引号，一般连续的字符串，数字，路径等可以用。</p><h2 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h2><p>grep搜索的内容，可以输入正则表达式，如果不想输入正则表达式，即不想被解析，可以使用fgerp。</p><p>比如，有文件a，如下</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ cat a</span><br><span class="line">s</span><br><span class="line">dsa</span><br><span class="line">fasf</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fsaf</span><br><span class="line">fasdasdw</span><br><span class="line">da</span><br></pre></td></tr></table></figure><p>可以用[]来搜索集合字符，其中^表示不</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep l[sd] a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">yangzhuo@n224-019-077:~/file$ grep l[^<span class="built_in">cd</span>] a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br></pre></td></tr></table></figure><p>grep l[sd] a表示在a中搜索ls或者ld。</p><p>grep l[^cd] a表示a中搜索除了lc和ld其他。</p><p>正如正则表达式，[1-9][a-z][^A-Z]这些表达也是可以的。</p><h2 id="行首与行尾字符"><a href="#行首与行尾字符" class="headerlink" title="行首与行尾字符 ^ $"></a>行首与行尾字符 ^ $</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep ^f a</span><br><span class="line">fasf</span><br><span class="line">fsaf</span><br><span class="line">fasdasdw</span><br><span class="line">yangzhuo@n224-019-077:~/file$ grep w$ a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fasdasdw</span><br><span class="line">yangzhuo@n224-019-077:~/file$</span><br></pre></td></tr></table></figure><p>如上，^表示句首，$表示句尾。同时可以使用正则表达式</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep ^[^sd] a</span><br><span class="line">fasf</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fsaf</span><br><span class="line">fasdasdw</span><br><span class="line">yangzhuo@n224-019-077:~/file$</span><br></pre></td></tr></table></figure><p>表示不以s或者d开头的</p><h2 id="转义与egrep"><a href="#转义与egrep" class="headerlink" title="转义与egrep"></a>转义与egrep</h2><p>正则表达式中，.表示任意字符，*表示重复前面字符0到无穷次，{a,b}表示重复前面字符a到b次，但是在grep中，输入这种特殊符号需要转义.</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep w\* a</span><br><span class="line">s</span><br><span class="line">dsa</span><br><span class="line">fasf</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fsaf</span><br><span class="line">fasdasdw</span><br><span class="line">da</span><br></pre></td></tr></table></figure><p>再比如</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep <span class="string">'w\+'</span> a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fasdasdw</span><br><span class="line">yangzhuo@n224-019-077:~/file$ grep <span class="string">'w\&#123;2,\&#125;'</span> a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br></pre></td></tr></table></figure><p>没输一个字符都要转义，未免太麻烦了吧，可以使用egrep。</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ egrep <span class="string">'w+'</span> a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fasdasdw</span><br></pre></td></tr></table></figure><p>esay~~</p><p>还有fgrep，就是怎么输都是纯文本</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h2 id=&quot;加单引号、双引号和不加引号&quot;&gt;&lt;a href=&quot;#加单引号、双引号和不加引号&quot; class=&quot;headerlink&quot; title=&quot;加单引号、双引号和不加引号&quot;&gt;&lt;/a&gt;加单引号、双引号和不加引号&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;单引号：&lt;/strong&gt;&lt;/p&gt;
-
       
     
     </summary>
