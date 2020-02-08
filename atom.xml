@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2020-02-07T11:43:46.646Z</updated>
+  <updated>2020-02-08T07:03:10.193Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -17,11 +17,36 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>僵尸进程</title>
+    <link href="http://yoursite.com/blog/2020/02/08/2-8%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2020/02/08/2-8技术笔记/</id>
+    <published>2020-02-08T06:49:25.000Z</published>
+    <updated>2020-02-08T07:03:10.193Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="产生方法"><a href="#产生方法" class="headerlink" title="产生方法"></a>产生方法</h2><pre><code>当一个父进程以fork()系统调用建立一个新的子进程后，核心进程就会在进程表中给这个子进程分配一个进入点，然后将相关信息存储在该进入点所对应的进程表内。这些信息中有一项是其父进程的识别码。当这个子进程结束的时候（比如调用exit命令结束），其实他并没有真正的被销毁，而是留下一个称为僵尸进程（Zombie）的数据结构（系统调用exit的作用是使进程退出，但是也仅仅限于一个正常的进程变成了一个僵尸进程，并不能完全将其销毁）。此时原来进程表中的数据会被该进程的退出码（exit code）、执行时所用的CPU时间等数据所取代，这些数据会一直保留到系统将它传递给它的父进程为止。由此可见，defunct进程的出现时间是在子进程终止后，但是父进程尚未读取这些数据之前。</code></pre><p>如果子进程先于父进程退出， 同时父进程又没有调用wait/waitpid，则该子进程将成为僵尸进程。通过ps命令，我们可以看到该进程的状态为Z(表示僵死)</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pid_t</span> child = fork();</span><br><span class="line"><span class="keyword">if</span>(child == <span class="number">0</span>)&#123;</span><br><span class="line">   <span class="built_in">cout</span> &lt;&lt; <span class="string">"\nIm in child process:"</span> &lt;&lt;  getpid() &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">   <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">   <span class="built_in">cout</span> &lt;&lt; <span class="string">"\nIm in parent process."</span>  &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">   sleep(<span class="number">600</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h2 id="处理僵尸进程"><a href="#处理僵尸进程" class="headerlink" title="处理僵尸进程"></a>处理僵尸进程</h2><p>kill命令无法杀死僵尸进程。要么重启服务器。要么杀死其父进程。</p><p>ps -ef | grep defunct_process_pid</p><h2 id="避免产生僵尸进程"><a href="#避免产生僵尸进程" class="headerlink" title="避免产生僵尸进程"></a>避免产生僵尸进程</h2><p>   1.在父进程创建子进程之前，就向系统申明自己并不会对这个子进程的exit动作进行任何关注行为，这样的话，子进程一旦退出后，系统就不会去等待父进程的操作，而是直接将该子进程的资源回收掉，也就不会出现僵尸进程了。具体的办法就是，在父进程的初始化函数中，调用这个函数：signal(SIGCHLD,SIG_IGN)；</p><ol start="2"><li>如果父进程不忙，可以等待子进程，那么可以在创建完子进程后，用waitpid等待子进程返回。</li></ol>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;产生方法&quot;&gt;&lt;a href=&quot;#产生方法&quot; class=&quot;headerlink&quot; title=&quot;产生方法&quot;&gt;&lt;/a&gt;产生方法&lt;/h2&gt;&lt;pre&gt;&lt;code&gt;当一个父进程以fork()系统调用建立一个新的子进程后，核心进程就会在进程表中给这个子进程分配一个进入点，然
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="操作系统" scheme="http://yoursite.com/blog/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
+    
+  </entry>
+  
+  <entry>
     <title>静态链接/动态链接库的区别</title>
     <link href="http://yoursite.com/blog/2020/02/07/2-7%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>http://yoursite.com/blog/2020/02/07/2-7技术笔记/</id>
     <published>2020-02-07T11:23:15.000Z</published>
-    <updated>2020-02-07T11:43:46.646Z</updated>
+    <updated>2020-02-08T01:30:51.662Z</updated>
     
     <content type="html"><![CDATA[<p><img src="https://img-blog.csdn.net/20151113153003874?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt></p><h2 id="静态链接库"><a href="#静态链接库" class="headerlink" title="静态链接库"></a>静态链接库</h2><p>　　什么是静态链接呢？即在链接阶段，将源文件中用到的库函数与汇编生成的目标文件.o合并生成可执行文件。该可执行文件可能会比较大。</p><p>这种链接方式的好处是：方便程序移植，因为可执行程序与库函数再无关系，放在如何环境当中都可以执行。</p><p>缺点是：文件太大，一个全静态方式生成的简单print文件都有857K。而动态链接生成的一样的可执行文件却只要8.４Ｋ。</p><h2 id="动态链接库"><a href="#动态链接库" class="headerlink" title="动态链接库"></a>动态链接库</h2><p>静态链接库的最大问题不是文件大，而是占内存，因为多个程序可能引用同一个静态链接库，导致它们在内存中存在多份拷贝。</p><p>动态链接是相对静态链接而言的，动态链接所调用的函数代码并没有被拷贝到应用程序的可执行文件中去，而是仅仅在其中加入了所调用函数的描述信息（往往是一些重定位信息）。仅当应用程序被装入内存开始运行时，在Windows的管理下，才在应用程序与相应的DLL之间建立链接关系。当要执行所调用DLL中的函数时，根据链接产生的重定位信息，Windows才转去执行DLL中相应的函数代码。一般情况下，如果一个应用程序使用了动态链接库，Win32系统保证内存中只有DLL的一份复制品。</p><p>动态链接库缺点是需要目标运行的环境中，也有该dll。</p>]]></content>
     
@@ -493,31 +518,6 @@
       
         &lt;h2 id=&quot;条件命令&quot;&gt;&lt;a href=&quot;#条件命令&quot; class=&quot;headerlink&quot; title=&quot;条件命令&quot;&gt;&lt;/a&gt;条件命令&lt;/h2&gt;&lt;p&gt;在bash脚本编程中，我们经常做一些条件判断， 我们主要用到了三种，test，单中括号，双中括号。&lt;/p&gt;
 &lt;figure 
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="linux" scheme="http://yoursite.com/blog/tags/linux/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>shellScript入门</title>
-    <link href="http://yoursite.com/blog/2019/09/08/9-8%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/09/08/9-8技术笔记/</id>
-    <published>2019-09-08T06:56:26.000Z</published>
-    <updated>2019-09-08T12:46:06.657Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="使用者输入变量内容"><a href="#使用者输入变量内容" class="headerlink" title="使用者输入变量内容"></a>使用者输入变量内容</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="built_in">read</span> -p <span class="string">"enter cnt"</span> cnt</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"will go <span class="variable">$cnt</span> num"</span></span><br><span class="line"></span><br><span class="line">yangzhuo@n224-019-077:~/file$ vim test.sh</span><br><span class="line">yangzhuo@n224-019-077:~/file$ sh test.sh</span><br><span class="line">enter cnt7</span><br><span class="line">will go 7 num</span><br></pre></td></tr></table></figure><p>read让用户输入参数</p><h2 id="时间处理"><a href="#时间处理" class="headerlink" title="时间处理"></a>时间处理</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">yesterday=`date -d last-day +%Y-%m-%d`</span><br><span class="line"><span class="built_in">echo</span> <span class="variable">$yesterday</span></span><br><span class="line"></span><br><span class="line">curday=`date +%Y-%m-%d`</span><br><span class="line"><span class="built_in">echo</span> <span class="variable">$curday</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"现在时间：`date '+%Y%m%d %T'`"</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"现在时间：`date '+%Y%m%d %H%M%S'`"</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> `date <span class="string">'+%Y%m%d-%H%M%S'</span>`</span><br><span class="line"></span><br><span class="line">send=`date --date=<span class="string">'3 hours ago'</span> <span class="string">'+%Y-%m-%d %H:%M:%S'</span>`</span><br><span class="line"><span class="built_in">echo</span> <span class="variable">$send</span></span><br></pre></td></tr></table></figure><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">2019-09-07</span><br><span class="line">2019-09-08</span><br><span class="line">现在时间：20190908 15:14:56</span><br><span class="line">现在时间：20190908 151456</span><br><span class="line">20190908-151456</span><br><span class="line">2019-09-08 12:14:56</span><br></pre></td></tr></table></figure><h2 id="默认参数"><a href="#默认参数" class="headerlink" title="默认参数"></a>默认参数</h2><p><strong><em>= 变量为null时, 同时改变变量值</em></strong></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[root@linuxidc /]# unset name</span><br><span class="line">[root@linuxidc /]# echo $&#123;name=linuxmi&#125;</span><br><span class="line">linuxmi</span><br><span class="line">[root@linuxidc /]# echo $name</span><br><span class="line">linuxmi</span><br><span class="line">[root@linuxidc /]# name=&quot;&quot;</span><br><span class="line">[root@linuxidc /]# echo $&#123;name=linuxmi&#125;</span><br><span class="line"></span><br><span class="line">[root@linuxidc /]#</span><br></pre></td></tr></table></figure><p><strong><em>-  变量为null时, 取默认值</em></strong></p><p><strong><em>:- 变量为null或空字符时, 取默认值</em></strong></p><p><strong><em>:= 变量为null时, 同时改变变量值</em></strong></p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h2 id=&quot;使用者输入变量内容&quot;&gt;&lt;a href=&quot;#使用者输入变量内容&quot; class=&quot;headerlink&quot; title=&quot;使用者输入变量内容&quot;&gt;&lt;/a&gt;使用者输入变量内容&lt;/h2&gt;&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td
       
     
     </summary>
