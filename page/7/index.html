@@ -251,6 +251,183 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/05/05/5-5技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/05/05/5-5技术笔记/" itemprop="url">http调用过程</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-05T17:34:21+08:00">
+                2019-05-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="http调用过程"><a href="#http调用过程" class="headerlink" title="http调用过程"></a>http调用过程</h1><h2 id="DNS解析"><a href="#DNS解析" class="headerlink" title="DNS解析"></a>DNS解析</h2><ol>
+<li><p>依次查找浏览器缓存，操作系统缓存，HOST文件。</p>
+</li>
+<li><p>发起DNS的系统调用，向本地运营商发起DNS解析请求，本地运营商查缓存，如果没有，迭代发起根域，顶级域，域名注册商的解析请求，拿到结果后返回。</p>
+</li>
+</ol>
+<h3 id="与服务器建立连接"><a href="#与服务器建立连接" class="headerlink" title="与服务器建立连接"></a>与服务器建立连接</h3><p>TCP三次握手，建立TCP连接，User-Agent（一般指浏览器）会以一个随机端口（1024&lt;端口&lt;65535）向服务器的WEB程序（常用的有httpd，nginx）等的80端口。</p>
+<p>客户端状态变化：SYN_SEND-&gt;ESTABLISHED;</p>
+<p>服务端状态变化：SYN_RCVD&gt;ESTABLISHED;</p>
+<h3 id="发起HTTP请求"><a href="#发起HTTP请求" class="headerlink" title="发起HTTP请求"></a>发起HTTP请求</h3><p>请求有三部分。</p>
+<ol>
+<li><p>请求行：即方法名，URL，版本号，如GET /books/java.html HTTP/1.1</p>
+</li>
+<li><p>请求头：各种属性，编码方式，数据压缩格式，连接属性等</p>
+</li>
+<li><p>请求体：GET就没有，POST就表单</p>
+</li>
+</ol>
+<h3 id="HTTP响应"><a href="#HTTP响应" class="headerlink" title="HTTP响应"></a>HTTP响应</h3><p>HTTP响应报文主要由状态行、响应头部、空行以及响应数据组成</p>
+<ol>
+<li>状态行包括HTTP协议版本，响应码，响应码解析。如HTTP/1.1 200 OK</li>
+</ol>
+<p>1XX请求已接收，正在处理XX<br>2XX，，请求接受成功，处理完成，成功返回，200=0k<br>3XX，，重定向<br>4XX，，客户端错误，400 有语法错误不能理解，401请求未授权，403拒绝提供服务，404 未找到改地址，对象不存在<br>5XX，，服务器端错误，500服务器发生未知错误，503服务器端当前不能处理</p>
+<ol start="2">
+<li><p>响应头部，和请求头对应，各种属性，长度，编码，语言等等。</p>
+</li>
+<li><p>空行用来隔开响应头部和数据</p>
+</li>
+<li><p>响应数据</p>
+</li>
+</ol>
+<h2 id="客户端处理HTTP响应"><a href="#客户端处理HTTP响应" class="headerlink" title="客户端处理HTTP响应"></a>客户端处理HTTP响应</h2><p> 浏览器拿到html文件后，就开始解析其中的html代码，遇到js/css/image等静态资源时，就向服务器端去请求下载（会使用多线程下载，每个浏览器的线程数不一样），这个时候就用上keep-alive特性了，建立一次HTTP连接，可以请求多个资源，下载资源的顺序就是按照代码里的顺序，但是由于每个资源大小不一样，而浏览器又多线程请求请求资源</p>
+<h2 id="断开服务器连接"><a href="#断开服务器连接" class="headerlink" title="断开服务器连接"></a>断开服务器连接</h2><p>TCP四次挥手。</p>
+<p>客户端状态变化：FIN_WAIT_1-&gt;FIN_WAIT_2-&gt;TIME_WAIT;</p>
+<p>服务端状态变化：CLOSE_WAIT-&gt;LAST_ACK;</p>
+<p><img src="https://i.loli.net/2019/05/05/5cceb416ad540.jpg" alt="5cceb416ad540"></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/04/30/leetcode134-152-207/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1748,166 +1925,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/04/09/leetcode55-79/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/04/09/leetcode55-79/" itemprop="url">跳跃到终点，矩阵字符串路径</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-09T19:54:25+08:00">
-                2019-04-09
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/leetcode/" itemprop="url" rel="index">
-                    <span itemprop="name">leetcode</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="55"><a href="#55" class="headerlink" title="55"></a>55</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>给定一个非负整数数组，最初定位在数组的第一个索引处。</p>
-<p>数组中的每个元素表示该位置的最大跳转长度。</p>
-<p>确定您是否能够到达最后一个索引。</p>
-<p><strong>例1：</strong></p>
-<p><strong>输入：</strong> [2,3,1,1,4] <strong>输出：</strong> true <strong>说明：</strong>从索引0跳转1步到1，然后从最后一个索引跳3步。 </p>
-<p><strong>例2：</strong></p>
-<p><strong>输入：</strong> [3,2,1,0,4] <strong>输出：</strong> false <strong>说明：</strong>无论如何， 您总是会到达索引3。它的最大值 跳转长度为0，这使得无法到达最后一个索引</p>
-<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><p>这个题其实溢出了也可以，就是跳过了。</p>
-<p>于是问题来了，怎么才会跳不动了，那就是某个位置是0，并且它前面的都不能越过它。</p>
-<p>随时记录，当前能跳到的最远位置。</p>
-<p>一个位置的最远位置=max(之前能跳到的最远位置,这个位置往前跳)。</p>
-<p>如果某处最远位置跳不到下一格，说明跳不动了。</p>
-<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">canJump</span><span class="params">(<span class="keyword">int</span>[] nums)</span> </span>&#123;</span><br><span class="line">     <span class="keyword">if</span>(nums.length &lt; <span class="number">1</span>) &#123;</span><br><span class="line">         <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">if</span>(nums.length == <span class="number">1</span>) &#123;</span><br><span class="line">         <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">int</span> max =<span class="number">0</span>;</span><br><span class="line">     <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nums.length; i++) &#123;</span><br><span class="line">         max = Math.max(max,i + nums[i]);</span><br><span class="line">         <span class="keyword">if</span>(max &lt;i+<span class="number">1</span>) &#123;</span><br><span class="line">             <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">         &#125;</span><br><span class="line">         <span class="keyword">if</span>(max&gt;=nums.length-<span class="number">1</span>)&#123;</span><br><span class="line">             <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<h1 id="79"><a href="#79" class="headerlink" title="79"></a>79</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>一个矩阵，每个格子是一个字母，可以从任意位置出发，只能前后左右走，能不能走出指定字符串来。</p>
-<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>这题显然是深度优先搜索，起点只能是等于字符串第一个字母的位置，找到所有起点，开始搜索。</p>
-<p>上下左右四个格子，溢出了的，字母不对的，都不搜索了。</p>
-<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">exist</span><span class="params">(<span class="keyword">char</span>[][] board, String word)</span> </span>&#123;</span><br><span class="line"><span class="keyword">if</span> (board == <span class="keyword">null</span> || board.length == <span class="number">0</span> || board[<span class="number">0</span>] == <span class="keyword">null</span> || board[<span class="number">0</span>].length == <span class="number">0</span>) <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">     <span class="keyword">if</span> (word == <span class="keyword">null</span>) <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">     <span class="keyword">int</span> row = board.length;</span><br><span class="line">     <span class="keyword">int</span> col = board[<span class="number">0</span>].length;</span><br><span class="line">     <span class="keyword">boolean</span>[][] v = <span class="keyword">new</span> <span class="keyword">boolean</span>[row][col];</span><br><span class="line">     <span class="keyword">int</span> pos = <span class="number">0</span>;</span><br><span class="line">     <span class="keyword">char</span> a = word.charAt(<span class="number">0</span>);</span><br><span class="line">     <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; row; i++) &#123;</span><br><span class="line">         <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; col; j++) &#123;</span><br><span class="line">             <span class="keyword">if</span> (board[i][j] != a) &#123;<span class="keyword">continue</span>;&#125;</span><br><span class="line">             <span class="keyword">if</span>(board[i][j] == a) &#123;</span><br><span class="line">                 v[i][j] = <span class="keyword">true</span>;</span><br><span class="line">                 <span class="keyword">boolean</span> res = dfs(board, v, i, j, word, pos);</span><br><span class="line">                 <span class="keyword">if</span>(res) &#123;</span><br><span class="line">                     <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">                 &#125;</span><br><span class="line">             &#125;</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line"></span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line"> <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">dfs</span><span class="params">(<span class="keyword">char</span>[][] board, <span class="keyword">boolean</span>[][] v, <span class="keyword">int</span> row, <span class="keyword">int</span> col, String word, <span class="keyword">int</span> pos)</span> </span>&#123;</span><br><span class="line">     System.out.println(row + <span class="string">"+"</span> + col);</span><br><span class="line"></span><br><span class="line">     <span class="keyword">if</span>(word.charAt(pos) != board[row][col]) &#123;</span><br><span class="line">         <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">if</span>(word.charAt(pos) == board[row][col] &amp;&amp; pos == word.length() - <span class="number">1</span>) &#123;</span><br><span class="line">         <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">     &#125;</span><br><span class="line">     v[row][col] = <span class="keyword">true</span>;</span><br><span class="line">     <span class="keyword">boolean</span> res1 = <span class="keyword">false</span>, res2 = <span class="keyword">false</span>, res3 = <span class="keyword">false</span>, res4 = <span class="keyword">false</span>;</span><br><span class="line">     <span class="keyword">if</span>(row + <span class="number">1</span> &lt;= board.length - <span class="number">1</span> &amp;&amp; !v[row + <span class="number">1</span>][col]) &#123;</span><br><span class="line">         res1 = dfs(board, v, row + <span class="number">1</span>, col, word, pos + <span class="number">1</span>);</span><br><span class="line">         <span class="keyword">if</span>(res1)&#123;<span class="keyword">return</span> <span class="keyword">true</span>;&#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">if</span>(row - <span class="number">1</span> &gt;= <span class="number">0</span> &amp;&amp; !v[row - <span class="number">1</span>][col]) &#123;</span><br><span class="line">         res2 = dfs(board, v, row - <span class="number">1</span>, col, word, pos + <span class="number">1</span>);</span><br><span class="line">         <span class="keyword">if</span>(res2)&#123;<span class="keyword">return</span> <span class="keyword">true</span>;&#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">if</span>(col - <span class="number">1</span> &gt;= <span class="number">0</span> &amp;&amp; !v[row][col - <span class="number">1</span>]) &#123;</span><br><span class="line">         res3 = dfs(board, v, row, col - <span class="number">1</span>, word, pos + <span class="number">1</span>);</span><br><span class="line">         <span class="keyword">if</span>(res3)&#123;<span class="keyword">return</span> <span class="keyword">true</span>;&#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">if</span>(col + <span class="number">1</span> &lt;= board[<span class="number">0</span>].length - <span class="number">1</span> &amp;&amp; !v[row][col + <span class="number">1</span>]) &#123;</span><br><span class="line">         res4 = dfs(board, v, row, col + <span class="number">1</span>, word, pos + <span class="number">1</span>);</span><br><span class="line">         <span class="keyword">if</span>(res4)&#123;<span class="keyword">return</span> <span class="keyword">true</span>;&#125;</span><br><span class="line">     &#125;</span><br><span class="line">     v[row][col] = <span class="keyword">false</span>;</span><br><span class="line">     <span class="keyword">return</span> res1 | res2 | res3 | res4;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="感想"><a href="#感想" class="headerlink" title="感想"></a>感想</h2><p>深搜一般都要带回溯，什么时候回溯，就是在递归调用下一步之后。</p>
-<p>如果有多个搜索路径，记得及时停止，以剪枝，简单来说，如果搜到了，其他的分支就别走了。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1958,7 +1975,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">203</span>
+                  <span class="site-state-item-count">204</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
