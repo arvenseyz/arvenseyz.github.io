@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2020-02-10T09:29:45.445Z</updated>
+  <updated>2020-02-11T09:20:49.327Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,31 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>内存管理</title>
+    <link href="http://yoursite.com/blog/2020/02/11/2-11%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2020/02/11/2-11技术笔记/</id>
+    <published>2020-02-11T03:43:04.000Z</published>
+    <updated>2020-02-11T09:20:49.327Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="分段和分页"><a href="#分段和分页" class="headerlink" title="分段和分页"></a>分段和分页</h1><h2 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h2><p>用户程序的地址空间被划分成若干固定大小的区域，称为“页”，相应地，内存空间分成若干个物理块，页和块的大小相等，称为帧。可将用户程序的任一页放在内存的任一块中，实现了离散分配。</p><p>这样每个页和每个帧存在一个映射关系。即页表。</p><p>每次要取地址，把地址前几位解析出，即页号，后几位即页内偏移。在页表中把页号转换成帧号（找不到即缺页中断），然后加上页内偏移，即物理地址。</p><h2 id="分段"><a href="#分段" class="headerlink" title="分段"></a>分段</h2><p>将用户程序地址空间分成若干个<strong>大小不等</strong>的段，每段可以定义一组相对完整的逻辑信息。存储分配时，以段为单位，段与段在内存中可以不相邻接，也实现了离散分配。</p><p>作业的地址空间被划分为若干个段，每个段定义了一组逻辑信息。例程序段、数据段等。每个段都从0开始编址，并采用一段连续的地址空间。</p><p>段的长度由相应的逻辑信息组的长度决定，因而各段长度不等。整个作业的地址空间是二维的。</p><p>显然也有个段表。要取地址，需要两个信息，第几段和段内偏移，然后段表解析出物理地址。</p><h2 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h2><p>分页是强行物理划分的，分段是逻辑划分。</p><p>页大小固定，段大小按需求。</p><p>分页的作业地址空间是一维的.分段的地址空间是二维的。实际上分页也是二维的，两个维度放在了一个数高位和地位而已。</p><h1 id="物理地址、虚拟地址（线性地址）、逻辑地址"><a href="#物理地址、虚拟地址（线性地址）、逻辑地址" class="headerlink" title="物理地址、虚拟地址（线性地址）、逻辑地址"></a>物理地址、虚拟地址（线性地址）、逻辑地址</h1><p>现代计算机，其实结合了分段和分页，即页内分段。具体内存寻址</p><p>首先，肯定是给一个段号+段内偏移，即<strong>逻辑地址</strong></p><p>然后段表把段号哈希出来，解读到它的<strong>虚拟地址</strong>，即<strong>线性地址</strong></p><p>在接下来，页表，把虚拟地址，解析出<strong>物理地址</strong></p><p>CPU要<strong>利用其段式内存管理单元，先将为个逻辑地址转换成一个线程地址，再利用其页式内存管理单元，转换为最终物理地址</strong>。这样做两次转换，的确是非常麻烦而且没有必要的，因为直接可以把线性地址抽像给进程。之所以这样冗余，Intel完全是为了向前兼容而已。</p><h1 id="大内存分页"><a href="#大内存分页" class="headerlink" title="大内存分页"></a>大内存分页</h1><h2 id="TLB"><a href="#TLB" class="headerlink" title="TLB"></a><strong>TLB</strong></h2><p>页表是储存在内存中的，每次查询都要查内存未免太慢，可以在寄存器中缓存一份最常使用的，即TLB（<strong>页表寄存器缓冲</strong>）。</p><p>TLB是有限的，这点毫无疑问。当超出TLB的存储极限时，就会发生 TLB miss，之后，OS就会命令CPU去访问内存上的页表。如果频繁的出现TLB miss，程序的性能会下降地很快。</p><p>为了让TLB可以存储更多的页地址映射关系，我们的做法是调大内存分页大小。</p><p>如果一个页4M，对比一个页4K，前者可以让TLB多存储1000个页地址映射关系，性能的提升是比较可观的。</p><h1 id="缺页中断和置换算法"><a href="#缺页中断和置换算法" class="headerlink" title="缺页中断和置换算法"></a>缺页中断和置换算法</h1><p>在请求分页系统中，可以通过查询页表中的状态位来确定所要访问的页面是否存在于内存中。每当所要访问的页面不在内存时，会产生一次缺页中断，此时操作系统会根据页表中的外存地址在外存中找到所缺的一页，将其调入内存。 </p><p>缺页本身是一种中断，与一般的中断一样，需要经过4个处理步骤：<br>　　1. 保护CPU现场<br>　　2. 分析中断原因<br>　　3. 转入缺页中断处理程序进行处理<br>　　4. 恢复CPU现场，继续执行<br>但是缺页中断时由于所要访问的页面不存在与内存时，有硬件所产生的一种特殊的中断，因此，与一般的中断存在区别：<br>　　 1. 在指令执行期间产生和处理缺页中断信号<br>　　 2. 一条指令在执行期间，可能产生多次缺页中断<br>　　 3. 缺页中断返回时，执行产生中断的那一条指令，而一般的中断返回时，执行下一条指令</p><p>于是问题来了，页表一直是满的，把哪一页换出？</p><p>理论上来说，置换以后不再被访问，或者在将来最迟才回被访问的页面，缺页中断率最低。这就是最优解，即 最佳置换（Optimal， OPT)，但实际上未来不止，该算法不可实现。</p><p>如果我们洞悉过去，即可预测未来。置换最近一段时间以来最长时间未访问过的页面。根据程序局部性原理，刚被访问的页面，可能马上又要被访问；而较长时间内没有被访问的页面，可能最近不会被访问。   最近最久未使用置换算法（ Least Recently Used， LRU）普偏地适用于各种类型的程序，但是系统要时时刻刻对各页的访问历史情况加以记录和更新，开销太大，因此LRU算法必须要有硬件的支持。</p><p>当然最简单的是先进先出。（First In First Out, FIFO)</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;分段和分页&quot;&gt;&lt;a href=&quot;#分段和分页&quot; class=&quot;headerlink&quot; title=&quot;分段和分页&quot;&gt;&lt;/a&gt;分段和分页&lt;/h1&gt;&lt;h2 id=&quot;分页&quot;&gt;&lt;a href=&quot;#分页&quot; class=&quot;headerlink&quot; title=&quot;分页&quot;&gt;&lt;/a&gt;分
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="操作系统" scheme="http://yoursite.com/blog/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
+    
+  </entry>
   
   <entry>
     <title>free 命令,系统内存的使用情况</title>
@@ -494,32 +519,6 @@
       
         &lt;h1 id=&quot;vmsta&quot;&gt;&lt;a href=&quot;#vmsta&quot; class=&quot;headerlink&quot; title=&quot;vmsta&quot;&gt;&lt;/a&gt;vmsta&lt;/h1&gt;&lt;p&gt;可对操作系统的虚拟内存、进程、CPU等的整体情况进行监视。&lt;/p&gt;
 &lt;p&gt;一般有两个参数，第一个是采样间隔，第二个是
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="linux" scheme="http://yoursite.com/blog/tags/linux/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>shellscript数组与函数</title>
-    <link href="http://yoursite.com/blog/2019/09/17/9-17%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>http://yoursite.com/blog/2019/09/17/9-17技术笔记-1/</id>
-    <published>2019-09-17T03:32:57.000Z</published>
-    <updated>2019-09-17T08:47:26.253Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h1><p>Bash Shell 只支持一维数组（不支持多维数组），初始化时不需要定义数组大小，并且从0开始。</p><p>Shell 数组用括号来表示，元素用”空格”符号分割开。即</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">array_name=(value1 ... valuen)</span><br></pre></td></tr></table></figure><p>也可以用下标来定义</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">array_name[0]=value0</span><br><span class="line">array_name[1]=value1</span><br><span class="line">array_name[2]=value2</span><br></pre></td></tr></table></figure><p>和其他类似，@和*表示所有，#表示长度</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line">marray[0]=A</span><br><span class="line">marray[1]=B</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"content: <span class="variable">$&#123;marray[@]&#125;</span>"</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"lenth: <span class="variable">$&#123;#marray[*]&#125;</span>"</span></span><br></pre></td></tr></table></figure><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ ./array.sh</span><br><span class="line">content: A B</span><br><span class="line">lenth: 2</span><br></pre></td></tr></table></figure><h1 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h1><p>函数严格定义，</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[ <span class="keyword">function</span> ] funname [()]</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    action;</span><br><span class="line"></span><br><span class="line">    [<span class="built_in">return</span> int;]</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>而function关键字可以省略，返回值也可以省略，将以最后一条命令运行结果，作为返回值。而函数不用写形式参数，传入参数后，就像bash，直接用@123取参数，就像bash，#*等的意义</p><table><thead><tr><th>参数</th><th>说明</th></tr></thead><tbody><tr><td>$#</td><td>参数个数</td></tr><tr><td>$*</td><td>以一个单字符串显示所有向脚本传递的参数</td></tr><tr><td>$$</td><td>脚本运行的当前进程ID号</td></tr><tr><td>$!</td><td>后台运行的最后一个进程的ID号</td></tr><tr><td>$@</td><td>与$*相同，但是使用时加引号，并在引号中返回每个参数。</td></tr><tr><td>$-</td><td>显示Shell使用的当前选项，与set命令功能相同。</td></tr><tr><td>$?</td><td>显示最后命令的退出状态。0表示没有错误，其他任何值表明有错误。</td></tr></tbody></table><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">func</span></span>()&#123;</span><br><span class="line">        sum=0</span><br><span class="line">        <span class="keyword">for</span> num <span class="keyword">in</span> $*</span><br><span class="line">        <span class="keyword">do</span></span><br><span class="line">                sum=`expr <span class="variable">$sum</span> + <span class="variable">$num</span>`</span><br><span class="line">        <span class="keyword">done</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"sum=<span class="variable">$sum</span>"</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func 1 2 3 4 5</span><br></pre></td></tr></table></figure><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ ./func.sh</span><br><span class="line">sum=15</span><br></pre></td></tr></table></figure><p>如上，expr是运算符，表数字运算.</p><p>直接用加法就是字符串拼接，结果会是”sum=0+1+2+3+4+5”</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;数组&quot;&gt;&lt;a href=&quot;#数组&quot; class=&quot;headerlink&quot; title=&quot;数组&quot;&gt;&lt;/a&gt;数组&lt;/h1&gt;&lt;p&gt;Bash Shell 只支持一维数组（不支持多维数组），初始化时不需要定义数组大小，并且从0开始。&lt;/p&gt;
-&lt;p&gt;Shell 数组用括号来表
       
     
     </summary>
