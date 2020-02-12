@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2020-02-11T09:23:15.948Z</updated>
+  <updated>2020-02-12T13:38:20.280Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,34 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>VIRT(虚拟内存)，RES(常驻内存)，SHR(共享内存)</title>
+    <link href="http://yoursite.com/blog/2020/02/12/2-12%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-2/"/>
+    <id>http://yoursite.com/blog/2020/02/12/2-12技术笔记-2/</id>
+    <published>2020-02-12T13:31:56.000Z</published>
+    <updated>2020-02-12T13:38:20.280Z</updated>
+    
+    <content type="html"><![CDATA[<p>可以通过top命令查看进程占用了多少内存。这里可以看到VIRT、RES和SHR三个重要的指标。</p><h2 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h2><p>1、进程“需要的”虚拟内存大小，包括进程使用的库、代码、数据，以及malloc、new分配的堆空间和分配的栈空间等；</p><p>2、假如进程新申请10MB的内存，但实际只使用了1MB，那么它会增长10MB，而不是实际的1MB使用量。</p><h2 id="常驻内存"><a href="#常驻内存" class="headerlink" title="常驻内存"></a>常驻内存</h2><p>驻留内存，顾名思义是指那些被映射到进程虚拟内存空间的物理内存。</p><h2 id="共享内存"><a href="#共享内存" class="headerlink" title="共享内存"></a>共享内存</h2><p>进程在运行过程中，会加载许多操作系统的动态库，比如 libc.so、libld.so等。这些库对于每个进程而言都是公用的，它们在内存中实际只会加载一份，这部分称为共享内存。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;可以通过top命令查看进程占用了多少内存。这里可以看到VIRT、RES和SHR三个重要的指标。&lt;/p&gt;
+&lt;h2 id=&quot;虚拟内存&quot;&gt;&lt;a href=&quot;#虚拟内存&quot; class=&quot;headerlink&quot; title=&quot;虚拟内存&quot;&gt;&lt;/a&gt;虚拟内存&lt;/h2&gt;&lt;p&gt;1、进程“需要
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="操作系统" scheme="http://yoursite.com/blog/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
+    
+      <category term="linux" scheme="http://yoursite.com/blog/tags/linux/"/>
+    
+  </entry>
   
   <entry>
     <title>内存管理</title>
@@ -501,32 +529,6 @@
     
     
       <category term="消息队列" scheme="http://yoursite.com/blog/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>linux性能分析工具</title>
-    <link href="http://yoursite.com/blog/2019/09/22/9-22%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2019/09/22/9-22技术笔记/</id>
-    <published>2019-09-22T11:31:32.000Z</published>
-    <updated>2019-09-22T12:00:32.504Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="vmsta"><a href="#vmsta" class="headerlink" title="vmsta"></a>vmsta</h1><p>可对操作系统的虚拟内存、进程、CPU等的整体情况进行监视。</p><p>一般有两个参数，第一个是采样间隔，第二个是采样次数，可省略第二个参数，会一直执行下去直到手动停止。</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----</span><br><span class="line"> r  b   swpd   free   buff  cache   si   so    bi    bo   <span class="keyword">in</span>   cs us sy id wa st</span><br><span class="line"> 0  0      0 257172 327980 5486280    0    0     1    13    0    0  1  1 97  1  0</span><br><span class="line"> 0  0      0 278168 327980 5486332    0    0     0    37 1583 3408  1  0 97  2  0</span><br><span class="line"> 0  0      0 266540 327980 5486348    0    0     0    26 1803 3684  1  0 98  0  0</span><br><span class="line"> 0  1      0 266964 327980 5484616    0    0     0    78 1647 4011  1  1 95  3  0</span><br></pre></td></tr></table></figure><p>第一行显示了系统自启动以来的平均值，第二行开始显示现在正在发生的情况，接下来的行会显示每5秒间隔发生了什么，每一列的含义在头部，如下所示：</p><p>▪ procs：r这一列显示了多少进程在等待cpu，b列显示多少进程正在不可中断的休眠（等待IO）。</p><p>▪ memory：swapd列显示了多少块被换出了磁盘（页面交换），剩下的列显示了多少块是空闲的（未被使用），多少块正在被用作缓冲区，以及多少正在被用作操作系统的缓存。</p><p>▪ swap：显示交换活动：每秒有多少块正在被换入（从磁盘）和换出（到磁盘）。</p><p>▪ io：显示了多少块从块设备读取（bi）和写出（bo）,通常反映了硬盘I/O。</p><p>▪ system：显示每秒中断(in)和上下文切换（cs）的数量。</p><p>▪ cpu：显示所有的cpu时间花费在各类操作的百分比，包括执行用户代码（非内核），执行系统代码（内核），空闲以及等待IO。</p><h1 id="ps"><a href="#ps" class="headerlink" title="ps"></a>ps</h1><p> Linux中的ps命令是Process Status的缩写。ps命令用来列出系统中当前运行的那些进程。ps命令列出的是当前那些进程的快照，就是执行ps命令的那个时刻的那些进程，如果想要动态的显示进程信息，就可以使用top命令。</p><p>主要参数-aux 显示所有包含其他使用者的行程</p><h1 id="netstat"><a href="#netstat" class="headerlink" title="netstat"></a>netstat</h1><p>netstat命令用于显示与IP、TCP、UDP和ICMP协议相关的统计数据，一般用于检验本机各端口的网络连接情况。netstat是在内核中访问网络及相关信息的程序，它能提供TCP连接，TCP和UDP监听，进程内存管理的相关报告。</p><p>常用参数：</p><p>-a或–all 显示所有连线中的Socket。</p><p>-n或–numeric 直接使用IP地址，而不通过域名服务器。</p><p>-p或–programs 显示正在使用Socket的程序识别码和程序名称。</p><p>-t或–tcp 显示TCP传输协议的连线状况。</p><p><strong>然而Debian没有预装netstat</strong></p><h1 id="top"><a href="#top" class="headerlink" title="top"></a>top</h1><p>top命令是Linux下常用的性能分析工具，能够实时显示系统中各个进程的资源占用状况，类似于Windows的任务管理器。</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">top - 19:57:18 up  2:07,  0 users,  load average: 8.88, 6.55, 6.53</span><br><span class="line">Tasks:   9 total,   1 running,   8 sleeping,   0 stopped,   0 zombie</span><br><span class="line">%Cpu(s):  5.7 us,  0.0 sy,  0.0 ni, 94.3 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st</span><br><span class="line">KiB Mem:   4194304 total,    38392 used,  4155912 free,        0 buffers</span><br><span class="line">KiB Swap:        0 total,        0 used,        0 free.     9920 cached Mem</span><br><span class="line"></span><br><span class="line">    PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND                                                                                                                                      </span><br><span class="line">     57 root      20   0  893576  32220  16872 S   3.0  0.8   3:21.04 toutiao.ev.wall                                                                                                                              </span><br><span class="line">      1 root      20   0   52868   6928   5432 S   0.0  0.2   0:01.61 systemd                                                                                                                                      </span><br><span class="line">     23 daemon    20   0   19028   1736   1568 S   0.0  0.0   0:00.00 atd                                                                                                                                          </span><br><span class="line">     26 root      20   0   29156   2800   2556 S   0.0  0.1   0:00.01 cron                                                                                                                                         </span><br><span class="line">     29 unscd     20   0   14776   1748   1608 S   0.0  0.0   0:00.26 nscd                                                                                                                                         </span><br><span class="line">     33 root      20   0  172092   2888   2472 S   0.0  0.1   0:00.01 rsyslogd                                                                                                                                     </span><br><span class="line">     50 root      20   0   43796   7552   7108 S   0.0  0.2   0:00.02 systemd-journal                                                                                                                              </span><br><span class="line">  13489 root      20   0   15184   3600   3084 S   0.0  0.1   0:00.04 bash                                                                                                                                         </span><br><span class="line">  19242 root      20   0   16808   2580   2228 R   0.0  0.1   0:00.01 top</span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;vmsta&quot;&gt;&lt;a href=&quot;#vmsta&quot; class=&quot;headerlink&quot; title=&quot;vmsta&quot;&gt;&lt;/a&gt;vmsta&lt;/h1&gt;&lt;p&gt;可对操作系统的虚拟内存、进程、CPU等的整体情况进行监视。&lt;/p&gt;
-&lt;p&gt;一般有两个参数，第一个是采样间隔，第二个是
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="linux" scheme="http://yoursite.com/blog/tags/linux/"/>
     
   </entry>
   

@@ -251,6 +251,163 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/26/11-26技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/11/26/11-26技术笔记-1/" itemprop="url">多线程笔记</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-26T16:26:30+08:00">
+                2018-11-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <ol>
+<li><p>终止线程只能用interrupt(),但该函数不一定能终止，方法是检测interrupt状态，因为interrupt()会抛异常，检测异常就好，或者直接return。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">public class MyThread &#123;</span><br><span class="line">    public static void main(String[] args) throws InterruptedException &#123;</span><br><span class="line">        RunTest rt = new RunTest();</span><br><span class="line">        Thread t = new Thread(rt);</span><br><span class="line">        t.start();</span><br><span class="line">        TimeUnit.SECONDS.sleep(2);</span><br><span class="line">        t.interrupt();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">    class RunTest implements Runnable &#123;</span><br><span class="line">        //这种设计比较好,当调用阻塞操作时,会因为抛出异常退出,当不调用阻塞操作时,会因为检查中断状态而退出</span><br><span class="line">        @Override</span><br><span class="line">        public void run() &#123;</span><br><span class="line">            try&#123;</span><br><span class="line">                Thread.sleep(1);</span><br><span class="line">                while(!Thread.interrupted())&#123;</span><br><span class="line">                    System.out.println(&quot;sleep 5s&quot;);</span><br><span class="line">                    Thread.sleep(5000);//接收到中断信号时，由于抛出异常退出，模拟耗时操作</span><br><span class="line">                &#125;</span><br><span class="line">                System.out.println(&quot;Exit normal&quot;);</span><br><span class="line">            &#125;catch(InterruptedException e)&#123;</span><br><span class="line">                System.out.println(&quot;interrupted and exit&quot;);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>main线程是第一个线程，Thread0是第二次。</p>
+</li>
+<li>多个线程之间共享变量才会用冲突，体现在new Thread()的参数是同一个对象（该对象的类继承了Thread或者实现了runnable)。同样，synchronized是对象锁。</li>
+<li>“可重入锁”概念是：自己可以再次获取自己的内部锁。比如一个线程获得了某个对象的锁，此时这个对象锁还没有释放，当其再次想要获取这个对象的锁的时候还是可以获取的，如果不可锁重入的话，就会造成死锁。</li>
+<li>ThreadPoolExecutor类是ExecutorSerivce接口的具体实现，一般用Executors就用后者，手动创建线程池new ThreadPoolExecutor()就用前者。强转也行。</li>
+<li><p>向线程池里提交，只需要一个Runable接口的对象即可。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(10,20,20, TimeUnit.SECONDS,new ArrayBlockingQueue&lt;Runnable&gt;(6));</span><br><span class="line">Runnable runnable = new Runnable() &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void run() &#123;</span><br><span class="line">        System.out.printf(&quot;132&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">threadPoolExecutor.execute(runnable);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>定时任务</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);</span><br><span class="line">ScheduledFuture&lt;?&gt; future = executor.schedule(</span><br><span class="line">  new Runnable() &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void run() &#123;</span><br><span class="line">      System.out.println(&quot;60 seconds later&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;, 60, TimeUnit.SECONDS);</span><br><span class="line">//blabla</span><br><span class="line">  executor.shutdown();</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/26/11-26技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1682,176 +1839,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/08/11-8技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/11/08/11-8技术笔记/" itemprop="url">netty基础</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-08T15:37:36+08:00">
-                2018-11-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="netty特点"><a href="#netty特点" class="headerlink" title="netty特点"></a>netty特点</h2><ol>
-<li><strong>高并发</strong>，通过非阻塞的NIO方式，使用了Selector，实现了高并发性。</li>
-<li><strong>高传输</strong>，Netty针对这种情况，使用了NIO中的另一大特性——零拷贝，当他需要接收数据的时候，他会在堆内存之外开辟一块内存，数据就直接从IO读到了那块内存中去，在netty里面通过ByteBuf可以直接对这些数据进行直接操作，从而加快了传输速度。</li>
-<li><strong>封装好</strong>    </li>
-</ol>
-<h2 id="netty组成"><a href="#netty组成" class="headerlink" title="netty组成"></a>netty组成</h2><p> （客户端+服务端）*（启动连接+业务逻辑处理）。完成交互至少需要这四部分。</p>
-<h2 id="netty术语"><a href="#netty术语" class="headerlink" title="netty术语"></a>netty术语</h2><h3 id="channel"><a href="#channel" class="headerlink" title="channel"></a>channel</h3><p><a href="https://imgchr.com/i/i7jEp8" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2018/11/08/i7jEp8.md.png" alt="i7jEp8.md.png"></a>   </p>
-<ol>
-<li>Channel，表示一个连接，可以理解为每一个请求，就是一个Channel。</li>
-<li>ChannelHandler，核心处理业务就在这里，用于处理业务请求。</li>
-<li>ChannelHandlerContext，用于传输业务数据。</li>
-<li>ChannelPipeline，用于保存处理过程需要用到的ChannelHandler和ChannelHandlerContext。   </li>
-</ol>
-<h3 id="ByteBuf"><a href="#ByteBuf" class="headerlink" title="ByteBuf"></a>ByteBuf</h3><p>ByteBuf是一个存储字节的容器，最大特点就是使用方便，它既有自己的读索引和写索引，方便你对整段字节缓存进行读写，也支持get/set，方便你对其中每一个字节进行读写.</p>
-<h3 id="EventLoop"><a href="#EventLoop" class="headerlink" title="EventLoop"></a>EventLoop</h3><p>EventLoopGroup 是用来处理I/O操作的多线程事件循环器.NioEventLoopGroup是其一个实现。<br>一般至少需要两个EventLoopGroup，boss这个EventLoopGroup作为一个acceptor负责接收来自客户端的请求，然后分发给worker这个EventLoopGroup来处理所有的事件event和channel的IO。    </p>
-<h3 id="BootStrap"><a href="#BootStrap" class="headerlink" title="BootStrap"></a>BootStrap</h3><p>BootStrap在netty的应用程序中负责引导服务器和客户端。netty包含了两种不同类型的引导：</p>
-<ol>
-<li>使用服务器的ServerBootStrap，用于接受客户端的连接以及为已接受的连接创建子通道。</li>
-<li>用于客户端的BootStrap，不接受新的连接，并且是在父通道类完成一些操作。<br>BootStrap配置<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">sBootstrap.group(bossGroup, workerGroup)</span><br><span class="line">                    .channel(NioServerSocketChannel.class)</span><br><span class="line">                    .childHandler(new SimpleChatServerInitializer())</span><br><span class="line">                    .option(ChannelOption.SO_BACKLOG, 128)</span><br><span class="line">                    .childOption(ChannelOption.SO_KEEPALIVE, true);</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<p>分别配置了BootStrap的EventLoop，channel，channelHandler来处理客户端的请求的channel的IO，设置TCP连接中的一些可选项，只作用于被acceptor(也就是boss EventLoopGroup)接收之后的channel的可选项。   </p>
-<h3 id="ChannelFuture"><a href="#ChannelFuture" class="headerlink" title="ChannelFuture"></a>ChannelFuture</h3><p>ChannelFuture是Channel结果的回调。当令Channel开始一个I/O操作时,会创建一个新的ChannelFuture去异步完成操作.<br>被创建时的ChannelFuture处于uncompleted状态(非失败,非成功,非取消);一旦ChannelFuture完成I/O操作,ChannelFuture将处于completed状态,结果可能有三种:</p>
-<ol>
-<li>操作成功</li>
-<li>操作失败</li>
-<li>操作被取消(I/O操作被主动终止)</li>
-</ol>
-<h2 id="channel生命周期"><a href="#channel生命周期" class="headerlink" title="channel生命周期"></a>channel生命周期</h2><p>下列重载函数在对应的时候触发。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">public class LifeCyCleTestHandler extends ChannelInboundHandlerAdapter &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void handlerAdded(ChannelHandlerContext ctx) throws Exception &#123;</span><br><span class="line">        System.out.println(&quot;逻辑处理器被添加：handlerAdded()&quot;);</span><br><span class="line">        super.handlerAdded(ctx);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void channelRegistered(ChannelHandlerContext ctx) throws Exception &#123;</span><br><span class="line">        System.out.println(&quot;channel 绑定到线程(NioEventLoop)：channelRegistered()&quot;);</span><br><span class="line">        super.channelRegistered(ctx);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void channelActive(ChannelHandlerContext ctx) throws Exception &#123;</span><br><span class="line">        System.out.println(&quot;channel 准备就绪：channelActive()&quot;);</span><br><span class="line">        super.channelActive(ctx);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception &#123;</span><br><span class="line">        System.out.println(&quot;channel 有数据可读：channelRead()&quot;);</span><br><span class="line">        super.channelRead(ctx, msg);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception &#123;</span><br><span class="line">        System.out.println(&quot;channel 某次数据读完：channelReadComplete()&quot;);</span><br><span class="line">        super.channelReadComplete(ctx);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void channelInactive(ChannelHandlerContext ctx) throws Exception &#123;</span><br><span class="line">        System.out.println(&quot;channel 被关闭：channelInactive()&quot;);</span><br><span class="line">        super.channelInactive(ctx);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception &#123;</span><br><span class="line">        System.out.println(&quot;channel 取消线程(NioEventLoop) 的绑定: channelUnregistered()&quot;);</span><br><span class="line">        super.channelUnregistered(ctx);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception &#123;</span><br><span class="line">        System.out.println(&quot;逻辑处理器被移除：handlerRemoved()&quot;);</span><br><span class="line">        super.handlerRemoved(ctx);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1902,7 +1889,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">205</span>
+                  <span class="site-state-item-count">206</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
