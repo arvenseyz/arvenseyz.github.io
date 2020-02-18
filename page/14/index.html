@@ -251,6 +251,343 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/30/11-30技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/11/30/11-30技术笔记/" itemprop="url">redis高阶数据结构</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-30T15:50:23+08:00">
+                2018-11-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="位图"><a href="#位图" class="headerlink" title="位图"></a>位图</h2><p>数据是布尔类型的时候，进行记录可以使用位图，即每个数据占一位而不是一字节。最简单的使用场景就是签到表啦。还有在线人数统计之内。<br>我看来，位图实际上是三维的，key,value,exist,所以很适合做签到这种事，因为也是三维的：用户，日期，是否签到。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis.setbit(offsetDate, user_id, 1);</span><br></pre></td></tr></table></figure></p>
+<p>统计也很简单，某天的活跃用户数<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">String key = offsetDate;</span><br><span class="line">BitSet users = BitSet.valueOf(redis.get(key.getBytes()));</span><br><span class="line">users.cardinality();</span><br></pre></td></tr></table></figure></p>
+<p>用BitSet相关计算，第一和第二天的交集，就是首日留存，之类的所有操作。<br>如果交换key,value值的位置，则是反过来统计，比如本月用户签到了多少次，某天用户是否签到。redis-&gt;bitCount($UserID)</p>
+<h2 id="HyperLogLog"><a href="#HyperLogLog" class="headerlink" title="HyperLogLog"></a>HyperLogLog</h2><ol>
+<li>HyperLogLog是去重计数器。比如统计访客数量，简单做法是，一个Set，来一个人就sadd加进集合，要计数就scard数一下集合里多少个。HyperLogLog就是针对这种情况设计的，功能单一，只有 pfadd 和 pfcount，加进去和计数。还有pfmerge合并计数器。   </li>
+<li>优势：内部实现靠复杂的数学计算，而不是萝卜占坑，因而存储空间占用很小。   </li>
+<li>缺点：其实是估算出来的，存在0.81%，也就是说不到1%的误差。    </li>
+<li>使用场景：去重计数。    </li>
+<li>原理和使用限制：分桶计数，用到的是 16384 个桶，也就是 2^14，每个桶的 maxbits 需要 6 个 bits 来存储，最大可以表示 maxbits=63，于是总共占用内存就是2^14 * 6 / 8 = 12k字节。即数据量很少也要12k，但适用于大量数据计数。    </li>
+</ol>
+<h2 id="布隆过滤器Bloom-Filter"><a href="#布隆过滤器Bloom-Filter" class="headerlink" title="布隆过滤器Bloom Filter"></a>布隆过滤器Bloom Filter</h2><ol>
+<li>Bloom Filter和HyperLogLog类似，是一个估计工具。相当于节省空间结果粗略的哈希表。与HyperLogLog不同的是，布隆过滤器是查询集合内某元素是否存在。比如说，steam要存储用户的购买记录，很多用户很多购买记录，n个set，每个set也很大。只是想知道用户有没有买过某个游戏。这时可以用Bloom Filter。</li>
+<li>它存储的是键值对，bf.add csgo user1，则user1购买了csgo。<br>bf.exists codehole user1，查询user1是否购买了csgo。<br>bf.madd和bf.mexists多值判断和查询</li>
+<li>当布隆过滤器说某个值存在时，这个值可能不存在；当它说不存在时，那就肯定不存在。虽然Bloom Filter是估测，但布隆过滤器对于已经见过的元素肯定不会误判，它只会误判那些没见过的元素。把编号1到10000的用户插入，然后再查它们是否存在，答案是都存在，不会有错误，但如果查10001到20000号用户是否存在，并不会回答都不存在，这里有误差，只会回答绝大部分的用户不存在。</li>
+<li>自定义参数，可以自定义预计数量和误差范围，显然可知，要求的误差越小，所需要的存储空间越大。比如5万数据，0.1%误差：client.createFilter(“codehole”, 50000, 0.001);</li>
+<li>使用的时候一是可以忍受误差的场景，比如说使用爬虫爬取URl,不爬重复的，这时就适合用布隆过滤器，即使有遗漏的，做统计也不要紧；二是利用“如果说不存在，那肯定不存在的特性”，在解决缓存攻击的时候, 也用到了布隆过滤器, 就是不法分子构造缓存中没有的key进行大量请求, 导致大量查询db, 这时候, 如果先在boom中查询一下是不是有这个key就可以抵挡这个攻击。如果布隆过滤器说该行不存在，那肯定不存在。那就不用查了。</li>
+</ol>
+<h2 id="GeoHash"><a href="#GeoHash" class="headerlink" title="GeoHash"></a>GeoHash</h2><blockquote>
+<p><a href="https://www.cnblogs.com/LBSer/p/3310455.html" target="_blank" rel="noopener">https://www.cnblogs.com/LBSer/p/3310455.html</a>     </p>
+</blockquote>
+<p>理论基础，简单来说，希尔伯特曲线表示，一维曲线可以填满二维空间。这个理论的实际意义在于，将二维的坐标一维表示，这样我们就可以用B树索引了。<br>GeoHash使用看皮亚诺曲线，有突变的问题，解决方法是，不只查这个小正方形区域，还要查它周围的八个正方形。</p>
+<ol>
+<li>geoadd 指令携带集合名称以及多个经纬度名称三元组，注意这里可以加入多个三元组。简单来说，就是表示(经度，维度，谁)。</li>
+<li>geodist 指令可以用来计算两个元素之间的距离，携带集合名称、2 个名称和距离单位。</li>
+<li>geopos 指令可以获取集合中任意元素的经纬度坐标，可以一次获取多个。</li>
+<li>geohash 可以获取元素的经纬度编码字符串，它是 base32 编码。 可以使用这个编码值直接查到地理位置。比如在<a href="http://geohash.org/" target="_blank" rel="noopener">http://geohash.org/</a></li>
+<li><p>georadiusbymember可以用来查询指定元素附近的其它元素。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">//范围 20 公里以内最多 3 个元素按距离倒排</span><br><span class="line">georadiusbymember company ireader 20 km count 3 desc</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>GeoHash本质是zset，删除点用zset的命令，即zrem。</p>
+</li>
+</ol>
+<h2 id="漏斗限流"><a href="#漏斗限流" class="headerlink" title="漏斗限流"></a>漏斗限流</h2><p>工作中对外提供的API 接口设计都要考虑限流，如果不考虑限流，会成系统的连锁反应，轻者响应缓慢，重者系统宕机，整个业务线崩溃，如何应对这种情况呢，我们可以对请求进行引流或者直接拒绝等操作，保持系统的可用性和稳定性，防止因流量暴增而导致的系统运行缓慢或宕机。<br>把请求比作是水，水来了都先放进桶里，并以限定的速度出水，当水来得过猛而出水不够快时就会导致水直接溢出，即拒绝服务。即可以累积待处理的服务，但不能累积太多待处理的服务，并且处理速度恒定。</p>
+<ol>
+<li>在漏斗中没有水的时候：<br>如果进水速率小于等于最大出水速率，那么，出水速率等于进水速率，此时，不会积水。<br>如果进水速率大于最大出水速率，那么，漏斗以最大速率出水，此时，多余的水会积在漏斗中</li>
+<li>在漏斗中有水的时候：<br>出水口以最大速率出水<br>如果漏斗未满，且有进水的话，那么这些水会积在漏斗中<br>如果漏斗已满，且有进水的话，那么这些水会溢出到漏斗之外   </li>
+</ol>
+<p>Redis 4.0 提供了一个限流 Redis 模块，它叫 redis-cell。只有一个指令cl.throttle。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&gt; cl.throttle laoqian:reply 15 30 60 #参数分别是，漏斗容量15，每60秒处理30个，need 1 quota (可选参数，默认值也是1)。   </span><br><span class="line">1) (integer) 0   # 0 表示允许，1表示拒绝</span><br><span class="line">2) (integer) 15  # 漏斗容量capacity</span><br><span class="line">3) (integer) 14  # 漏斗剩余空间left_quota</span><br><span class="line">4) (integer) -1  # 如果拒绝了，需要多长时间后再试(漏斗有空间了，单位秒)</span><br><span class="line">5) (integer) 2   # 多长时间后，漏斗完全空出来(left_quota==capacity，单位秒)...</span><br></pre></td></tr></table></figure></p>
+<h2 id="Scan"><a href="#Scan" class="headerlink" title="Scan"></a>Scan</h2><p>keys 用来列出所有满足特定正则字符串规则的 key，但其一该指令是阻塞的，而且算法复杂度O(n)，数据量太大会使Redis服务卡顿；其二，不支持各种粒度的参数，offset和limit之类。<br>后来提供了另一个的版本scan。通过游标实现，不会阻塞线程，但会带来并发问题。</p>
+<ol>
+<li>游标分步进行的，不会阻塞线程。</li>
+<li>服务器不需要为游标保存状态，游标的唯一状态就是 scan 返回给客户端的游标整数;</li>
+<li>单次返回的结果是空的并不意味着遍历结束，而要看返回的游标值是否为零;也就是说在使用中，如果要遍历完，需要循环执行，每次将上一次传回的游标值作为参数，进行下一次遍历，知道返回游标为0.</li>
+<li>遍历的过程中如果有数据修改，改动后的数据能不能遍历到是不确定的;</li>
+<li>返回的结果可能会有重复，需要客户端去重复，这点非常重要;</li>
+</ol>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/29/11-29技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/11/29/11-29技术笔记/" itemprop="url">redis五种数据结构</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-29T16:55:17+08:00">
+                2018-11-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="五种数据结构"><a href="#五种数据结构" class="headerlink" title="五种数据结构"></a>五种数据结构</h1><h2 id="String"><a href="#String" class="headerlink" title="String"></a>String</h2><p>实际上也是键值对，因为每个都有名字。其内部数据结构有点像ArrayList，有空余空间，满了翻倍，达到1M后，每次满了+1M。<br>如果value值是数字，还可以自增。</p>
+<h3 id="分布式锁"><a href="#分布式锁" class="headerlink" title="分布式锁"></a>分布式锁</h3><p>可以设置过期时间，这样就变成了一个分布式锁：问题在于，存入和设置过期时间之间的这一小段时间有风险，即set后expire前挂了或者并发危险。为了解决这个问题，redis有相当于原子性业务，即set有个参数。<br>另一个问题是超时问题，即已经过期了，业务还没有完成，另一个线程持有了锁，就失去了锁的意义。Redis不能解决这个问题，简陋解决方案的给value加个参数，删除锁先匹配参数，但匹配和删除两个操作之间也有时间。 想要完美解决需要Lua,成本太大，不如从业务的角度，不要把这么长时间才能完成的业务用redis分布式锁，或者鸵鸟策略。<br>可重入锁需要自己封装，就是用TheadLocal记录使用次数。</p>
+<h2 id="List"><a href="#List" class="headerlink" title="List"></a>List</h2><p>List是链表，意味着增减很快，意味着链表实现的功能如队列和栈，都是用List实现。即左右push和pop。</p>
+<h3 id="阻塞队列"><a href="#阻塞队列" class="headerlink" title="阻塞队列"></a>阻塞队列</h3><p>队列空了反复读有性能问题，所以有阻塞读：blpop，brpop，即blockingLeftPop的简写，会阻塞直到队列里有信息。<br>空连接会自动断开。</p>
+<h2 id="哈希"><a href="#哈希" class="headerlink" title="哈希"></a>哈希</h2><p>哈希和String似乎区别不大，在使用中，即可以把实体序列化整体存入String，也可以把实体的各个属性存入哈希，取决于是使用实体还是实体的某个属性频率。<br>hash结构和Java中的hashMap一样，数组加链表，把哈希碰撞的元素用链表连起来。区别在于reHash,Redis 为了高性能，不能堵塞服务，所以采用了渐进式 rehash 策略。渐进式 rehash 会在 rehash 的同时，保留新旧两个 hash 结构，查询时会同时查询两个 hash 结构，然后在后续的定时任务中以及 hash 操作指令中，循序渐进地将旧 hash 的内容一点点迁移到新的 hash 结构中。当搬迁完成了，就会使用新的hash结构取而代之。</p>
+<h2 id="set"><a href="#set" class="headerlink" title="set"></a>set</h2><p>set的意义在于去重，而且是单值的，加进去后，一般意义在于查在不在集合里。</p>
+<h2 id="zset"><a href="#zset" class="headerlink" title="zset"></a>zset</h2><p>有序集合，也是键值对，根据值排序，所以有点像优先队列。通过跳表实现。</p>
+<h3 id="延时队列"><a href="#延时队列" class="headerlink" title="延时队列"></a>延时队列</h3><p>延时队列可以通过 Redis 的 zset(有序列表) 来实现。我们将消息序列化成一个字符串作为 zset 的value，这个消息的到期处理时间作为score，然后用多个线程轮询 zset 获取到期的任务进行处理，多个线程是为了保障可用性，万一挂了一个线程还有其它线程可以继续处理。因为有多个线程，所以需要考虑并发争抢任务，确保任务不能被多次执行。</p>
+<h3 id="滑动窗口"><a href="#滑动窗口" class="headerlink" title="滑动窗口"></a>滑动窗口</h3><p>用时间做key值，行为做value值，就成了一个滑动窗口。比如说要限制用户行为，每分钟只能操作三次，每次操作前，移除时间窗口之前的行为记录 pipe.zremrangebyscore(key, 0, now_ts - period * 1000)，剩下的都是时间窗口内的，然后计数pipe.zcard(key)，如果达到了限制次数，则不能执行。同时应该设置过期时间，避免冷用户长期占用内存，pipe.expire(key, period + 1)。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/27/11-27技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1475,392 +1812,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/16/11-16技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/11/16/11-16技术笔记/" itemprop="url">双端通信</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-16T15:33:35+08:00">
-                2018-11-16
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="通讯基础"><a href="#通讯基础" class="headerlink" title="通讯基础"></a>通讯基础</h1><h2 id="编码解码和序列化"><a href="#编码解码和序列化" class="headerlink" title="编码解码和序列化"></a>编码解码和序列化</h2><h3 id="编解码"><a href="#编解码" class="headerlink" title="编解码"></a>编解码</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br></pre></td><td class="code"><pre><span class="line">package the.flash.protocol;</span><br><span class="line"></span><br><span class="line">import io.netty.buffer.ByteBuf;</span><br><span class="line">import io.netty.buffer.ByteBufAllocator;</span><br><span class="line">import the.flash.protocol.request.LoginRequestPacket;</span><br><span class="line">import the.flash.protocol.request.MessageRequestPacket;</span><br><span class="line">import the.flash.protocol.response.LoginResponsePacket;</span><br><span class="line">import the.flash.protocol.response.MessageResponsePacket;</span><br><span class="line">import the.flash.serialize.Serializer;</span><br><span class="line">import the.flash.serialize.impl.JSONSerializer;</span><br><span class="line"></span><br><span class="line">import java.util.HashMap;</span><br><span class="line">import java.util.Map;</span><br><span class="line"></span><br><span class="line">import static the.flash.protocol.command.Command.*;</span><br><span class="line"></span><br><span class="line">public class PacketCodeC &#123;</span><br><span class="line"></span><br><span class="line">    private static final int MAGIC_NUMBER = 0x12345678;</span><br><span class="line">    public static final PacketCodeC INSTANCE = new PacketCodeC();</span><br><span class="line"></span><br><span class="line">    private final Map&lt;Byte, Class&lt;? extends Packet&gt;&gt; packetTypeMap;</span><br><span class="line">    private final Map&lt;Byte, Serializer&gt; serializerMap;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    private PacketCodeC() &#123;</span><br><span class="line">        packetTypeMap = new HashMap&lt;&gt;();</span><br><span class="line">        packetTypeMap.put(LOGIN_REQUEST, LoginRequestPacket.class);</span><br><span class="line">        packetTypeMap.put(LOGIN_RESPONSE, LoginResponsePacket.class);</span><br><span class="line">        packetTypeMap.put(MESSAGE_REQUEST, MessageRequestPacket.class);</span><br><span class="line">        packetTypeMap.put(MESSAGE_RESPONSE, MessageResponsePacket.class);</span><br><span class="line"></span><br><span class="line">        serializerMap = new HashMap&lt;&gt;();</span><br><span class="line">        Serializer serializer = new JSONSerializer();</span><br><span class="line">        serializerMap.put(serializer.getSerializerAlogrithm(), serializer);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public ByteBuf encode(ByteBufAllocator byteBufAllocator, Packet packet) &#123;</span><br><span class="line">        // 1. 创建 ByteBuf 对象</span><br><span class="line">        ByteBuf byteBuf = byteBufAllocator.ioBuffer();</span><br><span class="line">        // 2. 序列化 java 对象</span><br><span class="line">        byte[] bytes = Serializer.DEFAULT.serialize(packet);</span><br><span class="line"></span><br><span class="line">        // 3. 实际编码过程</span><br><span class="line">        byteBuf.writeInt(MAGIC_NUMBER);</span><br><span class="line">        byteBuf.writeByte(packet.getVersion());</span><br><span class="line">        byteBuf.writeByte(Serializer.DEFAULT.getSerializerAlogrithm());</span><br><span class="line">        byteBuf.writeByte(packet.getCommand());</span><br><span class="line">        byteBuf.writeInt(bytes.length);</span><br><span class="line">        byteBuf.writeBytes(bytes);</span><br><span class="line"></span><br><span class="line">        return byteBuf;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public Packet decode(ByteBuf byteBuf) &#123;</span><br><span class="line">        // 跳过 magic number</span><br><span class="line">        byteBuf.skipBytes(4);</span><br><span class="line"></span><br><span class="line">        // 跳过版本号</span><br><span class="line">        byteBuf.skipBytes(1);</span><br><span class="line"></span><br><span class="line">        // 序列化算法</span><br><span class="line">        byte serializeAlgorithm = byteBuf.readByte();</span><br><span class="line"></span><br><span class="line">        // 指令</span><br><span class="line">        byte command = byteBuf.readByte();</span><br><span class="line"></span><br><span class="line">        // 数据包长度</span><br><span class="line">        int length = byteBuf.readInt();</span><br><span class="line"></span><br><span class="line">        byte[] bytes = new byte[length];</span><br><span class="line">        byteBuf.readBytes(bytes);</span><br><span class="line"></span><br><span class="line">        Class&lt;? extends Packet&gt; requestType = getRequestType(command);</span><br><span class="line">        Serializer serializer = getSerializer(serializeAlgorithm);</span><br><span class="line"></span><br><span class="line">        if (requestType != null &amp;&amp; serializer != null) &#123;</span><br><span class="line">            return serializer.deserialize(requestType, bytes);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return null;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private Serializer getSerializer(byte serializeAlgorithm) &#123;</span><br><span class="line"></span><br><span class="line">        return serializerMap.get(serializeAlgorithm);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private Class&lt;? extends Packet&gt; getRequestType(byte command) &#123;</span><br><span class="line"></span><br><span class="line">        return packetTypeMap.get(command);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h3><ol>
-<li><p>使用接口保存全局数据：序列化编码的序号</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public interface SerializerAlogrithm &#123;</span><br><span class="line">    /**</span><br><span class="line">     * json 序列化</span><br><span class="line">     */</span><br><span class="line">    byte JSON = 1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>fastjson进行序列化接口</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">public interface Serializer &#123;</span><br><span class="line"></span><br><span class="line">    Serializer DEFAULT = new JSONSerializer();</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 序列化算法</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    byte getSerializerAlogrithm();</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * java 对象转换成二进制</span><br><span class="line">     */</span><br><span class="line">    byte[] serialize(Object object);</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 二进制转换成 java 对象</span><br><span class="line">     */</span><br><span class="line">    &lt;T&gt; T deserialize(Class&lt;T&gt; clazz, byte[] bytes);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>fastjson进行序列化实现    </p>
-</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">public class JSONSerializer implements Serializer &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public byte getSerializerAlogrithm() &#123;</span><br><span class="line">        return SerializerAlogrithm.JSON;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public byte[] serialize(Object object) &#123;</span><br><span class="line"></span><br><span class="line">        return JSON.toJSONBytes(object);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public &lt;T&gt; T deserialize(Class&lt;T&gt; clazz, byte[] bytes) &#123;</span><br><span class="line"></span><br><span class="line">        return JSON.parseObject(bytes, clazz);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="通信数据包"><a href="#通信数据包" class="headerlink" title="通信数据包"></a>通信数据包</h2><h3 id="通信数据包基类"><a href="#通信数据包基类" class="headerlink" title="通信数据包基类"></a>通信数据包基类</h3><p>包括版本号，协议号，以及策略模式通信包中的channelread(),还有提供给子类使用的工具方法。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Packet &#123;</span><br><span class="line">    @JSONField(deserialize = false, serialize = false)</span><br><span class="line">    private Byte version = 1;</span><br><span class="line"></span><br><span class="line">    @JSONField(serialize = false)</span><br><span class="line">    public abstract Byte getCommand();</span><br></pre></td></tr></table></figure></p>
-<h3 id="具体通信数据包类"><a href="#具体通信数据包类" class="headerlink" title="具体通信数据包类"></a>具体通信数据包类</h3><p>实现双端通信，这里需要这几步：1.客户端给服务端发送登录请求；2.服务端回复登录请求；3.客户端给客服端发送消息；4.服务端回复消息。则需要四种数据包。</p>
-<ol>
-<li><p>登录请求数据包。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">@Data</span><br><span class="line">public class LoginRequestPacket extends Packet &#123;</span><br><span class="line">    private String userId;</span><br><span class="line"></span><br><span class="line">    private String username;</span><br><span class="line"></span><br><span class="line">    private String password;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public Byte getCommand() &#123;</span><br><span class="line"></span><br><span class="line">        return LOGIN_REQUEST;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>登陆请求回复数据包</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@Data</span><br><span class="line">public class LoginResponsePacket extends Packet &#123;</span><br><span class="line">    private boolean success;</span><br><span class="line"></span><br><span class="line">    private String reason;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public Byte getCommand() &#123;</span><br><span class="line">        return LOGIN_RESPONSE;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>消息发送数据包</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">@Data</span><br><span class="line">public class MessageRequestPacket extends Packet &#123;</span><br><span class="line"></span><br><span class="line">    private String message;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public Byte getCommand() &#123;</span><br><span class="line">        return MESSAGE_REQUEST;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>回复消息数据包</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">@Data</span><br><span class="line">public class MessageResponsePacket extends Packet &#123;</span><br><span class="line"></span><br><span class="line">    private String message;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public Byte getCommand() &#123;</span><br><span class="line"></span><br><span class="line">        return MESSAGE_RESPONSE;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<h2 id="辅助工具"><a href="#辅助工具" class="headerlink" title="辅助工具"></a>辅助工具</h2><p>为了在登录后的通信中，判断是否已经登录。使用Channel 绑定属性，通过 channel.attr(xxx).set(xx) 的方式，在登录成功之后，给 Channel 绑定一个登录成功的标志位，然后判断是否登录成功的时候取出这个标志位就可以了。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public class LoginUtil &#123;</span><br><span class="line">    public static void markAsLogin(Channel channel) &#123;</span><br><span class="line">        channel.attr(Attributes.LOGIN).set(true);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static boolean hasLogin(Channel channel) &#123;</span><br><span class="line">        Attribute&lt;Boolean&gt; loginAttr = channel.attr(Attributes.LOGIN);</span><br><span class="line"></span><br><span class="line">        return loginAttr.get() != null;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h1 id="通信过程"><a href="#通信过程" class="headerlink" title="通信过程"></a>通信过程</h1><h2 id="服务端引导"><a href="#服务端引导" class="headerlink" title="服务端引导"></a>服务端引导</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">public class NettyServer &#123;</span><br><span class="line"></span><br><span class="line">    private static final int PORT = 8000;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        NioEventLoopGroup boosGroup = new NioEventLoopGroup();</span><br><span class="line">        NioEventLoopGroup workerGroup = new NioEventLoopGroup();</span><br><span class="line"></span><br><span class="line">        final ServerBootstrap serverBootstrap = new ServerBootstrap();</span><br><span class="line">        serverBootstrap</span><br><span class="line">                .group(boosGroup, workerGroup)</span><br><span class="line">                .channel(NioServerSocketChannel.class)</span><br><span class="line">                .option(ChannelOption.SO_BACKLOG, 1024)</span><br><span class="line">                .childOption(ChannelOption.SO_KEEPALIVE, true)</span><br><span class="line">                .childOption(ChannelOption.TCP_NODELAY, true)</span><br><span class="line">                .childHandler(new ChannelInitializer&lt;NioSocketChannel&gt;() &#123;</span><br><span class="line">                    protected void initChannel(NioSocketChannel ch) &#123;</span><br><span class="line">                        ch.pipeline().addLast(new ServerHandler());</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line">        bind(serverBootstrap, PORT);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static void bind(final ServerBootstrap serverBootstrap, final int port) &#123;</span><br><span class="line">        serverBootstrap.bind(port).addListener(future -&gt; &#123;</span><br><span class="line">            if (future.isSuccess()) &#123;</span><br><span class="line">                System.out.println(new Date() + &quot;: 端口[&quot; + port + &quot;]绑定成功!&quot;);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                System.err.println(&quot;端口[&quot; + port + &quot;]绑定失败!&quot;);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="服务端业务逻辑"><a href="#服务端业务逻辑" class="headerlink" title="服务端业务逻辑"></a>服务端业务逻辑</h2><p>具体业务逻辑分为三步四部分：1. 解码 2. 根据数据包选择响应逻辑 3. 编码<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">public class ServerHandler extends ChannelInboundHandlerAdapter &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void channelRead(ChannelHandlerContext ctx, Object msg) &#123;</span><br><span class="line">        ByteBuf requestByteBuf = (ByteBuf) msg;</span><br><span class="line"></span><br><span class="line">        Packet packet = PacketCodeC.INSTANCE.decode(requestByteBuf);</span><br><span class="line"></span><br><span class="line">        if (packet instanceof LoginRequestPacket) &#123;</span><br><span class="line">            System.out.println(new Date() + &quot;: 收到客户端登录请求……&quot;);</span><br><span class="line">            // 登录流程</span><br><span class="line">            LoginRequestPacket loginRequestPacket = (LoginRequestPacket) packet;</span><br><span class="line"></span><br><span class="line">            LoginResponsePacket loginResponsePacket = new LoginResponsePacket();</span><br><span class="line">            loginResponsePacket.setVersion(packet.getVersion());</span><br><span class="line">            if (valid(loginRequestPacket)) &#123;</span><br><span class="line">                loginResponsePacket.setSuccess(true);</span><br><span class="line">                System.out.println(new Date() + &quot;: 登录成功!&quot;);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                loginResponsePacket.setReason(&quot;账号密码校验失败&quot;);</span><br><span class="line">                loginResponsePacket.setSuccess(false);</span><br><span class="line">                System.out.println(new Date() + &quot;: 登录失败!&quot;);</span><br><span class="line">            &#125;</span><br><span class="line">            // 登录响应</span><br><span class="line">            ByteBuf responseByteBuf = PacketCodeC.INSTANCE.encode(ctx.alloc(), loginResponsePacket);</span><br><span class="line">            ctx.channel().writeAndFlush(responseByteBuf);</span><br><span class="line">        &#125; else if (packet instanceof MessageRequestPacket) &#123;</span><br><span class="line">            // 客户端发来消息</span><br><span class="line">            MessageRequestPacket messageRequestPacket = ((MessageRequestPacket) packet);</span><br><span class="line"></span><br><span class="line">            MessageResponsePacket messageResponsePacket = new MessageResponsePacket();</span><br><span class="line">            System.out.println(new Date() + &quot;: 收到客户端消息: &quot; + messageRequestPacket.getMessage());</span><br><span class="line">            messageResponsePacket.setMessage(&quot;服务端回复【&quot; + messageRequestPacket.getMessage() + &quot;】&quot;);</span><br><span class="line">            ByteBuf responseByteBuf = PacketCodeC.INSTANCE.encode(ctx.alloc(), messageResponsePacket);</span><br><span class="line">            ctx.channel().writeAndFlush(responseByteBuf);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private boolean valid(LoginRequestPacket loginRequestPacket) &#123;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="客户端启动"><a href="#客户端启动" class="headerlink" title="客户端启动"></a>客户端启动</h2><p>客户端其启动时，新起了一个控制台线程，用来发送消息<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line">public class NettyClient &#123;</span><br><span class="line">    private static final int MAX_RETRY = 5;</span><br><span class="line">    private static final String HOST = &quot;127.0.0.1&quot;;</span><br><span class="line">    private static final int PORT = 8000;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        NioEventLoopGroup workerGroup = new NioEventLoopGroup();</span><br><span class="line"></span><br><span class="line">        Bootstrap bootstrap = new Bootstrap();</span><br><span class="line">        bootstrap</span><br><span class="line">                .group(workerGroup)</span><br><span class="line">                .channel(NioSocketChannel.class)</span><br><span class="line">                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)</span><br><span class="line">                .option(ChannelOption.SO_KEEPALIVE, true)</span><br><span class="line">                .option(ChannelOption.TCP_NODELAY, true)</span><br><span class="line">                .handler(new ChannelInitializer&lt;SocketChannel&gt;() &#123;</span><br><span class="line">                    @Override</span><br><span class="line">                    public void initChannel(SocketChannel ch) &#123;</span><br><span class="line">                        ch.pipeline().addLast(new ClientHandler());</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line"></span><br><span class="line">        connect(bootstrap, HOST, PORT, MAX_RETRY);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static void connect(Bootstrap bootstrap, String host, int port, int retry) &#123;</span><br><span class="line">        bootstrap.connect(host, port).addListener(future -&gt; &#123;</span><br><span class="line">            if (future.isSuccess()) &#123;</span><br><span class="line">                System.out.println(new Date() + &quot;: 连接成功，启动控制台线程……&quot;);</span><br><span class="line">                Channel channel = ((ChannelFuture) future).channel();</span><br><span class="line">                startConsoleThread(channel);</span><br><span class="line">            &#125; else if (retry == 0) &#123;</span><br><span class="line">                System.err.println(&quot;重试次数已用完，放弃连接！&quot;);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                // 第几次重连</span><br><span class="line">                int order = (MAX_RETRY - retry) + 1;</span><br><span class="line">                // 本次重连的间隔</span><br><span class="line">                int delay = 1 &lt;&lt; order;</span><br><span class="line">                System.err.println(new Date() + &quot;: 连接失败，第&quot; + order + &quot;次重连……&quot;);</span><br><span class="line">                bootstrap.config().group().schedule(() -&gt; connect(bootstrap, host, port, retry - 1), delay, TimeUnit</span><br><span class="line">                        .SECONDS);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static void startConsoleThread(Channel channel) &#123;</span><br><span class="line">        new Thread(() -&gt; &#123;</span><br><span class="line">            while (!Thread.interrupted()) &#123;</span><br><span class="line">                if (LoginUtil.hasLogin(channel)) &#123;</span><br><span class="line">                    System.out.println(&quot;输入消息发送至服务端: &quot;);</span><br><span class="line">                    Scanner sc = new Scanner(System.in);</span><br><span class="line">                    String line = sc.nextLine();</span><br><span class="line"></span><br><span class="line">                    MessageRequestPacket packet = new MessageRequestPacket();</span><br><span class="line">                    packet.setMessage(line);</span><br><span class="line">                    ByteBuf byteBuf = PacketCodeC.INSTANCE.encode(channel.alloc(), packet);</span><br><span class="line">                    channel.writeAndFlush(byteBuf);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;).start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="客户端业务逻辑"><a href="#客户端业务逻辑" class="headerlink" title="客户端业务逻辑"></a>客户端业务逻辑</h2><p>重写了两个函数，分别在连接建立时和每次收到信息时<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">public class ClientHandler extends ChannelInboundHandlerAdapter &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void channelActive(ChannelHandlerContext ctx) &#123;</span><br><span class="line">        System.out.println(new Date() + &quot;: 客户端开始登录&quot;);</span><br><span class="line"></span><br><span class="line">        // 创建登录对象</span><br><span class="line">        LoginRequestPacket loginRequestPacket = new LoginRequestPacket();</span><br><span class="line">        loginRequestPacket.setUserId(UUID.randomUUID().toString());</span><br><span class="line">        loginRequestPacket.setUsername(&quot;flash&quot;);</span><br><span class="line">        loginRequestPacket.setPassword(&quot;pwd&quot;);</span><br><span class="line"></span><br><span class="line">        // 编码</span><br><span class="line">        ByteBuf buffer = PacketCodeC.INSTANCE.encode(ctx.alloc(), loginRequestPacket);</span><br><span class="line"></span><br><span class="line">        // 写数据</span><br><span class="line">        ctx.channel().writeAndFlush(buffer);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void channelRead(ChannelHandlerContext ctx, Object msg) &#123;</span><br><span class="line">        ByteBuf byteBuf = (ByteBuf) msg;</span><br><span class="line"></span><br><span class="line">        Packet packet = PacketCodeC.INSTANCE.decode(byteBuf);</span><br><span class="line"></span><br><span class="line">        if (packet instanceof LoginResponsePacket) &#123;</span><br><span class="line">            LoginResponsePacket loginResponsePacket = (LoginResponsePacket) packet;</span><br><span class="line"></span><br><span class="line">            if (loginResponsePacket.isSuccess()) &#123;</span><br><span class="line">                System.out.println(new Date() + &quot;: 客户端登录成功&quot;);</span><br><span class="line">                LoginUtil.markAsLogin(ctx.channel());</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                System.out.println(new Date() + &quot;: 客户端登录失败，原因：&quot; + loginResponsePacket.getReason());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; else if (packet instanceof MessageResponsePacket) &#123;</span><br><span class="line">            MessageResponsePacket messageResponsePacket = (MessageResponsePacket) packet;</span><br><span class="line">            System.out.println(new Date() + &quot;: 收到服务端的消息: &quot; + messageResponsePacket.getMessage());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/14/11-14技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/11/14/11-14技术笔记/" itemprop="url">ByteBuf与通信协议</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-14T14:18:20+08:00">
-                2018-11-14
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="ByteBuf与内存管理"><a href="#ByteBuf与内存管理" class="headerlink" title="ByteBuf与内存管理"></a>ByteBuf与内存管理</h1><h2 id="结构"><a href="#结构" class="headerlink" title="结构"></a>结构</h2><p>ByteBuf结构上，类似一段连续的内存（数组），和其上的两个指针（读和写）。这样，通过读写指针的移动，可以控制到指定位置的读写。   </p>
-<h2 id="容量"><a href="#容量" class="headerlink" title="容量"></a>容量</h2><p>为了支持可扩容，实际上还保存了当前容量，然后自动扩容。直到最大容量（默认为Interger.Max）。   </p>
-<ol>
-<li>capacity()表示 ByteBuf 底层占用了多少字节的内存（包括丢弃的字节、可读字节、可写字节），不同的底层实现机制有不同的计算方式</li>
-<li>readableBytes() 表示 ByteBuf 当前可读的字节数，它的值等于 writerIndex-readerIndex，如果两者相等，则不可读，isReadable() 方法返回 false</li>
-<li>writableBytes() 表示 ByteBuf 当前可写的字节数，它的值等于 capacity-writerIndex，如果两者相等，则表示不可写，isWritable() 返回 false，但是这个时候，并不代表不能往 ByteBuf 中写数据了， 如果发现往 ByteBuf 中写数据写不进去的话，Netty 会自动扩容 ByteBuf，直到扩容到底层的内存大小为 maxCapacity，而 maxWritableBytes() 就表示可写的最大字节数，它的值等于 maxCapacity-writerIndex.    </li>
-</ol>
-<h2 id="读写指针"><a href="#读写指针" class="headerlink" title="读写指针"></a>读写指针</h2><p>readerIndex()表示返回当前的读指针 readerIndex 与 readerIndex(int)表示设置读指针。<br>writeIndex()表示返回当前的写指针 writerIndex 与 writeIndex(int)表示设置写指针。<br>markReaderIndex()表示把当前的读指针保存起来 与 resetReaderIndex()表示把当前的读指针恢复到之前保存的值。<br>markWriterIndex() 与 resetWriterIndex()同理。   </p>
-<h2 id="读写"><a href="#读写" class="headerlink" title="读写"></a>读写</h2><p>关于 ByteBuf 的读写都可以看作从指针开始的地方开始读写数据，write和read表示读写数据的同时指针移动，get和set只读写，指针不移动。<br>同时有Discard和clear等方法，抛弃前面的内容时，数组后面会延伸，以保持当年容量。</p>
-<blockquote>
-<p><a href="https://www.itcodemonkey.com/article/4655.html" target="_blank" rel="noopener">https://www.itcodemonkey.com/article/4655.html</a>    </p>
-</blockquote>
-<h2 id="内存管理"><a href="#内存管理" class="headerlink" title="内存管理"></a>内存管理</h2><p>由于netty可以使用堆外内存，这里GC不工作，所以此处需要自己管理内存。所管理的应该是引用计数，当引用计数为0时，才会自动清除。<br>默认情况下，当创建完一个 ByteBuf，它的引用为1，然后每次调用 retain() 方法， 它的引用就加一， release() 方法原理是将引用计数减一，减完之后如果发现引用计数为0，则直接回收 ByteBuf 底层的内存。<br>duplicate()和slice()创建的只是视图，也就是说对原内存的一个新的引用，对其内容的修改会导致原ByteBuf内容变化。</p>
-<p>两种形式，池化和非池化；三个位置堆，直接内存，混合。组合出六种生成的方式。<br>池化需要ByteBufAllocator，<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ByteBufAllocator allocator = channel.alloc();</span><br><span class="line">ByteBufAllocator allocator2 = ctx.alloc();</span><br></pre></td></tr></table></figure></p>
-<p>均可获得ByteBufAllocator对象。<br>heapBuffer()基于堆，directBuffer()基于直接内存，buffer()两者或，compositeBuffer()两者混合。<br>而非池化可以直接用Unpooled的静态方法。<br>buffer()基于堆，directBuffer()基于直接内存。</p>
-<h1 id="通信协议"><a href="#通信协议" class="headerlink" title="通信协议"></a>通信协议</h1><h2 id="协议设计"><a href="#协议设计" class="headerlink" title="协议设计"></a>协议设计</h2><p>netty可以自己设计通信协议，为什么需要通信协议。比如说服务端接收到客户端的数据包，怎么知道传来的是用户名密码还是发的消息呢？对于用户名密码，怎么知道哪些字节是用户名，哪些字节是密码呢，这些都需要规定，规定的结果就是协议。<br><a href="https://imgchr.com/i/ijAp40" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2018/11/14/ijAp40.md.png" alt="ijAp40.md.png"></a>   </p>
-<ol>
-<li>第一个字段是魔数，通常情况下为固定的几个字节（我们这边规定为4个字节）。魔数是用来区分协议的，不同的协议不同的魔数。对比魔数才能找到协议。</li>
-<li>第二个字段版本号。  </li>
-<li>第三部分，序列化算法表示如何把 Java 对象转换二进制数据以及二进制数据如何转换回 Java 对象，比如 Java 自带的序列化，json，hessian 等序列化方式。</li>
-<li>第四部分的字段表示指令，关于指令相关的介绍，我们在前面已经讨论过，服务端或者客户端每收到一种指令都会有相应的处理逻辑，正如之前说的区分账号密码还是说的话。</li>
-<li>数据长度。</li>
-<li>数据内容。    </li>
-</ol>
-<h2 id="（参考）实际上RPC协议"><a href="#（参考）实际上RPC协议" class="headerlink" title="（参考）实际上RPC协议"></a>（参考）实际上RPC协议</h2><p>一般 RPC 框架首先获取协议类型，根据这个协议类型得到协议处理器，然后再处理（一个端口处理多个协议的场景）。<br>生产级别的 RPC 通常较为复杂，以 SOFABolt 为例，需要以下字段：</p>
-<ol>
-<li>协议版本</li>
-<li>请求类型，即指令（Request，Response， oneway）</li>
-<li>指令版本</li>
-<li>RequestID 负责数据对应</li>
-<li>序列号器</li>
-<li>协议开关（例如 CRC 校验，安全校验）</li>
-<li>响应码，约定异常，简化异常</li>
-<li>类名长度，Java rpc 框架必备</li>
-<li>请求头长度（参照 http header）</li>
-<li>请求体长度（参照http body）</li>
-<li>类名</li>
-<li>业务请求头内容（一般是 Map，SOFABolt 支持自定义，SOFARPC 里面藏着是否泛化调用等信息）</li>
-<li>业务请求体内容（一般就是个Request对象或 Response对象，里面包含约定的属性，例如参数，返回值，超级多，SOFARPC 有个属性类 RemotingConstants，这里都有）</li>
-<li>CRC 校验码（金融场景必备）</li>
-</ol>
-<h2 id="数据包设计"><a href="#数据包设计" class="headerlink" title="数据包设计"></a>数据包设计</h2><ol>
-<li>数据包基类应该包括版本和指令</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Packet &#123;</span><br><span class="line">    /**</span><br><span class="line">     * 协议版本</span><br><span class="line">     */</span><br><span class="line">    @JSONField(deserialize = false, serialize = false)</span><br><span class="line">    private Byte version = 1;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    @JSONField(serialize = false)</span><br><span class="line">    public abstract Byte getCommand();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<ol start="2">
-<li>具体登陆数据包<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public class LoginRequestPacket extends Packet &#123;</span><br><span class="line"></span><br><span class="line">    private String username;</span><br><span class="line"></span><br><span class="line">    private String password;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public Byte getCommand() &#123;</span><br><span class="line">        return 1;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<h2 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h2><ol>
-<li><p>定义序列化接口</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">public interface Serializer &#123;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 序列化算法</span><br><span class="line">     */</span><br><span class="line">    byte getSerializerAlgorithm();</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * java 对象转换成二进制</span><br><span class="line">     */</span><br><span class="line">    byte[] serialize(Object object);</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 二进制转换成 java 对象</span><br><span class="line">     */</span><br><span class="line">    &lt;T&gt; T deserialize(Class&lt;T&gt; clazz, byte[] bytes);</span><br><span class="line">    /**</span><br><span class="line">    * 默认采用JSON</span><br><span class="line">    */</span><br><span class="line"></span><br><span class="line">     Serializer DEFAULT = new JSONSerializer();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>使用 fastjson进行序列化</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">public class JSONSerializer implements Serializer &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public byte getSerializerAlgorithm() &#123;</span><br><span class="line"></span><br><span class="line">        return 1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public byte[] serialize(Object object) &#123;</span><br><span class="line"></span><br><span class="line">        return JSON.toJSONBytes(object);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public &lt;T&gt; T deserialize(Class&lt;T&gt; clazz, byte[] bytes) &#123;</span><br><span class="line"></span><br><span class="line">        return JSON.parseObject(bytes, clazz);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<h2 id="编码与解码"><a href="#编码与解码" class="headerlink" title="编码与解码"></a>编码与解码</h2><h3 id="编码"><a href="#编码" class="headerlink" title="编码"></a>编码</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">private static final int MAGIC_NUMBER = 0x12345678;</span><br><span class="line"></span><br><span class="line">public ByteBuf encode(Packet packet) &#123;</span><br><span class="line">    // 1. 创建 ByteBuf 对象</span><br><span class="line">    ByteBuf byteBuf = ByteBufAllocator.DEFAULT.ioBuffer();</span><br><span class="line">    // 2. 序列化 Java 对象</span><br><span class="line">    byte[] bytes = Serializer.DEFAULT.serialize(packet);</span><br><span class="line"></span><br><span class="line">    // 3. 实际编码过程</span><br><span class="line">    byteBuf.writeInt(MAGIC_NUMBER);</span><br><span class="line">    byteBuf.writeByte(packet.getVersion());</span><br><span class="line">    byteBuf.writeByte(Serializer.DEFAULT.getSerializerAlgorithm());</span><br><span class="line">    byteBuf.writeByte(packet.getCommand());</span><br><span class="line">    byteBuf.writeInt(bytes.length);</span><br><span class="line">    byteBuf.writeBytes(bytes);</span><br><span class="line"></span><br><span class="line">    return byteBuf;</span><br><span class="line">&#125;...</span><br></pre></td></tr></table></figure>
-<ol>
-<li>首先，我们需要创建一个 ByteBuf，这里我们调用 Netty 的 ByteBuf 分配器来创建，ioBuffer() 方法会返回适配 io 读写相关的内存，它会尽可能创建一个直接内存，直接内存可以理解为不受 jvm 堆管理的内存空间，写到 IO 缓冲区的效果更高。</li>
-<li>接下来，我们将 Java 对象序列化成二进制数据包。</li>
-<li>最后，我们对照本小节开头协议的设计以及上一小节 ByteBuf 的 API，逐个往 ByteBuf 写入字段，即实现了编码过程，到此，编码过程结束</li>
-</ol>
-<h3 id="解码"><a href="#解码" class="headerlink" title="解码"></a>解码</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">public Packet decode(ByteBuf byteBuf) &#123;</span><br><span class="line">    // 跳过 magic number</span><br><span class="line">    byteBuf.skipBytes(4);</span><br><span class="line"></span><br><span class="line">    // 跳过版本号</span><br><span class="line">    byteBuf.skipBytes(1);</span><br><span class="line"></span><br><span class="line">    // 序列化算法标识</span><br><span class="line">    byte serializeAlgorithm = byteBuf.readByte();</span><br><span class="line"></span><br><span class="line">    // 指令</span><br><span class="line">    byte command = byteBuf.readByte();</span><br><span class="line"></span><br><span class="line">    // 数据包长度</span><br><span class="line">    int length = byteBuf.readInt();</span><br><span class="line"></span><br><span class="line">    byte[] bytes = new byte[length];</span><br><span class="line">    byteBuf.readBytes(bytes);</span><br><span class="line"></span><br><span class="line">    Class&lt;? extends Packet&gt; requestType = getRequestType(command);</span><br><span class="line">    Serializer serializer = getSerializer(serializeAlgorithm);</span><br><span class="line"></span><br><span class="line">    if (requestType != null &amp;&amp; serializer != null) &#123;</span><br><span class="line">        return serializer.deserialize(requestType, bytes);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return null;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<ol>
-<li>我们假定 decode 方法传递进来的 ByteBuf 已经是合法的，即首四个字节是我们前面定义的魔数 0x12345678，这里我们调用 skipBytes 跳过这四个字节。</li>
-<li>这里，我们暂时不关注协议版本，通常我们在没有遇到协议升级的时候，这个字段暂时不处理，因为，你会发现，绝大多数情况下，这个字段几乎用不着，但我们仍然需要暂时留着。</li>
-<li>接下来，我们调用 ByteBuf 的 API 分别拿到序列化算法标识、指令、数据包的长度。</li>
-<li>最后，我们根据拿到的数据包的长度取出数据，通过指令拿到该数据包对应的 Java 对象的类型，根据序列化算法标识拿到序列化对象，将字节数组转换为 Java 对象，至此，解码过程结束。</li>
-<li>指令号对应的指令，序列法序号对应的序列化方法，储存在服务端，两个get函数既是查询本机的映射表，得到相应的映射方法。</li>
-</ol>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1911,7 +1862,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">207</span>
+                  <span class="site-state-item-count">209</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

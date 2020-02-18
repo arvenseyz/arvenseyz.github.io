@@ -251,6 +251,325 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/08/22/8-22技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/08/22/8-22技术笔记-1/" itemprop="url">shell入门</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-22T10:26:10+08:00">
+                2019-08-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="名字"><a href="#名字" class="headerlink" title="名字"></a>名字</h1><p>第一个流行的 shell 是由 Steven Bourne 发展出来的，为了纪念他所以就称为 Bourne shell ，或直接简称为 sh。。至于 Linux 使用的这一种版本就称为“ Bourne Again SHell （简称 bash） ”，这个 Shell 是 Bourne Shell 的增强版本，也是基准于 GNU 的架构下发展出来的</p>
+<h1 id="echo"><a href="#echo" class="headerlink" title="echo"></a>echo</h1><p>echo不但能输出字符串，还能显示变量，或者重定向到文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line"><span class="built_in">read</span> name </span><br><span class="line"><span class="built_in">echo</span> <span class="string">"<span class="variable">$name</span> It is a test"</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">"It is a test"</span> &gt; myfile</span><br></pre></td></tr></table></figure>
+<p>如果使用单引号，表示不转义，不取变量</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">'$name\"'</span></span><br><span class="line"><span class="comment">#输出结果：$name\"</span></span><br></pre></td></tr></table></figure>
+<h1 id="参数"><a href="#参数" class="headerlink" title="参数"></a>参数</h1><p>我们可以在执行 Shell 脚本时，向脚本传递参数，脚本内获取参数的格式为：<strong>$n</strong>。<strong>n</strong> 代表一个数字。第0个参数是文件名，后面的第1，第2，第3个参数就是传入的。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"Shell 传递参数实例！"</span>;</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"执行的文件名：<span class="variable">$0</span>"</span>;</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"第一个参数为：<span class="variable">$1</span>"</span>;</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"第二个参数为：<span class="variable">$2</span>"</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">#输出结果</span></span><br><span class="line"><span class="comment">#$ ./test.sh 1 2 </span></span><br><span class="line"><span class="comment">#Shell 传递参数实例！</span></span><br><span class="line"><span class="comment">#执行的文件名：./test.sh</span></span><br><span class="line"><span class="comment">#第一个参数为：1</span></span><br><span class="line"><span class="comment">#第二个参数为：2</span></span><br></pre></td></tr></table></figure>
+<h1 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h1><p>定义变量时，直接申明并赋值即可</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">name=<span class="string">"xx"</span></span><br></pre></td></tr></table></figure>
+<p>使用时，\$变量名，或者\${变量名}</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">name=<span class="string">"ww"</span></span><br><span class="line"><span class="built_in">echo</span> <span class="variable">$your_name</span></span><br><span class="line"><span class="built_in">echo</span> <span class="variable">$&#123;your_name&#125;</span></span><br></pre></td></tr></table></figure>
+<p>已定义的变量，可以被重新定义，但可以readonly 命令可以将变量定义为只读变量，只读变量的值不能被改变。用unset可以删除变量。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/08/16/8-16技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/08/16/8-16技术笔记/" itemprop="url">压缩文件</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-16T14:32:00+08:00">
+                2019-08-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="打包和压缩"><a href="#打包和压缩" class="headerlink" title="打包和压缩"></a>打包和压缩</h1><p>常见的压缩文件，都是.tar.gz结尾的，有双重含义，即打包并压缩。</p>
+<p>原因在于，压缩文件，压缩的是一个文件而不是文件夹，需要先把文件夹打包成一个文件，所以压缩一般都是先打包再压缩。</p>
+<h1 id="gzip"><a href="#gzip" class="headerlink" title="gzip"></a>gzip</h1><p>gzip是GNUzip的缩写，最早用于UNIX系统的文件压缩。HTTP协议上的gzip编码是一种用来改进web应用程序性能的技术，web服务器和客户端（浏览器）必须共同支持gzip。目前主流的浏览器，Chrome,firefox,IE等都支持该协议。常见的服务器如Apache，Nginx，IIS同样支持gzip。</p>
+<h1 id="压缩和解压"><a href="#压缩和解压" class="headerlink" title="压缩和解压"></a>压缩和解压</h1><p>与windows习惯不同的是，Linux默认压缩后，原文件就没了，所以如果是要执行把某文件夹A压缩成压缩文件B，需要参数和指定压缩文件名</p>
+<p>tar可以带参数-z，意思是并且用gzip压缩，所以一个指令即可打包并压缩文件。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar -zcf log.tar.gz log2012.log</span><br></pre></td></tr></table></figure>
+<p>c参数就是产生新的包，f参数指定位置。</p>
+<p>而解压缩，则需要参数x。其中参数-C，即指定解压的位置。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar -xzf go1.10.4.linux-amd64.tar.gz -C /usr/<span class="built_in">local</span></span><br></pre></td></tr></table></figure>
+<p>而参数t，指的是我就看看</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar -ztf log.tar.gz</span><br></pre></td></tr></table></figure>
+<p>实际上</p>
+<p>-c:  建立压缩档案  </p>
+<p>-x：解压  </p>
+<p>-t：查看内容  </p>
+<p>-r：向压缩归档文件末尾追加文件  </p>
+<p>-u：更新原压缩包中的文件</p>
+<p>这五个是独立的命令，压缩解压都要用到其中一个，可以和别的命令连用但只能用其中一个。下面的参数是根据需要在压缩或解压档案时可选的。</p>
+<p>-z：有gzip属性的  </p>
+<p>-j：有bz2属性的 </p>
+<p> -v：显示所有过程  </p>
+<p>-O：将文件解开到标准输出</p>
+<p>参数 -f 是必须的:</p>
+<p>-f:  使用档案名字，切记，这个参数是最后一个参数，后面只能接档案名。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/08/14/8-14技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1476,351 +1795,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/07/10/7-10技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/07/10/7-10技术笔记/" itemprop="url">GO的MPG模型</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-10T14:36:08+08:00">
-                2019-07-10
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="用户态VS内核态"><a href="#用户态VS内核态" class="headerlink" title="用户态VS内核态"></a>用户态VS内核态</h1><p>内核从本质上看是一种软件——控制计算机的硬件资源，并提供上层应用程序运行的环境。用户态即上层应用程序的活动空间，应用程序的执行必须依托于内核提供的资源，包括CPU资源、存储资源、I/O资源等。为了使上层应用能够访问到这些资源，内核必须为上层应用提供访问的接口：即系统调用。</p>
-<ul>
-<li>内核态：CPU可以访问内存所有数据,包括外围设备（硬盘、网卡），CPU也可以将自己从一个程序切换到另一个程序；</li>
-<li>用户态：只能受限的访问内存，且不允许访问外围设备，占用CPU的能力被剥夺，CPU资源可以被其他程序获取</li>
-</ul>
-<p>用户态的应用程序可以通过三种方式来访问内核态的资源：</p>
-<p>1）系统调用</p>
-<p>2）库函数</p>
-<p>3）Shell脚本</p>
-<p>系统调用类似于操作系统的原子操作，而库函数就是对其封装，其实shell也是，不过shell可以交互。</p>
-<p>由于资源有限，大部分进程都在用户态，只有需要访问资源，才进入内核态。进入内核态手段即是中断。具体来说，中断分软硬，有三种：</p>
-<p>1）当然就是系统调用：即软中断</p>
-<p>2）异常事件： 当CPU正在执行运行在用户态的程序时，突然发生某些预先不可知的异常事件，这个时候就会触发从当前用户态执行的进程转向内核态执行相关的异常事件，典型的如缺页异常。</p>
-<p>3）外围设备的中断：当外围设备完成用户的请求操作后，会像CPU发出中断信号，此时，CPU就会暂停执行下一条即将要执行的指令，转而去执行中断信号对应的处理程序，如果先前执行的指令是在用户态下，则自然就发生从用户态到内核态的转换。</p>
-<h1 id="用户线程VS核心线程"><a href="#用户线程VS核心线程" class="headerlink" title="用户线程VS核心线程"></a>用户线程VS核心线程</h1><p>linux其实没有线程，是通过共享资源的单线程进程模拟了线程的概念。</p>
-<p><strong>用户线程</strong>指不需要内核支持而在用户程序中实现的线程，其不依赖于操作系统核心，应 用进程利用线程库提供创建、同步、调度和管理线程的函数来控制用户线程。不需要用户态/核心态切换，速度快，操作系统内核不知道多线程的存在，因此一个线 程阻塞将使得整个进程（包括它的所有线程）阻塞。单纯的用户线程是建立在用户空间，其对内核是透明的，因此其所属进程单独参与处理器的竞争，而进程的所有线程参与竞争该进程的资源。</p>
-<p><strong>内核线程</strong>：由操作系统内核创建和撤销。内核维护进程及线程的上下文信息以及线程切换。一个内核线程由于I/O操作而阻塞，不会影响其它线程的运行。内核线程只运行在内核态，不受用户态上下文的拖累。</p>
-<h1 id="线程模型"><a href="#线程模型" class="headerlink" title="线程模型"></a>线程模型</h1><p>核心线程和用户线程显然有以下三种关系，一对一，一对多，多对多。</p>
-<p>一对一而言，用户线程的操作，等价于对核心线程的操作，这种模型直接调用操作系统的内核线程，所有线程的创建、终止、切换、同步等操作，都由内核来完成。C++就是这种。</p>
-<p>一对多而言，多个用户态的线程对应着一个内核线程，也对应同一个进程，程序线程的创建、终止、切换或者同步等线程工作必须自身来完成。一旦一个线程发生阻塞，整个进程下的其他线程也会被阻塞。不能利用多核系统的优势。</p>
-<p>多对多是比较复杂的实现，  这种模型是介于用户级线程模型和内核级线程模型之间的一种线程模型。这种模型的实现非常复杂，和内核级线程模型类似，一个进程中可以对应多个内核级线程，但是进程中的线程不和内核线程一一对应；这种线程模型会先创建多个内核级线程，然后用自身的用户级线程去对应创建的多个内核级线程，自身的用户级线程需要本身程序去调度，内核级的线程交给操作系统内核去调度。</p>
-<p>Go语言的线程模型就是一种特殊的两级线程模型。即“MPG”模型。</p>
-<p># </p>
-<h1 id="MPG"><a href="#MPG" class="headerlink" title="MPG"></a>MPG</h1><p><code>M</code>指的是<code>Machine</code>，一个<code>M</code>直接关联了一个内核线程。<br><code>P</code>指的是”processor”，代表了<code>M</code>所需的上下文环境，也是处理用户级代码逻辑的处理器。<br><code>G</code>指的是<code>Goroutine</code>，其实本质上也是一种轻量级的线程。</p>
-<p><img src="https://i.loli.net/2019/07/10/5d25d292c0df547301.png" alt="5d25d292c0df547301"></p>
-<p><img src="https://i.loli.net/2019/07/10/5d25d322985ce39721.png" alt="5d25d322985ce39721"></p>
-<p>调度的本质是将G尽量均匀合理地安排给M来执行，其中P的作用就是来实现合理安排逻辑。</p>
-<ul>
-<li>P的数量通过  <code>GOMAXPROCS()</code>  来设置，一般等于CPU的核数，对于一次代码执行设置好一般不会变。</li>
-<li>P维护了一个本地的G队列（runqueue），包括正在执行和待执行的G，尽量保证所有的P都匹配一个M同时在执行G。</li>
-<li>当P本地goroutine队列消费完，会从全局的goroutine队列（global runqueue）中拿goroutine到本地队列。P也会定期检查全局的goroutine队列，避免存在全局的goroutine没有被执行而”饿死”的现象。</li>
-<li>P和M是动态形式的一对一的关系，P和G是动态形式的一对多的关系。</li>
-</ul>
-<p>当goroutine发生阻塞的时候，可以通过P将剩余的G切换给新的M来执行，而不会导致剩余的G无法执行，如果没有M则创建M来匹配P。</p>
-<p>当阻塞的goroutine返回后，进程会尝试获取一个上下文（Context）来执行这个goroutine。一般是先从其他进程中”偷取”一个Context，如果”偷取”不成功，则将goroutine放入全局的goroutine中。</p>
-<p>P可以偷任务即goroutine，当某个P的本地G执行完，且全局没有G需要执行的时候，P可以去偷别的P还没有执行完的一半的G来给M执行，提高了G的执行效率。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/07/09/7-9技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/07/09/7-9技术笔记/" itemprop="url">Go编译原理简析</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-09T14:09:42+08:00">
-                2019-07-09
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>go和c一脉相承，其实编译原理和c差不多。无非分为以下步骤。</p>
-<h1 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h1><p>编译器将文本转化为汇编文件的过程。</p>
-<h2 id="编译器前端"><a href="#编译器前端" class="headerlink" title="编译器前端"></a>编译器前端</h2><p>第一步是词法分析，因为go是支持 Unicode 编码的，所以应该是按字节读取，想象下词法分析器，其实很简单，无非就是类似于正则表达式匹配，用switch语句，把文本拆成关键字/运算符/变量名的过程。</p>
-<p>第二步是语法分析，就是把这些单词变成语法树的过程。比如slice[i]=i*(2+6)，整个语句被看作是一个赋值表达式，左子树是一个数组表达式，右子树是一个乘法表达式；数组表达式由 2 个符号表达式组成；乘号表达式则是由一个符号表达式和一个加号表达式组成；加号表达式则是由两个数字组成。符号和数字是最小的表达式，它们不能再被分解，通常作为树的叶子节点。</p>
-<p>第三步是语义分析，编译期所能检查的是静态语义，可以认为这是在“代码”阶段，包括变量类型的匹配、转换等。例如，将一个浮点值赋给一个指针变量的时候，明显的类型不匹配，就会报编译错误。而对于运行期间才会出现的错误：不小心除了一个 0 ，语义分析是没办法检测的。</p>
-<p><strong>语义分析阶段完成之后，会在每个节点上标注上类型。</strong></p>
-<h2 id="编译器后端"><a href="#编译器后端" class="headerlink" title="编译器后端"></a>编译器后端</h2><p>前端生成和平台无关的中间代码，后端会针对不同的平台，生成不同的机器码。</p>
-<p>目标机器硬件底层不同，主要体现在cpu架构不同，所以机器字长、寄存器等等都不一样，意味着在不同机器上跑的机器码是不一样的。</p>
-<p>当然生成机器码之前，需要先优化一下。</p>
-<p>比如把乘法运算变成位移运算，中间变量先计算出来。</p>
-<p>而之后中间代码的生成过程其实就是从 AST 抽象语法树到 SSA 中间代码的转换过程，在这期间会对语法树中的关键字在进行一次更新，更新后的语法树会经过多轮处理转变最后的 SSA 中间代码。</p>
-<h1 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h1><p>编译的过程是针对单文件的，但运行时需要互相引用。</p>
-<p>链接过程就是要把编译器生成的一个个目标文件链接成可执行文件。最终得到的文件是分成各种段的，比如数据段、代码段、BSS段等等，运行时会被装载到内存中。各个段具有不同的读写、执行属性，保护了程序的安全运行。</p>
-<h1 id="Go-程序启动"><a href="#Go-程序启动" class="headerlink" title="Go 程序启动"></a>Go 程序启动</h1><ol>
-<li><p>检查运行平台的CPU，设置好程序运行需要相关标志。</p>
-</li>
-<li><p>TLS（线程局部数据）的初始化。</p>
-</li>
-<li><p>runtime.args（保存二进制文件的绝对路径）、runtime.osinit（获取cpu核）、runtime.schedinit（初始化程序运行的环境） 三个方法做好程序运行需要的各种变量与调度器。</p>
-</li>
-<li><p>runtime.newproc创建新的goroutine用于绑定用户写的main方法。</p>
-</li>
-<li><p>runtime.mstart开始goroutine的调度。</p>
-</li>
-</ol>
-<p>main 函数里执行的一些重要的操作包括：新建一个线程执行 sysmon 函数，定期垃圾回收和调度抢占；启动 gc；执行所有的 init 函数等等。</p>
-<h1 id="Go程序退出"><a href="#Go程序退出" class="headerlink" title="Go程序退出"></a>Go程序退出</h1><p>当 main 函数执行结束之后，会执行 exit(0) 来退出进程。若执行 exit(0) 后，进程没有退出，main 函数最后的代码会一直访问非法地址：正常情况下，一旦出现非法地址访问，系统会把进程杀死，用这样的方法确保进程退出。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1871,7 +1845,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">207</span>
+                  <span class="site-state-item-count">209</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
