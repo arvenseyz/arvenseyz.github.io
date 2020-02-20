@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Arvense, NexT">
+  <meta name="keywords" content="操作系统,linux,">
 
 
 
@@ -81,14 +81,18 @@
 
 
 
+<meta name="description" content="缓冲区在调用函数write()时，似乎该函数一旦返回，数据便已经写到了文件中. 但显然，写磁盘速度很慢，如果加个内存缓冲区，只写入缓冲区，后续再把缓冲区写入磁盘，可以低速的输入输出设备长时间占用CPU，提高效率。 write函数当调用write()函数写出数据时，数据一旦写到该缓冲区（关键：只是写到缓冲区），函数便立即返回.此时写出的数据可以用read()读回，也可以被其他进程读到，但是并不意味着">
+<meta name="keywords" content="操作系统,linux">
 <meta property="og:type" content="article">
-<meta property="og:title" content="2-16技术笔记">
+<meta property="og:title" content="同步I&#x2F;O">
 <meta property="og:url" content="http://yoursite.com/blog/2020/02/16/2-16技术笔记/index.html">
 <meta property="og:site_name" content="Arvense">
+<meta property="og:description" content="缓冲区在调用函数write()时，似乎该函数一旦返回，数据便已经写到了文件中. 但显然，写磁盘速度很慢，如果加个内存缓冲区，只写入缓冲区，后续再把缓冲区写入磁盘，可以低速的输入输出设备长时间占用CPU，提高效率。 write函数当调用write()函数写出数据时，数据一旦写到该缓冲区（关键：只是写到缓冲区），函数便立即返回.此时写出的数据可以用read()读回，也可以被其他进程读到，但是并不意味着">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2020-02-16T09:19:52.870Z">
+<meta property="og:updated_time" content="2020-02-19T08:20:40.168Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="2-16技术笔记">
+<meta name="twitter:title" content="同步I&#x2F;O">
+<meta name="twitter:description" content="缓冲区在调用函数write()时，似乎该函数一旦返回，数据便已经写到了文件中. 但显然，写磁盘速度很慢，如果加个内存缓冲区，只写入缓冲区，后续再把缓冲区写入磁盘，可以低速的输入输出设备长时间占用CPU，提高效率。 write函数当调用write()函数写出数据时，数据一旦写到该缓冲区（关键：只是写到缓冲区），函数便立即返回.此时写出的数据可以用read()读回，也可以被其他进程读到，但是并不意味着">
 
 
 
@@ -124,7 +128,7 @@
 
 
 
-  <title>2-16技术笔记 | Arvense</title>
+  <title>同步I/O | Arvense</title>
   
 
 
@@ -268,7 +272,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">2-16技术笔记</h1>
+          <h1 class="post-title" itemprop="name headline">同步I/O</h1>
         
 
         <div class="post-meta">
@@ -290,6 +294,28 @@
             
           </span>
 
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -318,7 +344,13 @@
       
 
       
-        
+        <h2 id="缓冲区"><a href="#缓冲区" class="headerlink" title="缓冲区"></a>缓冲区</h2><p>在调用函数write()时，似乎该函数一旦返回，数据便已经写到了文件中.</p>
+<p>但显然，写磁盘速度很慢，如果加个内存缓冲区，只写入缓冲区，后续再把缓冲区写入磁盘，可以低速的输入输出设备长时间占用CPU，提高效率。</p>
+<h2 id="write函数"><a href="#write函数" class="headerlink" title="write函数"></a>write函数</h2><p>当调用write()函数写出数据时，数据一旦写到该缓冲区（关键：只是写到缓冲区），函数便立即返回.此时写出的数据可以用read()读回，也可以被其他进程读到，但是并不意味着它们已经被写到了外部永久存储介质上，即使调用close()关闭文件后也可能如此. 因为缓冲区的数据可能还在等待输出.<br>因此，从数据被实际写到磁盘的角度来看，用write()写出的文件数据与外部存储设备并不是完全同步的.不同步的时间间隔非常短，一般只有几秒或十几秒，具体取决于写出的数据量和I/O数据缓冲区的状态.尽管不同步的时间间隔很短，但是如果在此期间发生掉电或者系统崩溃，则会导致所写数据来不及写至磁盘而丢失的情况.</p>
+<h2 id="sync函数"><a href="#sync函数" class="headerlink" title="sync函数"></a>sync函数</h2><p>sync负责将系统缓冲区的数据“写入”磁盘，以确保数据的一致性和同步性.注意：sync函数只是将所有修改过的块缓冲区排入写队列，然后就返回，他并不等待实际I/O操作结束.所以不要认为调用了sync函数，就觉得数据已安全的送到磁盘文件上，有可能会出现问题，但是sync函数是无法得知的.<br>系统守候进程一般每隔一段时间调用一次sync函数，确保定期刷新内核的块缓存.UNIX系统中，系统守候进程update会周期性地（一般每个30秒）调用sync函数.命令sync(1)也调用sync函数.</p>
+<h2 id="fsync函数"><a href="#fsync函数" class="headerlink" title="fsync函数"></a>fsync函数</h2><p>与sync函数不同，fsync函数只对由文件描符filedes指定的单一文件起作用，强制与描述字fildes相连文件的所有修改过的数据（包括核内I/O缓冲区中的数据）传送到外部永久介质，即刷新fildes给出的文件的所有信息，并且等待写磁盘操作结束，然后返回.调用 fsync()的进程将阻塞直到设备报告传送已经完成.这个fsync就安全点了.<br>一个程序在写出数据之后，如果继续进行后续处理之前要求确保所写数据已写到磁盘，则应当调用fsync().例如，数据库应用通常会在调用write()保存关键交易数据的同时也调用fsync().这样更能保证数据的安全可靠.</p>
+<h2 id="fdatasync函数"><a href="#fdatasync函数" class="headerlink" title="fdatasync函数"></a>fdatasync函数</h2><p>fdatasync函数类似于fsync函数，但它只影响文件数据部分，强制传送用户已写出的数据至物理存储设备，不包括文件本身的特征数据.这样可以适当减少文件刷新时的数据传送量.而除数据外，fdatasync还会同步更新文件的属性.</p>
+
       
     </div>
     
@@ -332,6 +364,14 @@
     
 
     <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/blog/tags/操作系统/" rel="tag"># 操作系统</a>
+          
+            <a href="/blog/tags/linux/" rel="tag"># linux</a>
+          
+        </div>
       
 
       
@@ -406,8 +446,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -422,7 +471,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">209</span>
+                  <span class="site-state-item-count">210</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -474,6 +523,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#缓冲区"><span class="nav-number">1.</span> <span class="nav-text">缓冲区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#write函数"><span class="nav-number">2.</span> <span class="nav-text">write函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sync函数"><span class="nav-number">3.</span> <span class="nav-text">sync函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fsync函数"><span class="nav-number">4.</span> <span class="nav-text">fsync函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fdatasync函数"><span class="nav-number">5.</span> <span class="nav-text">fdatasync函数</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
