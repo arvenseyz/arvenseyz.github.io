@@ -251,6 +251,155 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/20/11-20技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/11/20/11-20技术笔记/" itemprop="url">netty实现单聊</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-20T14:47:23+08:00">
+                2018-11-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="单聊"><a href="#单聊" class="headerlink" title="单聊"></a>单聊</h1><p>单聊不可能是一个人是服务端一个人是客户端，而应该是两个人都是客户端，把信息发送给同一个服务端，由服务端进行信息处理和转发。</p>
+<h2 id="Session"><a href="#Session" class="headerlink" title="Session"></a>Session</h2><p>服务端里保存了客户端的session信息，用来找到收信人。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public class Session &#123;</span><br><span class="line">    // 用户唯一性标识</span><br><span class="line">    private String userId;</span><br><span class="line">    private String userName;</span><br><span class="line"></span><br><span class="line">    public Session(String userId, String userName) &#123;</span><br><span class="line">        this.userId = userId;</span><br><span class="line">        this.userName = userName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String toString() &#123;</span><br><span class="line">        return userId + &quot;:&quot; + userName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>对session的管理主要是管理用户和channel的映射，和channel中自设的session属性。前者用来找个用户对应的channel，后者用来验证登陆状况。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">public class SessionUtil &#123;</span><br><span class="line">    private static final Map&lt;String, Channel&gt; userIdChannelMap = new ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    public static void bindSession(Session session, Channel channel) &#123;</span><br><span class="line">        userIdChannelMap.put(session.getUserId(), channel);</span><br><span class="line">        channel.attr(Attributes.SESSION).set(session);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void unBindSession(Channel channel) &#123;</span><br><span class="line">        if (hasLogin(channel)) &#123;</span><br><span class="line">            userIdChannelMap.remove(getSession(channel).getUserId());</span><br><span class="line">            channel.attr(Attributes.SESSION).set(null);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static boolean hasLogin(Channel channel) &#123;</span><br><span class="line"></span><br><span class="line">        return channel.hasAttr(Attributes.SESSION);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static Session getSession(Channel channel) &#123;</span><br><span class="line"></span><br><span class="line">        return channel.attr(Attributes.SESSION).get();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static Channel getChannel(String userId) &#123;</span><br><span class="line"></span><br><span class="line">        return userIdChannelMap.get(userId);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="消息发送"><a href="#消息发送" class="headerlink" title="消息发送"></a>消息发送</h2><p>新起一个控制台线程，如果没有登录，则发送登录数据包；如果登录了，则发送消息包即可。这样一来，客户端发送的消息，不但有消息的内容，还要指定消息发送给谁，即消息数据包里应该多一条目的人的数据。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public class MessageRequestPacket extends Packet &#123;</span><br><span class="line">    private String toUserId;</span><br><span class="line">    private String message;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>具体控制台代码,连接成功后，调用该函数即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">private static void startConsoleThread(Channel channel) &#123;</span><br><span class="line">       Scanner sc = new Scanner(System.in);</span><br><span class="line">       LoginRequestPacket loginRequestPacket = new LoginRequestPacket();</span><br><span class="line"></span><br><span class="line">       new Thread(() -&gt; &#123;</span><br><span class="line">           while (!Thread.interrupted()) &#123;</span><br><span class="line">               if (!SessionUtil.hasLogin(channel)) &#123;</span><br><span class="line">                   System.out.print(&quot;输入用户名登录: &quot;);</span><br><span class="line">                   String username = sc.nextLine();</span><br><span class="line">                   loginRequestPacket.setUserName(username);</span><br><span class="line"></span><br><span class="line">                   // 密码使用默认的</span><br><span class="line">                   loginRequestPacket.setPassword(&quot;pwd&quot;);</span><br><span class="line"></span><br><span class="line">                   // 发送登录数据包</span><br><span class="line">                   channel.writeAndFlush(loginRequestPacket);</span><br><span class="line">                   waitForLoginResponse();</span><br><span class="line">               &#125; else &#123;</span><br><span class="line">                   String toUserId = sc.next();</span><br><span class="line">                   String message = sc.next();</span><br><span class="line">                   channel.writeAndFlush(new MessageRequestPacket(toUserId, message));</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;).start();</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   private static void waitForLoginResponse() &#123;</span><br><span class="line">       try &#123;</span><br><span class="line">           Thread.sleep(1000);</span><br><span class="line">       &#125; catch (InterruptedException ignored) &#123;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="登录"><a href="#登录" class="headerlink" title="登录"></a>登录</h2><p>服务端处理登录，就是接受到登录数据包后，验证账号密码，找到UserID，然后响应登录即可。还有一点，当连接断开，需要取消session的绑定。（重载 channelInactive(ChannelHandlerContext ctx)方法）<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">public class LoginRequestHandler extends SimpleChannelInboundHandler&lt;LoginRequestPacket&gt; &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, LoginRequestPacket loginRequestPacket) &#123;</span><br><span class="line">        LoginResponsePacket loginResponsePacket = new LoginResponsePacket();</span><br><span class="line">        loginResponsePacket.setVersion(loginRequestPacket.getVersion());</span><br><span class="line">        loginResponsePacket.setUserName(loginRequestPacket.getUserName());</span><br><span class="line"></span><br><span class="line">        if (valid(loginRequestPacket)) &#123;</span><br><span class="line">            loginResponsePacket.setSuccess(true);</span><br><span class="line">            String userId = randomUserId();</span><br><span class="line">            loginResponsePacket.setUserId(userId);</span><br><span class="line">            System.out.println(&quot;[&quot; + loginRequestPacket.getUserName() + &quot;]登录成功&quot;);</span><br><span class="line">            SessionUtil.bindSession(new Session(userId, loginRequestPacket.getUserName()), ctx.channel());</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            loginResponsePacket.setReason(&quot;账号密码校验失败&quot;);</span><br><span class="line">            loginResponsePacket.setSuccess(false);</span><br><span class="line">            System.out.println(new Date() + &quot;: 登录失败!&quot;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 登录响应</span><br><span class="line">        ctx.channel().writeAndFlush(loginResponsePacket);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private boolean valid(LoginRequestPacket loginRequestPacket) &#123;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static String randomUserId() &#123;</span><br><span class="line">        return UUID.randomUUID().toString().split(&quot;-&quot;)[0];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void channelInactive(ChannelHandlerContext ctx) &#123;</span><br><span class="line">        SessionUtil.unBindSession(ctx.channel());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="消息转发"><a href="#消息转发" class="headerlink" title="消息转发"></a>消息转发</h2><p>服务端处理消息，找到对应channel，然后转发即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">public class MessageRequestHandler extends SimpleChannelInboundHandler&lt;MessageRequestPacket&gt; &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, MessageRequestPacket messageRequestPacket) &#123;</span><br><span class="line">        // 1.拿到消息发送方的会话信息</span><br><span class="line">        Session session = SessionUtil.getSession(ctx.channel());</span><br><span class="line"></span><br><span class="line">        // 2.通过消息发送方的会话信息构造要发送的消息</span><br><span class="line">        MessageResponsePacket messageResponsePacket = new MessageResponsePacket();</span><br><span class="line">        messageResponsePacket.setFromUserId(session.getUserId());</span><br><span class="line">        messageResponsePacket.setFromUserName(session.getUserName());</span><br><span class="line">        messageResponsePacket.setMessage(messageRequestPacket.getMessage());</span><br><span class="line"></span><br><span class="line">        // 3.拿到消息接收方的 channel</span><br><span class="line">        Channel toUserChannel = SessionUtil.getChannel(messageRequestPacket.getToUserId());</span><br><span class="line"></span><br><span class="line">        // 4.将消息发送给消息接收方</span><br><span class="line">        if (toUserChannel != null &amp;&amp; SessionUtil.hasLogin(toUserChannel)) &#123;</span><br><span class="line">            toUserChannel.writeAndFlush(messageResponsePacket);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            System.err.println(&quot;[&quot; + messageRequestPacket.getToUserId() + &quot;] 不在线，发送失败);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="消息接收"><a href="#消息接收" class="headerlink" title="消息接收"></a>消息接收</h2><p>很简单，接收消息即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class MessageResponseHandler extends SimpleChannelInboundHandler&lt;MessageResponsePacket&gt; &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, MessageResponsePacket messageResponsePacket) &#123;</span><br><span class="line">        String fromUserId = messageResponsePacket.getFromUserId();</span><br><span class="line">        String fromUserName = messageResponsePacket.getFromUserName();</span><br><span class="line">        System.out.println(fromUserId + &quot;:&quot; + fromUserName + &quot; -&gt; &quot; + messageResponsePacket</span><br><span class="line">                .getMessage());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/19/11-19技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1744,153 +1893,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/10/29/10-29技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/10/29/10-29技术笔记/" itemprop="url">注解@PostConstruct和@PreDestroy</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-10-29T16:45:30+08:00">
-                2018-10-29
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="PostConstruct和-PreDestroy"><a href="#PostConstruct和-PreDestroy" class="headerlink" title="@PostConstruct和@PreDestroy"></a>@PostConstruct和@PreDestroy</h1><p>方法注解，实现Bean初始化之前和销毁之前的自定义操作。<br>在项目中@PostConstruct主要应用场景是在初始化Servlet时加载一些缓存数据等。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">@Service</span><br><span class="line">public class TsyeService &#123;</span><br><span class="line">    public void show()&#123;</span><br><span class="line">        System.out.println(&quot;ok&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    @PostConstruct</span><br><span class="line">    void post()&#123;</span><br><span class="line">        System.out.println(&quot;before&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    @PreDestroy</span><br><span class="line">    void pre()&#123;</span><br><span class="line">        System.out.println(&quot;after&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/blog/page/14/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/blog/">1</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/14/">14</a><span class="page-number current">15</span><a class="page-number" href="/blog/page/16/">16</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/21/">21</a><a class="extend next" rel="next" href="/blog/page/16/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/blog/page/14/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/blog/">1</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/14/">14</a><span class="page-number current">15</span><a class="page-number" href="/blog/page/16/">16</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/22/">22</a><a class="extend next" rel="next" href="/blog/page/16/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1936,7 +1943,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">210</span>
+                  <span class="site-state-item-count">211</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
