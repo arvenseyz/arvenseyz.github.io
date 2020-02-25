@@ -251,6 +251,306 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/07/18/7-18技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/07/18/7-18技术笔记/" itemprop="url">goMap细节</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-18T14:08:30+08:00">
+                2019-07-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="Map实现"><a href="#Map实现" class="headerlink" title="Map实现"></a>Map实现</h1><h2 id="存储"><a href="#存储" class="headerlink" title="存储"></a>存储</h2><p>我看来go的Map综合了开放寻址法和拉链法。</p>
+<p>核心在于分桶，存储kv数据的在两个桶的数组中，一个数据桶，一个额外数据桶。后者是用于拉链法来解决哈希冲突的。</p>
+<p>每个桶中可以存八对kv，在桶中是使用开发寻址法，如果溢出，有指向对应的溢出桶的指针，这时是拉链法。</p>
+<p>通过具体的访问过程可知。首先是计算哈希值，这样就找到了对应的桶（此处有旧桶新桶问题），然后进入桶中查找，和桶中已存的一一比较，如果没有，则看桶链接的下一个桶（如果存在）。</p>
+<p>特色在于快速试错，桶中除了key和value的大小为8的各一个数组外，还有个topbits的数组，即该键值对哈希值的前八位，这样每次访问不用直接比较key，只用比较哈希值的前八位，就可以快速试错。</p>
+<p>其实就像是一级缓存，它存储的是哈希最高的 8 位，而选择桶时使用了桶掩码使用的是最低的几位，这种方式能够帮助我们快速判断当前的键值对是否存在并且减少碰撞。</p>
+<p>有一个问题，哪些类型可以作为key的类型，不能比较的比如函数当然不能，float64语法上能实际上不能吗，原因在于NAN（not a number)，NAN != NAN hash(NAN) != hash(NAN)，以及float64的不能精确存储。</p>
+<h2 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h2><p>扩容就是新建一个两倍大的桶数组，然后数据搬迁过去。问题在于，哈希表过大时，搬迁成本很高，这里解决方法是，同时持有新旧两个数组，逐步搬迁。所以扩容是一个非阻塞的相对缓慢完成的一个过程。</p>
+<p>扩容原因有两个，装载因子过大，或者溢出桶太多。两种情况下扩容方法不一样。</p>
+<p>后者与其说扩容，不如说重整，即是<strong>不改变大小的扩容动作</strong>。而前者会扩容到两倍。</p>
+<p>造成溢出桶数量过多的原因有两种：其一，反复进行插入再删除。先插入一些元素，溢出桶创建了一些，但还没到达负载因子，再把这些元素删了然后又插入一些元素，溢出桶又创建了一些，反复进行后，最后造成负载桶都很空旷，溢出桶中有元素。</p>
+<p>这种情况下，原大小扩容，将老 bucket 中的元素移动到新 bucket。这样，原来在 overflow bucket 中的 key 可以移动到 负载的bucket 中来。</p>
+<p>第二种情况，插入的元素的哈希取模都一样，也就是说，所有的扩容桶都是同一个桶扩的容，这样哈希表退化成了链表，并且该原地扩容无法解决该问题。但造成该问题的原因不在扩容或者负载上，是哈希函数不好。</p>
+<p>扩容完后不会搬迁，真正的搬迁工作，在插入或修改、删除 key 的时候，都会尝试进行搬迁 buckets 的工作。主要是申请到了新的 buckets 空间，然后把相关的标志位都进行了处理：例如标志 nevacuate 被置为 0， 表示当前搬迁进度为 0。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/07/17/7-17技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/07/17/7-17技术笔记/" itemprop="url">go实现策略模式</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-17T17:02:28+08:00">
+                2019-07-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="传统策略模式"><a href="#传统策略模式" class="headerlink" title="传统策略模式"></a>传统策略模式</h1><p>传统(Java)策略模式依赖于继承，简单来说，各策略里面的实现封装一次，共同继承一个基类或者实现一个接口，然后一个策略工厂持有基类/接口对象，根据输入进行策略选择，得到对应的策略。业务方在使用时，应该首先用策略工厂获得需要的策略，然后调用策略的方法。</p>
+<p>然而，第一，依然没有避免switch，只不过转移到了策略工厂里；第二，策略和策略工厂耦合。</p>
+<h1 id="GO实现"><a href="#GO实现" class="headerlink" title="GO实现"></a>GO实现</h1><p>GO没有继承，但有方法变量，不如把策略先存到一个Map里，即   [策略名]实现方法的映射，这样直接可以从map中取出方法进行调用</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"><span class="keyword">var</span> Strategy <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span></span><br><span class="line"><span class="function"><span class="title">func</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    Strategy := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span>)</span></span><br><span class="line"><span class="function">	<span class="title">Strategy</span>["<span class="title">update</span>"] = <span class="title">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"update table set ? = ?"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	Strategy[<span class="string">"insert"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"insert into table values(?,?,?,?)"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	Strategy[<span class="string">"delete"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"delete from table where ?=?"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	Strategy[<span class="string">"select"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"select ? from table where ?=?"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	Strategy[<span class="string">"insert"</span>]()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/07/15/7-15技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1498,316 +1798,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/06/19/6-19技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/06/19/6-19技术笔记/" itemprop="url">Struct Tag和定时器</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-19T16:24:09+08:00">
-                2019-06-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="Struct-Tag"><a href="#Struct-Tag" class="headerlink" title="Struct Tag"></a>Struct Tag</h1><p>结构体的字段后可以添加一个信息，写法就是字段后单引号中一个字符串，规范上字符串应该是JSON的形式，即’name:”zhangsan”‘格式的k:”v”,还可以有空格隔开的多对。</p>
-<p>写法如下：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Server <span class="keyword">struct</span> &#123;</span><br><span class="line">    ServerName <span class="keyword">string</span> <span class="string">`key1:"value1" key11:"value11"`</span></span><br><span class="line">    ServerIP   <span class="keyword">string</span> <span class="string">`key2:"2"`</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>想要拿到其中的数据，需要反射，反射拿到结构体的某个StructField，然后其有Tag字段</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">s := Server&#123;&#125;</span><br><span class="line">st := reflect.TypeOf(s)</span><br><span class="line"></span><br><span class="line">field1 := st.Field(<span class="number">0</span>)</span><br><span class="line">fmt.Printf(<span class="string">"key1:%v\n"</span>, field1.Tag.Get(<span class="string">"key1"</span>))</span><br></pre></td></tr></table></figure>
-<p>Tag字段即该字符串，还有些方法，Get拿value之类，Lookup方法还会返回成功失败。</p>
-<h1 id="Ticker和Timer"><a href="#Ticker和Timer" class="headerlink" title="Ticker和Timer"></a>Ticker和Timer</h1><p>Ticker的结构体里有个只读的通道C，和一个定时器，用户操作前者，后者系统管理，调用其time.NewTicker(d Duration)，系统会每间隔该时间间隔d，往通道写入数据，用户只需要监听通道读取到数据，就完成定时。读取数据可以 for range ticker.C{}，也可以</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> &lt;-ticker.C:</span><br><span class="line">            fmt.Println(time.Now())</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<p>Timer是个定时器，区别在于只执行一次，即在给定时间后，通道会有一次数据。比如：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    ticker := time.NewTimer(time.Second * <span class="number">3</span>)</span><br><span class="line">    <span class="keyword">defer</span> ticker.Stop()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> &lt;-ticker.C:</span><br><span class="line">        fmt.Println(time.Now())</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>拿不到数据，select会阻塞，直到三秒后，拿到数据，输出后程序退出。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/06/18/6-16技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/06/18/6-16技术笔记/" itemprop="url">kite框架简单了解</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-18T19:27:35+08:00">
-                2019-06-18
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="kite"><a href="#kite" class="headerlink" title="kite"></a>kite</h1><p>Kite是RPC库，作为分布式微服务的框架。</p>
-<p>传输层使用SockJS提供的WebSocket,RPC的消息格式使用的是修改过的dnode协议。</p>
-<h1 id="简单通信"><a href="#简单通信" class="headerlink" title="简单通信"></a>简单通信</h1><p>比如服务器和客户端的代码如下</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> <span class="string">"github.com/koding/kite"</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"first"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    k.Config.Port = <span class="number">6000</span></span><br><span class="line">    k.Run()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"github.com/koding/kite"</span></span><br><span class="line">)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"second"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    client := k.NewClient(<span class="string">"http://localhost:6000/kite"</span>)</span><br><span class="line">    client.Dial()</span><br><span class="line">    response, _ := client.Tell(<span class="string">"kite.ping"</span>)</span><br><span class="line">    fmt.Println(response.MustString())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>可以看到，服务端和客户端都通过kite对象交互，New()方法制定了名字和版本，服务端通过属性设置了监听的端口，Run()方法开始了服务。</p>
-<p>客户端制定了连接的URL,而Tell()方法相当于一个方法调用，传入的参数即方法名调用的方法，这里服务端并没有对应的handler，仍能正常交互并返回一个“pong”,是因为这是个默认方法。</p>
-<h1 id="方法调用"><a href="#方法调用" class="headerlink" title="方法调用"></a>方法调用</h1><p>这里再增加一个服务端的handler，完成完整的方法调用。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> <span class="string">"github.com/koding/kite"</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"first"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    k.Config.Port = <span class="number">6000</span></span><br><span class="line">    k.Config.DisableAuthentication = <span class="literal">true</span></span><br><span class="line">    k.HandleFunc(<span class="string">"square"</span>, <span class="function"><span class="keyword">func</span><span class="params">(r *kite.Request)</span> <span class="params">(<span class="keyword">interface</span>&#123;&#125;, error)</span></span> &#123;</span><br><span class="line">        a := r.Args.One().MustFloat64()</span><br><span class="line">        <span class="keyword">return</span> a * a, <span class="literal">nil</span></span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    k.Run()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这里kite注册了一个方法，名称是square，实现是后面的匿名方法，其实就是求下平方，注意其参数是个kite.Request的指针。</p>
-<p>服务端进行方法调用</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"github.com/koding/kite"</span></span><br><span class="line">)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"second"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    client := k.NewClient(<span class="string">"http://localhost:6000/kite"</span>)</span><br><span class="line">    client.Dial()</span><br><span class="line">    response, _ := client.Tell(<span class="string">"square"</span>, <span class="number">4</span>)</span><br><span class="line">    fmt.Println(response.MustFloat64())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="服务注册与发现"><a href="#服务注册与发现" class="headerlink" title="服务注册与发现"></a>服务注册与发现</h1><p>用的是Kontrol。他也是一个Kite。</p>
-<p>服务端Register()方法即注册到了Kontrol</p>
-<p>k.Register(&amp;url.URL{Scheme: “http”, Host: “localhost:6000/kite”})</p>
-<p>客户端用GetKites方法连接到Kontrol</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"github.com/koding/kite"</span></span><br><span class="line">    <span class="string">"github.com/koding/kite/protocol"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"second"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    <span class="comment">// search a kite that has the same username and environment as us, but the</span></span><br><span class="line">    <span class="comment">// kite name should be "first"</span></span><br><span class="line">    kites, _ := k.GetKites(&amp;protocol.KontrolQuery&#123;</span><br><span class="line">        Username:    k.Config.Username,</span><br><span class="line">        Environment: k.Config.Environment,</span><br><span class="line">        Name:        <span class="string">"first"</span>,</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// there might be several kites that matches our query</span></span><br><span class="line">    client := kites[<span class="number">0</span>]</span><br><span class="line">    client.Dial()</span><br><span class="line">    response, _ := client.Tell(<span class="string">"square"</span>, <span class="number">4</span>)</span><br><span class="line">    fmt.Println(response.MustFloat64())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1858,7 +1848,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">211</span>
+                  <span class="site-state-item-count">213</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

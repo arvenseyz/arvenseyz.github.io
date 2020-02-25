@@ -251,6 +251,296 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/23/8-23技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/08/23/8-23技术笔记/" itemprop="url">Go函数与接口</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-23T14:00:18+08:00">
+                2018-08-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="函数和方法"><a href="#函数和方法" class="headerlink" title="函数和方法"></a>函数和方法</h1><p>Go中，函数和方法是不同的，可以认为函数是没有接受者的方法，方法的接收者放在 func 关键字和函数名之间。接收者可以是结构体类型或非结构体类型。可以在方法内部访问接收者。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">func (t Type) methodName(parameter list) &#123;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>同名方法可以定义在不同的类型上</p>
+<h1 id="指针接收者-vs-值接收者"><a href="#指针接收者-vs-值接收者" class="headerlink" title="指针接收者 vs. 值接收者"></a>指针接收者 vs. 值接收者</h1><p>目前为止我们看到的都是以值作为接收者。以指针为接收者也是可以的。两者的区别在于，以指针作为接收者时，方法内部对其的修改对于调用者是可见的，但是以值作为接收者却不是。简单来说，就是按值传递和按指针传递。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">)</span><br><span class="line">type Employee struct &#123;</span><br><span class="line">	name string</span><br><span class="line">	age  int</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (e Employee) changeName(newName string) &#123;  //按值传递</span><br><span class="line">	e.name = newName</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (e *Employee) changeAge(newAge int) &#123;  //按值传递按应用传递</span><br><span class="line">	e.age = newAge</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	e := Employee&#123;</span><br><span class="line">		name: &quot;未修改&quot;,</span><br><span class="line">		age:  50,</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Printf(&quot;Employee name before change: %s&quot;, e.name)</span><br><span class="line">	e.changeName(&quot;修改&quot;)</span><br><span class="line">	fmt.Printf(&quot;\nEmployee name after change: %s&quot;, e.name)</span><br><span class="line"></span><br><span class="line">	fmt.Printf(&quot;\n\nEmployee age before change: %d&quot;, e.age)</span><br><span class="line">	(&amp;e).changeAge(51)</span><br><span class="line">	fmt.Printf(&quot;\nEmployee age after change: %d&quot;, e.age)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="类型等价定义"><a href="#类型等价定义" class="headerlink" title="类型等价定义"></a>类型等价定义</h1><p>意义在于，type绝不只是用于定义一系列的别名。还可以针对新类型定义方法。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">type name string</span><br><span class="line"></span><br><span class="line">func (n name) len() int &#123;</span><br><span class="line">	return len(n)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	var myname name = &quot;taozs&quot; //其实就是字符串类型</span><br><span class="line">	l := []byte(myname) //字符串转字节数组</span><br><span class="line">	fmt.Println(len(l)) //字节长度</span><br><span class="line">	fmt.Println(myname.len()) //调用对象的方法</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="接口"><a href="#接口" class="headerlink" title="接口"></a>接口</h2><p>如果一个方法实现了某接口，则视为其接受者实现了该接口。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">type info interface &#123;</span><br><span class="line">	CalculateSalary() int</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type Permanent struct &#123;</span><br><span class="line">	id1 int</span><br><span class="line">	id2 int</span><br><span class="line">&#125;</span><br><span class="line">type Contract struct &#123;</span><br><span class="line">	id int</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (p Permanent) CalculateSalary() int &#123;</span><br><span class="line">	return p.id1 + p.id2</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (c Contract) CalculateSalary() int &#123;</span><br><span class="line">	return c.id</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func totalExpense(s []info) &#123;</span><br><span class="line">	expense := 0</span><br><span class="line">	for _, v := range s &#123;</span><br><span class="line">		expense = expense + v.CalculateSalary()</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Printf(&quot;Total Expense  $%d&quot;, expense)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	pemp1 := Permanent&#123;1, 2&#125;</span><br><span class="line">	pemp2 := Permanent&#123;3, 1&#125;</span><br><span class="line">	cemp1 := Contract&#123;3&#125;</span><br><span class="line">	people := []info&#123;pemp1, pemp2, cemp1&#125;</span><br><span class="line">	totalExpense(people)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="空接口"><a href="#空接口" class="headerlink" title="空接口"></a>空接口</h1><p>一个没有声明任何方法的接口称为空接口。空接口表示为 interface{}。因为空接口没有方法，因此所有类都都实现了空接口。<br>使用空接口实现了重载的效果<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (  </span><br><span class="line">    &quot;fmt&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func describe(i interface&#123;&#125;) &#123;  </span><br><span class="line">    fmt.Printf(&quot;Type = %T, value = %v\n&quot;, i, i)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;  </span><br><span class="line">    s := &quot;Hello World&quot;</span><br><span class="line">    describe(s)</span><br><span class="line">    i := 55</span><br><span class="line">    describe(i)</span><br><span class="line">    strt := struct &#123;</span><br><span class="line">        name string</span><br><span class="line">    &#125;&#123;</span><br><span class="line">        name: &quot;Naveen R&quot;,</span><br><span class="line">    &#125;</span><br><span class="line">    describe(strt)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上面程序的第7行，describe(i interface{}) 函数接受一个空接口作为参数，因此任何值都可以传递给它。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/22/8-22技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/08/22/8-22技术笔记/" itemprop="url">javamail</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-22T15:42:46+08:00">
+                2018-08-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="javaMail"><a href="#javaMail" class="headerlink" title="javaMail"></a>javaMail</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">import com.sun.mail.util.MailSSLSocketFactory;</span><br><span class="line">import java.security.GeneralSecurityException;</span><br><span class="line">import java.util.*;</span><br><span class="line">import javax.mail.*;</span><br><span class="line">import javax.mail.internet.*;</span><br><span class="line">import javax.activation.*;</span><br><span class="line"></span><br><span class="line">public class SendEmail &#123;</span><br><span class="line">    public static void main(String[] args) throws GeneralSecurityException &#123;</span><br><span class="line">        // 收件人电子邮箱</span><br><span class="line">        String to = &quot;424452061@qq.com&quot;;</span><br><span class="line">        // 发件人电子邮箱</span><br><span class="line">        String from = &quot;424452061@qq.com&quot;;</span><br><span class="line">        // 指定发送邮件的主机为 smtp.qq.com</span><br><span class="line">        String host = &quot;smtp.qq.com&quot;;  //QQ 邮件服务器</span><br><span class="line">        // 获取系统属性</span><br><span class="line">        Properties properties = System.getProperties();</span><br><span class="line">        // 设置邮件服务器</span><br><span class="line">        properties.setProperty(&quot;mail.smtp.host&quot;, host);</span><br><span class="line">        properties.put(&quot;mail.smtp.auth&quot;, &quot;true&quot;);</span><br><span class="line">        MailSSLSocketFactory sf = new MailSSLSocketFactory();</span><br><span class="line">        sf.setTrustAllHosts(true);</span><br><span class="line">        properties.put(&quot;mail.smtp.ssl.enable&quot;, &quot;true&quot;);</span><br><span class="line">        properties.put(&quot;mail.smtp.ssl.socketFactory&quot;, sf);</span><br><span class="line">        // 获取默认session对象</span><br><span class="line">        Session session = Session.getDefaultInstance(properties, new Authenticator() &#123;</span><br><span class="line">            public PasswordAuthentication getPasswordAuthentication() &#123;</span><br><span class="line">                return new PasswordAuthentication(&quot;424452061@qq.com&quot;, &quot;授权码&quot;); //发件人邮件用户名、授权码</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            // 创建默认的 MimeMessage 对象</span><br><span class="line">            MimeMessage message = new MimeMessage(session);</span><br><span class="line">            // Set From: 头部头字段</span><br><span class="line">            message.setFrom(new InternetAddress(from));</span><br><span class="line">            // Set To: 头部头字段</span><br><span class="line">            message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));</span><br><span class="line">            // Set Subject: 头部头字段</span><br><span class="line">            message.setSubject(&quot;This is the Subject Line!&quot;);</span><br><span class="line">            // 设置消息体</span><br><span class="line">            message.setText(&quot;This is actual message&quot;);</span><br><span class="line">            // 发送消息</span><br><span class="line">            Transport.send(message);</span><br><span class="line">            System.out.println(&quot;Sent message successfully....&quot;);</span><br><span class="line">        &#125; catch (MessagingException mex) &#123;</span><br><span class="line">            mex.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/21/8-21技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1586,339 +1876,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/09/8-9技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/08/09/8-9技术笔记/" itemprop="url">多线程</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-09T10:43:49+08:00">
-                2018-08-09
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="多线程"><a href="#多线程" class="headerlink" title="多线程"></a>多线程</h1><h2 id="五个状态"><a href="#五个状态" class="headerlink" title="五个状态"></a>五个状态</h2><p><img src="8-9技术笔记/多线程.jpg" alt="多线程状态"></p>
-<ol>
-<li>新建状态(new)：线程新建时，进入该状态，Thread thread1 = new Thread();</li>
-<li>就绪状态(Runnable):线程调用start()后，进入该状态，表示该线程已经准备好，等待CPU分配资源使用，但实际使用情况取决于CPU。</li>
-<li>运行状态(Running)：CPU根据其调度算法，选择一个线程开始运行，当选择到该线程，该线程进入运行状态</li>
-<li>阻塞状态(Blocked): 处于运行状态中的线程由于某种原因，暂时放弃对CPU的使用权，停止执行，此时进入阻塞状态，直到其进入到就绪状态，才 有机会再次被CPU调用以进入到运行状态。根据阻塞产生的原因不同，阻塞状态又可以分为三种：<br>等待阻塞：运行状态中的线程执行wait()方法，使本线程进入到等待阻塞状态；<br>同步阻塞 – 线程在获取synchronized同步锁失败(因为锁被其它线程所占用)，它会进入同步阻塞状态；<br>其他阻塞 – 通过调用线程的sleep()或join()或发出了I/O请求时，线程会进入到阻塞状态。当sleep()状态超时、join()等待线程终止或者超时、或者I/O处理完毕时，线程重新转入就绪状态。  </li>
-<li>死亡状态（Dead）：线程执行完了或者因异常退出了run()方法，该线程结束生命周期。</li>
-</ol>
-<h2 id="yield-join-Interrupt"><a href="#yield-join-Interrupt" class="headerlink" title="yield,join,Interrupt"></a>yield,join,Interrupt</h2><ol>
-<li>yield()应该做的是让当前运行线程回到可运行状态，以允许具有相同优先级的其他线程获得运行机会。因此，使用yield()的目的是让相同优先级的线程之间能适当的轮转执行。但是，实际中无法保证yield()达到让步目的，因为让步的线程还有可能被线程调度程序再次选中。</li>
-<li>当我们在某线程中调用另一个线程的join()时，这个方法会挂起调用线程，执行被调用线程，直到被调用线程结束执行，调用线程才会继续执行。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">public class ThreadJoin &#123;</span><br><span class="line">	public static int a = 0;</span><br><span class="line">	public static void main(String[] args)&#123;</span><br><span class="line">		Thread thread = new Thread(new Runnable()&#123;</span><br><span class="line">			@Override</span><br><span class="line">			public void run()&#123;</span><br><span class="line">				for(int i=0;i&lt;5;i++)</span><br><span class="line">					a++;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;);</span><br><span class="line">		thread.start();</span><br><span class="line">		/*try &#123;</span><br><span class="line">			thread.join();</span><br><span class="line">		&#125; catch (InterruptedException e) &#123;</span><br><span class="line">			e.printStackTrace();</span><br><span class="line">		&#125;*/</span><br><span class="line">		System.out.println(a);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<p>运行代码，貌似永远都看不到a的值是5，而每次都是0，原因很简单的，因为在thread中的run方法中进行a的增值操作，这些可能都是需要时间的，但是此时main线程中的System.out.println方法已经执行了，所以很难看到a的值是5，为了看到a的值是5，我的一个思路就是等thread运行结束之后，我们采取执行System.out.println就可以了，这时候join方法的作用就显现出来的，我们把上面的注释代码删除注释，然后运行，不管运行多少次，输出的结果都是5，从这个例子中我们就可以看到join方法的作用，它能够调节各个线程之间的运行顺序，从而可以实现同步</p>
-<ol start="3">
-<li>interrupt()通过异常进行交互。<br>interrupt() 方法只是改变中断状态而已，它不会中断一个正在运行的线程。这一方法实际完成的是，给受阻塞的线程发出一个中断信号，这样受阻线程就得以退出阻塞的状态。 更确切的说，如果线程被Object.wait, Thread.join和Thread.sleep三种方法之一阻塞，此时调用该线程的interrupt()方法，那么该线程将抛出一个 InterruptedException中断异常（该线程必须事先预备好处理此异常），从而提早地终结被阻塞状态。如果线程没有被阻塞，这时调用 interrupt()将不起作用，直到执行到wait(),sleep(),join()时,才马上会抛出 InterruptedException。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">public class MyThread &#123;</span><br><span class="line">    public static void main(String[] args) throws InterruptedException &#123;</span><br><span class="line">        RunTest rt = new RunTest();</span><br><span class="line">        Thread t = new Thread(rt);</span><br><span class="line">        t.start();</span><br><span class="line">        TimeUnit.SECONDS.sleep(2);</span><br><span class="line">        t.interrupt();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">    class RunTest implements Runnable &#123;</span><br><span class="line">        //这种设计比较好,当调用阻塞操作时,会因为抛出异常退出,当不调用阻塞操作时,会因为检查中断状态而退出</span><br><span class="line">        public void run() &#123;</span><br><span class="line">            try&#123;</span><br><span class="line">                while(!Thread.interrupted())&#123;</span><br><span class="line">                    // System.out.println(&quot;sleep 5s&quot;);</span><br><span class="line">                    Thread.sleep(5000);//接收到中断信号时，由于抛出异常退出，模拟耗时操作</span><br><span class="line">                &#125;</span><br><span class="line">                System.out.println(&quot;Exit normal&quot;);</span><br><span class="line">            &#125;catch(Exception e)&#123;</span><br><span class="line">                System.out.println(&quot;interrupted and exit&quot;);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/08/8-8技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/08/08/8-8技术笔记/" itemprop="url">多线程</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-08T15:25:18+08:00">
-                2018-08-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="wait和sleep"><a href="#wait和sleep" class="headerlink" title="wait和sleep"></a>wait和sleep</h1><h2 id="wait"><a href="#wait" class="headerlink" title="wait"></a>wait</h2><p>wait是object类的方法，在当前线程持有对象锁的情况下，暂时放弃锁，并释放资源，等待其他线程调用同一对象的notify()或者notifyAll()。<br>注意，即使只有一个线程在等待，并且有其它线程调用了notify或者notifyAll方法，等待的线程只是被激活，但是它必须得再次获得锁才能继续往下执行。换言之，即使notify被调用，但只要锁没有被释放，原等待线程因为未获得锁仍然无法继续执行。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">import java.util.Date;</span><br><span class="line">public class Wait &#123;</span><br><span class="line">  public static void main(String[] args) &#123;</span><br><span class="line">    Thread thread1 = new Thread(() -&gt; &#123;</span><br><span class="line">      synchronized (Wait.class) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">          System.out.println(new Date() + &quot; Thread1 is running&quot;);</span><br><span class="line">          Wait.class.wait();</span><br><span class="line">          System.out.println(new Date() + &quot; Thread1 ended&quot;);</span><br><span class="line">        &#125; catch (Exception ex) &#123;</span><br><span class="line">          ex.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    thread1.start();</span><br><span class="line"></span><br><span class="line">    Thread thread2 = new Thread(() -&gt; &#123;</span><br><span class="line">      synchronized (Wait.class) &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">          System.out.println(new Date() + &quot; Thread2 is running&quot;);</span><br><span class="line">          Wait.class.notify();</span><br><span class="line">          // Don&apos;t use sleep method to avoid confusing</span><br><span class="line">          for(long i = 0; i &lt; 200000; i++) &#123;</span><br><span class="line">            for(long j = 0; j &lt; 100000; j++) &#123;&#125;</span><br><span class="line">          &#125;</span><br><span class="line">          System.out.println(new Date() + &quot; Thread2 release lock&quot;);</span><br><span class="line">        &#125; catch (Exception ex) &#123;</span><br><span class="line">          ex.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      for(long i = 0; i &lt; 200000; i++) &#123;</span><br><span class="line">        for(long j = 0; j &lt; 100000; j++) &#123;&#125;</span><br><span class="line">      &#125;</span><br><span class="line">      System.out.println(new Date() + &quot; Thread2 ended&quot;);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    // Don&apos;t use sleep method to avoid confusing</span><br><span class="line">    for(long i = 0; i &lt; 200000; i++) &#123;</span><br><span class="line">      for(long j = 0; j &lt; 100000; j++) &#123;&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    thread2.start();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>结果<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Tue Jun 14 22:51:11 CST 2016 Thread1 is running</span><br><span class="line">Tue Jun 14 22:51:23 CST 2016 Thread2 is running</span><br><span class="line">Tue Jun 14 22:51:36 CST 2016 Thread2 release lock</span><br><span class="line">Tue Jun 14 22:51:36 CST 2016 Thread1 ended</span><br><span class="line">Tue Jun 14 22:51:49 CST 2016 Thread2 ended</span><br></pre></td></tr></table></figure></p>
-<p>可以看出，线程一执行-&gt;线程一wait()-&gt;线程二执行-&gt;线程二notify()-&gt;此时线程一并不会接着执行，而是等线程二释放锁，之后线程一获得资源，线程一结束-&gt;线程二结束</p>
-<h2 id="sleep"><a href="#sleep" class="headerlink" title="sleep"></a>sleep</h2><p>sleep()是Thread类的方法，实际上sleep和锁没有关系，仅仅是一定时间内不占用资源。</p>
-<h1 id="synchronized和volatile和Atomic"><a href="#synchronized和volatile和Atomic" class="headerlink" title="synchronized和volatile和Atomic"></a>synchronized和volatile和Atomic</h1><p>实际使用上，功能上synchronized是后两者的超集。只有考虑性能时，使用后两者。</p>
-<h2 id="多线程三大特性"><a href="#多线程三大特性" class="headerlink" title="多线程三大特性"></a>多线程三大特性</h2><ol>
-<li>原子性</li>
-<li>可见性</li>
-<li>有序性  </li>
-</ol>
-<h2 id="synchronized"><a href="#synchronized" class="headerlink" title="synchronized"></a>synchronized</h2><ol>
-<li>修饰实例方法，作用于当前实例加锁，进入同步代码前要获得当前实例的锁</li>
-<li>修饰静态方法，作用于当前类对象加锁，进入同步代码前要获得当前类对象的锁</li>
-<li>修饰代码块，指定加锁对象，对给定对象加锁，进入同步代码库前要获得给定对象的锁。<br>实际上是一致的，即synchronized锁的是对象，即｛｝内代码对（）内对象的访问加锁。<br>synchronized保证了三大特性  </li>
-</ol>
-<h2 id="volatile"><a href="#volatile" class="headerlink" title="volatile"></a>volatile</h2><p>当一个共享变量被volatile修饰时，它会保证修改的值会立即被更新到主存，当有其他线程需要读取时，它会去内存中读取新值。<br>一旦一个共享变量（类的成员变量、类的静态成员变量）被volatile修饰之后，那么就具备了两层语义：</p>
-<ol>
-<li>保证了不同线程对这个变量进行操作时的可见性，即一个线程修改了某个变量的值，这新值对其他线程来说是立即可见的。</li>
-<li>禁止进行指令重排序。  </li>
-</ol>
-<p>volatile保证了可见性和有序性</p>
-<h2 id="Atomic"><a href="#Atomic" class="headerlink" title="Atomic"></a>Atomic</h2><p>Atomic保证了原子性<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">AtomicInteger atomic = new AtomicInteger(0);</span><br></pre></td></tr></table></figure></p>
-<p>boolean compareAndSet(int expect, int update)”方法，API上解释的比较清楚了，是说“如果当前值 == 预期值，则以原子方式将该设置为给定的更新值”，并且，它内部是调用的一个native方法。</p>
-<h1 id="ReentrantLock"><a href="#ReentrantLock" class="headerlink" title="ReentrantLock"></a>ReentrantLock</h1><h2 id="获得和释放"><a href="#获得和释放" class="headerlink" title="获得和释放"></a>获得和释放</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ReentrantLock lock = new ReentrantLock();</span><br><span class="line">       try &#123;</span><br><span class="line">           lock.lock();</span><br><span class="line">           System.out.println(&quot;do&quot;);</span><br><span class="line">       &#125; catch (Exception e) &#123;</span><br><span class="line">       &#125; finally &#123;</span><br><span class="line">           lock.unlock();</span><br><span class="line">       &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="休眠和唤醒"><a href="#休眠和唤醒" class="headerlink" title="休眠和唤醒"></a>休眠和唤醒</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[] args) &#123;</span><br><span class="line">    ReentrantLock lock = new ReentrantLock();</span><br><span class="line">    Condition condition =lock.newCondition();</span><br><span class="line">    Thread thread1=new Thread(()-&gt;&#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            lock.lock();</span><br><span class="line">            System.out.println(&quot;1&quot;);</span><br><span class="line">            condition.await();</span><br><span class="line">            System.out.println(&quot;2&quot;);</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">        &#125; finally &#123;</span><br><span class="line">            lock.unlock();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    thread1.start();</span><br><span class="line">    Thread thread2=new Thread(()-&gt;&#123;</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            lock.lock();</span><br><span class="line">            System.out.println(&quot;3&quot;);</span><br><span class="line">            condition.signal();</span><br><span class="line">            System.out.println(&quot;4&quot;);</span><br><span class="line">        &#125; catch (Exception e) &#123;</span><br><span class="line">        &#125; finally &#123;</span><br><span class="line">            lock.unlock();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    thread2.start();</span><br></pre></td></tr></table></figure>
-<h2 id="公平锁和非公平锁"><a href="#公平锁和非公平锁" class="headerlink" title="公平锁和非公平锁"></a>公平锁和非公平锁</h2><p>公平锁指的是线程获取锁的顺序是按照加锁顺序来的，而非公平锁指的是抢锁机制，先lock的线程不一定先获得锁。<br>ReentrantLock默认非公平锁<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Lock lock=new ReentrantLock(true);//公平锁</span><br><span class="line">Lock lock=new ReentrantLock(false);//非公平锁</span><br></pre></td></tr></table></figure></p>
-<h2 id="读写锁"><a href="#读写锁" class="headerlink" title="读写锁"></a>读写锁</h2><p>lock.readLock().lock();<br>lock.writeLock().lock();<br>读读共享，写写互斥，读写互斥</p>
-<h2 id="加锁方式"><a href="#加锁方式" class="headerlink" title="加锁方式"></a>加锁方式</h2><ol>
-<li>lock(), 如果获取了锁立即返回，如果别的线程持有锁，当前线程则一直处于休眠状态，直到获取锁</li>
-<li>tryLock(), 如果获取了锁立即返回true，如果别的线程正持有锁，立即返回false；</li>
-<li>tryLock(long timeout,TimeUnit unit)，   如果获取了锁定立即返回true，如果别的线程正持有锁，会等待参数给定的时间，在等待的过程中，如果获取了锁定，就返回true，如果等待超时，返回false；</li>
-<li>lockInterruptibly:如果获取了锁定立即返回，如果没有获取锁定，当前线程处于休眠状态，直到或者锁定，或者当前线程被别的线程中断</li>
-</ol>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1969,7 +1926,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">211</span>
+                  <span class="site-state-item-count">213</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
