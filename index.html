@@ -251,6 +251,160 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2020/03/03/3-3技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2020/03/03/3-3技术笔记/" itemprop="url">group by和聚合函数</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-03-03T19:30:41+08:00">
+                2020-03-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="sum"><a href="#sum" class="headerlink" title="sum"></a>sum</h2><p>比如说简单的一张表，学生-学科-成绩。</p>
+<p>要查每个学生的总成绩，用sum和group by可以写</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span>， <span class="keyword">SUM</span>(score) <span class="keyword">as</span> totalscore </span><br><span class="line"><span class="keyword">from</span> stuscore </span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> <span class="keyword">name</span> </span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> totalscore <span class="keyword">desc</span></span><br></pre></td></tr></table></figure>
+<h2 id="group-by-多字段"><a href="#group-by-多字段" class="headerlink" title="group by 多字段"></a>group by 多字段</h2><p>如果 group by 多个字段，那么这些不同的多条数据之间，只有这些字段的值<strong>全部</strong>一致，才会被合并到一条记录中，如果有各别字段不一致，将会生成更多的组。</p>
+<h2 id="同一张表多条件"><a href="#同一张表多条件" class="headerlink" title="同一张表多条件"></a>同一张表多条件</h2><p>比如说，有数学课，并且没有语文课的学生</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> *</span><br><span class="line"><span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">where</span> subject =<span class="string">"数学"</span> <span class="keyword">and</span> subject !=<span class="string">"语文"</span></span><br></pre></td></tr></table></figure>
+<p>这些写显然是<strong>不对</strong>的，where条件里满足了数学，肯定自然满足了没有语文。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">distinct</span> <span class="keyword">NAME</span> <span class="keyword">FROM</span> qtest T </span><br><span class="line"><span class="keyword">WHERE</span> <span class="keyword">EXISTS</span>(<span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">FROM</span> qtest <span class="keyword">WHERE</span> uid=T.uid  <span class="keyword">AND</span> subject=<span class="string">'数学'</span>) <span class="keyword">AND</span> </span><br><span class="line"><span class="keyword">NOT</span> <span class="keyword">EXISTS</span>(<span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">FROM</span> qtest <span class="keyword">WHERE</span> uid=T.uid  <span class="keyword">AND</span> subject=<span class="string">'语文'</span>)</span><br></pre></td></tr></table></figure>
+<p>EXISTS在SQL中的作用是：检验查询是否返回数据。</p>
+<p>select a.* from tb a where exists(select 1 from tb where name =a.name)返回真假，当 where 后面的条件成立，则列出数据，否则为空。</p>
+<h2 id="HAVING"><a href="#HAVING" class="headerlink" title="HAVING"></a>HAVING</h2><p>在 SQL 中增加 HAVING 子句原因是，WHERE 关键字无法与合计函数一起使用。</p>
+<p>找出平均分大于70的学生</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span> </span><br><span class="line"><span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">having</span> <span class="keyword">avg</span>(score)&gt;<span class="number">70</span></span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2020/02/26/2-26技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1607,172 +1761,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2020/02/11/2-11技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2020/02/11/2-11技术笔记/" itemprop="url">内存管理</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-02-11T11:43:04+08:00">
-                2020-02-11
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="分段和分页"><a href="#分段和分页" class="headerlink" title="分段和分页"></a>分段和分页</h1><h2 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h2><p>用户程序的地址空间被划分成若干固定大小的区域，称为“页”，相应地，内存空间分成若干个物理块，页和块的大小相等，称为帧。可将用户程序的任一页放在内存的任一块中，实现了离散分配。</p>
-<p>这样每个页和每个帧存在一个映射关系。即页表。</p>
-<p>每次要取地址，把地址前几位解析出，即页号，后几位即页内偏移。在页表中把页号转换成帧号（找不到即缺页中断），然后加上页内偏移，即物理地址。</p>
-<h2 id="分段"><a href="#分段" class="headerlink" title="分段"></a>分段</h2><p>将用户程序地址空间分成若干个<strong>大小不等</strong>的段，每段可以定义一组相对完整的逻辑信息。存储分配时，以段为单位，段与段在内存中可以不相邻接，也实现了离散分配。</p>
-<p>作业的地址空间被划分为若干个段，每个段定义了一组逻辑信息。例程序段、数据段等。每个段都从0开始编址，并采用一段连续的地址空间。</p>
-<p>段的长度由相应的逻辑信息组的长度决定，因而各段长度不等。整个作业的地址空间是二维的。</p>
-<p>显然也有个段表。要取地址，需要两个信息，第几段和段内偏移，然后段表解析出物理地址。</p>
-<h2 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h2><p>分页是强行物理划分的，分段是逻辑划分。</p>
-<p>页大小固定，段大小按需求。</p>
-<p>分页的作业地址空间是一维的.分段的地址空间是二维的。实际上分页也是二维的，两个维度放在了一个数高位和地位而已。</p>
-<h1 id="物理地址、虚拟地址（线性地址）、逻辑地址"><a href="#物理地址、虚拟地址（线性地址）、逻辑地址" class="headerlink" title="物理地址、虚拟地址（线性地址）、逻辑地址"></a>物理地址、虚拟地址（线性地址）、逻辑地址</h1><p>现代计算机，其实结合了分段和分页，即段内分页。具体内存寻址</p>
-<p>首先，肯定是给一个段号+段内偏移，即<strong>逻辑地址</strong></p>
-<p>然后段表把段号哈希出来，解读到它的<strong>虚拟地址</strong>，即<strong>线性地址</strong></p>
-<p>在接下来，页表，把虚拟地址，解析出<strong>物理地址</strong></p>
-<p>CPU要<strong>利用其段式内存管理单元，先将为个逻辑地址转换成一个线程地址，再利用其页式内存管理单元，转换为最终物理地址</strong>。这样做两次转换，的确是非常麻烦而且没有必要的，因为直接可以把线性地址抽像给进程。之所以这样冗余，Intel完全是为了向前兼容而已。</p>
-<h1 id="大内存分页"><a href="#大内存分页" class="headerlink" title="大内存分页"></a>大内存分页</h1><h2 id="TLB"><a href="#TLB" class="headerlink" title="TLB"></a><strong>TLB</strong></h2><p>页表是储存在内存中的，每次查询都要查内存未免太慢，可以在寄存器中缓存一份最常使用的，即TLB（<strong>页表寄存器缓冲</strong>）。</p>
-<p>TLB是有限的，这点毫无疑问。当超出TLB的存储极限时，就会发生 TLB miss，之后，OS就会命令CPU去访问内存上的页表。如果频繁的出现TLB miss，程序的性能会下降地很快。</p>
-<p>为了让TLB可以存储更多的页地址映射关系，我们的做法是调大内存分页大小。</p>
-<p>如果一个页4M，对比一个页4K，前者可以让TLB多存储1000个页地址映射关系，性能的提升是比较可观的。</p>
-<h1 id="缺页中断和置换算法"><a href="#缺页中断和置换算法" class="headerlink" title="缺页中断和置换算法"></a>缺页中断和置换算法</h1><p>在请求分页系统中，可以通过查询页表中的状态位来确定所要访问的页面是否存在于内存中。每当所要访问的页面不在内存时，会产生一次缺页中断，此时操作系统会根据页表中的外存地址在外存中找到所缺的一页，将其调入内存。 </p>
-<p>缺页本身是一种中断，与一般的中断一样，需要经过4个处理步骤：<br>　　1. 保护CPU现场<br>　　2. 分析中断原因<br>　　3. 转入缺页中断处理程序进行处理<br>　　4. 恢复CPU现场，继续执行<br>但是缺页中断时由于所要访问的页面不存在与内存时，有硬件所产生的一种特殊的中断，因此，与一般的中断存在区别：<br>　　 1. 在指令执行期间产生和处理缺页中断信号<br>　　 2. 一条指令在执行期间，可能产生多次缺页中断<br>　　 3. 缺页中断返回时，执行产生中断的那一条指令，而一般的中断返回时，执行下一条指令</p>
-<p>于是问题来了，页表一直是满的，把哪一页换出？</p>
-<p>理论上来说，置换以后不再被访问，或者在将来最迟才回被访问的页面，缺页中断率最低。这就是最优解，即 最佳置换（Optimal， OPT)，但实际上未来不止，该算法不可实现。</p>
-<p>如果我们洞悉过去，即可预测未来。置换最近一段时间以来最长时间未访问过的页面。根据程序局部性原理，刚被访问的页面，可能马上又要被访问；而较长时间内没有被访问的页面，可能最近不会被访问。   最近最久未使用置换算法（ Least Recently Used， LRU）普偏地适用于各种类型的程序，但是系统要时时刻刻对各页的访问历史情况加以记录和更新，开销太大，因此LRU算法必须要有硬件的支持。</p>
-<p>当然最简单的是先进先出。（First In First Out, FIFO)</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1823,7 +1811,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">214</span>
+                  <span class="site-state-item-count">215</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

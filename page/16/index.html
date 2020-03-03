@@ -251,6 +251,161 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/07/11-6技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/11/07/11-6技术笔记/" itemprop="url">SpringMVC+jsp</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-07T11:13:45+08:00">
+                2018-11-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <ol>
+<li>需要视图解析器<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;bean class=&quot;org.springframework.web.servlet.view.InternalResourceViewResolver&quot;&gt;</span><br><span class="line">  &lt;property name=&quot;viewClass&quot; value=&quot;org.springframework.web.servlet.view.JstlView&quot;/&gt;</span><br><span class="line">  &lt;property name=&quot;prefix&quot; value=&quot;/WEB-INF/view/&quot;/&gt;</span><br><span class="line">  &lt;property name=&quot;suffix&quot; value=&quot;.jsp&quot;/&gt;</span><br><span class="line">&lt;/bean&gt;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>如果用jstl，还需要加依赖<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;javax.servlet&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;jstl&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;1.2&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;taglibs&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;standard&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;1.1.2&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure></p>
+<ol start="2">
+<li>为了避免.jsp进入spring的 DispatcherServlet类。DispatcherServlet中ServletMapping需要是/而不是/*<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;servlet-mapping&gt;</span><br><span class="line">    &lt;servlet-name&gt;dispatcher&lt;/servlet-name&gt;</span><br><span class="line">    &lt;url-pattern&gt;/&lt;/url-pattern&gt;</span><br><span class="line">&lt;/servlet-mapping&gt;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>&lt; url-pattern &gt; / <url-pattern> 不会匹配到.jsp，即：.jsp不会进入spring的 DispatcherServlet类 。<br>&lt; url-pattern &gt; /<em> <url-pattern> 会匹配</url-pattern></em>.jsp，会出现返回jsp视图时再次进入spring的DispatcherServlet 类，导致找不到对应的controller所以报404错。</url-pattern></p>
+<p>关于web.xml的url映射规则：<br>&lt; url-pattern&gt;/<url-pattern> 会匹配到/login这样的路径型url，不会匹配到模式为<em>.jsp这样的后缀型url<br>&lt; url-pattern&gt;/\</em></url-pattern> 会匹配所有url：路径型的和后缀型的url(包括/login,.jsp,.js和*.html等)</p>
+<ol start="3">
+<li>属性值引号冲突<br>如果属性的内容有引号，属性值的引号会冲突。实际上，HTML 中,属性值用双引号、单引号、不加引号都可以。此时，把双引号换成单引号即可。</li>
+</ol>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/05/11-5技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1595,152 +1750,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/10/16/10-16技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/10/16/10-16技术笔记/" itemprop="url">跳跃表，红黑树的优势</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-10-16T17:08:26+08:00">
-                2018-10-16
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="跳跃表"><a href="#跳跃表" class="headerlink" title="跳跃表"></a>跳跃表</h1><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>链表的插入删除速度很快，但有序链表查找无法使用二分法，速度只有O(n)，跳跃表就是为了解决这个问题。</p>
-<h2 id="构建思路"><a href="#构建思路" class="headerlink" title="构建思路"></a>构建思路</h2><p>假设有个有序链表<br>1-&gt;4-&gt;5-&gt;8-&gt;10-&gt;11-&gt;13<br>查找一个元素的时间复杂度为O(n)。我们建立一个索引。<br>1—–&gt;5—–&gt;10——&gt;13<br>↓——-↓——–↓———↓<br>1-&gt;4-&gt;5-&gt;8-&gt;10-&gt;11-&gt;13<br>这样查询速度提升了，查询时从上往下。查11时路线1,5,10,11。四次。<br>为了优化，继续建立索引的索引。<br>1————-&gt;10<br>1—–&gt;5—–&gt;10——&gt;13<br>↓——-↓——–↓———↓<br>1-&gt;4-&gt;5-&gt;8-&gt;10-&gt;11-&gt;13<br>这样查11只用3次，1,10,11。这样不断建立索引，一共有log(2,n)层，每一层平均查两次，查询时间复杂度，O(2log2N)。  </p>
-<h2 id="优化方法"><a href="#优化方法" class="headerlink" title="优化方法"></a>优化方法</h2><p>这样每次折半建立索引，查找虽然快，但维护（增减数据）非常困难，可以说无法维护，以保持结构。为了解决这个问题，建立索引用”掷硬币法”，即，每个元素有50%的概念向上建立索引，当新增元素时，50%往上建立索引点，索引点的索引也是50%往上建立，最后依靠频率接近概率的方法，建立跳跃表。</p>
-<h2 id="掷骰子的方法"><a href="#掷骰子的方法" class="headerlink" title="掷骰子的方法"></a>掷骰子的方法</h2><p>表有很多层，层数取决于对数，显然有个因子e，实际上，从效率上来说，建立索引点的概率应该是1/e。</p>
-<h1 id="红黑树"><a href="#红黑树" class="headerlink" title="红黑树"></a>红黑树</h1><p>红黑树其实相当于AVL树的优化，相比于AVL树，红黑是用非严格的平衡来换取增删节点时候旋转次数的降低，任何不平衡都会在三次旋转之内解决。因而插入删除时，平衡节点的花费更低，优势在此。<br>总之，AVL树的高度最多为~1.44log（N），低于红黑树的最大高度，~2log（N）。但是，在插入时，AVL树可能需要O（log（N））操作来重新平衡树，但是红黑树需要O（1）。这意味着AVL树在搜索时可能更快，但在插入时速度更慢。<br>此外，红黑树更容易实现为持久数据结构。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1791,7 +1800,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">214</span>
+                  <span class="site-state-item-count">215</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
