@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2020-03-03T13:16:46.338Z</updated>
+  <updated>2020-03-11T12:42:50.079Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -17,11 +17,36 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>Mysql-proxy</title>
+    <link href="http://yoursite.com/blog/2020/03/11/3-11%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2020/03/11/3-11技术笔记/</id>
+    <published>2020-03-11T12:40:31.000Z</published>
+    <updated>2020-03-11T12:42:50.079Z</updated>
+    
+    <content type="html"><![CDATA[<p> MySQL Proxy就是这么一个中间层代理，简单的说，MySQL Proxy就是一个连接池，负责将前台应用的连接请求转发给后台的数据库，并且通过使用lua脚本，可以实现复杂的连接控制和过滤，<br>    从而实现读写分离和负载平衡。对于应用来说，MySQL Proxy是完全透明的，应用则只需要连接到MySQL Proxy的监听端口即可。</p><p>当然，这样proxy机器可能成为单点失效，但完全可以使用多个proxy机器做为冗余，在应用服务器的连接池配置中配置到多 个proxy的连接参数即可。</p><p>这么看MySQL Proxy就类似nginx，通过代理能实现负载均衡/主写从读/失败重试等功能。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt; MySQL Proxy就是这么一个中间层代理，简单的说，MySQL Proxy就是一个连接池，负责将前台应用的连接请求转发给后台的数据库，并且通过使用lua脚本，可以实现复杂的连接控制和过滤，&lt;br&gt;    从而实现读写分离和负载平衡。对于应用来说，MySQL Proxy
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="数据库" scheme="http://yoursite.com/blog/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
+  
+  <entry>
     <title>group by和聚合函数</title>
     <link href="http://yoursite.com/blog/2020/03/03/3-3%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>http://yoursite.com/blog/2020/03/03/3-3技术笔记/</id>
     <published>2020-03-03T11:30:41.000Z</published>
-    <updated>2020-03-03T13:16:46.338Z</updated>
+    <updated>2020-03-03T13:20:06.047Z</updated>
     
     <content type="html"><![CDATA[<h2 id="sum"><a href="#sum" class="headerlink" title="sum"></a>sum</h2><p>比如说简单的一张表，学生-学科-成绩。</p><p>要查每个学生的总成绩，用sum和group by可以写</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span>， <span class="keyword">SUM</span>(score) <span class="keyword">as</span> totalscore </span><br><span class="line"><span class="keyword">from</span> stuscore </span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> <span class="keyword">name</span> </span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> totalscore <span class="keyword">desc</span></span><br></pre></td></tr></table></figure><h2 id="group-by-多字段"><a href="#group-by-多字段" class="headerlink" title="group by 多字段"></a>group by 多字段</h2><p>如果 group by 多个字段，那么这些不同的多条数据之间，只有这些字段的值<strong>全部</strong>一致，才会被合并到一条记录中，如果有各别字段不一致，将会生成更多的组。</p><h2 id="同一张表多条件"><a href="#同一张表多条件" class="headerlink" title="同一张表多条件"></a>同一张表多条件</h2><p>比如说，有数学课，并且没有语文课的学生</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> *</span><br><span class="line"><span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">where</span> subject =<span class="string">"数学"</span> <span class="keyword">and</span> subject !=<span class="string">"语文"</span></span><br></pre></td></tr></table></figure><p>这些写显然是<strong>不对</strong>的，where条件里满足了数学，肯定自然满足了没有语文。</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">distinct</span> <span class="keyword">NAME</span> <span class="keyword">FROM</span> qtest T </span><br><span class="line"><span class="keyword">WHERE</span> <span class="keyword">EXISTS</span>(<span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">FROM</span> qtest <span class="keyword">WHERE</span> uid=T.uid  <span class="keyword">AND</span> subject=<span class="string">'数学'</span>) <span class="keyword">AND</span> </span><br><span class="line"><span class="keyword">NOT</span> <span class="keyword">EXISTS</span>(<span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">FROM</span> qtest <span class="keyword">WHERE</span> uid=T.uid  <span class="keyword">AND</span> subject=<span class="string">'语文'</span>)</span><br></pre></td></tr></table></figure><p>EXISTS在SQL中的作用是：检验查询是否返回数据。</p><p>select a.* from tb a where exists(select 1 from tb where name =a.name)返回真假，当 where 后面的条件成立，则列出数据，否则为空。</p><h2 id="HAVING"><a href="#HAVING" class="headerlink" title="HAVING"></a>HAVING</h2><p>在 SQL 中增加 HAVING 子句原因是，WHERE 关键字无法与合计函数一起使用。</p><p>找出平均分大于70的学生</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span> </span><br><span class="line"><span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">having</span> <span class="keyword">avg</span>(score)&gt;<span class="number">70</span></span><br></pre></td></tr></table></figure>]]></content>
     
@@ -520,32 +545,6 @@
     
     
       <category term="分布式" scheme="http://yoursite.com/blog/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>mysql支持json</title>
-    <link href="http://yoursite.com/blog/2019/12/11/12-11%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>http://yoursite.com/blog/2019/12/11/12-11技术笔记-1/</id>
-    <published>2019-12-11T06:16:54.000Z</published>
-    <updated>2019-12-26T03:07:23.915Z</updated>
-    
-    <content type="html"><![CDATA[<p>mysql自5.7开始支持json。</p><h2 id="数据库建表"><a href="#数据库建表" class="headerlink" title="数据库建表"></a>数据库建表</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`json_test`</span> (</span><br><span class="line">  <span class="string">`id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">unsigned</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  <span class="string">`user_id`</span> <span class="built_in">bigint</span>(<span class="number">20</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'1'</span> <span class="keyword">COMMENT</span> <span class="string">'用户ID '</span>,</span><br><span class="line">  <span class="string">`attr`</span> <span class="keyword">json</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">'属性类型'</span>,</span><br><span class="line">  <span class="string">`update_time`</span> <span class="built_in">timestamp</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="keyword">CURRENT_TIMESTAMP</span>,</span><br><span class="line">  <span class="string">`create_time`</span> <span class="built_in">timestamp</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="keyword">CURRENT_TIMESTAMP</span> <span class="keyword">ON</span> <span class="keyword">UPDATE</span> <span class="keyword">CURRENT_TIMESTAMP</span>,</span><br><span class="line">  PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> AUTO_INCREMENT=<span class="number">3</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8mb4;</span><br></pre></td></tr></table></figure><h2 id="数组中查询"><a href="#数组中查询" class="headerlink" title="数组中查询"></a>数组中查询</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="string">`json_test`</span> (<span class="keyword">attr</span>) <span class="keyword">VALUES</span> (<span class="string">'[1, 2, 3]'</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> json_test <span class="keyword">WHERE</span> JSON_CONTAINS(<span class="keyword">attr</span>, <span class="string">'2'</span>)</span><br></pre></td></tr></table></figure><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">iduser_idattr    update_time        create_time</span><br><span class="line">11    [1, 2, 3]2019-12-11 11:45:062019-12-11 11:45:06</span><br></pre></td></tr></table></figure><h2 id="key-value查询"><a href="#key-value查询" class="headerlink" title="key-value查询"></a>key-value查询</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="string">`json_test`</span> (<span class="keyword">attr</span>) <span class="keyword">VALUES</span> (<span class="string">'&#123;"color":"red","height":1.5&#125;'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> json_test <span class="keyword">WHERE</span> <span class="keyword">attr</span>-&gt;<span class="string">'$.color'</span> = <span class="string">'red'</span></span><br></pre></td></tr></table></figure><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">iduser_id attr                               update_time create_time</span><br><span class="line">21     &#123;"color": "red", "height": 1.5&#125;2019-12-11 11:54:442019-12-11 11:54:44</span><br></pre></td></tr></table></figure><p>也可以查key存在</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> json_test <span class="keyword">WHERE</span> JSON_CONTAINS_PATH(<span class="keyword">attr</span>,<span class="string">'all'</span>,<span class="string">'$.color'</span>)</span><br></pre></td></tr></table></figure><p>或者用 JSON_EXTRACT查value存在</p><h2 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h2><p>全部更新和插入类似。</p><p>也可以指定key，更新value</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">UPDATE</span> json_test <span class="keyword">SET</span> <span class="keyword">attr</span> = JSON_SET(<span class="keyword">attr</span>, <span class="string">'$.color'</span>, <span class="string">'blue'</span>) <span class="keyword">WHERE</span> <span class="keyword">id</span> = <span class="number">2</span>;</span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;mysql自5.7开始支持json。&lt;/p&gt;
-&lt;h2 id=&quot;数据库建表&quot;&gt;&lt;a href=&quot;#数据库建表&quot; class=&quot;headerlink&quot; title=&quot;数据库建表&quot;&gt;&lt;/a&gt;数据库建表&lt;/h2&gt;&lt;figure class=&quot;highlight sql&quot;&gt;&lt;tabl
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="数据库" scheme="http://yoursite.com/blog/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
     
   </entry>
   
