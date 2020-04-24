@@ -251,6 +251,167 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/28/9-28技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/09/28/9-28技术笔记/" itemprop="url">命令模式，解释器模式</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-28T16:41:13+08:00">
+                2018-09-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="命令模式"><a href="#命令模式" class="headerlink" title="命令模式"></a>命令模式</h1><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>命令式操控，使用命令模式，独立出命令对象，使得命令发出者和接受者解耦。</p>
+<h2 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h2><ol>
+<li><p>命令接收者，执行任务</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public class Receiver &#123;</span><br><span class="line">    public void DoA()&#123;System.out.println(&quot;DoA&quot;);&#125;</span><br><span class="line">    public void DoB()&#123;System.out.println(&quot;DoB&quot;);&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>命令接口</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public interface Command &#123;</span><br><span class="line">    void Execute();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>具体任务类，持有接受者对象，通过构造函数注入，执行调用接受者的执行方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public class CommandB implements Command &#123;</span><br><span class="line">    private Receiver receiver;</span><br><span class="line"></span><br><span class="line">    CommandB(Receiver receiver) &#123;</span><br><span class="line">        this.receiver = receiver;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void Execute() &#123;</span><br><span class="line">        this.receiver.DoB();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">//多个具体任务类  </span><br><span class="line">public class CommandA implements Command &#123;</span><br><span class="line">    private Receiver receiver;</span><br><span class="line"></span><br><span class="line">    CommandA(Receiver receiver) &#123;</span><br><span class="line">        this.receiver = receiver;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void Execute() &#123;</span><br><span class="line">        this.receiver.DoA();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>命令发起者类持有命令对象，通过设置函数注入，执行任务调用命令的执行方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class Invoker &#123;</span><br><span class="line">    private Command command =null;</span><br><span class="line"></span><br><span class="line">    public void setCommand(Command command) &#123;</span><br><span class="line">        this.command = command;</span><br><span class="line">    &#125;</span><br><span class="line">    public void run()&#123;</span><br><span class="line">        command.Execute();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>具体使用，构造接受者和命令发起者对象，命令发起者设置函数设命令，然后命令者执行。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class Client &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Receiver receiver = new Receiver();</span><br><span class="line">        Invoker invoker = new Invoker();</span><br><span class="line">        invoker.setCommand(new CommandA(receiver));</span><br><span class="line">        invoker.run();</span><br><span class="line">        invoker.setCommand(new CommandB(receiver));</span><br><span class="line">        invoker.run();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="感受"><a href="#感受" class="headerlink" title="感受"></a>感受</h2><p>虽然命令发起者与接受者解耦了，但命令的接受者即执行者和命令本身是耦合的。这并不要紧，因为本来命令就依赖于命令的执行者如何执行。</p>
+<h1 id="解释器模式"><a href="#解释器模式" class="headerlink" title="解释器模式"></a>解释器模式</h1><p>类似于编译器或者文法词法分析器这样，解析一串表达式，实际上无论是数学表达式，xml，json，java都有自己的解析库。<br>该模式，大抵来讲，把节点分为终结节点和非终结节点，非终结节点持有其上下对点对象，或者持有整个数组，然后通过递归调用等方式，完成解释。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/27/9-27技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1687,159 +1848,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/09/17/9-17技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/09/17/9-17技术笔记/" itemprop="url">springboot+mybaits</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-17T19:28:57+08:00">
-                2018-09-17
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>用了一天跑通了springboot+mybaits，中间也遇见了不少坑，下次应该记录下来的。<br>大体参考这篇博客，<a href="https://www.cnblogs.com/zslli/p/8779449.html" target="_blank" rel="noopener">https://www.cnblogs.com/zslli/p/8779449.html</a></p>
-<ol>
-<li>直接new spring即可，然后可以先选上需要的依赖</li>
-<li><p>配置里写，关于mabaits这两点应该写对，不然会报mybatis Invalid bound statement (not found)异常</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mybatis.type-aliases-package=com.example.demo.pojo</span><br><span class="line">mybatis.mapper-locations=classpath*:/mapping/*.xml</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>mybatis genetator的配置文件，注意数据库连接账号密码，生成文件路径，然后再run里编辑maven启动项，注意不要多次运行，运行通一次即可，多次的话xml文件会重复生成。账号密码有误等，可能报Access denied for user ‘root‘@’localhost’ (using password: YES)</p>
-</li>
-<li>@RestController，网页呈现return的内容。@Controller，网页呈现返回的字符串对应的文件的网页。</li>
-<li>@GetMapping=@RequestMapping（Method=GET）,当然@PostMapping等注解也是一致</li>
-<li>jackson注解：<br>@JsonFormat(pattern = “yyyy-MM-dd HH:mm:ss”, timezone = “GMT+8”)<br>指定Date类字段序列化时的格式；<br>@JsonInclude()，可以填一个Include枚举中的参数，指定当什么时候；<br>@JsonIgnore序列化时忽略此字段；<br>@JsonIgnoreProperties({“id”, “created”, “steps”})类注解，指定序列化时忽略这些属性，可以用于覆盖超类中默认输出的属性；    </li>
-</ol>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1890,7 +1898,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">216</span>
+                  <span class="site-state-item-count">217</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

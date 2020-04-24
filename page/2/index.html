@@ -251,6 +251,153 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2020/02/13/2-13技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2020/02/13/2-13技术笔记-1/" itemprop="url">内存碎片与内存整理</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-02-13T17:57:03+08:00">
+                2020-02-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>内存碎片分为两种，内部碎片和外部碎片。可以简单认为，内部碎片是分页导致的，外部碎片是分段导致的。</p>
+<h1 id="slub"><a href="#slub" class="headerlink" title="slub"></a>slub</h1><p>linux kernel 通过把整个物理内存划分成以一个个page进行管理，管理器就是伙伴系统，它的最小分配单元就是page。但是对于小于page的内存分配，如果直接分配一个page，是一个很大的浪费。linux kernel 通过slab来实现对小于page大小的内存分配。slab把page按2的m次幂进行划分一个个字节块，当kmalloc申请内存时，通过slab管理器返回需要满足申请大小的最小空闲内存块。</p>
+<p>解决了内部碎片的问题。</p>
+<p>slab是Linux操作系统的一种内存分配机制。其工作是针对一些经常分配并释放的对象，如进程描述符等，这些对象的大小一般比较小，如果直接采用伙伴系统来进行分配和释放，不仅会造成大量的内存碎片，而且处理速度也太慢。<br>而slab分配器是基于对象进行管理的，相同类型的对象归为一类(如进程描述符就是一类)，每当要申请这样一个对象，slab分配器就从一个slab列表中分配一个这样大小的单元出去，而当要释放时，将其重新保存在该列表中，而不是直接返回给伙伴系统，从而避免这些内碎片。slab分配器并不丢弃已分配的对象，而是释放并把它们保存在内存中。当以后又要请求新的对象时，就可以从内存直接获取而不用重复初始化。</p>
+<h1 id="buddy"><a href="#buddy" class="headerlink" title="buddy"></a>buddy</h1><p>Linux采用著名的伙伴系统(buddy system)算法来解决外碎片问题。把所有的空闲页框分组为11个块链表，每个链表分别包含大小为1,2,4,8,16,32,64,128,256,512,1024个连续的页框，对1024个页框的最大请求对应着4MB大小的连续RAM（每页大小为4KB），每个块的第一个页框的物理地址是该块大小的整数倍，例如，大小为16个页框的块，其起始地址是16*2^12的倍数。</p>
+<p>假设现在要请求一个256个页框的块（1MB），算法步骤如下：<br>• 在256个页框的链表中检查是否有一个空闲快，如果没有，查找下一个更大的块，如果有，请求满足。<br>• 在512个页框的链表中检查是否有一个空闲块，如果有，把512个页框的空闲块分为两份，第一份用于满足请求，第二份链接到256个页框的链表中。如果没有空闲块，继续寻找下一个更大的块。<br>以上过程的逆过程，就是页框块的释放过程，也是该算法名字的由来，内核试图把大小为B的一对空闲伙伴块合并为一个2B的单独块，满足以下条件的两个块称之为伙伴：<br>• 两个块具有相同的大小<br>• 他们的物理地址是连续的<br>第一块的第一个页框的物理地址是2 <em> B </em> 2^12<br>该算法是递归的，如果它成功合并了B，就会试图去合并2B，以再次试图形成更大的块。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2020/02/12/2-12技术笔记-2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1703,148 +1850,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/12/19/12-19技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/12/19/12-19技术笔记/" itemprop="url">分布式对时</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-19T14:34:56+08:00">
-                2019-12-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p><a href="https://docs.qq.com/pdf/DT1VSaFBvSGx3RWxi" target="_blank" rel="noopener">https://docs.qq.com/pdf/DT1VSaFBvSGx3RWxi</a></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1895,7 +1900,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">216</span>
+                  <span class="site-state-item-count">217</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
