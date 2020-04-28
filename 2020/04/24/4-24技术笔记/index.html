@@ -90,7 +90,7 @@
 <meta property="og:description" content="TIME_WAIT状态产生背景 在tcp四次挥手中，断联一方，收到被断联方的FIN后，发出ACK，并不会直接到close状态，而是先处于TIME—WAIT，等待两个MSL（报文最大生存时间）后，才会到closed态。 这样做是为了保证可靠性，由于网络原因，ACK可能会发送失败，那么这个时候，被动一方会主动重新发送一次FIN，这个时候如果主动方在TIME_WAIT状态，则还会再发送一次ACK，从而保">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://upload-images.jianshu.io/upload_images/1446087-d0c9996dc421bf05.jpg?imageMogr2/auto-orient/strip|imageView2/2/w/472/format/webp">
-<meta property="og:updated_time" content="2020-04-24T03:16:41.127Z">
+<meta property="og:updated_time" content="2020-04-28T14:22:26.801Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="TIME_AWAIT大量出现及解决办法">
 <meta name="twitter:description" content="TIME_WAIT状态产生背景 在tcp四次挥手中，断联一方，收到被断联方的FIN后，发出ACK，并不会直接到close状态，而是先处于TIME—WAIT，等待两个MSL（报文最大生存时间）后，才会到closed态。 这样做是为了保证可靠性，由于网络原因，ACK可能会发送失败，那么这个时候，被动一方会主动重新发送一次FIN，这个时候如果主动方在TIME_WAIT状态，则还会再发送一次ACK，从而保">
@@ -352,7 +352,6 @@
 <h3 id="服务端TIME-WAIT过多"><a href="#服务端TIME-WAIT过多" class="headerlink" title="服务端TIME_WAIT过多"></a>服务端TIME_WAIT过多</h3><p>在HTTP1.1协议中，有个 Connection 头，Connection有两个值，close和keep-alive，这个头就相当于客户端告诉服务端，服务端你执行完成请求之后，是关闭连接还是保持连接，保持连接就意味着在保持连接期间，只能由客户端主动断开连接。还有一个keep-alive的头，设置的值就代表了服务端保持连接保持多久。</p>
 <p>HTTP默认的Connection值为close，那么就意味着关闭请求的一方几乎都会是由服务端这边发起的。那么这个服务端产生TIME_WAIT过多的情况就很正常了。</p>
 <p>虽然HTTP默认Connection值为close，但是现在的浏览器发送请求的时候一般都会设置Connection为keep-alive了。所以，也有人说，现在没有必要通过调整参数来使TIME_WAIT降低了。</p>
-<p>作者：大富帅<br>链接：<a href="https://www.jianshu.com/p/2da62c5e10fa" target="_blank" rel="noopener">https://www.jianshu.com/p/2da62c5e10fa</a><br>来源：简书<br>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
 
       
     </div>
@@ -392,6 +391,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/blog/2020/04/28/4-28技术笔记-1/" rel="prev" title="4-28技术笔记">
+                4-28技术笔记 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -468,7 +471,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">217</span>
+                  <span class="site-state-item-count">218</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

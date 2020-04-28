@@ -251,6 +251,155 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/14/8-14技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/08/14/8-14技术笔记/" itemprop="url">final和反射</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-14T14:02:42+08:00">
+                2018-08-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="final"><a href="#final" class="headerlink" title="final"></a>final</h1><h2 id="不可改变"><a href="#不可改变" class="headerlink" title="不可改变"></a>不可改变</h2><p>final基本数据类型，则该基本数据类型值不可改变；final对象，指的是对该对象的引用不可改变。  </p>
+<h2 id="空白final"><a href="#空白final" class="headerlink" title="空白final"></a>空白final</h2><p>类的final域不初始化，而是在构造函数中初始化，这样类的每个对象该属性值可以不同。  </p>
+<h2 id="final参数"><a href="#final参数" class="headerlink" title="final参数"></a>final参数</h2><p>无法在方法中更改参数引用所指的对象。  </p>
+<h2 id="final方法"><a href="#final方法" class="headerlink" title="final方法"></a>final方法</h2><p>防止任何继承类修改其定义，继承中方法行为保持不变，不会被覆盖。  </p>
+<h2 id="private"><a href="#private" class="headerlink" title="private"></a>private</h2><p>private定义里包含final。（尝试重写一个private方法，不会重写，但会生成一个同名新方法，使用@Override避免此尴尬）  </p>
+<h2 id="final类"><a href="#final类" class="headerlink" title="final类"></a>final类</h2><p>无法被继承，方法无法被覆盖。  </p>
+<h1 id="反射"><a href="#反射" class="headerlink" title="反射"></a>反射</h1><h2 id="class"><a href="#class" class="headerlink" title="class"></a>class</h2><p>每个类拥有自己的class对象，通过类名.class或者对象名.getclass()获得，或者直接通过Class的静态函数Class.forName(),参数为类的名字获得该对象。<br>该对象有大量的get和is方法，通过他们获得该类的信息，是否是接口，获得构造函数等等。<br>可以通过class对象创建该类的对象，使用对象.newInstance(),通过其无参构造函数获得对象。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;?&gt; c=finaltry1.getClass();</span><br><span class="line">Class&lt;?&gt; d=Finaltry.class;</span><br><span class="line">try &#123;</span><br><span class="line">    Class&lt;?&gt; e=Class.forName(&quot;Finaltry&quot;);</span><br><span class="line">    java.lang.Object finaltry3=e.newInstance();</span><br><span class="line">    System.out.println(((Finaltry)finaltry3).j);</span><br><span class="line">&#125; catch (ClassNotFoundException |InstantiationException |IllegalAccessException e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br></pre></td></tr></table></figure></p>
+<h2 id="reflect"><a href="#reflect" class="headerlink" title="reflect"></a>reflect</h2><p>使用Constructor对象创建新的对象，使用Field对象get和set方法读取和修改相关联的字段，使用invoke()方法调用Method对象关联的方法。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public class Finaltry &#123;</span><br><span class="line">    private int j;</span><br><span class="line">    public Finaltry()&#123;this.j=1;&#125;</span><br><span class="line">    public Finaltry(int j)&#123;</span><br><span class="line">        this.j=j;</span><br><span class="line">    &#125;</span><br><span class="line">    public void show()&#123;</span><br><span class="line">        System.out.println(&quot;***&quot;);&#125;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Finaltry finaltry1=new Finaltry();</span><br><span class="line">        Method method1=d.getDeclaredMethod(&quot;show&quot;);</span><br><span class="line">        method1.invoke(finaltry1);</span><br><span class="line"></span><br><span class="line">        Method method2[]=d.getMethods();</span><br><span class="line">        method2[1].invoke(finaltry1);</span><br><span class="line"></span><br><span class="line">        Constructor constructor[]= d.getConstructors();</span><br><span class="line">        java.lang.Object ff=constructor[1].newInstance(1);</span><br><span class="line"></span><br><span class="line">        Field field=d.getDeclaredField(&quot;j&quot;);</span><br><span class="line">        System.out.println(field.get(finaltry1));</span><br><span class="line">        field.setAccessible(true);</span><br><span class="line">        field.set(finaltry1,4);</span><br><span class="line">      &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/13/8-13技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1749,148 +1898,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/08/03/刨根挖底/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/08/03/刨根挖底/" itemprop="url">刨根挖底，群众反映</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-03T17:36:07+08:00">
-                2018-08-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/杂谈/" itemprop="url" rel="index">
-                    <span itemprop="name">杂谈</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>&emsp;&emsp;今天看见句对最近各种封杀时间的评价，“刑不可知,则威不可测”，大概就是讲，从暴走大事件到陈一发儿被封，大概就是体现这句话吧。<br>&emsp;&emsp;陈一发儿已经是被挖出来两年前的东西了，其实就是YYF这种主播，也会说“雷锋”啊什么的话，真要挖很容易挖出来的，一个资本大鳄，几十个活动组织，无数洪小将，很快就能让一个人完蛋，我想现在肯定有人正组织人看想整的人的录像，刨根挖底想挖点什么呢。<br>&emsp;&emsp;但我最奇怪的是，不过现在也能理解，就是我原来逛得两个论坛，虎扑和NGA，意见基本上大半是“关我屁事”，小半是“早看他不爽了”，也有可能是删帖和舆论引导的结果，但NGA是老魔兽世界玩家社区，当年也遭受了不少什么电子鸦片的舆论攻击，想不到这么快就媳妇儿熬成婆了，而虎扑用户画像更加年轻，可能大学生为主，居然也是这样反映。<br>&emsp;&emsp;其实想说的也不是人治法治什么的，是大部分人还是只能从自己的角度看问题，所谓屁股决定脑袋，当年喜欢周杰伦，被人攻击，现在有了一点点话语权，马上看不上转过头攻击华晨宇张杰。<br>&emsp;&emsp;据说本科生只占同龄人的13%，那么看来985更是少之又少，取样的偏差会使人难以正确观测世界，我本觉得我观世人皆煞笔，料世人观我应如是。要是从这个角度，倒也不一定，说不定真是世人煞笔居多呢。<br>&emsp;&emsp;但我又区别不大吗？我对抖音、王者荣耀、华晨宇等等，最多也只能做到不歧视，还是只能抱着刀塔，甚至甚至，抱着鲍勃迪伦，我又何尝敢于尝试这些新生代的呢？说是不敢没兴趣，心里恐怕还是有些鄙夷的吧。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1941,7 +1948,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">217</span>
+                  <span class="site-state-item-count">218</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
