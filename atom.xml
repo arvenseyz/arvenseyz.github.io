@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2020-04-28T14:22:22.854Z</updated>
+  <updated>2020-05-06T08:20:54.080Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -17,11 +17,34 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>4-28技术笔记</title>
+    <title>不及格，优秀，前三名sql</title>
+    <link href="http://yoursite.com/blog/2020/05/06/5-6%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>http://yoursite.com/blog/2020/05/06/5-6技术笔记-1/</id>
+    <published>2020-05-06T07:37:13.000Z</published>
+    <updated>2020-05-06T08:20:54.080Z</updated>
+    
+    <content type="html"><![CDATA[<h3 id="不及格的学生"><a href="#不及格的学生" class="headerlink" title="不及格的学生"></a>不及格的学生</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> uid,<span class="keyword">name</span>,<span class="keyword">avg</span>(score) <span class="keyword">as</span> avg_score <span class="keyword">from</span> qtest </span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> uid <span class="keyword">having</span> avg_score&gt;<span class="number">60</span></span><br></pre></td></tr></table></figure><h3 id="每门课成绩都不低于80的学生"><a href="#每门课成绩都不低于80的学生" class="headerlink" title="每门课成绩都不低于80的学生"></a>每门课成绩都不低于80的学生</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">distinct</span> uid </span><br><span class="line"><span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">where</span> uid <span class="keyword">not</span> <span class="keyword">in</span> (</span><br><span class="line"><span class="keyword">select</span> uid </span><br><span class="line"><span class="keyword">from</span> qtest </span><br><span class="line"><span class="keyword">where</span> score&lt;<span class="number">80</span>)</span><br></pre></td></tr></table></figure><h3 id="总成绩前三名"><a href="#总成绩前三名" class="headerlink" title="总成绩前三名"></a>总成绩前三名</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span>  uid,<span class="keyword">sum</span>(score) <span class="keyword">as</span> sum_score <span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> uid</span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> sum_score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">3</span></span><br></pre></td></tr></table></figure><h3 id="语文第二名"><a href="#语文第二名" class="headerlink" title="语文第二名"></a>语文第二名</h3><p>先查第三名语文的分数</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> score <span class="keyword">from</span> qtest <span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">group</span> <span class="keyword">by</span> score <span class="keyword">order</span> <span class="keyword">by</span> score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>,<span class="number">1</span>;</span><br></pre></td></tr></table></figure><p>再找人</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span>,uid <span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">and</span> score=(</span><br><span class="line"><span class="keyword">select</span> score <span class="keyword">from</span> qtest <span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">group</span> <span class="keyword">by</span> score <span class="keyword">order</span> <span class="keyword">by</span> score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>,<span class="number">1</span>)</span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h3 id=&quot;不及格的学生&quot;&gt;&lt;a href=&quot;#不及格的学生&quot; class=&quot;headerlink&quot; title=&quot;不及格的学生&quot;&gt;&lt;/a&gt;不及格的学生&lt;/h3&gt;&lt;figure class=&quot;highlight sql&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutte
+      
+    
+    </summary>
+    
+    
+      <category term="数据库" scheme="http://yoursite.com/blog/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>重名，前三名sql</title>
     <link href="http://yoursite.com/blog/2020/04/28/4-28%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
     <id>http://yoursite.com/blog/2020/04/28/4-28技术笔记-1/</id>
     <published>2020-04-28T10:27:10.000Z</published>
-    <updated>2020-04-28T14:22:22.854Z</updated>
+    <updated>2020-05-06T07:38:04.561Z</updated>
     
     <content type="html"><![CDATA[<h3 id="查询student表中重名的学生"><a href="#查询student表中重名的学生" class="headerlink" title="查询student表中重名的学生"></a>查询student表中重名的学生</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">id</span>,<span class="keyword">name</span></span><br><span class="line"><span class="keyword">from</span> student</span><br><span class="line"><span class="keyword">where</span> <span class="keyword">name</span> <span class="keyword">in</span> (</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">name</span> <span class="keyword">from</span> student <span class="keyword">group</span> <span class="keyword">by</span> <span class="keyword">name</span> <span class="keyword">having</span>(<span class="keyword">count</span>(*) &gt; <span class="number">1</span>)</span><br><span class="line">) <span class="keyword">order</span> <span class="keyword">by</span> <span class="keyword">name</span>;</span><br></pre></td></tr></table></figure><h3 id="每门课第一名（支持并列）"><a href="#每门课第一名（支持并列）" class="headerlink" title="每门课第一名（支持并列）"></a>每门课第一名（支持并列）</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> qtest <span class="keyword">as</span> x <span class="keyword">where</span> score=</span><br><span class="line">(<span class="keyword">select</span> <span class="keyword">max</span>(score) <span class="keyword">from</span> qtest  <span class="keyword">where</span> subject=x.subject);</span><br></pre></td></tr></table></figure><p>即自连接，看成ab两张表，a中等于b中该学科最高成绩的。</p><h3 id="每门课前三名"><a href="#每门课前三名" class="headerlink" title="每门课前三名"></a>每门课前三名</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> qtest x <span class="keyword">where</span></span><br><span class="line"><span class="number">1</span>&gt;(<span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">from</span> qtest  <span class="keyword">where</span> subject=x.subject <span class="keyword">and</span> score&gt;x.score)</span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> subject,score <span class="keyword">desc</span>;</span><br></pre></td></tr></table></figure>]]></content>
     
@@ -506,35 +529,6 @@
         &lt;h1 id=&quot;互斥锁&quot;&gt;&lt;a href=&quot;#互斥锁&quot; class=&quot;headerlink&quot; title=&quot;互斥锁&quot;&gt;&lt;/a&gt;互斥锁&lt;/h1&gt;&lt;p&gt;即最简单的锁机制，这样多线程只会同时有一个执行关键代码。&lt;/p&gt;
 &lt;p&gt;显然锁操作有四种，申请锁，上锁，解锁，销毁锁。&lt;/p&gt;
 &lt;f
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="操作系统" scheme="http://yoursite.com/blog/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>进程调度算法</title>
-    <link href="http://yoursite.com/blog/2020/02/04/2-4%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2020/02/04/2-4技术笔记/</id>
-    <published>2020-02-04T09:14:24.000Z</published>
-    <updated>2020-02-05T03:02:18.785Z</updated>
-    
-    <content type="html"><![CDATA[<p>cpu调度算法有六种，我觉得可以分为两类，四种基础思路，两种复杂的真正使用的。</p><ol><li><p>先到先得，很简单，但不现实，长作业到了，一直持有cpu，其他的傻眼了。</p></li><li><p>按优先级，这个也可以细分为抢占式和非抢占式，就是说有更高优先级的来了，立刻执行还是等当先任务结束。</p></li><li><p>短作业优先，一直有短作业插入，长作业无限等。</p></li><li><p>时间片轮转，把所有就绪的进程按先进先出的原则排成队列，进程以时间片q位单位轮流使用CPU，进程循环轮转使用CPU。缺点在于时间片长短难以确定，如果q太大,则交互性差，设置退化位FCFS调度方法；如果q太小，进程切换频繁，系统开销增加。</p></li><li><p>响应比优先，这样兼顾了等得久的先执行，时间短的先执行。优点是兼顾长短作业，缺点是计算响应比开销大，适用于批处理系统。</p></li><li><p>多级反馈队列调度算法：将时间片轮转与优先级调度相结合，把进程按优先级分成不同的队列，先按优先级调度，优先级相同的，按时间片轮转。优点是兼顾长短作业，有较好的响应时间，可行性强，适用于各种作业环境。</p></li></ol>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;cpu调度算法有六种，我觉得可以分为两类，四种基础思路，两种复杂的真正使用的。&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;先到先得，很简单，但不现实，长作业到了，一直持有cpu，其他的傻眼了。&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;按优先级，这个也可以细分为抢占式和非抢占式，就是说有更高
       
     
     </summary>
