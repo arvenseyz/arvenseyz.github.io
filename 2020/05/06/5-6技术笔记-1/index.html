@@ -89,7 +89,7 @@
 <meta property="og:site_name" content="Arvense">
 <meta property="og:description" content="不及格的学生12select uid,name,avg(score) as avg_score from qtest group by uid having avg_score&amp;gt;60 每门课成绩都不低于80的学生123456select distinct uid from qtestwhere uid not in (select uid from qtest where score&amp;lt;">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2020-05-06T08:20:54.080Z">
+<meta property="og:updated_time" content="2020-05-08T13:30:18.367Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="不及格，优秀，前三名sql">
 <meta name="twitter:description" content="不及格的学生12select uid,name,avg(score) as avg_score from qtest group by uid having avg_score&amp;gt;60 每门课成绩都不低于80的学生123456select distinct uid from qtestwhere uid not in (select uid from qtest where score&amp;lt;">
@@ -329,6 +329,8 @@
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> score <span class="keyword">from</span> qtest <span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">group</span> <span class="keyword">by</span> score <span class="keyword">order</span> <span class="keyword">by</span> score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>,<span class="number">1</span>;</span><br></pre></td></tr></table></figure>
 <p>再找人</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span>,uid <span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">and</span> score=(</span><br><span class="line"><span class="keyword">select</span> score <span class="keyword">from</span> qtest <span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">group</span> <span class="keyword">by</span> score <span class="keyword">order</span> <span class="keyword">by</span> score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>,<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+<h3 id="各门功课前三"><a href="#各门功课前三" class="headerlink" title="各门功课前三"></a>各门功课前三</h3><p>相同思路，先找第三名分数，再找人</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> qtest <span class="keyword">as</span> x <span class="keyword">where</span> score &gt;</span><br><span class="line">(<span class="keyword">select</span> score <span class="keyword">from</span> qtest <span class="keyword">where</span> subject=x.subject <span class="keyword">ORDER</span> <span class="keyword">BY</span> score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>,<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
 
       
     </div>
@@ -506,7 +508,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#不及格的学生"><span class="nav-number">1.</span> <span class="nav-text">不及格的学生</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#每门课成绩都不低于80的学生"><span class="nav-number">2.</span> <span class="nav-text">每门课成绩都不低于80的学生</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总成绩前三名"><span class="nav-number">3.</span> <span class="nav-text">总成绩前三名</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#语文第二名"><span class="nav-number">4.</span> <span class="nav-text">语文第二名</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#不及格的学生"><span class="nav-number">1.</span> <span class="nav-text">不及格的学生</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#每门课成绩都不低于80的学生"><span class="nav-number">2.</span> <span class="nav-text">每门课成绩都不低于80的学生</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总成绩前三名"><span class="nav-number">3.</span> <span class="nav-text">总成绩前三名</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#语文第二名"><span class="nav-number">4.</span> <span class="nav-text">语文第二名</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#各门功课前三"><span class="nav-number">5.</span> <span class="nav-text">各门功课前三</span></a></li></ol></div>
             
 
           </div>
