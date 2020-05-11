@@ -251,6 +251,186 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/08/26/8-26技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/08/26/8-26技术笔记/" itemprop="url">重定向与文件描述符</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-26T10:31:51+08:00">
+                2019-08-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="重定向"><a href="#重定向" class="headerlink" title="重定向"></a>重定向</h1><p>标准输出是键盘，标准输出是屏幕，标准错误输出是屏幕。</p>
+<p>但是可以重定向，改变输入和输出的位置。</p>
+<h2 id="简单重定向"><a href="#简单重定向" class="headerlink" title="简单重定向"></a>简单重定向</h2><ul>
+<li>cmd &gt; file</li>
+</ul>
+<p>把cmd命令的输出重定向到文件file中。如果file已经存在，则清空原有文件，使用bash的<a href="http://linux-wiki.cn/index.php?title=Noclobber&amp;action=edit&amp;redlink=1" title="Noclobber（尚未撰写）" target="_blank" rel="noopener">noclobber</a>选项可以防止覆盖原有文件。</p>
+<ul>
+<li>cmd &gt;&gt; file</li>
+</ul>
+<p>把cmd命令的输出重定向到文件file中，如果file已经存在，则把信息加在原有文件后面。</p>
+<ul>
+<li>cmd &lt; file</li>
+</ul>
+<p>使cmd命令从file读入</p>
+<h2 id="文件描述符"><a href="#文件描述符" class="headerlink" title="文件描述符"></a>文件描述符</h2><p>Shell 中对文件描述符的操作由三部分组成:  <code>(Left, Operation, Right)</code>:</p>
+<ul>
+<li>Left 可以是 0-9 的数字, 代表第 n 号文件描述符;<ul>
+<li>Left 还可以为  <code>&amp;</code>, 表示同时操作  <code>stdout</code>  和  <code>stderr</code></li>
+</ul>
+</li>
+<li>Right 可以是文件名或 0-9 的数字, 当 Right 是数字时必须要加上  <code>&amp;</code>  符号, 表示引用第 n 号文件描述符;<ul>
+<li>Right 还可以为  <code>&amp;-</code>, 此时表示关闭 Left 描述符, 例如  <code>2&lt;&amp;-</code>  表示关闭 stderr;</li>
+</ul>
+</li>
+<li>Operation 可以为  <code>&lt;</code>  或  <code>&gt;</code>;<ul>
+<li>为  <code>&lt;</code>  时表示以读模式复制 Right 到 Left, 此时如果没有指定 Left 的话, 则为默认值 0;</li>
+<li>当为  <code>&gt;</code>  表示以写模式复制 Right 到 Left, 此时如果没有指定 Left 的话, 则为默认值 1;</li>
+<li>Operation 和 Left 之间不能有空格;</li>
+<li>当 Right 为文件名时, Operation 和 Right 可以有空格, 否则也不能有空格;</li>
+</ul>
+</li>
+</ul>
+<pre><code>可以使用exec命令创建自定义的描述符。
+</code></pre><p>   创建一个文件a，其内容是hello。实验如下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ cat 0&lt;a</span><br><span class="line">hello</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ ls &amp;&gt;a</span><br><span class="line">yangzhuo@n224-019-077:~/file$ cat a</span><br><span class="line">0703老清北线下发货明细 - 填写模板.csv</span><br><span class="line">7-8赠课.csv</span><br><span class="line">a</span><br><span class="line">buyGift.csv</span><br><span class="line">giftSheet.csv</span><br><span class="line">userInfo.csv</span><br><span class="line">换新单号表格.csv</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ ls noexist &amp;&gt;a</span><br><span class="line">yangzhuo@n224-019-077:~/file$ cat a</span><br><span class="line">ls: cannot access <span class="string">'noexist'</span>: No such file or directory</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ <span class="built_in">exec</span> 3&lt; a</span><br><span class="line">yangzhuo@n224-019-077:~/file$ cat &lt;&amp;3</span><br><span class="line">ls: cannot access <span class="string">'noexist'</span>: No such file or directory</span><br></pre></td></tr></table></figure>
+<p>如果要再次读取，我们就不能再继续使用文件描述符3了，而是需要用exec重新分配文件描述符3以便用于读取。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/08/22/8-22技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1639,162 +1819,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/07/11/7-11技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/07/11/7-11技术笔记/" itemprop="url">kafka技术杂记</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-11T16:59:15+08:00">
-                2019-07-11
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="发送方式"><a href="#发送方式" class="headerlink" title="发送方式"></a>发送方式</h1><p>kafka有同步（sync）、异步（async）以及oneway这三种发送方式，某些概念上区分也可以分为同步和异步两种，同步和异步的发送方式通过“producer.type”参数指定，而oneway由“request.require.acks”参数指定。</p>
-<ol>
-<li><p>同步就是每次发一条，然后刷盘，确认后再发第二条。</p>
-</li>
-<li><p>异步是生产者先把消息缓存起来，指定缓存的时间条数等，然后批量一起发送。</p>
-</li>
-<li><p>oneway就是只管发，不需要收到broker的消息确认。</p>
-</li>
-</ol>
-<h1 id="zookeeper"><a href="#zookeeper" class="headerlink" title="zookeeper"></a>zookeeper</h1><p>zookeeper主要用来管理broker，一个是broker的信息，另一方面是broker上下线的管理。因为zookeeper写性能不好，所以现在生产和消费者一般不连接zookeeper。生产者和消费者直接连接broker。</p>
-<h1 id="推vs拉"><a href="#推vs拉" class="headerlink" title="推vs拉"></a>推vs拉</h1><p>生产者把消息推向broker，消费者从broker拉消息。</p>
-<h1 id="重试"><a href="#重试" class="headerlink" title="重试"></a>重试</h1><p>生产者消息发送失败会重试，重试失败达到指定次数返回异常。</p>
-<p>问题在于，重试会破坏顺序性，如果要求顺序性，可以参数指定，重试时相当于阻塞。max.in.flight.requests.per.connection=1</p>
-<h1 id="消息分区"><a href="#消息分区" class="headerlink" title="消息分区"></a>消息分区</h1><p>如果不指定key，那么消息会随机分配到各个partition，相当于负载均衡。</p>
-<p>然而可以指定 partitioner 分区器，这样消息和partition就关联。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1845,7 +1869,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">219</span>
+                  <span class="site-state-item-count">220</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

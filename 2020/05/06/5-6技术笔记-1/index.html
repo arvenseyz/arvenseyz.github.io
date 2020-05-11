@@ -89,7 +89,7 @@
 <meta property="og:site_name" content="Arvense">
 <meta property="og:description" content="不及格的学生12select uid,name,avg(score) as avg_score from qtest group by uid having avg_score&amp;lt;60 每门课成绩都不低于80的学生123456select distinct uid from qtestwhere uid not in (select uid from qtest where score&amp;lt;">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2020-05-08T13:52:55.585Z">
+<meta property="og:updated_time" content="2020-05-11T03:25:59.582Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="不及格，优秀，前三名sql">
 <meta name="twitter:description" content="不及格的学生12select uid,name,avg(score) as avg_score from qtest group by uid having avg_score&amp;lt;60 每门课成绩都不低于80的学生123456select distinct uid from qtestwhere uid not in (select uid from qtest where score&amp;lt;">
@@ -326,9 +326,9 @@
 <h3 id="每门课成绩都不低于80的学生"><a href="#每门课成绩都不低于80的学生" class="headerlink" title="每门课成绩都不低于80的学生"></a>每门课成绩都不低于80的学生</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">distinct</span> uid </span><br><span class="line"><span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">where</span> uid <span class="keyword">not</span> <span class="keyword">in</span> (</span><br><span class="line"><span class="keyword">select</span> uid </span><br><span class="line"><span class="keyword">from</span> qtest </span><br><span class="line"><span class="keyword">where</span> score&lt;<span class="number">80</span>)</span><br></pre></td></tr></table></figure>
 <h3 id="总成绩前三名"><a href="#总成绩前三名" class="headerlink" title="总成绩前三名"></a>总成绩前三名</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span>  uid,<span class="keyword">sum</span>(score) <span class="keyword">as</span> sum_score <span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> uid</span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> sum_score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">3</span></span><br></pre></td></tr></table></figure>
 <h3 id="语文第二名"><a href="#语文第二名" class="headerlink" title="语文第二名"></a>语文第二名</h3><p>先查第三名语文的分数</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> score <span class="keyword">from</span> qtest <span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">group</span> <span class="keyword">by</span> score <span class="keyword">order</span> <span class="keyword">by</span> score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>,<span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> score <span class="keyword">from</span> qtest <span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">order</span> <span class="keyword">by</span> score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">2</span>,<span class="number">1</span>;</span><br></pre></td></tr></table></figure>
 <p>再找人</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span>,uid <span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">and</span> score=(</span><br><span class="line"><span class="keyword">select</span> score <span class="keyword">from</span> qtest <span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">group</span> <span class="keyword">by</span> score <span class="keyword">order</span> <span class="keyword">by</span> score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>,<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span>,uid <span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">and</span> score=(</span><br><span class="line"><span class="keyword">select</span> score <span class="keyword">from</span> qtest <span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">order</span> <span class="keyword">by</span> score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">2</span>,<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
 <h3 id="各门功课前三"><a href="#各门功课前三" class="headerlink" title="各门功课前三"></a>各门功课前三</h3><p>相同思路，先找第三名分数，再找人</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> qtest <span class="keyword">as</span> x <span class="keyword">where</span> score &gt;</span><br><span class="line">(<span class="keyword">select</span> score <span class="keyword">from</span> qtest <span class="keyword">where</span> subject=x.subject <span class="keyword">ORDER</span> <span class="keyword">BY</span> score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">2</span>,<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
 
@@ -370,6 +370,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/blog/2020/05/11/5-11技术笔记/" rel="prev" title="exist">
+                exist <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -446,7 +450,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">219</span>
+                  <span class="site-state-item-count">220</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
