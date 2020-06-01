@@ -251,6 +251,173 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/08/30/8-30技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/08/30/8-30技术笔记/" itemprop="url">grep与正则表达式</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-30T15:19:09+08:00">
+                2019-08-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="加单引号、双引号和不加引号"><a href="#加单引号、双引号和不加引号" class="headerlink" title="加单引号、双引号和不加引号"></a>加单引号、双引号和不加引号</h2><p><strong>单引号：</strong></p>
+<p>可以说是所见即所得：即将单引号内的内容原样输出，或者描述为单引号里面看到的是什么就会输出什么。单引号’’是全引用，被单引号括起的内容不管是常量还是变量者不会发生替换。</p>
+<p><strong>双引号：</strong></p>
+<p>把双引号内的内容输出出来；如果内容中有命令、变量等，会先把变量、命令解析出结果，然后在输出最终内容来。双引号””是部分引用，被双引号括起的内容常量还是常量，变量则会发生替换，替换成变量内容。</p>
+<p><strong>不加引号：</strong></p>
+<p>不会将含有空格的字符串视为一个整体输出, 如果内容中有命令、变量等，会先把变量、命令解析出结果，然后在输出最终内容来，如果字符串中带有空格等特殊字符，则不能完整的输出，需要改加双引号，一般连续的字符串，数字，路径等可以用。</p>
+<h2 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h2><p>grep搜索的内容，可以输入正则表达式，如果不想输入正则表达式，即不想被解析，可以使用fgerp。</p>
+<p>比如，有文件a，如下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ cat a</span><br><span class="line">s</span><br><span class="line">dsa</span><br><span class="line">fasf</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fsaf</span><br><span class="line">fasdasdw</span><br><span class="line">da</span><br></pre></td></tr></table></figure>
+<p>可以用[]来搜索集合字符，其中^表示不</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep l[sd] a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">yangzhuo@n224-019-077:~/file$ grep l[^<span class="built_in">cd</span>] a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br></pre></td></tr></table></figure>
+<p>grep l[sd] a表示在a中搜索ls或者ld。</p>
+<p>grep l[^cd] a表示a中搜索除了lc和ld其他。</p>
+<p>正如正则表达式，[1-9][a-z][^A-Z]这些表达也是可以的。</p>
+<h2 id="行首与行尾字符"><a href="#行首与行尾字符" class="headerlink" title="行首与行尾字符 ^ $"></a>行首与行尾字符 ^ $</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep ^f a</span><br><span class="line">fasf</span><br><span class="line">fsaf</span><br><span class="line">fasdasdw</span><br><span class="line">yangzhuo@n224-019-077:~/file$ grep w$ a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fasdasdw</span><br><span class="line">yangzhuo@n224-019-077:~/file$</span><br></pre></td></tr></table></figure>
+<p>如上，^表示句首，$表示句尾。同时可以使用正则表达式</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep ^[^sd] a</span><br><span class="line">fasf</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fsaf</span><br><span class="line">fasdasdw</span><br><span class="line">yangzhuo@n224-019-077:~/file$</span><br></pre></td></tr></table></figure>
+<p>表示不以s或者d开头的</p>
+<h2 id="转义与egrep"><a href="#转义与egrep" class="headerlink" title="转义与egrep"></a>转义与egrep</h2><p>正则表达式中，.表示任意字符，*表示重复前面字符0到无穷次，{a,b}表示重复前面字符a到b次，但是在grep中，输入这种特殊符号需要转义.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep w\* a</span><br><span class="line">s</span><br><span class="line">dsa</span><br><span class="line">fasf</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fsaf</span><br><span class="line">fasdasdw</span><br><span class="line">da</span><br></pre></td></tr></table></figure>
+<p>再比如</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ grep <span class="string">'w\+'</span> a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fasdasdw</span><br><span class="line">yangzhuo@n224-019-077:~/file$ grep <span class="string">'w\&#123;2,\&#125;'</span> a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br></pre></td></tr></table></figure>
+<p>没输一个字符都要转义，未免太麻烦了吧，可以使用egrep。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ egrep <span class="string">'w+'</span> a</span><br><span class="line">wwwwwwwlswwwwwwwwwwww</span><br><span class="line">fasdasdw</span><br></pre></td></tr></table></figure>
+<p>esay~~</p>
+<p>还有fgrep，就是怎么输都是纯文本</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/08/26/8-26技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1687,143 +1854,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/07/15/7-15技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/07/15/7-15技术笔记/" itemprop="url">Delve开发机调试</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-15T17:41:53+08:00">
-                2019-07-15
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go get github.com/derekparker/delve/cmd/dlv</span><br></pre></td></tr></table></figure>
-<p>一键安装，可能由于网速等原因，需要等待很久。</p>
-<p>输入dlv version验证安装成功</p>
-<h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><p>dlv debug delve-demo.go</p>
-<p>dlv test – -test.run <test function> </test></p>
-<h1 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h1><p>help输入帮助，b建立断点使用 <code>&lt;package&gt;.&lt;function&gt;</code>或是 <code>&lt;filename&gt;:&lt;line number&gt;</code>的格式。bp查看断点。</p>
-<p>c开始运行程序。</p>
-<p>單部執行： n<br>步入： s<br>步出：stepout  </p>
-<p>看函数参数：args</p>
-<p>看协程：goroutine</p>
-<p>看变量：print</p>
-<h1 id="然而"><a href="#然而" class="headerlink" title="然而"></a>然而</h1><p>1.如果写的是服务端程序，测试的时候是模拟rpc请求，这时自己的身份是rpc的消费者，生产者处打断点没用，生产者似乎无法在启动服务时打断点。</p>
-<p>2.goland有个go remote,可以输入开发机主机，但没有输密码的地方，当然连接不上。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/blog/page/4/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/blog/">1</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/blog/page/6/">6</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/22/">22</a><a class="extend next" rel="next" href="/blog/page/6/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/blog/page/4/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/blog/">1</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/blog/page/6/">6</a><span class="space">&hellip;</span><a class="page-number" href="/blog/page/23/">23</a><a class="extend next" rel="next" href="/blog/page/6/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1869,7 +1904,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">220</span>
+                  <span class="site-state-item-count">221</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
