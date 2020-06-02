@@ -251,6 +251,151 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/12/06/12-6技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/12/06/12-6技术笔记/" itemprop="url">redis分布式</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-06T19:55:00+08:00">
+                2018-12-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="主从备份"><a href="#主从备份" class="headerlink" title="主从备份"></a>主从备份</h1><p>redis支持主从备份，但从机只是防宕机的备份作用，采用读写分离可以缓解主机压力，但由于每次写操作后，主机数据同步到从机的过程，是非阻塞异步的，意味着这样有数据一致性的问题。</p>
+<h1 id="哨兵"><a href="#哨兵" class="headerlink" title="哨兵"></a>哨兵</h1><p>哨兵机制是，主机挂了自动找到合适的从机，并且将从机切换为主机。功能上，监控了主机和各从机是否正常；如果某redis实例有故障，通知管理员；出现故障后，自动找到从机将其切换为主机；如果故障转移发生了，通知client客户端有新的master地址。<br>为了避免哨兵自己挂了，哨兵也是集群的方式。</p>
+<h2 id="解决异步复制的一致性和脑裂问题"><a href="#解决异步复制的一致性和脑裂问题" class="headerlink" title="解决异步复制的一致性和脑裂问题"></a>解决异步复制的一致性和脑裂问题</h2><p>即，主机新的数据，还没复制到从机，主机就挂了怎么办。根据CAP定理，这个问题是无法完美解决的，只能有所取舍。取舍程度取决于两个参数：min-slaves-to-write 1 和 min-slaves-max-lag 10：<br>这两个参数的意思就是，要求至少有1个slave，数据复制和同步的延迟不能超过10s，如果说一旦所有的slave，数据复制和同步的延迟都超过10s，那么这个时候，master就不会再接受任何请求了。<br>一旦slave复制数据和ack延迟时间太长，就认为可能master宕机后损失的数据太多了，那么就拒绝写请求，这样就可以把master宕机时由于部分数据未同步到slave导致的数据丢失降低到可控范围内。<br>如果一个master出现了脑裂，跟其他slave丢了连接，那么上面两个配置可以确保的说，如果不能继续给指定数量的slave发送数据，而且slave超过10秒没有给自己ack消息，那么就直接拒绝客户端的写请求。这样脑裂后的旧master就不会接受client的新数据，也就避免了数据丢失。</p>
+<h1 id="Redis-Cluster"><a href="#Redis-Cluster" class="headerlink" title="Redis Cluster"></a>Redis Cluster</h1><p>redis单机单线程，解决方法最简单就是集群。Redis Cluster解决方法很简单，根据哈希值分池，对每个key值做CRC16取值，对16384求模后分池，redis cluster中每个master都会持有部分slot，比如有3个master，那么可能每个master持有5000多个hash slot。hash slot让node的增加和移除很简单，增加一个master，就将其他master的hash slot移动部分过去，减少一个master，就将它的hash slot移动到其他master上去。<br>在redis cluster架构下，每个redis要放开两个端口号，比如一个是6379，另外一个就是加10000的端口号，比如16379。16379端口号是用来进行节点间通信的，也就是cluster bus的东西，集群总线。cluster bus的通信，用来进行故障检测，配置更新，故障转移授权等。cluster bus用了另外一种二进制的协议，主要用于节点间进行高效的数据交换，占用更少的网络带宽和处理时间</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/12/04/12-4技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1681,165 +1826,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/21/11-21技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/11/21/11-21技术笔记/" itemprop="url">netty实现群聊</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-21T14:09:04+08:00">
-                2018-11-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="建群"><a href="#建群" class="headerlink" title="建群"></a>建群</h1><p>群聊首先需要一个群，服务端保存群ID和群里成员的ID的映射，有人说话，需要指明哪个群，这样，服务端把这个消息转发给该群里的所有人。</p>
-<h2 id="客户端构建"><a href="#客户端构建" class="headerlink" title="客户端构建"></a>客户端构建</h2><p>如果客户端可用指令较多，简陋的设计是，先输入指令，然后判断指令，根据指令类型进行相应数据包处理。这里可以采用策略模式，根据指令选择处理方式。</p>
-<h3 id="指令基类"><a href="#指令基类" class="headerlink" title="指令基类"></a>指令基类</h3><p>思考下指令里应该有什么，是输入的内容，以及channel。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public interface ConsoleCommand &#123;</span><br><span class="line">    void exec(Scanner scanner, Channel channel);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h3 id="具体指令类"><a href="#具体指令类" class="headerlink" title="具体指令类"></a>具体指令类</h3><p>有多少具体功能，应该就有多少具体指令类，里面是业务。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public class CreateGroupConsoleCommand implements ConsoleCommand &#123;</span><br><span class="line"></span><br><span class="line">    private static final String USER_ID_SPLITER = &quot;,&quot;;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void exec(Scanner scanner, Channel channel) &#123;</span><br><span class="line">        CreateGroupRequestPacket createGroupRequestPacket = new CreateGroupRequestPacket();</span><br><span class="line"></span><br><span class="line">        System.out.print(&quot;【拉人群聊】输入 userId 列表，userId 之间英文逗号隔开：&quot;);</span><br><span class="line">        String userIds = scanner.next();</span><br><span class="line">        createGroupRequestPacket.setUserIdList(Arrays.asList(userIds.split(USER_ID_SPLITER)));</span><br><span class="line">        channel.writeAndFlush(createGroupRequestPacket);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h3 id="指令管理类"><a href="#指令管理类" class="headerlink" title="指令管理类"></a>指令管理类</h3><p>储存着指令名和指令的映射，使用时根据指令名选择到指令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">public class ConsoleCommandManager implements ConsoleCommand &#123;</span><br><span class="line">    private Map&lt;String, ConsoleCommand&gt; consoleCommandMap;</span><br><span class="line"></span><br><span class="line">    public ConsoleCommandManager() &#123;</span><br><span class="line">        consoleCommandMap = new HashMap&lt;&gt;();</span><br><span class="line">        consoleCommandMap.put(&quot;sendToUser&quot;, new SendToUserConsoleCommand());</span><br><span class="line">        consoleCommandMap.put(&quot;logout&quot;, new LogoutConsoleCommand());</span><br><span class="line">        consoleCommandMap.put(&quot;createGroup&quot;, new CreateGroupConsoleCommand());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void exec(Scanner scanner, Channel channel) &#123;</span><br><span class="line">        //  获取第一个指令</span><br><span class="line">        String command = scanner.next();</span><br><span class="line"></span><br><span class="line">        ConsoleCommand consoleCommand = consoleCommandMap.get(command);</span><br><span class="line"></span><br><span class="line">        if (consoleCommand != null) &#123;</span><br><span class="line">            consoleCommand.exec(scanner, channel);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            System.err.println(&quot;无法识别[&quot; + command + &quot;]指令，请重新输入!&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h3 id="客户端控制台"><a href="#客户端控制台" class="headerlink" title="客户端控制台"></a>客户端控制台</h3><p>在连接成功后，启动控制台即可<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">private static void startConsoleThread(Channel channel) &#123;</span><br><span class="line">    ConsoleCommandManager consoleCommandManager = new ConsoleCommandManager();</span><br><span class="line">    LoginConsoleCommand loginConsoleCommand = new LoginConsoleCommand();</span><br><span class="line">    Scanner scanner = new Scanner(System.in);</span><br><span class="line"></span><br><span class="line">    new Thread(() -&gt; &#123;</span><br><span class="line">        while (!Thread.interrupted()) &#123;</span><br><span class="line">            if (!SessionUtil.hasLogin(channel)) &#123;</span><br><span class="line">                loginConsoleCommand.exec(scanner, channel);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                consoleCommandManager.exec(scanner, channel);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;).start();</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h3 id="群聊请求数据包"><a href="#群聊请求数据包" class="headerlink" title="群聊请求数据包"></a>群聊请求数据包</h3><p>建立一个群聊，只需要建群的人的ID列表即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public class CreateGroupRequestPacket extends Packet &#123;</span><br><span class="line">    private List&lt;String&gt; userIdList;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h3 id="客户端处理创建群聊响应"><a href="#客户端处理创建群聊响应" class="headerlink" title="客户端处理创建群聊响应"></a>客户端处理创建群聊响应</h3><p>建群请求数据包发给服务端后，服务端返回成功失败信息。客户端处理。显然也是需要一个handler，加到pipeline中。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public class CreateGroupResponseHandler extends SimpleChannelInboundHandler&lt;CreateGroupResponsePacket&gt; &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, CreateGroupResponsePacket createGroupResponsePacket) &#123;</span><br><span class="line">        System.out.print(&quot;群创建成功，id 为[&quot; + createGroupResponsePacket.getGroupId() + &quot;], &quot;);</span><br><span class="line">        System.out.println(&quot;群里面有：&quot; + createGroupResponsePacket.getUserNameList());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="服务端处理"><a href="#服务端处理" class="headerlink" title="服务端处理"></a>服务端处理</h2><p>显然需要添加一个处理群聊请求数据包的Handler<br><strong>ChannelGroup</strong> 就是一组Channel，对外暴露方式和Channel一样，并且实现了Set接口。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">public class CreateGroupRequestHandler extends SimpleChannelInboundHandler&lt;CreateGroupRequestPacket&gt; &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, CreateGroupRequestPacket createGroupRequestPacket) &#123;</span><br><span class="line">        List&lt;String&gt; userIdList = createGroupRequestPacket.getUserIdList();</span><br><span class="line"></span><br><span class="line">        List&lt;String&gt; userNameList = new ArrayList&lt;&gt;();</span><br><span class="line">        // 1. 创建一个 channel 分组</span><br><span class="line">        ChannelGroup channelGroup = new DefaultChannelGroup(ctx.executor());</span><br><span class="line"></span><br><span class="line">        // 2. 筛选出待加入群聊的用户的 channel 和 userName</span><br><span class="line">        for (String userId : userIdList) &#123;</span><br><span class="line">            Channel channel = SessionUtil.getChannel(userId);</span><br><span class="line">            if (channel != null) &#123;</span><br><span class="line">                channelGroup.add(channel);</span><br><span class="line">                userNameList.add(SessionUtil.getSession(channel).getUserName());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 3. 创建群聊创建结果的响应</span><br><span class="line">        CreateGroupResponsePacket createGroupResponsePacket = new CreateGroupResponsePacket();</span><br><span class="line">        createGroupResponsePacket.setSuccess(true);</span><br><span class="line">        createGroupResponsePacket.setGroupId(IDUtil.randomId());</span><br><span class="line">        createGroupResponsePacket.setUserNameList(userNameList);</span><br><span class="line"></span><br><span class="line">        // 4. 给每个客户端发送拉群通知</span><br><span class="line">        channelGroup.writeAndFlush(createGroupResponsePacket);</span><br><span class="line"></span><br><span class="line">        System.out.print(&quot;群创建成功，id 为[&quot; + createGroupResponsePacket.getGroupId() + &quot;], &quot;);</span><br><span class="line">        System.out.println(&quot;群里面有：&quot; + createGroupResponsePacket.getUserNameList());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h1 id="群成员管理"><a href="#群成员管理" class="headerlink" title="群成员管理"></a>群成员管理</h1><h2 id="加群"><a href="#加群" class="headerlink" title="加群"></a>加群</h2><h3 id="客户端加群指令"><a href="#客户端加群指令" class="headerlink" title="客户端加群指令"></a>客户端加群指令</h3><p>加一个指令后，CommandManager也应该改变，加一下这个映射<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public class JoinGroupConsoleCommand implements ConsoleCommand &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void exec(Scanner scanner, Channel channel) &#123;</span><br><span class="line">        JoinGroupRequestPacket joinGroupRequestPacket = new JoinGroupRequestPacket();</span><br><span class="line"></span><br><span class="line">        System.out.print(&quot;输入 groupId，加入群聊：&quot;);</span><br><span class="line">        String groupId = scanner.next();</span><br><span class="line"></span><br><span class="line">        joinGroupRequestPacket.setGroupId(groupId);</span><br><span class="line">        channel.writeAndFlush(joinGroupRequestPacket);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h3 id="服务端处理加群"><a href="#服务端处理加群" class="headerlink" title="服务端处理加群"></a>服务端处理加群</h3><p>增加一个handler<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public class JoinGroupRequestHandler extends SimpleChannelInboundHandler&lt;JoinGroupRequestPacket&gt; &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, JoinGroupRequestPacket requestPacket) &#123;</span><br><span class="line">        // 1. 获取群对应的 channelGroup，然后将当前用户的 channel 添加进去</span><br><span class="line">        String groupId = requestPacket.getGroupId();</span><br><span class="line">        ChannelGroup channelGroup = SessionUtil.getChannelGroup(groupId);</span><br><span class="line">        channelGroup.add(ctx.channel());</span><br><span class="line"></span><br><span class="line">        // 2. 构造加群响应发送给客户端</span><br><span class="line">        JoinGroupResponsePacket responsePacket = new JoinGroupResponsePacket();</span><br><span class="line"></span><br><span class="line">        responsePacket.setSuccess(true);</span><br><span class="line">        responsePacket.setGroupId(groupId);</span><br><span class="line">        ctx.channel().writeAndFlush(responsePacket);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h3 id="客户端响应响应"><a href="#客户端响应响应" class="headerlink" title="客户端响应响应"></a>客户端响应响应</h3><p>没啥好说的，增加一个handler,打印服务端传回的信息即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class JoinGroupResponseHandler extends SimpleChannelInboundHandler&lt;JoinGroupResponsePacket&gt; &#123;</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, JoinGroupResponsePacket responsePacket) &#123;</span><br><span class="line">        if (responsePacket.isSuccess()) &#123;</span><br><span class="line">            System.out.println(&quot;加入群[&quot; + responsePacket.getGroupId() + &quot;]成功!&quot;);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            System.err.println(&quot;加入群[&quot; + responsePacket.getGroupId() + &quot;]失败，原因为：&quot; + responsePacket.getReason());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="退群"><a href="#退群" class="headerlink" title="退群"></a>退群</h2><p>其实和加群没啥区别，调用channelGroup.remove(ctx.channel());从ChannelGroup中删除当前channel即可。还可以踢人，从映射中拿到指定的channel，然后remove就好。</p>
-<h2 id="获取群成员列表"><a href="#获取群成员列表" class="headerlink" title="获取群成员列表"></a>获取群成员列表</h2><p>其实和退群区别也不大，客户端新加指令，服务端先从SessionUtil中保存的GroupID和ChannelGroup映射中取出ChannelGroup，因为ChannelGroup实现了Set接口，直接foreach循环遍历所有的channel，从SessionUtil中保存的ID和Channel的映射中找到ID，这些ID就是群成员了。</p>
-<h1 id="发送群消息"><a href="#发送群消息" class="headerlink" title="发送群消息"></a>发送群消息</h1><p>同样，通过groupID获得ChannelGroup，然后构造转发的消息包，channelGroup.writeAndFlush(responsePacket);转发即可。</p>
-<h1 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h1><h2 id="单例模式与handler"><a href="#单例模式与handler" class="headerlink" title="单例模式与handler"></a>单例模式与handler</h2><p>什么时候可以用单例模式呢，考察标准是 <strong>“无状态”</strong> ，即内部没有成员变量。或者说它的成员变量也是无状态的。换句话说，有状态对象可以保存数据，不是线程安全的，无状态对象反过来。<br>实际上，我们写的所有handler都是无状态的，在每一个连接pipeline中，都new了一个handler，实际上不需要，这里可以用单例模式，所有的连接用同一个单例即可。<br>@ChannelHandler.Sharable注解表示告诉netty，该handler是单例的。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public class LoginRequestHandler extends SimpleChannelInboundHandler&lt;LoginRequestPacket&gt; &#123;</span><br><span class="line">        //私有静态内部类实现单例</span><br><span class="line">        private static class SingletonHolder &#123;</span><br><span class="line">            private static final LoginRequestHandler INSTANCE = new LoginRequestHandler();</span><br><span class="line">        &#125;</span><br><span class="line">        private LoginRequestHandler ()&#123;&#125;</span><br><span class="line">        public static final LoginRequestHandler getInstance() &#123;</span><br><span class="line">            return SingletonHolder.INSTANCE;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, LoginRequestPacket loginRequestPacket) &#123;</span><br><span class="line">      //业务</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="合并编解码器"><a href="#合并编解码器" class="headerlink" title="合并编解码器"></a>合并编解码器</h2><p>Netty 内部提供了一个类，叫做 MessageToMessageCodec，使用它可以让我们的编解码操作放到一个类里面去实现，没啥好说的，就是编解码加起来，同样它也是无状态的。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">@ChannelHandler.Sharable</span><br><span class="line">public class PacketCodecHandler extends MessageToMessageCodec&lt;ByteBuf, Packet&gt; &#123;</span><br><span class="line">    private static class PacketCodecHandlerHolder &#123;</span><br><span class="line">        private static final PacketCodecHandler INSTASNSE = new PacketCodecHandler();</span><br><span class="line">    &#125;</span><br><span class="line">    private PacketCodecHandler()&#123;&#125;</span><br><span class="line"></span><br><span class="line">    public static PacketCodecHandler getInstance()&#123;</span><br><span class="line">        return PacketCodecHandlerHolder.INSTASNSE;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List&lt;Object&gt; out) &#123;</span><br><span class="line">        out.add(PacketCodec.INSTANCE.decode(byteBuf));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected void encode(ChannelHandlerContext ctx, Packet packet, List&lt;Object&gt; out) &#123;</span><br><span class="line">        ByteBuf byteBuf = ctx.channel().alloc().ioBuffer();</span><br><span class="line">        PacketCodec.INSTANCE.encode(byteBuf, packet);</span><br><span class="line">        out.add(byteBuf);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="策略模式处理平行的Handler"><a href="#策略模式处理平行的Handler" class="headerlink" title="策略模式处理平行的Handler"></a>策略模式处理平行的Handler</h2><p>有些Handler不会同时发生，只会n选一，这里可以用策略模式，合并它们，根据需求调用。这样pipeline中只需要一个IMhandler。而IMHandler从其映射中存储的Handler，调用他们的对应函数即可。<br>netty对此有所提供，因为channelRead0方法是protected的，无法在IMHandler中调用对应Handler的channelRead0方法，netty在SimpleChannelInboundHandler提供了channelRead方法，该方法内部调用了对应Handler的channelRead0()。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">@ChannelHandler.Sharable</span><br><span class="line">public class IMHandler extends SimpleChannelInboundHandler&lt;Packet&gt; &#123;</span><br><span class="line">    public static final IMHandler INSTANCE = new IMHandler();</span><br><span class="line"></span><br><span class="line">    private Map&lt;Byte, SimpleChannelInboundHandler&lt;? extends Packet&gt;&gt; handlerMap;</span><br><span class="line"></span><br><span class="line">    private IMHandler() &#123;</span><br><span class="line">        handlerMap = new HashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">        handlerMap.put(MESSAGE_REQUEST, MessageRequestHandler.INSTANCE);</span><br><span class="line">        handlerMap.put(CREATE_GROUP_REQUEST, CreateGroupRequestHandler.INSTANCE);</span><br><span class="line">        handlerMap.put(JOIN_GROUP_REQUEST, JoinGroupRequestHandler.INSTANCE);</span><br><span class="line">        handlerMap.put(QUIT_GROUP_REQUEST, QuitGroupRequestHandler.INSTANCE);</span><br><span class="line">        handlerMap.put(LIST_GROUP_MEMBERS_REQUEST, ListGroupMembersRequestHandler.INSTANCE);</span><br><span class="line">        handlerMap.put(GROUP_MESSAGE_REQUEST, GroupMessageRequestHandler.INSTANCE);</span><br><span class="line">        handlerMap.put(LOGOUT_REQUEST, LogoutRequestHandler.INSTANCE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, Packet packet) throws Exception &#123;</span><br><span class="line">        handlerMap.get(packet.getCommand()).channelRead(ctx, packet);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1890,7 +1876,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">221</span>
+                  <span class="site-state-item-count">222</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

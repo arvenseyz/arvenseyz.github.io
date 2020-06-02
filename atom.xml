@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2020-06-01T08:56:29.558Z</updated>
+  <updated>2020-06-02T10:45:57.107Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,31 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>redo日志</title>
+    <link href="http://yoursite.com/blog/2020/06/02/6-2%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2020/06/02/6-2技术笔记/</id>
+    <published>2020-06-02T08:03:42.000Z</published>
+    <updated>2020-06-02T10:45:57.107Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="物理日志和逻辑日志"><a href="#物理日志和逻辑日志" class="headerlink" title="物理日志和逻辑日志"></a>物理日志和逻辑日志</h2><p>mysql数据最终落盘是分页的，undo log和bin log是并没有记录最终落盘的数据，而是执行的操作，增删改，所以是逻辑日志。redo log记录的纬度不是操作，而是最终落盘的数据，是物理日志。</p><h2 id="redo-log"><a href="#redo-log" class="headerlink" title="redo log"></a>redo log</h2><h3 id="产生原因"><a href="#产生原因" class="headerlink" title="产生原因"></a>产生原因</h3><p>对事务的操作，并不是直接落盘的，而是先到缓冲区，即页缓存上的，为了保证持久性，即重启等操作后，缓冲区清空，已提交的事务只在缓冲区，没有落盘。</p><p>最简单的办法是，每当有事务提交，在事务提交完成之前把该事务所修改的所有页面都刷新到磁盘。但是有两个问题。</p><ul><li><p>刷新一个完整的数据页太浪费了</p><p>有时候我们仅仅修改了某个页面中的一个字节，但是我们知道在<code>InnoDB</code>中是以页为单位来进行磁盘IO的，也就是说我们在该事务提交时不得不将一个完整的页面从内存中刷新到磁盘，我们又知道一个页面默认是16KB大小，只修改一个字节就要刷新16KB的数据到磁盘上显然是太浪费了。</p></li><li><p>随机IO刷起来比较慢</p><p>一个事务可能包含很多语句，即使是一条语句也可能修改许多页面，倒霉催的是该事务修改的这些页面可能并不相邻，这就意味着在将某个事务修改的<code>Buffer Pool</code>中的页面刷新到磁盘时，需要进行很多的随机IO，随机IO比顺序IO要慢。</p></li></ul><p>更好解决的方法是redo log。即事务提交时，把修改的字段写入一个文件中，比如重启恢复时，按照该文件恢复即可。</p><h3 id="redo日志格式"><a href="#redo日志格式" class="headerlink" title="redo日志格式"></a>redo日志格式</h3><p>如果简单的想，记录一下在某个页面的某个偏移量处修改了几个字节的值，具体被修改的内容是啥就好了。那么redo日志只需要类型、表空间ID、页号、偏移量、修改的内容长度，修改的内容即可。（实际上修改的内容长度被隐含在类型中，比如MLOG_8BYTE表示在页面的某个偏移量处写入8个字节的redo日志类型。）</p><p>但实际上，很多时候没这么简单，因为修改一条数据，会涉及多页的变化，比如插入数据导致页分裂，更新字段有索引要更新索引的b+树，目录页的统计信息会改变。</p><p>解决的方式是逻辑的方式，即redo类型是插入/删除，物理层面看，这些日志都指明了对哪个表空间的哪个页进行了修改。但是逻辑层面看，在系统崩溃重启时，并不能直接根据这些日志里的记载，将页面内的某个偏移量处恢复成某个数据，而是需要调用一些事先准备好的函数，执行完这些函数后才可以将页面恢复成系统崩溃前的样子。</p><h3 id="redo日志刷盘时机"><a href="#redo日志刷盘时机" class="headerlink" title="redo日志刷盘时机"></a>redo日志刷盘时机</h3><p>1.发出commit动作时。已经说明过，commit发出后是否刷日志由变量 innodb_flush_log_at_trx_commit 控制。</p><p>2.每秒刷一次。这个刷日志的频率由变量 innodb_flush_log_at_timeout 值决定，默认是1秒。要注意，这个刷日志频率和commit动作无关。</p><p>3.当log buffer中已经使用的内存超过一半时。</p><p>4.当有checkpoint时，checkpoint在一定程度上代表了刷到磁盘时日志所处的LSN位置。</p><h3 id="LSN"><a href="#LSN" class="headerlink" title="LSN"></a>LSN</h3><p>LSN称为日志的逻辑序列号(log sequence number)，在innodb存储引擎中，lsn占用8个字节。LSN的值会随着日志的写入而逐渐增大。</p><p>LSN不仅存在于redo log中，还存在于数据页中，在每个数据页的头部，有一个<em>fil_page_lsn</em>记录了当前页最终的LSN值是多少。通过数据页中的LSN值和redo log中的LSN值比较，如果页中的LSN值小于redo log中LSN值，则表示数据丢失了一部分，这时候可以通过redo log的记录来恢复到redo log中记录的LSN值时的状态。</p><p>flushed_to_disk_lsn表示刷新到磁盘中的redo日志量的全局变量</p><p>当有新的redo日志写入到log buffer时，首先lsn的值会增长，但flushed_to_disk_lsn不变，随后随着不断有log buffer中的日志被刷新到磁盘上，flushed_to_disk_lsn`的值也跟着增长。如果两者的值相同时，说明log buffer中的所有redo日志都已经刷新到磁盘中了。</p><h3 id="checkpoint"><a href="#checkpoint" class="headerlink" title="checkpoint"></a>checkpoint</h3><p>如果重做日志可以无限地增大，同时缓冲池也足够大，那么是不需要将缓冲池中页的新版本刷新回磁盘。因为当发生宕机时，完全可以通过重做日志来恢复整个数据库系统中的数据到宕机发生的时刻。</p><p>实际上不存在的，第一redolog越写越多后来没地方写了，第二缓冲区不少数据已经刷回了磁盘，这些数据不用再刷盘。所以需要checkPoint。</p><p>Checkpoint发生的时间、条件及脏页的选择等都非常复杂。而Checkpoint所做的事情无外乎是将缓冲池中的脏页刷回到磁盘，不同之处在于每次刷新多少页到磁盘，每次从哪里取脏页，以及什么时间触发Checkpoint。</p><p>Checkpoint分为两种Sharp Checkpoint、Fuzzy Checkpoint，前者全量刷脏页，后者刷一部分的，全量只发生在数据库关闭时，不然会很影响性能。</p><p>检查点触发想来也就这么几种，定时出发， 脏页比例达到一定值时触发。</p><p>checkpoint对应LSN，</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;物理日志和逻辑日志&quot;&gt;&lt;a href=&quot;#物理日志和逻辑日志&quot; class=&quot;headerlink&quot; title=&quot;物理日志和逻辑日志&quot;&gt;&lt;/a&gt;物理日志和逻辑日志&lt;/h2&gt;&lt;p&gt;mysql数据最终落盘是分页的，undo log和bin log是并没有记录最终落盘
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="数据库" scheme="http://yoursite.com/blog/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
   
   <entry>
     <title>&lt;form&gt; 标签的 enctype</title>
@@ -511,31 +536,6 @@
       
       
         &lt;h2 id=&quot;产生方法&quot;&gt;&lt;a href=&quot;#产生方法&quot; class=&quot;headerlink&quot; title=&quot;产生方法&quot;&gt;&lt;/a&gt;产生方法&lt;/h2&gt;&lt;pre&gt;&lt;code&gt;当一个父进程以fork()系统调用建立一个新的子进程后，核心进程就会在进程表中给这个子进程分配一个进入点，然
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="操作系统" scheme="http://yoursite.com/blog/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>静态链接/动态链接库的区别</title>
-    <link href="http://yoursite.com/blog/2020/02/07/2-7%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2020/02/07/2-7技术笔记/</id>
-    <published>2020-02-07T11:23:15.000Z</published>
-    <updated>2020-02-08T01:30:51.662Z</updated>
-    
-    <content type="html"><![CDATA[<p><img src="https://img-blog.csdn.net/20151113153003874?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt></p><h2 id="静态链接库"><a href="#静态链接库" class="headerlink" title="静态链接库"></a>静态链接库</h2><p>　　什么是静态链接呢？即在链接阶段，将源文件中用到的库函数与汇编生成的目标文件.o合并生成可执行文件。该可执行文件可能会比较大。</p><p>这种链接方式的好处是：方便程序移植，因为可执行程序与库函数再无关系，放在如何环境当中都可以执行。</p><p>缺点是：文件太大，一个全静态方式生成的简单print文件都有857K。而动态链接生成的一样的可执行文件却只要8.４Ｋ。</p><h2 id="动态链接库"><a href="#动态链接库" class="headerlink" title="动态链接库"></a>动态链接库</h2><p>静态链接库的最大问题不是文件大，而是占内存，因为多个程序可能引用同一个静态链接库，导致它们在内存中存在多份拷贝。</p><p>动态链接是相对静态链接而言的，动态链接所调用的函数代码并没有被拷贝到应用程序的可执行文件中去，而是仅仅在其中加入了所调用函数的描述信息（往往是一些重定位信息）。仅当应用程序被装入内存开始运行时，在Windows的管理下，才在应用程序与相应的DLL之间建立链接关系。当要执行所调用DLL中的函数时，根据链接产生的重定位信息，Windows才转去执行DLL中相应的函数代码。一般情况下，如果一个应用程序使用了动态链接库，Win32系统保证内存中只有DLL的一份复制品。</p><p>动态链接库缺点是需要目标运行的环境中，也有该dll。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;&lt;img src=&quot;https://img-blog.csdn.net/20151113153003874?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQ
       
     
     </summary>

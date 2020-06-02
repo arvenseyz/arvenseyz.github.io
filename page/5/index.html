@@ -251,6 +251,212 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/09/04/9-4技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/09/04/9-4技术笔记/" itemprop="url">awk</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-04T14:08:02+08:00">
+                2019-09-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="print"><a href="#print" class="headerlink" title="print"></a>print</h1><p>print其实和C差不多.</p>
+<p>比如先来个文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ cat print.txt</span><br><span class="line">Name Chinese English Math Average</span><br><span class="line">DmTsai 80 60 92 77.33</span><br><span class="line">VBird 75 55 80 70.00</span><br><span class="line">Ken 60 90 70 73.33</span><br></pre></td></tr></table></figure>
+<p>%s,\t之类的，可以格式化输出</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ <span class="built_in">printf</span> <span class="string">'%s\t %s\t %s\t %s\t %s\t \n'</span> $(cat print.txt)</span><br><span class="line">Name     Chinese     English     Math     Average</span><br><span class="line">DmTsai     80     60     92     77.33</span><br><span class="line">VBird     75     55     80     70.00</span><br><span class="line">Ken     60     90     70     73.33</span><br></pre></td></tr></table></figure>
+<p>还可以指定位数和内容，方法和C类似</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ <span class="built_in">printf</span> <span class="string">'%10s %5i %5i %5i %8.2f \n'</span> $(cat print.txt | grep -v Name)</span><br><span class="line">    DmTsai    80    60    92    77.33</span><br><span class="line">     VBird    75    55    80    70.00</span><br><span class="line">       Ken    60    90    70    73.33</span><br></pre></td></tr></table></figure>
+<h1 id="awk"><a href="#awk" class="headerlink" title="awk"></a>awk</h1><h2 id="小栗子"><a href="#小栗子" class="headerlink" title="小栗子"></a>小栗子</h2><p>awk 主要是处理“每一行的字段内的数据”，而默认的“字段的分隔符号为 “空白键” 或 “[tab]键” ”。</p>
+<p>比如刚才的数据，一共一行，每行有5列，这种表格状的数据，适合awk处理。</p>
+<p>awk使用方式是<code></code>中放指令。</p>
+<p>awk ‘条件类型1{动作1} 条件类型2{动作2} …’ filename</p>
+<p>比如刚才的数据</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ cat print.txt |awk <span class="string">'&#123;print $1 "\t" $3&#125;'</span></span><br><span class="line">Name    English</span><br><span class="line">DmTsai    60</span><br><span class="line">VBird    55</span><br><span class="line">Ken        90</span><br></pre></td></tr></table></figure>
+<p>上表即是 awk 最常使用的动作，通过 print 的功能将字段数据列出来。字段的分隔则以空白键或 [tab] 按键来隔开。 因为不论哪一行都要处理，因此，就不需要有 “条件类型” 的限制！我所想要的是第一栏以及第三栏，每一行的每个字段都是有变量名称的，那就是 \$1, $2… 等变量名称。所以Name是第一个变量，English是第三个变量。</p>
+<p>而\$0代表该行所有数据。</p>
+<p>而非指令，即字符串，需要用“”包起来</p>
+<h2 id="条件"><a href="#条件" class="headerlink" title="条件"></a>条件</h2><p>awk 的处理流程是：</p>
+<ol>
+<li><p>读入第一行，并将第一行的数据填入 $0, $1, $2…. 等变量当中； </p>
+</li>
+<li><p>依据 “条件类型” 的限制，判断是否需要进行后面的 “动作”； </p>
+</li>
+<li><p>做完所有的动作与条件类型； </p>
+</li>
+<li><p>若还有后续的“行”的数据，则重复上面 1~3 的步骤，直到所有的数据都读完为止。</p>
+</li>
+</ol>
+<p>awk 是“以行为一次处理的单位”， 而“以字段为最小的处理单位”。，那么 awk 需要知道有多少行</p>
+<table>
+<thead>
+<tr>
+<th>变量名</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NF</td>
+<td>每行字段数（总列数）</td>
+</tr>
+<tr>
+<td>NR</td>
+<td>当前在第几行</td>
+</tr>
+<tr>
+<td>FS</td>
+<td>分割字符（默认空格）</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ cat print.txt |awk <span class="string">'&#123;print "line @   "NR "content"$1&#125;'</span></span><br><span class="line">line @   1contentName</span><br><span class="line">line @   2contentDmTsai</span><br><span class="line">line @   3contentVBird</span><br><span class="line">line @   4contentKen</span><br></pre></td></tr></table></figure>
+<p>awk还可以逻辑判断，比如输出英语成绩大于85的学生</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ cat print.txt |awk <span class="string">'$3&gt;85&#123;print $0&#125;'</span></span><br><span class="line">Name Chinese English Math Average</span><br><span class="line">Ken 60 90 70 73.33</span><br></pre></td></tr></table></figure>
+<p>这种写法就是’条件类型1{动作1}’，第三个变量大于85是条件，输出整行是动作。至于为什么第一行可以展示，估计是asclii之类的。</p>
+<h2 id="变量和统计"><a href="#变量和统计" class="headerlink" title="变量和统计"></a>变量和统计</h2><p>BEGIN和END表示最前和最后做某事，比如BEGIN {FS=”:”} ，意思是把分隔符变成：，不然第二行才会开始生效。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ cat print.txt |awk <span class="string">'NR==1&#123;printf "%10s %10s %10s %10s %10s %10s\n",$1,$2,$3,$4,$5,"total"&#125;</span></span><br><span class="line"><span class="string">NR&gt;=2&#123;total = $2 + $3 + $4</span></span><br><span class="line"><span class="string">printf "%10s %10d %10d %10d %10.2f %10d\n", $1, $2, $3, $4,$5, total&#125;'</span></span><br><span class="line">      Name    Chinese    English       Math    Average      total</span><br><span class="line">    DmTsai         80         60         92      77.33        232</span><br><span class="line">     VBird         75         55         80      70.00        210</span><br><span class="line">       Ken         60         90         70      73.33        220</span><br></pre></td></tr></table></figure>
+<p>从这个例子可以看出，有这么几点</p>
+<ol>
+<li><p>printf格式化输出，用法和c类似</p>
+</li>
+<li><p>变量直接用名字和用即可，因为非变量用双引号括起来了</p>
+</li>
+<li><p>只要‘’的后单引号没结束，可以回车换行接着输入指令。</p>
+</li>
+</ol>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/08/30/8-30技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1709,151 +1915,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/07/17/7-17技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/07/17/7-17技术笔记/" itemprop="url">go实现策略模式</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-17T17:02:28+08:00">
-                2019-07-17
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="传统策略模式"><a href="#传统策略模式" class="headerlink" title="传统策略模式"></a>传统策略模式</h1><p>传统(Java)策略模式依赖于继承，简单来说，各策略里面的实现封装一次，共同继承一个基类或者实现一个接口，然后一个策略工厂持有基类/接口对象，根据输入进行策略选择，得到对应的策略。业务方在使用时，应该首先用策略工厂获得需要的策略，然后调用策略的方法。</p>
-<p>然而，第一，依然没有避免switch，只不过转移到了策略工厂里；第二，策略和策略工厂耦合。</p>
-<h1 id="GO实现"><a href="#GO实现" class="headerlink" title="GO实现"></a>GO实现</h1><p>GO没有继承，但有方法变量，不如把策略先存到一个Map里，即   [策略名]实现方法的映射，这样直接可以从map中取出方法进行调用</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"><span class="keyword">var</span> Strategy <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span></span><br><span class="line"><span class="function"><span class="title">func</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    Strategy := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span>)</span></span><br><span class="line"><span class="function">	<span class="title">Strategy</span>["<span class="title">update</span>"] = <span class="title">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"update table set ? = ?"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	Strategy[<span class="string">"insert"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"insert into table values(?,?,?,?)"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	Strategy[<span class="string">"delete"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"delete from table where ?=?"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	Strategy[<span class="string">"select"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"select ? from table where ?=?"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	Strategy[<span class="string">"insert"</span>]()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1904,7 +1965,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">221</span>
+                  <span class="site-state-item-count">222</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
