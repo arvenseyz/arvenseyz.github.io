@@ -81,18 +81,18 @@
 
 
 
-<meta name="description" content="物理日志和逻辑日志mysql数据最终落盘是分页的，undo log和bin log是并没有记录最终落盘的数据，而是执行的操作，增删改，所以是逻辑日志。redo log记录的纬度不是操作，而是最终落盘的数据，是物理日志。 redo log产生原因对事务的操作，并不是直接落盘的，而是先到缓冲区，即页缓存上的，为了保证持久性，即重启等操作后，缓冲区清空，已提交的事务只在缓冲区，没有落盘。 最简单的办法是">
+<meta name="description" content="物理日志和逻辑日志mysql数据最终落盘是分页的，undo log和bin log是并没有记录最终落盘的数据，而是执行的操作，增删改，所以是逻辑日志。redo log记录的纬度不是操作，而是最终落盘的数据，是物理日志。 redo log产生原因 redo log的意义有两个，保证持久性，提高性能 对事务的操作，并不是直接落盘的，而是先到缓冲区，即页缓存上的，为了保证持久性，即重启等操作后，缓冲区清">
 <meta name="keywords" content="数据库">
 <meta property="og:type" content="article">
 <meta property="og:title" content="redo日志">
 <meta property="og:url" content="http://yoursite.com/blog/2020/06/02/6-2技术笔记/index.html">
 <meta property="og:site_name" content="Arvense">
-<meta property="og:description" content="物理日志和逻辑日志mysql数据最终落盘是分页的，undo log和bin log是并没有记录最终落盘的数据，而是执行的操作，增删改，所以是逻辑日志。redo log记录的纬度不是操作，而是最终落盘的数据，是物理日志。 redo log产生原因对事务的操作，并不是直接落盘的，而是先到缓冲区，即页缓存上的，为了保证持久性，即重启等操作后，缓冲区清空，已提交的事务只在缓冲区，没有落盘。 最简单的办法是">
+<meta property="og:description" content="物理日志和逻辑日志mysql数据最终落盘是分页的，undo log和bin log是并没有记录最终落盘的数据，而是执行的操作，增删改，所以是逻辑日志。redo log记录的纬度不是操作，而是最终落盘的数据，是物理日志。 redo log产生原因 redo log的意义有两个，保证持久性，提高性能 对事务的操作，并不是直接落盘的，而是先到缓冲区，即页缓存上的，为了保证持久性，即重启等操作后，缓冲区清">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2020-06-02T10:45:57.107Z">
+<meta property="og:updated_time" content="2020-06-08T07:18:47.244Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="redo日志">
-<meta name="twitter:description" content="物理日志和逻辑日志mysql数据最终落盘是分页的，undo log和bin log是并没有记录最终落盘的数据，而是执行的操作，增删改，所以是逻辑日志。redo log记录的纬度不是操作，而是最终落盘的数据，是物理日志。 redo log产生原因对事务的操作，并不是直接落盘的，而是先到缓冲区，即页缓存上的，为了保证持久性，即重启等操作后，缓冲区清空，已提交的事务只在缓冲区，没有落盘。 最简单的办法是">
+<meta name="twitter:description" content="物理日志和逻辑日志mysql数据最终落盘是分页的，undo log和bin log是并没有记录最终落盘的数据，而是执行的操作，增删改，所以是逻辑日志。redo log记录的纬度不是操作，而是最终落盘的数据，是物理日志。 redo log产生原因 redo log的意义有两个，保证持久性，提高性能 对事务的操作，并不是直接落盘的，而是先到缓冲区，即页缓存上的，为了保证持久性，即重启等操作后，缓冲区清">
 
 
 
@@ -345,7 +345,8 @@
 
       
         <h2 id="物理日志和逻辑日志"><a href="#物理日志和逻辑日志" class="headerlink" title="物理日志和逻辑日志"></a>物理日志和逻辑日志</h2><p>mysql数据最终落盘是分页的，undo log和bin log是并没有记录最终落盘的数据，而是执行的操作，增删改，所以是逻辑日志。redo log记录的纬度不是操作，而是最终落盘的数据，是物理日志。</p>
-<h2 id="redo-log"><a href="#redo-log" class="headerlink" title="redo log"></a>redo log</h2><h3 id="产生原因"><a href="#产生原因" class="headerlink" title="产生原因"></a>产生原因</h3><p>对事务的操作，并不是直接落盘的，而是先到缓冲区，即页缓存上的，为了保证持久性，即重启等操作后，缓冲区清空，已提交的事务只在缓冲区，没有落盘。</p>
+<h2 id="redo-log"><a href="#redo-log" class="headerlink" title="redo log"></a>redo log</h2><h3 id="产生原因"><a href="#产生原因" class="headerlink" title="产生原因"></a>产生原因</h3><p> <strong>redo log的意义有两个，保证持久性，提高性能</strong></p>
+<p>对事务的操作，并不是直接落盘的，而是先到缓冲区，即页缓存上的，为了保证持久性，即重启等操作后，缓冲区清空，已提交的事务只在缓冲区，没有落盘。</p>
 <p>最简单的办法是，每当有事务提交，在事务提交完成之前把该事务所修改的所有页面都刷新到磁盘。但是有两个问题。</p>
 <ul>
 <li><p>刷新一个完整的数据页太浪费了</p>
@@ -372,7 +373,9 @@
 <p>Checkpoint发生的时间、条件及脏页的选择等都非常复杂。而Checkpoint所做的事情无外乎是将缓冲池中的脏页刷回到磁盘，不同之处在于每次刷新多少页到磁盘，每次从哪里取脏页，以及什么时间触发Checkpoint。</p>
 <p>Checkpoint分为两种Sharp Checkpoint、Fuzzy Checkpoint，前者全量刷脏页，后者刷一部分的，全量只发生在数据库关闭时，不然会很影响性能。</p>
 <p>检查点触发想来也就这么几种，定时出发， 脏页比例达到一定值时触发。</p>
-<p>checkpoint对应LSN，</p>
+<p>checkpoint对应LSN.</p>
+<p>Innodb每次取最老的modified page(last checkpoint)对应的LSN，再将此脏页的LSN作为Checkpoint点记录到日志文件，意思就是“此LSN之前的LSN对应的日志和数据都已经flush到redo log</p>
+<p>当mysql crash的时候，Innodb扫描redo log，从last checkpoint开始apply redo log到buffer pool，直到last checkpoint对应的LSN等于Log flushed up to对应的LSN，则恢复完成</p>
 
       
     </div>
@@ -412,6 +415,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/blog/2020/06/08/6-8技术笔记/" rel="prev" title="undo日志">
+                undo日志 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -488,7 +495,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">222</span>
+                  <span class="site-state-item-count">223</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

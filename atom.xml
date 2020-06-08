@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2020-06-02T10:45:57.107Z</updated>
+  <updated>2020-06-08T08:06:34.471Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -17,13 +17,38 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>undo日志</title>
+    <link href="http://yoursite.com/blog/2020/06/08/6-8%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2020/06/08/6-8技术笔记/</id>
+    <published>2020-06-08T07:14:53.000Z</published>
+    <updated>2020-06-08T08:06:34.471Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="undo-log"><a href="#undo-log" class="headerlink" title="undo log"></a>undo log</h2><h3 id="产生原因"><a href="#产生原因" class="headerlink" title="产生原因"></a>产生原因</h3><p><strong>undo log的意义有两个，保证原子性，mvcc</strong></p><p>事务执行过程中，系统异常或者手动callback，都要求数据回滚到之前的版本，解决方法看起来很简单，就是记录之前的版本，即undo log.</p><h3 id="事务id"><a href="#事务id" class="headerlink" title="事务id"></a>事务id</h3><p>如果某个事务执行过程中对某个表执行了增、删、改操作，那么InnoDB存储引擎就会给它分配一个独一无二的<code>事务id</code></p><p>服务器会在内存中维护一个全局变量，每当需要为某个事务分配一个<code>事务id</code>时，就会把该变量的值当作<code>事务id</code>分配给该事务，并且把该变量自增1。</p><p>数据行有一隐藏列，即事务id，修改了它的事务的id。</p><h3 id="日志格式"><a href="#日志格式" class="headerlink" title="日志格式"></a>日志格式</h3><p>undolog，如果做成物理日志，并不合理，因为涉及页比较多。所以做法是反向的逻辑日志。</p><h2 id="mvcc"><a href="#mvcc" class="headerlink" title="mvcc"></a>mvcc</h2><p>每行数据有两个隐藏列，trx_id和roll_pointer。</p><ul><li><p>trx_id：每次一个事务对某条聚簇索引记录进行改动时，都会把该事务的<code>事务id</code>赋值给trx_id隐藏列。</p></li><li><p>roll_pointer：每次对某条聚簇索引记录进行改动时，都会把旧的版本写入到undo日志中，然后这个隐藏列就相当于一个指针，可以通过它来找到该记录修改前的信息。</p></li></ul><p>这两个隐藏列结合undo log，就完成了mvcc。</p><p>因为他们把undolog链了起来。</p><p><img src="https://s1.ax1x.com/2020/06/08/tfAXaq.png" alt="dd"></p><h3 id="读已提交"><a href="#读已提交" class="headerlink" title="读已提交"></a>读已提交</h3><p>有事务id为100和200两个事务，修改了同一行数据，此时他们都还未提交。这时有个select语句，应该读到最之前的那条数据。</p><p>从系统变量中读取，当前活跃的最小的事务id100，和最大的事务id200。顺着链表读数据，凡事数据行的事务id，在这个范围内的，都是还未提交的事务对其的修改，都不该读到，知道读到第一个小于活跃的最小的事务id的数据行。</p><p>即抛弃200，200，100，100，四条记录，拿到最后一条80的记录。</p><p>然后100这事务提交了，此时再读，最小的事务id已经变成200了。只抛弃200，200两条数据，拿得到100提交的数据。</p><h3 id="可重复读"><a href="#可重复读" class="headerlink" title="可重复读"></a>可重复读</h3><p>可重复读的区别在于，事务中最小的事务id不变的，这样别的事务提交了，也读不到它提交的数据。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;undo-log&quot;&gt;&lt;a href=&quot;#undo-log&quot; class=&quot;headerlink&quot; title=&quot;undo log&quot;&gt;&lt;/a&gt;undo log&lt;/h2&gt;&lt;h3 id=&quot;产生原因&quot;&gt;&lt;a href=&quot;#产生原因&quot; class=&quot;headerlink&quot; 
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="数据库" scheme="http://yoursite.com/blog/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
+  
+  <entry>
     <title>redo日志</title>
     <link href="http://yoursite.com/blog/2020/06/02/6-2%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>http://yoursite.com/blog/2020/06/02/6-2技术笔记/</id>
     <published>2020-06-02T08:03:42.000Z</published>
-    <updated>2020-06-02T10:45:57.107Z</updated>
+    <updated>2020-06-08T07:18:47.244Z</updated>
     
-    <content type="html"><![CDATA[<h2 id="物理日志和逻辑日志"><a href="#物理日志和逻辑日志" class="headerlink" title="物理日志和逻辑日志"></a>物理日志和逻辑日志</h2><p>mysql数据最终落盘是分页的，undo log和bin log是并没有记录最终落盘的数据，而是执行的操作，增删改，所以是逻辑日志。redo log记录的纬度不是操作，而是最终落盘的数据，是物理日志。</p><h2 id="redo-log"><a href="#redo-log" class="headerlink" title="redo log"></a>redo log</h2><h3 id="产生原因"><a href="#产生原因" class="headerlink" title="产生原因"></a>产生原因</h3><p>对事务的操作，并不是直接落盘的，而是先到缓冲区，即页缓存上的，为了保证持久性，即重启等操作后，缓冲区清空，已提交的事务只在缓冲区，没有落盘。</p><p>最简单的办法是，每当有事务提交，在事务提交完成之前把该事务所修改的所有页面都刷新到磁盘。但是有两个问题。</p><ul><li><p>刷新一个完整的数据页太浪费了</p><p>有时候我们仅仅修改了某个页面中的一个字节，但是我们知道在<code>InnoDB</code>中是以页为单位来进行磁盘IO的，也就是说我们在该事务提交时不得不将一个完整的页面从内存中刷新到磁盘，我们又知道一个页面默认是16KB大小，只修改一个字节就要刷新16KB的数据到磁盘上显然是太浪费了。</p></li><li><p>随机IO刷起来比较慢</p><p>一个事务可能包含很多语句，即使是一条语句也可能修改许多页面，倒霉催的是该事务修改的这些页面可能并不相邻，这就意味着在将某个事务修改的<code>Buffer Pool</code>中的页面刷新到磁盘时，需要进行很多的随机IO，随机IO比顺序IO要慢。</p></li></ul><p>更好解决的方法是redo log。即事务提交时，把修改的字段写入一个文件中，比如重启恢复时，按照该文件恢复即可。</p><h3 id="redo日志格式"><a href="#redo日志格式" class="headerlink" title="redo日志格式"></a>redo日志格式</h3><p>如果简单的想，记录一下在某个页面的某个偏移量处修改了几个字节的值，具体被修改的内容是啥就好了。那么redo日志只需要类型、表空间ID、页号、偏移量、修改的内容长度，修改的内容即可。（实际上修改的内容长度被隐含在类型中，比如MLOG_8BYTE表示在页面的某个偏移量处写入8个字节的redo日志类型。）</p><p>但实际上，很多时候没这么简单，因为修改一条数据，会涉及多页的变化，比如插入数据导致页分裂，更新字段有索引要更新索引的b+树，目录页的统计信息会改变。</p><p>解决的方式是逻辑的方式，即redo类型是插入/删除，物理层面看，这些日志都指明了对哪个表空间的哪个页进行了修改。但是逻辑层面看，在系统崩溃重启时，并不能直接根据这些日志里的记载，将页面内的某个偏移量处恢复成某个数据，而是需要调用一些事先准备好的函数，执行完这些函数后才可以将页面恢复成系统崩溃前的样子。</p><h3 id="redo日志刷盘时机"><a href="#redo日志刷盘时机" class="headerlink" title="redo日志刷盘时机"></a>redo日志刷盘时机</h3><p>1.发出commit动作时。已经说明过，commit发出后是否刷日志由变量 innodb_flush_log_at_trx_commit 控制。</p><p>2.每秒刷一次。这个刷日志的频率由变量 innodb_flush_log_at_timeout 值决定，默认是1秒。要注意，这个刷日志频率和commit动作无关。</p><p>3.当log buffer中已经使用的内存超过一半时。</p><p>4.当有checkpoint时，checkpoint在一定程度上代表了刷到磁盘时日志所处的LSN位置。</p><h3 id="LSN"><a href="#LSN" class="headerlink" title="LSN"></a>LSN</h3><p>LSN称为日志的逻辑序列号(log sequence number)，在innodb存储引擎中，lsn占用8个字节。LSN的值会随着日志的写入而逐渐增大。</p><p>LSN不仅存在于redo log中，还存在于数据页中，在每个数据页的头部，有一个<em>fil_page_lsn</em>记录了当前页最终的LSN值是多少。通过数据页中的LSN值和redo log中的LSN值比较，如果页中的LSN值小于redo log中LSN值，则表示数据丢失了一部分，这时候可以通过redo log的记录来恢复到redo log中记录的LSN值时的状态。</p><p>flushed_to_disk_lsn表示刷新到磁盘中的redo日志量的全局变量</p><p>当有新的redo日志写入到log buffer时，首先lsn的值会增长，但flushed_to_disk_lsn不变，随后随着不断有log buffer中的日志被刷新到磁盘上，flushed_to_disk_lsn`的值也跟着增长。如果两者的值相同时，说明log buffer中的所有redo日志都已经刷新到磁盘中了。</p><h3 id="checkpoint"><a href="#checkpoint" class="headerlink" title="checkpoint"></a>checkpoint</h3><p>如果重做日志可以无限地增大，同时缓冲池也足够大，那么是不需要将缓冲池中页的新版本刷新回磁盘。因为当发生宕机时，完全可以通过重做日志来恢复整个数据库系统中的数据到宕机发生的时刻。</p><p>实际上不存在的，第一redolog越写越多后来没地方写了，第二缓冲区不少数据已经刷回了磁盘，这些数据不用再刷盘。所以需要checkPoint。</p><p>Checkpoint发生的时间、条件及脏页的选择等都非常复杂。而Checkpoint所做的事情无外乎是将缓冲池中的脏页刷回到磁盘，不同之处在于每次刷新多少页到磁盘，每次从哪里取脏页，以及什么时间触发Checkpoint。</p><p>Checkpoint分为两种Sharp Checkpoint、Fuzzy Checkpoint，前者全量刷脏页，后者刷一部分的，全量只发生在数据库关闭时，不然会很影响性能。</p><p>检查点触发想来也就这么几种，定时出发， 脏页比例达到一定值时触发。</p><p>checkpoint对应LSN，</p>]]></content>
+    <content type="html"><![CDATA[<h2 id="物理日志和逻辑日志"><a href="#物理日志和逻辑日志" class="headerlink" title="物理日志和逻辑日志"></a>物理日志和逻辑日志</h2><p>mysql数据最终落盘是分页的，undo log和bin log是并没有记录最终落盘的数据，而是执行的操作，增删改，所以是逻辑日志。redo log记录的纬度不是操作，而是最终落盘的数据，是物理日志。</p><h2 id="redo-log"><a href="#redo-log" class="headerlink" title="redo log"></a>redo log</h2><h3 id="产生原因"><a href="#产生原因" class="headerlink" title="产生原因"></a>产生原因</h3><p> <strong>redo log的意义有两个，保证持久性，提高性能</strong></p><p>对事务的操作，并不是直接落盘的，而是先到缓冲区，即页缓存上的，为了保证持久性，即重启等操作后，缓冲区清空，已提交的事务只在缓冲区，没有落盘。</p><p>最简单的办法是，每当有事务提交，在事务提交完成之前把该事务所修改的所有页面都刷新到磁盘。但是有两个问题。</p><ul><li><p>刷新一个完整的数据页太浪费了</p><p>有时候我们仅仅修改了某个页面中的一个字节，但是我们知道在<code>InnoDB</code>中是以页为单位来进行磁盘IO的，也就是说我们在该事务提交时不得不将一个完整的页面从内存中刷新到磁盘，我们又知道一个页面默认是16KB大小，只修改一个字节就要刷新16KB的数据到磁盘上显然是太浪费了。</p></li><li><p>随机IO刷起来比较慢</p><p>一个事务可能包含很多语句，即使是一条语句也可能修改许多页面，倒霉催的是该事务修改的这些页面可能并不相邻，这就意味着在将某个事务修改的<code>Buffer Pool</code>中的页面刷新到磁盘时，需要进行很多的随机IO，随机IO比顺序IO要慢。</p></li></ul><p>更好解决的方法是redo log。即事务提交时，把修改的字段写入一个文件中，比如重启恢复时，按照该文件恢复即可。</p><h3 id="redo日志格式"><a href="#redo日志格式" class="headerlink" title="redo日志格式"></a>redo日志格式</h3><p>如果简单的想，记录一下在某个页面的某个偏移量处修改了几个字节的值，具体被修改的内容是啥就好了。那么redo日志只需要类型、表空间ID、页号、偏移量、修改的内容长度，修改的内容即可。（实际上修改的内容长度被隐含在类型中，比如MLOG_8BYTE表示在页面的某个偏移量处写入8个字节的redo日志类型。）</p><p>但实际上，很多时候没这么简单，因为修改一条数据，会涉及多页的变化，比如插入数据导致页分裂，更新字段有索引要更新索引的b+树，目录页的统计信息会改变。</p><p>解决的方式是逻辑的方式，即redo类型是插入/删除，物理层面看，这些日志都指明了对哪个表空间的哪个页进行了修改。但是逻辑层面看，在系统崩溃重启时，并不能直接根据这些日志里的记载，将页面内的某个偏移量处恢复成某个数据，而是需要调用一些事先准备好的函数，执行完这些函数后才可以将页面恢复成系统崩溃前的样子。</p><h3 id="redo日志刷盘时机"><a href="#redo日志刷盘时机" class="headerlink" title="redo日志刷盘时机"></a>redo日志刷盘时机</h3><p>1.发出commit动作时。已经说明过，commit发出后是否刷日志由变量 innodb_flush_log_at_trx_commit 控制。</p><p>2.每秒刷一次。这个刷日志的频率由变量 innodb_flush_log_at_timeout 值决定，默认是1秒。要注意，这个刷日志频率和commit动作无关。</p><p>3.当log buffer中已经使用的内存超过一半时。</p><p>4.当有checkpoint时，checkpoint在一定程度上代表了刷到磁盘时日志所处的LSN位置。</p><h3 id="LSN"><a href="#LSN" class="headerlink" title="LSN"></a>LSN</h3><p>LSN称为日志的逻辑序列号(log sequence number)，在innodb存储引擎中，lsn占用8个字节。LSN的值会随着日志的写入而逐渐增大。</p><p>LSN不仅存在于redo log中，还存在于数据页中，在每个数据页的头部，有一个<em>fil_page_lsn</em>记录了当前页最终的LSN值是多少。通过数据页中的LSN值和redo log中的LSN值比较，如果页中的LSN值小于redo log中LSN值，则表示数据丢失了一部分，这时候可以通过redo log的记录来恢复到redo log中记录的LSN值时的状态。</p><p>flushed_to_disk_lsn表示刷新到磁盘中的redo日志量的全局变量</p><p>当有新的redo日志写入到log buffer时，首先lsn的值会增长，但flushed_to_disk_lsn不变，随后随着不断有log buffer中的日志被刷新到磁盘上，flushed_to_disk_lsn`的值也跟着增长。如果两者的值相同时，说明log buffer中的所有redo日志都已经刷新到磁盘中了。</p><h3 id="checkpoint"><a href="#checkpoint" class="headerlink" title="checkpoint"></a>checkpoint</h3><p>如果重做日志可以无限地增大，同时缓冲池也足够大，那么是不需要将缓冲池中页的新版本刷新回磁盘。因为当发生宕机时，完全可以通过重做日志来恢复整个数据库系统中的数据到宕机发生的时刻。</p><p>实际上不存在的，第一redolog越写越多后来没地方写了，第二缓冲区不少数据已经刷回了磁盘，这些数据不用再刷盘。所以需要checkPoint。</p><p>Checkpoint发生的时间、条件及脏页的选择等都非常复杂。而Checkpoint所做的事情无外乎是将缓冲池中的脏页刷回到磁盘，不同之处在于每次刷新多少页到磁盘，每次从哪里取脏页，以及什么时间触发Checkpoint。</p><p>Checkpoint分为两种Sharp Checkpoint、Fuzzy Checkpoint，前者全量刷脏页，后者刷一部分的，全量只发生在数据库关闭时，不然会很影响性能。</p><p>检查点触发想来也就这么几种，定时出发， 脏页比例达到一定值时触发。</p><p>checkpoint对应LSN.</p><p>Innodb每次取最老的modified page(last checkpoint)对应的LSN，再将此脏页的LSN作为Checkpoint点记录到日志文件，意思就是“此LSN之前的LSN对应的日志和数据都已经flush到redo log</p><p>当mysql crash的时候，Innodb扫描redo log，从last checkpoint开始apply redo log到buffer pool，直到last checkpoint对应的LSN等于Log flushed up to对应的LSN，则恢复完成</p>]]></content>
     
     <summary type="html">
     
@@ -519,31 +544,6 @@
       <category term="操作系统" scheme="http://yoursite.com/blog/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
     
       <category term="linux" scheme="http://yoursite.com/blog/tags/linux/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>僵尸进程</title>
-    <link href="http://yoursite.com/blog/2020/02/08/2-8%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2020/02/08/2-8技术笔记/</id>
-    <published>2020-02-08T06:49:25.000Z</published>
-    <updated>2020-02-08T07:03:10.193Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="产生方法"><a href="#产生方法" class="headerlink" title="产生方法"></a>产生方法</h2><pre><code>当一个父进程以fork()系统调用建立一个新的子进程后，核心进程就会在进程表中给这个子进程分配一个进入点，然后将相关信息存储在该进入点所对应的进程表内。这些信息中有一项是其父进程的识别码。当这个子进程结束的时候（比如调用exit命令结束），其实他并没有真正的被销毁，而是留下一个称为僵尸进程（Zombie）的数据结构（系统调用exit的作用是使进程退出，但是也仅仅限于一个正常的进程变成了一个僵尸进程，并不能完全将其销毁）。此时原来进程表中的数据会被该进程的退出码（exit code）、执行时所用的CPU时间等数据所取代，这些数据会一直保留到系统将它传递给它的父进程为止。由此可见，defunct进程的出现时间是在子进程终止后，但是父进程尚未读取这些数据之前。</code></pre><p>如果子进程先于父进程退出， 同时父进程又没有调用wait/waitpid，则该子进程将成为僵尸进程。通过ps命令，我们可以看到该进程的状态为Z(表示僵死)</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pid_t</span> child = fork();</span><br><span class="line"><span class="keyword">if</span>(child == <span class="number">0</span>)&#123;</span><br><span class="line">   <span class="built_in">cout</span> &lt;&lt; <span class="string">"\nIm in child process:"</span> &lt;&lt;  getpid() &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">   <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">   <span class="built_in">cout</span> &lt;&lt; <span class="string">"\nIm in parent process."</span>  &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">   sleep(<span class="number">600</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h2 id="处理僵尸进程"><a href="#处理僵尸进程" class="headerlink" title="处理僵尸进程"></a>处理僵尸进程</h2><p>kill命令无法杀死僵尸进程。要么重启服务器。要么杀死其父进程。</p><p>ps -ef | grep defunct_process_pid</p><h2 id="避免产生僵尸进程"><a href="#避免产生僵尸进程" class="headerlink" title="避免产生僵尸进程"></a>避免产生僵尸进程</h2><p>   1.在父进程创建子进程之前，就向系统申明自己并不会对这个子进程的exit动作进行任何关注行为，这样的话，子进程一旦退出后，系统就不会去等待父进程的操作，而是直接将该子进程的资源回收掉，也就不会出现僵尸进程了。具体的办法就是，在父进程的初始化函数中，调用这个函数：signal(SIGCHLD,SIG_IGN)；</p><ol start="2"><li>如果父进程不忙，可以等待子进程，那么可以在创建完子进程后，用waitpid等待子进程返回。</li></ol>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h2 id=&quot;产生方法&quot;&gt;&lt;a href=&quot;#产生方法&quot; class=&quot;headerlink&quot; title=&quot;产生方法&quot;&gt;&lt;/a&gt;产生方法&lt;/h2&gt;&lt;pre&gt;&lt;code&gt;当一个父进程以fork()系统调用建立一个新的子进程后，核心进程就会在进程表中给这个子进程分配一个进入点，然
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="操作系统" scheme="http://yoursite.com/blog/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
     
   </entry>
   
