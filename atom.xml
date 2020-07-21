@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2020-06-08T08:06:34.471Z</updated>
+  <updated>2020-07-21T03:48:18.485Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,33 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>join中on和where的区别</title>
+    <link href="http://yoursite.com/blog/2020/07/21/7-21%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2020/07/21/7-21技术笔记/</id>
+    <published>2020-07-21T02:36:35.000Z</published>
+    <updated>2020-07-21T03:48:18.485Z</updated>
+    
+    <content type="html"><![CDATA[<p>两个表在，join时，首先做一个笛卡尔积，on后面的条件是对这个笛卡尔积做一个过滤形成一张临时表，如果没有where就直接返回结果，如果有where就对上一步的临时表再进行过滤。</p><p>在使用left jion时，on和where条件的区别如下：</p><p>1、on条件是在生成临时表时使用的条件，它不管on中的条件是否为真，都会返回左边表中的记录。</p><p>2、where条件是在临时表生成好后，再对临时表进行过滤的条件。这时已经没有left join的含义（必须返回左边表的记录）了，条件不为真的就全部过滤掉。</p><p>从这来看，从结果的角度，对于inner join来说，条件在where还是on没有区别，只是在哪一层过滤而已。</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> orders <span class="keyword">inner</span> <span class="keyword">join</span> sub_orders <span class="keyword">on</span> orders.order_id = sub_orders.order_id <span class="keyword">and</span> orders.order_id=<span class="number">6851559448792635150</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> orders <span class="keyword">inner</span> <span class="keyword">join</span> sub_orders <span class="keyword">on</span> orders.order_id = sub_orders.order_id <span class="keyword">where</span> orders.order_id=<span class="number">6851559448792635150</span></span><br></pre></td></tr></table></figure><p>对于left join就不一样了，因为left join要留下左表所有的数据。对于left join，on是连接右表的条件，而不是查找左边的条件。也就是说，on 后面的and，筛不了左表。比如这么写</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> sub_orders <span class="keyword">left</span> <span class="keyword">join</span> orders <span class="keyword">on</span> (orders.order_id = sub_orders.order_id <span class="keyword">and</span> sub_orders.order_id=<span class="number">6843974166572439310</span>)</span><br></pre></td></tr></table></figure><p>会返回左表所有数据，右表只有order_id=6843974166572439310的数据，其他全是null。</p><p>如果条件写在where里</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> sub_orders <span class="keyword">left</span> <span class="keyword">join</span> orders <span class="keyword">on</span> orders.order_id = sub_orders.order_id <span class="keyword">where</span> orders.order_id=<span class="number">6843974166572439310</span></span><br></pre></td></tr></table></figure><p>可获得想要的结果。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;两个表在，join时，首先做一个笛卡尔积，on后面的条件是对这个笛卡尔积做一个过滤形成一张临时表，如果没有where就直接返回结果，如果有where就对上一步的临时表再进行过滤。&lt;/p&gt;
+&lt;p&gt;在使用left jion时，on和where条件的区别如下：&lt;/p&gt;
+&lt;p&gt;1、
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="数据库" scheme="http://yoursite.com/blog/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
   
   <entry>
     <title>undo日志</title>
@@ -516,34 +543,6 @@
     
     
       <category term="操作系统" scheme="http://yoursite.com/blog/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>free 命令,系统内存的使用情况</title>
-    <link href="http://yoursite.com/blog/2020/02/10/2-10%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2020/02/10/2-10技术笔记/</id>
-    <published>2020-02-10T09:07:52.000Z</published>
-    <updated>2020-02-10T09:29:45.445Z</updated>
-    
-    <content type="html"><![CDATA[<p>free 命令显示系统内存的使用情况，包括物理内存、交换内存(swap)和内核缓冲区内存。</p><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n227-011-128:~$ free -h</span><br><span class="line">              total        used        free      shared  buff/cache   available</span><br><span class="line">Mem:            15G        1.6G        1.4G        161M         12G         13G</span><br><span class="line">Swap:            0B          0B          0B</span><br><span class="line">yangzhuo@n227-011-128:~$</span><br></pre></td></tr></table></figure><h1 id="buff-cache"><a href="#buff-cache" class="headerlink" title="buff/cache"></a>buff/cache</h1><p>buffer是缓冲，cache是缓存。</p><p><strong>Buffer</strong>（缓冲区）是系统两端处理<strong>速度平衡</strong>（从长时间尺度上看）时使用的。它的引入是为了减小短期内突发I/O的影响，起到<strong>流量整形</strong>的作用。比如生产者——消费者问题，他们产生和消耗资源的速度大体接近，加一个buffer可以抵消掉资源刚产生/消耗时的突然变化。<em>相当于buffer是两端的中间层，解决双端速度不一致问题。</em></p><p><strong>Cache</strong>（缓存）则是系统两端处理<strong>速度不匹配</strong>时的一种<strong>折衷策略</strong>。因为CPU和memory之间的速度差异越来越大，所以人们充分利用数据的局部性（locality）特征，通过使用存储系统分级（memory hierarchy）的策略来减小这种差异带来的影响。<em>cache就是传统意义上的缓存</em></p><p>无论是缓冲区还是页高速缓存，它们的实现方式都是一样的。缓冲区只不过是一种概念上比较特殊的页高速缓存罢了。<br>那么为什么 free 命令不直接称为 cache 而非要写成 buff/cache？ 这是因为缓冲区和页高速缓存的实现并非天生就是统一的。在 linux 内核 2.4 中才将它们统一。更早的内核中有两个独立的磁盘缓存：页高速缓存和缓冲区高速缓存。前者缓存页面，后者缓存缓冲区。</p><h1 id="free-与-available"><a href="#free-与-available" class="headerlink" title="free 与 available"></a>free 与 available</h1><p>free 是真正尚未被使用的物理内存数量。至于 available 就比较有意思了，它是从应用程序的角度看到的可用内存数量。Linux 内核为了提升磁盘操作的性能，会消耗一部分内存去缓存磁盘数据，就是我们介绍的 buffer 和 cache。所以对于内核来说，buffer 和 cache 都属于已经被使用的内存。当应用程序需要内存时，如果没有足够的 free 内存可以用，内核就会从 buffer 和 cache 中回收内存来满足应用程序的请求。所以从应用程序的角度来说，<strong>available = free + buffer + cache</strong>。</p><h1 id="swap"><a href="#swap" class="headerlink" title="swap"></a>swap</h1><p>swap space 是磁盘上的一块区域，可以是一个分区，也可以是一个文件。所以具体的实现可以是 swap 分区也可以是 swap 文件。当系统物理内存吃紧时，Linux 会将内存中不常访问的数据保存到 swap 上，这样系统就有更多的物理内存为各个进程服务，而当系统需要访问 swap 上存储的内容时，再将 swap 上的数据加载到内存中，这就是常说的换出和换入。交换空间可以在一定程度上缓解内存不足的情况，但是它需要读写磁盘数据，所以性能不是很高。</p><p>实际上，现在已经没那么缺内存了，可以不用这个，有个参数/etc/sysctl.conf 文件中设置 swappiness，意思是交换的紧迫程度。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;free 命令显示系统内存的使用情况，包括物理内存、交换内存(swap)和内核缓冲区内存。&lt;/p&gt;
-&lt;figure class=&quot;highlight bash&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="操作系统" scheme="http://yoursite.com/blog/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
-    
-      <category term="linux" scheme="http://yoursite.com/blog/tags/linux/"/>
     
   </entry>
   
