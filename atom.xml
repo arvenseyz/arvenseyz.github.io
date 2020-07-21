@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2020-07-21T03:48:18.485Z</updated>
+  <updated>2020-07-21T03:51:18.492Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="http://yoursite.com/blog/2020/07/21/7-21%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>http://yoursite.com/blog/2020/07/21/7-21技术笔记/</id>
     <published>2020-07-21T02:36:35.000Z</published>
-    <updated>2020-07-21T03:48:18.485Z</updated>
+    <updated>2020-07-21T03:51:18.492Z</updated>
     
     <content type="html"><![CDATA[<p>两个表在，join时，首先做一个笛卡尔积，on后面的条件是对这个笛卡尔积做一个过滤形成一张临时表，如果没有where就直接返回结果，如果有where就对上一步的临时表再进行过滤。</p><p>在使用left jion时，on和where条件的区别如下：</p><p>1、on条件是在生成临时表时使用的条件，它不管on中的条件是否为真，都会返回左边表中的记录。</p><p>2、where条件是在临时表生成好后，再对临时表进行过滤的条件。这时已经没有left join的含义（必须返回左边表的记录）了，条件不为真的就全部过滤掉。</p><p>从这来看，从结果的角度，对于inner join来说，条件在where还是on没有区别，只是在哪一层过滤而已。</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> orders <span class="keyword">inner</span> <span class="keyword">join</span> sub_orders <span class="keyword">on</span> orders.order_id = sub_orders.order_id <span class="keyword">and</span> orders.order_id=<span class="number">6851559448792635150</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> orders <span class="keyword">inner</span> <span class="keyword">join</span> sub_orders <span class="keyword">on</span> orders.order_id = sub_orders.order_id <span class="keyword">where</span> orders.order_id=<span class="number">6851559448792635150</span></span><br></pre></td></tr></table></figure><p>对于left join就不一样了，因为left join要留下左表所有的数据。对于left join，on是连接右表的条件，而不是查找左边的条件。也就是说，on 后面的and，筛不了左表。比如这么写</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> sub_orders <span class="keyword">left</span> <span class="keyword">join</span> orders <span class="keyword">on</span> (orders.order_id = sub_orders.order_id <span class="keyword">and</span> sub_orders.order_id=<span class="number">6843974166572439310</span>)</span><br></pre></td></tr></table></figure><p>会返回左表所有数据，右表只有order_id=6843974166572439310的数据，其他全是null。</p><p>如果条件写在where里</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> sub_orders <span class="keyword">left</span> <span class="keyword">join</span> orders <span class="keyword">on</span> orders.order_id = sub_orders.order_id <span class="keyword">where</span> orders.order_id=<span class="number">6843974166572439310</span></span><br></pre></td></tr></table></figure><p>可获得想要的结果。</p>]]></content>
     
