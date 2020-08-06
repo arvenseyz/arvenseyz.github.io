@@ -251,6 +251,200 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/09/17/9-17技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/09/17/9-17技术笔记-1/" itemprop="url">shellscript数组与函数</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-17T11:32:57+08:00">
+                2019-09-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h1><p>Bash Shell 只支持一维数组（不支持多维数组），初始化时不需要定义数组大小，并且从0开始。</p>
+<p>Shell 数组用括号来表示，元素用”空格”符号分割开。即</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">array_name=(value1 ... valuen)</span><br></pre></td></tr></table></figure>
+<p>也可以用下标来定义</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">array_name[0]=value0</span><br><span class="line">array_name[1]=value1</span><br><span class="line">array_name[2]=value2</span><br></pre></td></tr></table></figure>
+<p>和其他类似，@和*表示所有，#表示长度</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line">marray[0]=A</span><br><span class="line">marray[1]=B</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"content: <span class="variable">$&#123;marray[@]&#125;</span>"</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"lenth: <span class="variable">$&#123;#marray[*]&#125;</span>"</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ ./array.sh</span><br><span class="line">content: A B</span><br><span class="line">lenth: 2</span><br></pre></td></tr></table></figure>
+<h1 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h1><p>函数严格定义，</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[ <span class="keyword">function</span> ] funname [()]</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    action;</span><br><span class="line"></span><br><span class="line">    [<span class="built_in">return</span> int;]</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>而function关键字可以省略，返回值也可以省略，将以最后一条命令运行结果，作为返回值。而函数不用写形式参数，传入参数后，就像bash，直接用@123取参数，就像bash，#*等的意义</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$#</td>
+<td>参数个数</td>
+</tr>
+<tr>
+<td>$*</td>
+<td>以一个单字符串显示所有向脚本传递的参数</td>
+</tr>
+<tr>
+<td>$$</td>
+<td>脚本运行的当前进程ID号</td>
+</tr>
+<tr>
+<td>$!</td>
+<td>后台运行的最后一个进程的ID号</td>
+</tr>
+<tr>
+<td>$@</td>
+<td>与$*相同，但是使用时加引号，并在引号中返回每个参数。</td>
+</tr>
+<tr>
+<td>$-</td>
+<td>显示Shell使用的当前选项，与set命令功能相同。</td>
+</tr>
+<tr>
+<td>$?</td>
+<td>显示最后命令的退出状态。0表示没有错误，其他任何值表明有错误。</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">func</span></span>()&#123;</span><br><span class="line">        sum=0</span><br><span class="line">        <span class="keyword">for</span> num <span class="keyword">in</span> $*</span><br><span class="line">        <span class="keyword">do</span></span><br><span class="line">                sum=`expr <span class="variable">$sum</span> + <span class="variable">$num</span>`</span><br><span class="line">        <span class="keyword">done</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"sum=<span class="variable">$sum</span>"</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func 1 2 3 4 5</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ ./func.sh</span><br><span class="line">sum=15</span><br></pre></td></tr></table></figure>
+<p>如上，expr是运算符，表数字运算.</p>
+<p>直接用加法就是字符串拼接，结果会是”sum=0+1+2+3+4+5”</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/09/10/9-10技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1782,162 +1976,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/07/29/7-29技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/07/29/7-29技术笔记/" itemprop="url">channel泄漏和关闭</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-29T17:11:53+08:00">
-                2019-07-29
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="channel内存泄漏"><a href="#channel内存泄漏" class="headerlink" title="channel内存泄漏"></a>channel内存泄漏</h1><p>造成channel泄漏的原因很简单，协程持有channel，一直阻塞不释放。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineB</span><span class="params">(b <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	b&lt;<span class="number">-1</span></span><br><span class="line">	b&lt;<span class="number">-2</span></span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br><span class="line">	<span class="keyword">go</span> goroutineB(ch)</span><br><span class="line">	<span class="keyword">for</span> i:=<span class="keyword">range</span> ch&#123;</span><br><span class="line">	fmt.Printf(<span class="string">"%d\n"</span>,i)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>for range 会阻塞，读两次后，没数据了，就阻塞了。然后该channel不会被释放，死锁。或者select操作也是。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineA</span><span class="params">(a &lt;-<span class="keyword">chan</span> <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> i:=&lt;-a: fmt.Printf(<span class="string">"%d\n"</span>,i)</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">	<span class="keyword">case</span> i:=&lt;-a: fmt.Printf(<span class="string">"%d\n"</span>,i)</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	fmt.Printf(<span class="string">"out"</span>)</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineB</span><span class="params">(b <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	b&lt;<span class="number">-1</span></span><br><span class="line">	<span class="comment">//close(b)</span></span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br><span class="line">	<span class="keyword">go</span> goroutineA(ch)</span><br><span class="line">	<span class="keyword">go</span> goroutineB(ch)</span><br><span class="line">	time.Sleep(<span class="number">3</span>*time.Second)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>如图，B只产生了一个数据，A试图select读两次，造成A阻塞，同时chan也得不到释放。</p>
-<h1 id="channel关闭"><a href="#channel关闭" class="headerlink" title="channel关闭"></a>channel关闭</h1><p>解决上面情况很简单，即去掉注释，B产生完数据后关闭通道。</p>
-<p>然而有个问题，go在发送侧无法得知通道是否已经关闭，接受侧也只能尝试读一个，才能知道是否关闭。关闭一个已关闭的通道，向一个已关闭的通道发送数据，都会导致panic。</p>
-<p>即channel没有提供isClosed()方法，不然直接写</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> !ch.isClosed()&#123;</span><br><span class="line">    ch&lt;-data</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> !ch.isClosed()&#123;</span><br><span class="line">    ch.<span class="built_in">close</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>没法实现，只能从设计侧解决。</p>
-<h2 id="接受侧不关闭通道"><a href="#接受侧不关闭通道" class="headerlink" title="接受侧不关闭通道"></a>接受侧不关闭通道</h2><p>很简单，适用于1v1场景，发送侧觉得自己发完了，记得要关闭通道即可，接受侧不做处理。</p>
-<h2 id="如果有多个发送侧，不关闭通道"><a href="#如果有多个发送侧，不关闭通道" class="headerlink" title="如果有多个发送侧，不关闭通道"></a>如果有多个发送侧，不关闭通道</h2><p>不关闭的意思是，不调用close，而让gc回收。而发出关闭指令，让发送侧别发了的，是接受端，怎么搞呢。</p>
-<p>这里要分情况，一个1vn:再来个channel，用于接受侧，发送停止信号。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineA</span><span class="params">(a &lt;-<span class="keyword">chan</span> <span class="keyword">int</span>, stop <span class="keyword">chan</span>&lt;-<span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	c:=<span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> i:=<span class="keyword">range</span> a &#123;</span><br><span class="line">		fmt.Printf(<span class="string">"%d\n"</span>, i)</span><br><span class="line">		c++</span><br><span class="line">		<span class="keyword">if</span> c &gt;= <span class="number">10</span> &#123;</span><br><span class="line">			<span class="built_in">close</span>(stop)</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">"out"</span>)</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineB</span><span class="params">(b <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>,stop &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-stop:</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		<span class="keyword">case</span> b &lt;- <span class="number">1</span>:</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineC</span><span class="params">(b <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>,stop &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-stop:</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		<span class="keyword">case</span> b &lt;- <span class="number">1</span>:</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br><span class="line">	stop := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> goroutineA(ch,stop)</span><br><span class="line">	<span class="keyword">go</span> goroutineB(ch,stop)</span><br><span class="line">	<span class="keyword">go</span> goroutineC(ch,stop)</span><br><span class="line">	time.Sleep(<span class="number">3</span>*time.Second)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>如上，B和C是两个生产者，向chan里生产信息，A是接受者，A不想接受了，就关闭stop通道，BC接收到stop通道关闭信息，就不生产了。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1988,7 +2026,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">224</span>
+                  <span class="site-state-item-count">225</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

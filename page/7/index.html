@@ -251,6 +251,160 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/06/25/6-25技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/06/25/6-25技术笔记/" itemprop="url">go.context</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-25T15:19:28+08:00">
+                2019-06-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h1><p>context即上下文，其设计的初心可能是协调多个协程。官方介绍如下</p>
+<p>在 Go http包的Server中，每一个请求在都有一个对应的 goroutine 去处理。请求处理函数通常会启动额外的 goroutine 用来访问后端服务，比如数据库和RPC服务。用来处理一个请求的 goroutine 通常需要访问一些与请求特定的数据，比如终端用户的身份认证信息、验证相关的token、请求的截止时间。 当一个请求被取消或超时时，所有用来处理该请求的 goroutine 都应该迅速退出，然后系统才能释放这些 goroutine 占用的资源。</p>
+<p>即，多个任务的协程需要同步信息和动作。</p>
+<h1 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">coordinateWithContext</span><span class="params">()</span></span> &#123;</span><br><span class="line"> total := <span class="number">12</span></span><br><span class="line"> <span class="keyword">var</span> num <span class="keyword">int32</span></span><br><span class="line"> fmt.Printf(<span class="string">"The number: %d [with context.Context]\n"</span>, num)</span><br><span class="line"> cxt, cancelFunc := context.WithCancel(context.Background())</span><br><span class="line"> <span class="keyword">for</span> i := <span class="number">1</span>; i &lt;= total; i++ &#123;</span><br><span class="line">  <span class="keyword">go</span> addNum(&amp;num, i, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">if</span> atomic.LoadInt32(&amp;num) == <span class="keyword">int32</span>(total) &#123;</span><br><span class="line">    cancelFunc()</span><br><span class="line">   &#125;</span><br><span class="line">  &#125;)</span><br><span class="line"> &#125;</span><br><span class="line"> &lt;-cxt.Done()</span><br><span class="line"> fmt.Println(<span class="string">"End."</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// addNum 用于原子地增加一次numP所指的变量的值。</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">addNum</span><span class="params">(numP *<span class="keyword">int32</span>, id <span class="keyword">int</span>, deferFunc <span class="keyword">func</span>()</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        deferFunc()</span><br><span class="line">    &#125;()</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; ; i++ &#123;</span><br><span class="line">        currNum := atomic.LoadInt32(numP)</span><br><span class="line">        newNum := currNum + <span class="number">1</span></span><br><span class="line">        time.Sleep(time.Millisecond * <span class="number">200</span>)</span><br><span class="line">        <span class="keyword">if</span> atomic.CompareAndSwapInt32(numP, currNum, newNum) &#123;</span><br><span class="line">            fmt.Printf(<span class="string">"The number: %d [%d-%d]\n"</span>, newNum, id, i)</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">//fmt.Printf("The CAS operation failed. [%d-%d]\n", id, i)</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这是个类mapReduce分组求和的程序，下面的add函数是原子加的过程，接受一个函数做参数。上面的协调函数即使用了context.</p>
+<p>在这个函数体中，先后调用了context.Background()和context.WithCancel函数，获得了一个withCancel的context，并得到了一个可撤销的方法cancelFunc。</p>
+<p>然后起了12个协程来做加法，一旦加到total了，调用cancelFunc()，主协程就会收到&lt;-cxt.Done()的消息</p>
+<h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><p>context是可繁衍的，四个with方法，都会生成新的子context，这些子值可以携带其父值的属性和数据，也可以响应我们通过其父值传达的信号。</p>
+<p>最终所有的context形成了一个树形结构，而根结点则就是context包中的backgroundContext。</p>
+<h2 id="撤销"><a href="#撤销" class="headerlink" title="撤销"></a>撤销</h2><p>除了with value，其他三个with函数都有撤销的用法，只不过撤销的来历不同，通过回调函数触发/根据时间触发。</p>
+<p>什么叫撤销呢，Done()函数返回一个只读的通道，撤销就是通道关闭，那么此时所有针对该通道的接受操作也会结束。</p>
+<h2 id="传值"><a href="#传值" class="headerlink" title="传值"></a>传值</h2><p>withvalue的可以带个k-v，而传递到的也可以用Value()取出该值。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    ctx, cancel := context.WithCancel(context.Background())</span><br><span class="line"></span><br><span class="line">    valueCtx := context.WithValue(ctx, <span class="number">1</span>, <span class="string">"add value"</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">go</span> watch(valueCtx)</span><br><span class="line">    time.Sleep(<span class="number">10</span> * time.Second)</span><br><span class="line">    cancel()</span><br><span class="line"></span><br><span class="line">    time.Sleep(<span class="number">5</span> * time.Second)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">watch</span><span class="params">(ctx context.Context)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> &lt;-ctx.Done():</span><br><span class="line">            <span class="comment">//get value</span></span><br><span class="line">            fmt.Println(ctx.Value(<span class="number">1</span>), <span class="string">"is cancel"</span>)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="comment">//get value</span></span><br><span class="line">            fmt.Println(ctx.Value(<span class="number">1</span>), <span class="string">"int goroutine"</span>)</span><br><span class="line"></span><br><span class="line">            time.Sleep(<span class="number">2</span> * time.Second)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/06/20/6-20技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1690,156 +1844,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/05/27/5-27技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/05/27/5-27技术笔记/" itemprop="url">并发获取网页内容，web服务器</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-27T14:32:59+08:00">
-                2019-05-27
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="并发获取多个网页内容"><a href="#并发获取多个网页内容" class="headerlink" title="并发获取多个网页内容"></a>并发获取多个网页内容</h2><p>首先是http包，使用其函数http.Get()，就可以直接进行http请求，返回体即是请求到的内容的指针。</p>
-<p>其次是ioutil包，其函数ReadAll()，将一个io.Reader对象转化成字符串，而网页内容实体response的属性boby即是一个io.Reader对象。</p>
-<p>最后是通道和协程，使用协程来进行http请求，协程将内容传给主协程，主协程读取输出，这里用一个0容量channel，读写阻塞依次进行。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	start := time.Now()</span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>)</span><br><span class="line">	<span class="keyword">for</span> _, url := <span class="keyword">range</span> os.Args[<span class="number">1</span>:] &#123;</span><br><span class="line">		<span class="keyword">go</span> fetch(url, ch) <span class="comment">// start a goroutine</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> <span class="keyword">range</span> os.Args[<span class="number">1</span>:] &#123;</span><br><span class="line">		fmt.Println(&lt;-ch) <span class="comment">// receive from channel ch</span></span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Printf(<span class="string">"%.2fs elapsed\n"</span>, time.Since(start).Seconds())</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">fetch</span><span class="params">(url <span class="keyword">string</span>, ch <span class="keyword">chan</span>&lt;- <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">	<span class="comment">//start := time.Now()</span></span><br><span class="line">	resp, err := http.Get(url)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		ch &lt;- fmt.Sprint(err) <span class="comment">// send to channel ch</span></span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	nbytes, err := ioutil.ReadAll(resp.Body)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		ch &lt;- fmt.Sprintf(<span class="string">"while reading %s: %v"</span>, url, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	err = resp.Body.Close() <span class="comment">// don't leak resources</span></span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		ch &lt;- fmt.Sprintf(<span class="string">"while reading %s: %v"</span>, url, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//secs := time.Since(start).Seconds()</span></span><br><span class="line">	ch &lt;- <span class="keyword">string</span>(nbytes)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="web服务器"><a href="#web服务器" class="headerlink" title="web服务器"></a>web服务器</h1><p>首先是http包的监听端口,http.ListenAndServe()，两个参数填地址和handler</p>
-<p>其次是实现这个handler，让showHandler实现Hanlder的方法ServeHTTP，这里简单打印一下request的头部</p>
-<p>最后是给端口加处理函数http.HandleFunc()，这里用一个简单的计数函数，计数器需要加锁，用sync包里的Mutex，它实现了加解锁方法。</p>
-<p>呈现的效果是，访问localhost:8100，控制台输出请求头部，访问localhost:8100/count，网页显示访问次数。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"net/http"</span></span><br><span class="line">	<span class="string">"sync"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> mu sync.Mutex</span><br><span class="line"><span class="keyword">var</span> count <span class="keyword">int</span></span><br><span class="line"><span class="keyword">type</span> showHandler <span class="keyword">string</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	 http.HandleFunc(<span class="string">"/"</span>, handler)</span><br><span class="line"></span><br><span class="line">	http.HandleFunc(<span class="string">"/count"</span>, counter)</span><br><span class="line">	http.ListenAndServe(<span class="string">"localhost:8100"</span>, <span class="literal">nil</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// handler echoes the Path component of the requested URL.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">handler</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">	mu.Lock()</span><br><span class="line">	count++</span><br><span class="line">	mu.Unlock()</span><br><span class="line">	fmt.Fprintf(w, <span class="string">"URL.Path = %q\n"</span>, r.URL.Path)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// counter echoes the number of calls so far.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">counter</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">	mu.Lock()</span><br><span class="line">	fmt.Fprintf(w, <span class="string">"Count %d\n"</span>, count)</span><br><span class="line">	mu.Unlock()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s showHandler)</span> <span class="title">ServeHTTP</span><span class="params">(r http.ResponseWriter,p *http.Request)</span></span>  &#123;</span><br><span class="line"> 	fmt.Printf(<span class="string">"%s"</span>,p.Header)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1890,7 +1894,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">224</span>
+                  <span class="site-state-item-count">225</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

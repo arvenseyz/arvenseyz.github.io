@@ -251,6 +251,171 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/12/06/12-6技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/12/06/12-6技术笔记-1/" itemprop="url">NTP协议</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-06T17:05:36+08:00">
+                2019-12-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="计算rtt"><a href="#计算rtt" class="headerlink" title="计算rtt"></a>计算rtt</h1><p>即使两个服务器时间不一样，他们之间的rtt也是可以计算的，过程如下：</p>
+<p>Device A发送一个NTP报文给Device B，该报文带有它离开Device A时的时间戳，该时间戳为10:00:00am（T1）。<br>当此NTP报文到达Device B时，Device B加上自己的时间戳，该时间戳为11:00:01am（T2）。<br>当此NTP报文离开Device B时，Device B再加上自己的时间戳，该时间戳为11:00:02am（T3）。<br>当Device A接收到该响应报文时，Device A的本地时间为10:00:03am（T4）。  </p>
+<p>这样，Device A已经拥有足够的信息来计算两个重要的参数：  </p>
+<p>NTP报文的往返时延Delay=（T4-T1）-（T3-T2）=2秒。<br>Device A相对Device B的时间差offset=（（T2-T1）+（T3-T4））/2=1小时。  </p>
+<p>Device A就能够根据这些信息来设定自己的时钟，与Device B的时钟同步。</p>
+<h1 id="时钟分层"><a href="#时钟分层" class="headerlink" title="时钟分层"></a>时钟分层</h1><p>NTP使用一个分层、半分层的时间源系统。该层次的每个级别被称为“stratum”，顶层分配为数字0。一个通过阶层n同步的服务器将运行在阶层n + 1。数字表示与参考时钟的距离，用于防止层次结构中的循环依赖性。阶层并不总是指示质量或可靠性；在阶层3的时间源得到比阶层2时间源更高的时间质量也很常见。电信系统对[时钟层]使用不同的定义。以下提供了阶层0、1、2、3的简要描述。</p>
+<ol>
+<li>阶层0（Stratum 0）</li>
+</ol>
+<p>这些是高精度计时设备，例如[原子钟]（如铯、铷）、[GPS时钟]或其他[无线电时钟]。它们生成非常精确的[脉冲秒]信号，触发所连接计算机上的[中断]和时间戳。阶层0设备也称为参考（基准）时钟。</p>
+<ol start="2">
+<li>阶层1</li>
+</ol>
+<p>这些与阶层0设备相连、在几微秒误差内同步[系统时钟]的计算机。阶层1服务器可能与其他阶层1服务器对等相连，以进行完整性检查和备份。它们也被称为主要（primary）时间服务器</p>
+<ol start="3">
+<li>阶层2</li>
+</ol>
+<p>这些计算机通过网络与阶层1服务器同步。提供阶层2的计算机将查询多个阶层1服务器。阶层2计算机也可能与其他阶层2计算机对等相连，为对等组中的所有设备提供更健全稳定的时间。</p>
+<ol start="3">
+<li>阶层3</li>
+</ol>
+<p>这些计算机与阶层2的服务器同步。它们使用与阶层2相同的算法进行对等和数据采样，并可以自己作为服务器担任阶层4计算机，以此类推。</p>
+<p>阶层的上限为15；阶层16被用于标识设备未同步。每台计算机上的NTP算法相互构造一个[贝尔曼-福特算法]最短路径[生成树]，以最小化所有客户端到阶层1服务器的累积往返延迟。</p>
+<p>典型的NTP客户端将定期[轮询]不同网络上的三个或更多服务器。为同步其时钟</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/11/03/11-3技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1562,200 +1727,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/09/17/9-17技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/09/17/9-17技术笔记-1/" itemprop="url">shellscript数组与函数</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-17T11:32:57+08:00">
-                2019-09-17
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h1><p>Bash Shell 只支持一维数组（不支持多维数组），初始化时不需要定义数组大小，并且从0开始。</p>
-<p>Shell 数组用括号来表示，元素用”空格”符号分割开。即</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">array_name=(value1 ... valuen)</span><br></pre></td></tr></table></figure>
-<p>也可以用下标来定义</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">array_name[0]=value0</span><br><span class="line">array_name[1]=value1</span><br><span class="line">array_name[2]=value2</span><br></pre></td></tr></table></figure>
-<p>和其他类似，@和*表示所有，#表示长度</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line">marray[0]=A</span><br><span class="line">marray[1]=B</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"content: <span class="variable">$&#123;marray[@]&#125;</span>"</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"lenth: <span class="variable">$&#123;#marray[*]&#125;</span>"</span></span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ ./array.sh</span><br><span class="line">content: A B</span><br><span class="line">lenth: 2</span><br></pre></td></tr></table></figure>
-<h1 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h1><p>函数严格定义，</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[ <span class="keyword">function</span> ] funname [()]</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    action;</span><br><span class="line"></span><br><span class="line">    [<span class="built_in">return</span> int;]</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>而function关键字可以省略，返回值也可以省略，将以最后一条命令运行结果，作为返回值。而函数不用写形式参数，传入参数后，就像bash，直接用@123取参数，就像bash，#*等的意义</p>
-<table>
-<thead>
-<tr>
-<th>参数</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>$#</td>
-<td>参数个数</td>
-</tr>
-<tr>
-<td>$*</td>
-<td>以一个单字符串显示所有向脚本传递的参数</td>
-</tr>
-<tr>
-<td>$$</td>
-<td>脚本运行的当前进程ID号</td>
-</tr>
-<tr>
-<td>$!</td>
-<td>后台运行的最后一个进程的ID号</td>
-</tr>
-<tr>
-<td>$@</td>
-<td>与$*相同，但是使用时加引号，并在引号中返回每个参数。</td>
-</tr>
-<tr>
-<td>$-</td>
-<td>显示Shell使用的当前选项，与set命令功能相同。</td>
-</tr>
-<tr>
-<td>$?</td>
-<td>显示最后命令的退出状态。0表示没有错误，其他任何值表明有错误。</td>
-</tr>
-</tbody>
-</table>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">func</span></span>()&#123;</span><br><span class="line">        sum=0</span><br><span class="line">        <span class="keyword">for</span> num <span class="keyword">in</span> $*</span><br><span class="line">        <span class="keyword">do</span></span><br><span class="line">                sum=`expr <span class="variable">$sum</span> + <span class="variable">$num</span>`</span><br><span class="line">        <span class="keyword">done</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"sum=<span class="variable">$sum</span>"</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func 1 2 3 4 5</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ ./func.sh</span><br><span class="line">sum=15</span><br></pre></td></tr></table></figure>
-<p>如上，expr是运算符，表数字运算.</p>
-<p>直接用加法就是字符串拼接，结果会是”sum=0+1+2+3+4+5”</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1806,7 +1777,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">224</span>
+                  <span class="site-state-item-count">225</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

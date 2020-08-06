@@ -251,6 +251,152 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2020/08/06/8-6技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2020/08/06/8-6技术笔记/" itemprop="url">蓄水池采样算法</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-08-06T16:57:36+08:00">
+                2020-08-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>蓄水池采样算法（Reservoir Sampling）。算法的过程：</p>
+<p>假设数据序列的规模为  n，需要采样的数量的为  k。</p>
+<p>首先构建一个可容纳  k  个元素的数组，将序列的前  k  个元素放入数组中。</p>
+<p>然后从第  k+1  个元素开始，以  k/n  的概率来决定该元素是否被替换到数组中（数组中的元素被替换的概率是相同的）。 当遍历完所有元素之后，数组中剩下的元素即为所需采取的样本。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"math/rand"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	from:=<span class="built_in">make</span>([]<span class="keyword">int64</span>,<span class="number">0</span>)</span><br><span class="line">	<span class="keyword">for</span> i:=<span class="number">0</span>;i&lt;<span class="number">100</span>;i++ &#123;</span><br><span class="line">		from=<span class="built_in">append</span>(from,<span class="keyword">int64</span>(i))</span><br><span class="line">	&#125;</span><br><span class="line">	res:=reservoir(from)</span><br><span class="line">	fmt.Print(res)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reservoir</span><span class="params">(form []<span class="keyword">int64</span> )</span> []<span class="title">int64</span></span> &#123;</span><br><span class="line">	about:=<span class="number">10</span></span><br><span class="line">	res:=<span class="built_in">make</span>([]<span class="keyword">int64</span>,<span class="number">0</span>,<span class="number">10</span>)</span><br><span class="line">	rand.Seed(time.Now().UnixNano())</span><br><span class="line">	<span class="keyword">for</span> key, value := <span class="keyword">range</span> form &#123;</span><br><span class="line">		<span class="keyword">if</span> key&lt;about&#123;</span><br><span class="line">			res=<span class="built_in">append</span>(res,value)</span><br><span class="line">		&#125;<span class="keyword">else</span> &#123;</span><br><span class="line">			randNum:=rand.Intn(key)</span><br><span class="line">			<span class="keyword">if</span> randNum&lt;about&#123;</span><br><span class="line">				res[randNum]=value</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2020/07/21/7-21技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1608,160 +1754,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2020/03/03/3-3技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2020/03/03/3-3技术笔记/" itemprop="url">group by和聚合函数</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-03-03T19:30:41+08:00">
-                2020-03-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="sum"><a href="#sum" class="headerlink" title="sum"></a>sum</h2><p>比如说简单的一张表，学生-学科-成绩。</p>
-<p>要查每个学生的总成绩，用sum和group by可以写</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span>， <span class="keyword">SUM</span>(score) <span class="keyword">as</span> totalscore </span><br><span class="line"><span class="keyword">from</span> stuscore </span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> <span class="keyword">name</span> </span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> totalscore <span class="keyword">desc</span></span><br></pre></td></tr></table></figure>
-<h2 id="group-by-多字段"><a href="#group-by-多字段" class="headerlink" title="group by 多字段"></a>group by 多字段</h2><p>如果 group by 多个字段，那么这些不同的多条数据之间，只有这些字段的值<strong>全部</strong>一致，才会被合并到一条记录中，如果有各别字段不一致，将会生成更多的组。</p>
-<h2 id="同一张表多条件"><a href="#同一张表多条件" class="headerlink" title="同一张表多条件"></a>同一张表多条件</h2><p>比如说，有数学课，并且没有语文课的学生</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> *</span><br><span class="line"><span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">where</span> subject =<span class="string">"数学"</span> <span class="keyword">and</span> subject !=<span class="string">"语文"</span></span><br></pre></td></tr></table></figure>
-<p>这些写显然是<strong>不对</strong>的，where条件里满足了数学，肯定自然满足了没有语文。</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">distinct</span> <span class="keyword">NAME</span> <span class="keyword">FROM</span> qtest T </span><br><span class="line"><span class="keyword">WHERE</span> <span class="keyword">EXISTS</span>(<span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">FROM</span> qtest <span class="keyword">WHERE</span> uid=T.uid  <span class="keyword">AND</span> subject=<span class="string">'数学'</span>) <span class="keyword">AND</span> </span><br><span class="line"><span class="keyword">NOT</span> <span class="keyword">EXISTS</span>(<span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">FROM</span> qtest <span class="keyword">WHERE</span> uid=T.uid  <span class="keyword">AND</span> subject=<span class="string">'语文'</span>)</span><br></pre></td></tr></table></figure>
-<p>EXISTS在SQL中的作用是：检验查询是否返回数据。</p>
-<p>select a.* from tb a where exists(select 1 from tb where name =a.name)返回真假，当 where 后面的条件成立，则列出数据，否则为空。</p>
-<h2 id="HAVING"><a href="#HAVING" class="headerlink" title="HAVING"></a>HAVING</h2><p>在 SQL 中增加 HAVING 子句原因是，WHERE 关键字无法与合计函数一起使用。</p>
-<p>找出平均分大于70的学生</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span> </span><br><span class="line"><span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">having</span> <span class="keyword">avg</span>(score)&gt;<span class="number">70</span></span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1812,7 +1804,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">224</span>
+                  <span class="site-state-item-count">225</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
