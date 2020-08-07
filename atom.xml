@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2020-08-06T12:23:15.817Z</updated>
+  <updated>2020-08-07T10:24:51.530Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,31 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>两协程轮流打压</title>
+    <link href="http://yoursite.com/blog/2020/08/07/8-7%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>http://yoursite.com/blog/2020/08/07/8-7技术笔记-1/</id>
+    <published>2020-08-07T10:22:00.000Z</published>
+    <updated>2020-08-07T10:24:51.530Z</updated>
+    
+    <content type="html"><![CDATA[<p>读空channel会阻塞，利用这点即可。</p><p>即第一个协程先读后写，第二个协程先写后读。</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"sync"</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br><span class="line">wg:=sync.WaitGroup&#123;&#125;</span><br><span class="line"></span><br><span class="line">wg.Add(<span class="number">1</span>)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line"><span class="keyword">defer</span> wg.Done()</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">1</span>; i &lt;= <span class="number">20</span>; i++ &#123;</span><br><span class="line"><span class="built_in">println</span>(<span class="string">"g1:"</span>, &lt;-ch)  <span class="comment">// 执行步骤1， 执行步骤5</span></span><br><span class="line">i++  <span class="comment">//执行步骤6</span></span><br><span class="line">ch &lt;- i <span class="comment">// 执行步骤7</span></span><br><span class="line">&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">wg.Add(<span class="number">1</span>)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line"><span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line"><span class="built_in">close</span>(ch)</span><br><span class="line">wg.Done()</span><br><span class="line">&#125;()</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">20</span>; i++ &#123;</span><br><span class="line">i++  <span class="comment">// 执行步骤2</span></span><br><span class="line">ch &lt;- i  <span class="comment">//执行步骤3</span></span><br><span class="line"><span class="built_in">println</span>(<span class="string">"g2:"</span>, &lt;-ch) <span class="comment">//执行步骤4</span></span><br><span class="line">&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;读空channel会阻塞，利用这点即可。&lt;/p&gt;
+&lt;p&gt;即第一个协程先读后写，第二个协程先写后读。&lt;/p&gt;
+&lt;figure class=&quot;highlight go&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;
+      
+    
+    </summary>
+    
+    
+      <category term="Go" scheme="http://yoursite.com/blog/tags/Go/"/>
+    
+  </entry>
   
   <entry>
     <title>蓄水池采样算法</title>
@@ -508,34 +533,6 @@
       
         &lt;p&gt;内存碎片分为两种，内部碎片和外部碎片。可以简单认为，内部碎片是分页导致的，外部碎片是分段导致的。&lt;/p&gt;
 &lt;h1 id=&quot;slub&quot;&gt;&lt;a href=&quot;#slub&quot; class=&quot;headerlink&quot; title=&quot;slub&quot;&gt;&lt;/a&gt;slub&lt;/h1&gt;&lt;p&gt;linux 
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="操作系统" scheme="http://yoursite.com/blog/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
-    
-      <category term="linux" scheme="http://yoursite.com/blog/tags/linux/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>VIRT(虚拟内存)，RES(常驻内存)，SHR(共享内存)</title>
-    <link href="http://yoursite.com/blog/2020/02/12/2-12%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-2/"/>
-    <id>http://yoursite.com/blog/2020/02/12/2-12技术笔记-2/</id>
-    <published>2020-02-12T13:31:56.000Z</published>
-    <updated>2020-02-13T09:57:14.274Z</updated>
-    
-    <content type="html"><![CDATA[<p>可以通过top命令查看进程占用了多少内存。这里可以看到VIRT、RES和SHR三个重要的指标。</p><h2 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h2><p>1、进程“需要的”虚拟内存大小，包括进程使用的库、代码、数据，以及malloc、new分配的堆空间和分配的栈空间等；</p><p>2、假如进程新申请10MB的内存，但实际只使用了1MB，那么它会增长10MB，而不是实际的1MB使用量。</p><h2 id="常驻内存"><a href="#常驻内存" class="headerlink" title="常驻内存"></a>常驻内存</h2><p>驻留内存，顾名思义是指那些被映射到进程虚拟内存空间的物理内存。</p><h2 id="共享内存"><a href="#共享内存" class="headerlink" title="共享内存"></a>共享内存</h2><p>进程在运行过程中，会加载许多操作系统的动态库，比如 libc.so、libld.so等。这些库对于每个进程而言都是公用的，它们在内存中实际只会加载一份，这部分称为共享内存。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;可以通过top命令查看进程占用了多少内存。这里可以看到VIRT、RES和SHR三个重要的指标。&lt;/p&gt;
-&lt;h2 id=&quot;虚拟内存&quot;&gt;&lt;a href=&quot;#虚拟内存&quot; class=&quot;headerlink&quot; title=&quot;虚拟内存&quot;&gt;&lt;/a&gt;虚拟内存&lt;/h2&gt;&lt;p&gt;1、进程“需要
       
     
     </summary>
