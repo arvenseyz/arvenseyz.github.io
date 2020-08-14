@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2020-08-07T10:24:51.530Z</updated>
+  <updated>2020-08-14T06:24:15.164Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -17,11 +17,38 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>两协程轮流打压</title>
+    <title>redis单线程原理</title>
+    <link href="http://yoursite.com/blog/2020/08/14/8-14%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-2/"/>
+    <id>http://yoursite.com/blog/2020/08/14/8-14技术笔记-2/</id>
+    <published>2020-08-14T06:00:21.000Z</published>
+    <updated>2020-08-14T06:24:15.164Z</updated>
+    
+    <content type="html"><![CDATA[<p>redis单线程指的是工作线程是单线程，还有很多辅助线程。</p><p>redis单线程快，合理的说法是，多线程不能提升redis性能，所以没必要使用多线程。</p><p>考虑单核处理器，多线程并不能增加cpu使用总时间，反而会增加上下文切换消耗。那为什么我们平时要多线程呢？</p><p>因为IO速度比cpu慢太多，多线程是为了防止/减少IO阻塞。</p><p>IO分为两部分，磁盘和网络，redis纯内存，没有IO。至于网络，redis用了select/epoll的多路复用，相当于多线程。（这里其实有优化空间，多路复用也可以多线程多路复用，redis6.0已经优化）。</p><p>考虑多核处理器的情况，多线程的确能并行使用多个cpu，但对于redis来说，cpu并不是瓶颈，，Redis的瓶颈最有可能是机器内存的大小或者网络带宽。既然单线程容易实现，而且CPU不会成为瓶颈，那就顺理成章地采用单线程的方案了。</p><h2 id="select-epoll"><a href="#select-epoll" class="headerlink" title="select/epoll"></a>select/epoll</h2><p><img src="https://s1.ax1x.com/2020/08/14/dCyZEq.jpg" alt="dCyZEq.jpg"></p><p>套接字，文件描述符什么的，目前还不懂。但简单的来说，是同时注册多个，基于回调，回调后入一个事件处理队列，redis的工作线程只需要不断得从队列取，进行工作即可。那么就无需轮询客户端是否有请求。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;redis单线程指的是工作线程是单线程，还有很多辅助线程。&lt;/p&gt;
+&lt;p&gt;redis单线程快，合理的说法是，多线程不能提升redis性能，所以没必要使用多线程。&lt;/p&gt;
+&lt;p&gt;考虑单核处理器，多线程并不能增加cpu使用总时间，反而会增加上下文切换消耗。那为什么我们平时要多线
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="redis" scheme="http://yoursite.com/blog/tags/redis/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>两协程轮流打印</title>
     <link href="http://yoursite.com/blog/2020/08/07/8-7%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
     <id>http://yoursite.com/blog/2020/08/07/8-7技术笔记-1/</id>
     <published>2020-08-07T10:22:00.000Z</published>
-    <updated>2020-08-07T10:24:51.530Z</updated>
+    <updated>2020-08-14T06:00:59.021Z</updated>
     
     <content type="html"><![CDATA[<p>读空channel会阻塞，利用这点即可。</p><p>即第一个协程先读后写，第二个协程先写后读。</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"sync"</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br><span class="line">wg:=sync.WaitGroup&#123;&#125;</span><br><span class="line"></span><br><span class="line">wg.Add(<span class="number">1</span>)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line"><span class="keyword">defer</span> wg.Done()</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">1</span>; i &lt;= <span class="number">20</span>; i++ &#123;</span><br><span class="line"><span class="built_in">println</span>(<span class="string">"g1:"</span>, &lt;-ch)  <span class="comment">// 执行步骤1， 执行步骤5</span></span><br><span class="line">i++  <span class="comment">//执行步骤6</span></span><br><span class="line">ch &lt;- i <span class="comment">// 执行步骤7</span></span><br><span class="line">&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">wg.Add(<span class="number">1</span>)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line"><span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line"><span class="built_in">close</span>(ch)</span><br><span class="line">wg.Done()</span><br><span class="line">&#125;()</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">20</span>; i++ &#123;</span><br><span class="line">i++  <span class="comment">// 执行步骤2</span></span><br><span class="line">ch &lt;- i  <span class="comment">//执行步骤3</span></span><br><span class="line"><span class="built_in">println</span>(<span class="string">"g2:"</span>, &lt;-ch) <span class="comment">//执行步骤4</span></span><br><span class="line">&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
     
@@ -505,34 +532,6 @@
       
         &lt;h2 id=&quot;缓冲区&quot;&gt;&lt;a href=&quot;#缓冲区&quot; class=&quot;headerlink&quot; title=&quot;缓冲区&quot;&gt;&lt;/a&gt;缓冲区&lt;/h2&gt;&lt;p&gt;在调用函数write()时，似乎该函数一旦返回，数据便已经写到了文件中.&lt;/p&gt;
 &lt;p&gt;但显然，写磁盘速度很慢，如果加个内存缓冲区，
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="操作系统" scheme="http://yoursite.com/blog/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
-    
-      <category term="linux" scheme="http://yoursite.com/blog/tags/linux/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>内存碎片与内存整理</title>
-    <link href="http://yoursite.com/blog/2020/02/13/2-13%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>http://yoursite.com/blog/2020/02/13/2-13技术笔记-1/</id>
-    <published>2020-02-13T09:57:03.000Z</published>
-    <updated>2020-02-13T10:39:01.321Z</updated>
-    
-    <content type="html"><![CDATA[<p>内存碎片分为两种，内部碎片和外部碎片。可以简单认为，内部碎片是分页导致的，外部碎片是分段导致的。</p><h1 id="slub"><a href="#slub" class="headerlink" title="slub"></a>slub</h1><p>linux kernel 通过把整个物理内存划分成以一个个page进行管理，管理器就是伙伴系统，它的最小分配单元就是page。但是对于小于page的内存分配，如果直接分配一个page，是一个很大的浪费。linux kernel 通过slab来实现对小于page大小的内存分配。slab把page按2的m次幂进行划分一个个字节块，当kmalloc申请内存时，通过slab管理器返回需要满足申请大小的最小空闲内存块。</p><p>解决了内部碎片的问题。</p><p>slab是Linux操作系统的一种内存分配机制。其工作是针对一些经常分配并释放的对象，如进程描述符等，这些对象的大小一般比较小，如果直接采用伙伴系统来进行分配和释放，不仅会造成大量的内存碎片，而且处理速度也太慢。<br>而slab分配器是基于对象进行管理的，相同类型的对象归为一类(如进程描述符就是一类)，每当要申请这样一个对象，slab分配器就从一个slab列表中分配一个这样大小的单元出去，而当要释放时，将其重新保存在该列表中，而不是直接返回给伙伴系统，从而避免这些内碎片。slab分配器并不丢弃已分配的对象，而是释放并把它们保存在内存中。当以后又要请求新的对象时，就可以从内存直接获取而不用重复初始化。</p><h1 id="buddy"><a href="#buddy" class="headerlink" title="buddy"></a>buddy</h1><p>Linux采用著名的伙伴系统(buddy system)算法来解决外碎片问题。把所有的空闲页框分组为11个块链表，每个链表分别包含大小为1,2,4,8,16,32,64,128,256,512,1024个连续的页框，对1024个页框的最大请求对应着4MB大小的连续RAM（每页大小为4KB），每个块的第一个页框的物理地址是该块大小的整数倍，例如，大小为16个页框的块，其起始地址是16*2^12的倍数。</p><p>假设现在要请求一个256个页框的块（1MB），算法步骤如下：<br>• 在256个页框的链表中检查是否有一个空闲快，如果没有，查找下一个更大的块，如果有，请求满足。<br>• 在512个页框的链表中检查是否有一个空闲块，如果有，把512个页框的空闲块分为两份，第一份用于满足请求，第二份链接到256个页框的链表中。如果没有空闲块，继续寻找下一个更大的块。<br>以上过程的逆过程，就是页框块的释放过程，也是该算法名字的由来，内核试图把大小为B的一对空闲伙伴块合并为一个2B的单独块，满足以下条件的两个块称之为伙伴：<br>• 两个块具有相同的大小<br>• 他们的物理地址是连续的<br>第一块的第一个页框的物理地址是2 <em> B </em> 2^12<br>该算法是递归的，如果它成功合并了B，就会试图去合并2B，以再次试图形成更大的块。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;内存碎片分为两种，内部碎片和外部碎片。可以简单认为，内部碎片是分页导致的，外部碎片是分段导致的。&lt;/p&gt;
-&lt;h1 id=&quot;slub&quot;&gt;&lt;a href=&quot;#slub&quot; class=&quot;headerlink&quot; title=&quot;slub&quot;&gt;&lt;/a&gt;slub&lt;/h1&gt;&lt;p&gt;linux 
       
     
     </summary>

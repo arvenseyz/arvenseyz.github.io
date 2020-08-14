@@ -251,6 +251,178 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/27/11-27技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2018/11/27/11-27技术笔记/" itemprop="url">Netty技术杂记</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-27T14:14:31+08:00">
+                2018-11-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <ol>
+<li>netty中的操作返回的大多是ChannelFuture，比如bind(),connect(),write()。ChannelFuture继承自Future，可以addListener,isSuccess等方法。同时ChannelFuture 还持有Channel的引用。   </li>
+<li>ChannelFuture提供了几种额外的方法，这些方法使得我们能够注册一个或者多个ChannelFutureListener实例。监听器的回调方法operationComplete()，将会在对应的操作完成时被调用。</li>
+<li>sync()是阻塞的，和await()差异在于它返回异常，因为netty中所有的操作都是异步的，而返回的ChannelFuture是同步的，如果方法后加sync()，意味着阻塞并等待该操作的完成。实际上，最好还是加个Listener，等返回了再处理，而不是等它返回。</li>
+<li>EventLoop是和线程绑定的，与Channel是一对多的关系，一个 EventLoopGroup 包含一个或者多个 EventLoop；一个 EventLoopGroup 包含一个或者多个 EventLoop；</li>
+<li>ChannelInitializer先注册自己，然后安装其他的ChannelHandler,最后移除自己。</li>
+<li>为服务器需要两组不同的 Channel。第一组将只包含一个 ServerChannel，代表服务器自身的已绑定到某个本地端口的正在监听的套接字。而第二组将包含所有已创建的用来处理传入客户端连接（对于每个服务器已经接受的连接都有一个）的 Channel。</li>
+<li><p>池化的用法，当引用计数等于0的时候，Netty将Buffer回收致池中，在下一次申请Buffer的没某个时刻会被复用。为了降低分配和释放内存的开销，Netty 通过 interface ByteBufAllocator 实现了（ByteBuf 的）池化，它可以用来分配我们所描述过的任意类型的 ByteBuf 实例。可以通过 Channel（每个都可以有一个不同的 ByteBufAllocator 实例）或者绑定到ChannelHandler 的 ChannelHandlerContext 获取一个到 ByteBufAllocator 的引用。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Channel channel = ...;</span><br><span class="line">ByteBufAllocator allocator = channel.alloc();</span><br><span class="line">ChannelHandlerContext ctx = ...;</span><br><span class="line">ByteBufAllocator allocator2 = ctx.alloc();</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Bytebuf的最佳实践是在IO通信线程的读写缓冲区使用DirectByteBuf，后端业务使用HeapByteBuf。</p>
+</li>
+<li><p>复合缓冲区可以组合.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">CompositeByteBuf messageBuf = Unpooled.compositeBuffer();</span><br><span class="line">ByteBuf headerBuf = ...; // can be backing or direct</span><br><span class="line">ByteBuf bodyBuf = ...; // can be backing or direct</span><br><span class="line">messageBuf.addComponents(headerBuf, bodyBuf);</span><br><span class="line">.....</span><br><span class="line">messageBuf.removeComponent(0); // remove the header</span><br><span class="line">for (ByteBuf buf : messageBuf) &#123;</span><br><span class="line">System.out.println(buf.toString());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>每当通过调用 ChannelInboundHandler.channelRead()或者 ChannelOutboundHandler.write()方法来处理数据时，你都需要确保没有任何的资源泄漏。通过调用 ReferenceCountUtil.release()方法释放资源,在出站方向这边，如果你处理了 write()操作并丢弃了一个消息，那么你也应该负责释放它。重要的是，不仅要释放资源，还要通知 ChannelPromise。否则可能会出现 ChannelFutureListener收不到某个消息已经被处理了的通知的情况。</p>
+</li>
+<li>ChannelPromise接口扩展了Promise和ChannelFuture，绑定了Channel，又可写异步执行结构，又具备了监听者的功能，是Netty实际编程使用的表示异步执行的接口</li>
+<li>ChannelHandlerContext的writeAndFlush()方法是从当前handler开始的，Channel的writeAndFlush()方法是从头开始的。</li>
+<li><p>EventLoop是和线程绑定的，多线程有关操作应该通过EventLoop实现，定时任务：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Channel ch = ...</span><br><span class="line">ScheduledFuture&lt;?&gt; future = ch.eventLoop().scheduleAtFixedRate(</span><br><span class="line">  new Runnable() &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void run() &#123;</span><br><span class="line">      System.out.println(&quot;Run every 60 seconds&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;, 60, 60, TimeUnit.Seconds);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>客户端用bootstrap，服务端用ServerBootstrap进行引导，至少需要三部分，EventLoopGroup,channel或者channelFactory,Handler。</p>
+</li>
+<li><p>优雅地关闭</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Future&lt;?&gt; future = group.shutdownGracefully();</span><br><span class="line">// block until the group has shutdown</span><br><span class="line">future.syncUninterruptibly();</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>线程池，永远不要再IO你应该永远不要在 Netty 的 I/O 线程上执行任何非 CPU 限定的代码,这样会阻塞IO线程，正确的方法是放在线程池中，netty有继承了线程池的实现类。EventExecutorGroup默认实现类为DefaultEventExecutorGroup(int size),参数为线程数。使用时，在addlast()方法的重载方法中，第一个参数指定线程池就好。<br>应该使用类静态成员变量，这样各个连接共享线程池。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">static final EventExecutor executor = new DefaultEventExecutorGroup(16);</span><br><span class="line">//blabla</span><br><span class="line">pipeline.addlast(executor, new myhandler());</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/26/11-26技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1689,156 +1861,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2018/11/13/11-13技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2018/11/13/11-13技术笔记/" itemprop="url">netty基础搭建</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-13T14:41:08+08:00">
-                2018-11-13
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="服务端启动"><a href="#服务端启动" class="headerlink" title="服务端启动"></a>服务端启动</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><span class="line">public class NettyServer &#123;</span><br><span class="line"></span><br><span class="line">    private static final int BEGIN_PORT = 8000;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        /*</span><br><span class="line">        我们创建了两个NioEventLoopGroup，这两个对象可以看做是传统IO编程模型的两大线程组，</span><br><span class="line">        bossGroup表示监听端口，accept 新连接的线程组，workerGroup表示处理每一条连接的数据读写的线程组</span><br><span class="line">         */</span><br><span class="line">        NioEventLoopGroup boosGroup = new NioEventLoopGroup();</span><br><span class="line">        NioEventLoopGroup workerGroup = new NioEventLoopGroup();</span><br><span class="line">        /*</span><br><span class="line">        创建了一个引导类 ServerBootstrap，这个类将引导我们进行服务端的启动工作，直接new出来</span><br><span class="line">         */</span><br><span class="line">        final ServerBootstrap serverBootstrap = new ServerBootstrap();</span><br><span class="line">        final AttributeKey&lt;Object&gt; clientKey = AttributeKey.newInstance(&quot;clientKey&quot;);</span><br><span class="line">        serverBootstrap</span><br><span class="line">                /*</span><br><span class="line">                我们通过.group(bossGroup, workerGroup)给引导类配置两大线程组，这个引导类的线程模型也就定型了。</span><br><span class="line">                 */</span><br><span class="line">                .group(boosGroup, workerGroup)</span><br><span class="line">                /*</span><br><span class="line">                指定我们服务端的 IO 模型为NIO，我们通过.channel(NioServerSocketChannel.class)来指定 IO 模型，</span><br><span class="line">                当然，这里也有其他的选择，如果你想指定 IO 模型为 BIO，那么这里配置上OioServerSocketChannel.class</span><br><span class="line">                类型即可，当然通常我们也不会这么做，因为Netty的优势就在于NIO。</span><br><span class="line">                 */</span><br><span class="line">                .channel(NioServerSocketChannel.class)</span><br><span class="line">                /*</span><br><span class="line">                childHandler()用于指定处理新连接数据的读写处理逻辑，handler()用于指定在服务端启动过程中的一些逻辑</span><br><span class="line">                 */</span><br><span class="line">                .handler(new ChannelInboundHandlerAdapter() &#123;</span><br><span class="line">                    @Override</span><br><span class="line">                    public void channelActive(ChannelHandlerContext ctx) throws Exception &#123;</span><br><span class="line">                        super.channelActive(ctx);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;)</span><br><span class="line">                .childHandler(new ChannelInitializer&lt;NioSocketChannel&gt;() &#123;</span><br><span class="line">                    @Override</span><br><span class="line">                    protected void initChannel(NioSocketChannel ch) &#123;</span><br><span class="line">                        System.out.println(ch.attr(clientKey).get());</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;)</span><br><span class="line">                 /*</span><br><span class="line">                attr()方法可以给服务端的 channel，也就是NioServerSocketChannel指定一些自定义属性，</span><br><span class="line">                然后我们可以通过channel.attr()取出这个属性，</span><br><span class="line">                比如，下面的代码我们指定我们服务端channel的一个serverName属性，属性值为nettyServer</span><br><span class="line">                childAttr可以给每一条连接指定自定义属性，然后后续我们可以通过channel.attr()取出该属性。</span><br><span class="line">                 */</span><br><span class="line">                .attr(AttributeKey.newInstance(&quot;serverName&quot;), &quot;nettyServer&quot;)</span><br><span class="line">                .childAttr(clientKey, &quot;clientValue&quot;)</span><br><span class="line">                /*</span><br><span class="line">                childOption()可以给每条连接设置一些TCP底层相关的属性，比如上面，我们设置了两种TCP属性，其中</span><br><span class="line">                ChannelOption.SO_KEEPALIVE表示是否开启TCP底层心跳机制，true为开启</span><br><span class="line">                ChannelOption.TCP_NODELAY表示是否开启Nagle算法，true表示关闭，false表示开启，</span><br><span class="line">                通俗地说，如果要求高实时性，有数据发送时就马上发送，就关闭，如果需要减少发送次数减少网络交互，就开启。</span><br><span class="line"></span><br><span class="line">                除了给每个连接设置这一系列属性之外，我们还可以给服务端channel设置一些属性，最常见的就是so_backlog，</span><br><span class="line">                如下设置表示系统用于临时存放已完成三次握手的请求的队列的最大长度，如果连接建立频繁</span><br><span class="line">                ，服务器处理创建新连接较慢，可以适当调大这个参数...</span><br><span class="line">                 */</span><br><span class="line">                .option(ChannelOption.SO_BACKLOG, 1024)</span><br><span class="line">                .childOption(ChannelOption.SO_KEEPALIVE, true)</span><br><span class="line">                .childOption(ChannelOption.TCP_NODELAY, true)</span><br><span class="line">                ;</span><br><span class="line"></span><br><span class="line">        /*</span><br><span class="line">        调用bind(8000)，我们就可以在本地绑定一个 8000 端口启动起来。</span><br><span class="line">        这里手写了重载函数，如果绑定失败，则绑定下一个端口。</span><br><span class="line">         */</span><br><span class="line">        bind(serverBootstrap, BEGIN_PORT);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static void bind(final ServerBootstrap serverBootstrap, final int port) &#123;</span><br><span class="line">        serverBootstrap.bind(port).addListener(future -&gt; &#123;</span><br><span class="line">            if (future.isSuccess()) &#123;</span><br><span class="line">                System.out.println(&quot;端口[&quot; + port + &quot;]绑定成功!&quot;);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                System.err.println(&quot;端口[&quot; + port + &quot;]绑定失败!&quot;);</span><br><span class="line">                bind(serverBootstrap, port + 1);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="客户端启动"><a href="#客户端启动" class="headerlink" title="客户端启动"></a>客户端启动</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">public class NettyClient &#123;</span><br><span class="line">    private static final int MAX_RETRY = 5;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        NioEventLoopGroup workerGroup = new NioEventLoopGroup();</span><br><span class="line"></span><br><span class="line">        Bootstrap bootstrap = new Bootstrap();</span><br><span class="line">        bootstrap</span><br><span class="line">                // 1.指定线程模型,客户端只需要一个EventLoopGroup</span><br><span class="line">                .group(workerGroup)</span><br><span class="line">                // 2.指定 IO 类型为 NIO</span><br><span class="line">                .channel(NioSocketChannel.class)</span><br><span class="line">                // 绑定自定义属性到 channel</span><br><span class="line">                .attr(AttributeKey.newInstance(&quot;clientName&quot;), &quot;nettyClient&quot;)</span><br><span class="line">                // 设置TCP底层属性</span><br><span class="line">                /*</span><br><span class="line">                 ChannelOption.CONNECT_TIMEOUT_MILLIS 表示连接的超时时间，超过这个时间还是建立不上的话则代表连接失败</span><br><span class="line">                 ChannelOption.SO_KEEPALIVE 表示是否开启 TCP 底层心跳机制，true 为开启</span><br><span class="line">                 ChannelOption.TCP_NODELAY 表示是否开始 Nagle 算法，true 表示关闭，false 表示开启。</span><br><span class="line">                 通俗地说，如果要求高实时性，有数据发送时就马上发送，就设置为 true 关闭，如果需要减少发送次数减少网络交互，就设置为 false 开启</span><br><span class="line">                 */</span><br><span class="line">                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)</span><br><span class="line">                .option(ChannelOption.SO_KEEPALIVE, true)</span><br><span class="line">                .option(ChannelOption.TCP_NODELAY, true)</span><br><span class="line">                // 3.IO 处理逻辑</span><br><span class="line">                .handler(new ChannelInitializer&lt;SocketChannel&gt;() &#123;</span><br><span class="line">                    @Override</span><br><span class="line">                    public void initChannel(SocketChannel ch) &#123;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line"></span><br><span class="line">        // 4.建立连接</span><br><span class="line">        connect(bootstrap, &quot;127.0.0.1&quot;, 8000, MAX_RETRY);</span><br><span class="line">    &#125;</span><br><span class="line">    //这里建立连接，为了避免失败，同样手写了方法，超时重试机制。</span><br><span class="line">    private static void connect(Bootstrap bootstrap, String host, int port, int retry) &#123;</span><br><span class="line">        bootstrap.connect(host, port).addListener(future -&gt; &#123;</span><br><span class="line">            if(future.isSuccess()) &#123;</span><br><span class="line">                System.out.println(&quot;连接成功!&quot;);</span><br><span class="line">            &#125;else if(retry == 0) &#123;</span><br><span class="line">                System.err.println(&quot;重试次数已用完，放弃连接！&quot;);</span><br><span class="line">            &#125;else &#123;</span><br><span class="line">                // 第几次重连</span><br><span class="line">                int order = (MAX_RETRY - retry) + 1;</span><br><span class="line">                // 本次重连的间隔</span><br><span class="line">                int delay = 1 &lt;&lt; order;</span><br><span class="line">                System.err.println(new Date() + &quot;: 连接失败，第&quot; + order + &quot;次重连……&quot;);</span><br><span class="line">                bootstrap.config().group().schedule(() -&gt; connect(bootstrap, host, port, retry - 1), delay, TimeUnit</span><br><span class="line">                        .SECONDS);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="服务端和客户端数据交互"><a href="#服务端和客户端数据交互" class="headerlink" title="服务端和客户端数据交互"></a>服务端和客户端数据交互</h1><h2 id="业务逻辑位置"><a href="#业务逻辑位置" class="headerlink" title="业务逻辑位置"></a>业务逻辑位置</h2><p>在客户端启动中，childHandler中并没有写业务逻辑，仅仅一个打印。实际上，所以的业务都应该写于此种，这里使用了责任链模式。NioSocketChannel中有pipeline，pipe里有个双向链表，向其中添加业务逻辑的ChannelHandler即可。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">.childHandler(new ChannelInitializer&lt;NioSocketChannel&gt;() &#123;</span><br><span class="line">    protected void initChannel(NioSocketChannel ch) &#123;</span><br><span class="line">        ch.pipeline().addLast(new FirstServerHandler());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-<p>同样，在服务端中，数据读写是handler() 方法中的initChannel()。    </p>
-<h2 id="客户端写出数据"><a href="#客户端写出数据" class="headerlink" title="客户端写出数据"></a>客户端写出数据</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">public class FirstClientHandler extends ChannelInboundHandlerAdapter &#123;</span><br><span class="line"></span><br><span class="line">    /*</span><br><span class="line">    [覆盖了 channelActive()方法，这个方法会在客户端连接建立成功之后被调用]</span><br><span class="line">    写数据的逻辑分为两步：首先我们需要获取一个 netty 对二进制数据的抽象 ByteBuf，, ctx.alloc() 获取到一个 ByteBuf 的内存管理器，</span><br><span class="line">    这个内存管理器的作用就是分配一个 ByteBuf，然后我们把字符串的二进制数据填充到 ByteBuf，</span><br><span class="line">    这样我们就获取到了 Netty 需要的一个数据格式，最后我们调用 ctx.channel().writeAndFlush() 把数据写到服务端...</span><br><span class="line">     */</span><br><span class="line">    @Override</span><br><span class="line">    public void channelActive(ChannelHandlerContext ctx) &#123;</span><br><span class="line">        System.out.println(new Date() + &quot;: 客户端写出数据&quot;);</span><br><span class="line">        // 1.获取数据</span><br><span class="line">        ByteBuf buffer = getByteBuf(ctx);</span><br><span class="line">        // 2.写数据</span><br><span class="line">        ctx.channel().writeAndFlush(buffer);</span><br><span class="line">    &#125;</span><br><span class="line">    private ByteBuf getByteBuf(ChannelHandlerContext ctx) &#123;</span><br><span class="line">        byte[] bytes = &quot;hello world!&quot;.getBytes(Charset.forName(&quot;utf-8&quot;));</span><br><span class="line">        ByteBuf buffer = ctx.alloc().buffer();</span><br><span class="line">        buffer.writeBytes(bytes);</span><br><span class="line">        return buffer;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="服务端读入数据，写出数据"><a href="#服务端读入数据，写出数据" class="headerlink" title="服务端读入数据，写出数据"></a>服务端读入数据，写出数据</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">public class FirstServerHandler extends ChannelInboundHandlerAdapter &#123;</span><br><span class="line">    /*</span><br><span class="line">        [这里覆盖的方法是 channelRead()，这个方法在接收到客户端发来的数据之后被回调。]</span><br><span class="line">        这里的 msg 参数指的就是 Netty 里面数据读写的载体，</span><br><span class="line">        我们强转之后，然后调用 byteBuf.toString() 就能够拿到我们客户端发过来的字符串数据。</span><br><span class="line">         */</span><br><span class="line">    @Override</span><br><span class="line">    public void channelRead(ChannelHandlerContext ctx, Object msg) &#123;</span><br><span class="line"></span><br><span class="line">        ByteBuf byteBuf = (ByteBuf) msg;</span><br><span class="line">        System.out.println(new Date() + &quot;: 服务端读到数据 -&gt; &quot; + byteBuf.toString(Charset.forName(&quot;utf-8&quot;)));</span><br><span class="line"></span><br><span class="line">        /*</span><br><span class="line">       服务端向客户端写数据逻辑与客户端侧的写数据逻辑一样，</span><br><span class="line">       先创建一个 ByteBuf，然后填充二进制数据，最后调用 writeAndFlush() 方法写出去</span><br><span class="line">        */</span><br><span class="line">        System.out.println(new Date() + &quot;: 服务端写出数据&quot;);</span><br><span class="line">        ByteBuf out = getByteBuf(ctx);</span><br><span class="line">        ctx.channel().writeAndFlush(out);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private ByteBuf getByteBuf(ChannelHandlerContext ctx) &#123;</span><br><span class="line">        byte[] bytes = &quot;你好!&quot;.getBytes(Charset.forName(&quot;utf-8&quot;));</span><br><span class="line">        ByteBuf buffer = ctx.alloc().buffer();</span><br><span class="line">        buffer.writeBytes(bytes);</span><br><span class="line">        return buffer;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="客户端再读入数据"><a href="#客户端再读入数据" class="headerlink" title="客户端再读入数据"></a>客户端再读入数据</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">public class FirstClientHandler extends ChannelInboundHandlerAdapter &#123;</span><br><span class="line"></span><br><span class="line">    // 写数据相关的逻辑省略</span><br><span class="line">    /*</span><br><span class="line">        客户端的读取数据的逻辑和服务端读取数据的逻辑一样，同样是覆盖 ChannelRead() 方法</span><br><span class="line">    */</span><br><span class="line">    @Override</span><br><span class="line">    public void channelRead(ChannelHandlerContext ctx, Object msg) &#123;</span><br><span class="line">        ByteBuf byteBuf = (ByteBuf) msg;</span><br><span class="line"></span><br><span class="line">        System.out.println(new Date() + &quot;: 客户端读到数据 -&gt; &quot; + byteBuf.toString(Charset.forName(&quot;utf-8&quot;)));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="异常处理"><a href="#异常处理" class="headerlink" title="异常处理"></a>异常处理</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/*异常处理覆盖的方法是 exceptionCaught()。记录 Throwable，关闭 Channel，在这个场景下，终止到服务器的连接*/</span><br><span class="line">@Override</span><br><span class="line">public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) &#123;</span><br><span class="line">    cause.printStackTrace();</span><br><span class="line">    ctx.close();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1889,7 +1911,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">226</span>
+                  <span class="site-state-item-count">227</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

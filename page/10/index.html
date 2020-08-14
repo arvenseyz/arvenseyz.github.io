@@ -251,6 +251,173 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/04/16/leetcode118-121-128/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2019/04/16/leetcode118-121-128/" itemprop="url">买卖股票，帕斯卡三角，最长连续自然数</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-16T17:08:28+08:00">
+                2019-04-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/leetcode/" itemprop="url" rel="index">
+                    <span itemprop="name">leetcode</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="121"><a href="#121" class="headerlink" title="121"></a>121</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>最佳时机买卖股票系列。</p>
+<p>只能买卖一次。</p>
+<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><p>要求大值在小值后面才行。</p>
+<p>随时记录此时的最小值，和最大利润。遍历完即可知道答案。</p>
+<p>其实有点像那个木桶装水问题，如果点b在a后且比a低，那么如果在之后取得最大利润，低点必然是点b。</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">maxProfit</span><span class="params">(<span class="keyword">int</span>[] prices)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> min=Integer.MAX_VALUE;</span><br><span class="line">        <span class="keyword">int</span> max=<span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; prices.length; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span>(prices[i]&lt;min)&#123;</span><br><span class="line">                min=prices[i];</span><br><span class="line">            &#125;<span class="keyword">else</span> <span class="keyword">if</span>(prices[i]-min&gt;max)&#123;</span><br><span class="line">                max = prices[i]-min;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> max;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="118"><a href="#118" class="headerlink" title="118"></a>118</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>Pascal’s Triangle，好像中国叫杨辉三角？</p>
+<pre><code> \[1],
+\[1,1],
+</code></pre><p>   [1,2,1],<br>  [1,3,3,1],<br> [1,4,6,4,1]</p>
+<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>其实把这个三角左对齐变成直角三角形，就看出奥妙了。</p>
+<p>1</p>
+<p>11</p>
+<p>121</p>
+<p>1331</p>
+<p>14641</p>
+<p>即：两侧是1不论，其他数字，是上面的加上面左边的。</p>
+<p>上一句话就是动规方程</p>
+<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">     <span class="keyword">public</span> List&lt;List&lt;Integer&gt;&gt; generate(<span class="keyword">int</span> numRows) &#123;</span><br><span class="line">        <span class="keyword">int</span>[][] dp = <span class="keyword">new</span> <span class="keyword">int</span>[numRows][numRows];</span><br><span class="line">        List&lt;List&lt;Integer&gt;&gt; ans = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i =<span class="number">0</span>;i&lt;numRows;i++)&#123;</span><br><span class="line">            List&lt;Integer&gt; list = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> j =<span class="number">0</span>;j&lt;=i;j++)&#123;</span><br><span class="line">                <span class="keyword">if</span>(j==<span class="number">0</span>||j==i)&#123;</span><br><span class="line">                    dp[i][j]=<span class="number">1</span>;    <span class="comment">//两侧是1</span></span><br><span class="line"></span><br><span class="line">                &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">                    dp[i][j]=dp[i-<span class="number">1</span>][j-<span class="number">1</span>]+dp[i-<span class="number">1</span>][j];   <span class="comment">//其他数字，是上面的加上面左边的</span></span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line">                list.add(dp[i][j]);</span><br><span class="line">            &#125;</span><br><span class="line">            ans.add(list);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> ans;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="128"><a href="#128" class="headerlink" title="128"></a>128</h1><h2 id="题目-2"><a href="#题目-2" class="headerlink" title="题目"></a>题目</h2><p>最长连续自然数。</p>
+<p>比如[100,4,200,1,3,2]。里面有一串自然数1234，长度是4。</p>
+<h2 id="解答-2"><a href="#解答-2" class="headerlink" title="解答"></a>解答</h2><p>显然有排序的方法，但为O(nlgn)。这里需要O(n)的方法。</p>
+<p>哈希是O(1)，遍历哈希就是O(n)。</p>
+<p>把数组存入集合，遍历数组，找它前后的数。</p>
+<p>问题在于，找每个数前后的数，同一个序列，会反复找。最后还是O(n^2)了。解决方法是，集合里边找边删，这样就是O(n)。因为1找到了23,就不会再遍历2了。</p>
+<h2 id="代码-2"><a href="#代码-2" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">longestConsecutive</span><span class="params">(<span class="keyword">int</span>[] nums)</span> </span>&#123;</span><br><span class="line">       <span class="keyword">if</span>(nums.length == <span class="number">0</span>) &#123;</span><br><span class="line">           <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">       &#125;</span><br><span class="line">       Set&lt;Integer&gt; set = <span class="keyword">new</span> HashSet&lt;&gt;();</span><br><span class="line">       <span class="keyword">for</span> (<span class="keyword">int</span> num : nums) &#123;</span><br><span class="line">           set.add(num);</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">int</span> max = <span class="number">1</span>;</span><br><span class="line">       <span class="keyword">int</span> len = nums.length;</span><br><span class="line">       <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; len; i++) &#123;</span><br><span class="line">           <span class="keyword">int</span> val = nums[i];</span><br><span class="line">           <span class="keyword">int</span> cur = val + <span class="number">1</span>;</span><br><span class="line">           <span class="keyword">int</span> num = <span class="number">1</span>;</span><br><span class="line">           <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">               <span class="keyword">if</span>(set.contains(cur)) &#123;</span><br><span class="line">                   set.remove(cur);</span><br><span class="line">                   num++;</span><br><span class="line">                   cur++;</span><br><span class="line"></span><br><span class="line">               &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">                   <span class="keyword">break</span>;</span><br><span class="line">               &#125;</span><br><span class="line">               max = num &gt; max ? num : max;</span><br><span class="line">           &#125;</span><br><span class="line">           cur = val - <span class="number">1</span>;</span><br><span class="line">           <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">               <span class="keyword">if</span>(set.contains(cur)) &#123;</span><br><span class="line">                   set.remove(cur);</span><br><span class="line">                   num++;</span><br><span class="line">                   cur--;</span><br><span class="line">               &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">                   <span class="keyword">break</span>;</span><br><span class="line">               &#125;</span><br><span class="line">               max = num &gt; max ? num : max;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">return</span> max;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/04/11/4-11技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1710,172 +1877,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/03/26/3-26技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2019/03/26/3-26技术笔记/" itemprop="url">UDP</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-03-26T16:53:00+08:00">
-                2019-03-26
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>UDP是无连接不可靠的，如果用UDP通信，可靠性需要在应用层保证。</p>
-<p>如何保证可靠，需要首先知道怎么会不可靠。</p>
-<p>第一，数据拆包后，在传输过程中，包丢失。</p>
-<p>第二，后发先至。</p>
-<p>解决了这两个问题，才能说基于UDP的可靠的应用层协议。即，至少得有这三个功能。为了控制速度，参考TCP中的拥塞控制和滑动窗口，最好还得有类似功能。</p>
-<ol>
-<li><p>超时重传（定时器）</p>
-</li>
-<li><p>有序接受 （添加包序号）将数据包进行编号，按照包的顺序接收并存储。</p>
-</li>
-<li><p>应答确认 （Seq/Ack应答机制）</p>
-</li>
-<li><p>滑动窗口流量控制等机制 （滑动窗口协议）</p>
-</li>
-</ol>
-<p>比如说最简单的实现方式。</p>
-<p>数据包：</p>
-<p><img src="https://i.loli.net/2019/03/26/5c99ed3917924.png" alt="5c99ed3917924"></p>
-<p>传输：</p>
-<p><img src="https://i.loli.net/2019/03/26/5c99ed600c687.png" alt="5c99ed600d"></p>
-<h2 id="内容"><a href="#内容" class="headerlink" title="内容"></a>内容</h2><p>首先发送端发送一个文件信息报文，这个报文就是最简单的UDP报文，但是里面的信息很重要，记录着文件的大小，被分隔成的报文数，文件序号。</p>
-<p>发完这个信息包，发送端阻塞，等待接收端的回复报文才能继续。文件信息包被接收端接受以后使用确认机制确定是否接受这个文件，并把决定回馈给发送端。</p>
-<p>此时，发送端如果收到的是“确定接受”的结果，将会把这个文件的整组数据报全部发送过去，这里我们并不像最传统的可靠传输协议TCP协议一样，对于每个每个报文都要确认接受完才会对下一个报文进行处理，太没效率，遵守本协议的接受端在接受这组报文的时候将遵守错序重排机制，来对收到的这组报文进行按序号排序，期间可能序号不联系不过没关系，接受过程只要保证序号从小到大即可。</p>
-<p>发送端发完所有报文延迟一点时间再发送一个结束报文，延迟时间是为了减少结束报文比数据报文还早被接受的情况，当然即使这种情况出现也不会破坏可靠性，只不过在在结束报文之后的数据报文会被当做丢失的包被要求重发，降低效率。接受端接受到结束报文后按照一开始的文件信息包的信息和序列号做对比，把没有的序列号的报文的信息传回给发送端，要求重新发送这些报文。发送端接到信息以后重发丢失的数据包。直到接收端拿到的报文和信息匹配，接受端就可以发回一个“接受完毕”的报文。这样发送端接受端再进行下一次文件传输。</p>
-<p>实际上现在业界也有现行的协议了： RUDP，RTP，UDT</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1926,7 +1927,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">226</span>
+                  <span class="site-state-item-count">227</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
