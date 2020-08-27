@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Arvense, NexT">
+  <meta name="keywords" content="数据库,">
 
 
 
@@ -81,14 +81,18 @@
 
 
 
+<meta name="description" content="最左前缀匹配原则，非常重要的原则，mysql会一直向右匹配直到遇到范围查询(&amp;gt;、&amp;lt;、between、like)就停止匹配，比如a = 1 and b = 2 and c &amp;gt; 3 and d = 4 如果建立(a,b,c,d)顺序的索引，d是用不到索引的，如果建立(a,b,d,c)的索引则都可以用到，a,b,d的顺序可以任意调整。 12345678910select   count">
+<meta name="keywords" content="数据库">
 <meta property="og:type" content="article">
-<meta property="og:title" content="8-25技术笔记">
+<meta property="og:title" content="范围查询与索引">
 <meta property="og:url" content="http://yoursite.com/blog/2020/08/25/8-25技术笔记/index.html">
 <meta property="og:site_name" content="Arvense">
+<meta property="og:description" content="最左前缀匹配原则，非常重要的原则，mysql会一直向右匹配直到遇到范围查询(&amp;gt;、&amp;lt;、between、like)就停止匹配，比如a = 1 and b = 2 and c &amp;gt; 3 and d = 4 如果建立(a,b,c,d)顺序的索引，d是用不到索引的，如果建立(a,b,d,c)的索引则都可以用到，a,b,d的顺序可以任意调整。 12345678910select   count">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2020-08-25T06:21:11.813Z">
+<meta property="og:updated_time" content="2020-08-25T09:48:52.857Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="8-25技术笔记">
+<meta name="twitter:title" content="范围查询与索引">
+<meta name="twitter:description" content="最左前缀匹配原则，非常重要的原则，mysql会一直向右匹配直到遇到范围查询(&amp;gt;、&amp;lt;、between、like)就停止匹配，比如a = 1 and b = 2 and c &amp;gt; 3 and d = 4 如果建立(a,b,c,d)顺序的索引，d是用不到索引的，如果建立(a,b,d,c)的索引则都可以用到，a,b,d的顺序可以任意调整。 12345678910select   count">
 
 
 
@@ -124,7 +128,7 @@
 
 
 
-  <title>8-25技术笔记 | Arvense</title>
+  <title>范围查询与索引 | Arvense</title>
   
 
 
@@ -268,7 +272,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">8-25技术笔记</h1>
+          <h1 class="post-title" itemprop="name headline">范围查询与索引</h1>
         
 
         <div class="post-meta">
@@ -290,6 +294,28 @@
             
           </span>
 
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -318,7 +344,12 @@
       
 
       
-        
+        <p>最左前缀匹配原则，非常重要的原则，mysql会一直向右匹配直到遇到范围查询(&gt;、&lt;、between、like)就停止匹配，比如a = 1 and b = 2 and c &gt; 3 and d = 4 如果建立(a,b,c,d)顺序的索引，d是用不到索引的，如果建立(a,b,d,c)的索引则都可以用到，a,b,d的顺序可以任意调整。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">   <span class="keyword">count</span>(*) </span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">   task </span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">   <span class="keyword">status</span>=<span class="number">2</span> </span><br><span class="line">   <span class="keyword">and</span> operator_id=<span class="number">20839</span> </span><br><span class="line">   <span class="keyword">and</span> operate_time&gt;<span class="number">1371169729</span> </span><br><span class="line">   <span class="keyword">and</span> operate_time&lt;<span class="number">1371174603</span> </span><br><span class="line">   <span class="keyword">and</span> <span class="keyword">type</span>=<span class="number">2</span>;</span><br></pre></td></tr></table></figure>
+<p>如果索引是(operate_time,status,type,operator_id)，则只有operate_time参与索引。</p>
+<p>即索引应该建为(status,type,operator_id,operate_time)。</p>
+<p>总的来说，如果索引中某字段是范围查询，那么它应该在最后的字段。否则它右边的字段不参与索引。</p>
+
       
     </div>
     
@@ -332,6 +363,12 @@
     
 
     <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/blog/tags/数据库/" rel="tag"># 数据库</a>
+          
+        </div>
       
 
       
@@ -351,6 +388,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/blog/2020/08/27/8-27技术笔记-1/" rel="prev" title="RDB">
+                RDB <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -418,7 +459,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">229</span>
+                  <span class="site-state-item-count">230</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

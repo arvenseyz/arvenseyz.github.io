@@ -251,6 +251,153 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2020/02/20/2-20技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/blog/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/blog/2020/02/20/2-20技术笔记-1/" itemprop="url">TCP粘包/拆包</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-02-20T14:27:37+08:00">
+                2020-02-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="伪概念"><a href="#伪概念" class="headerlink" title="伪概念"></a>伪概念</h1><p>TCP是基于流的协议，所谓流，就是没有界限的一串数据。TCP底层并不了解上层业务数据的具体含义，它会根据TCP缓冲区的实际情况进行包的划分，所以在业务上认为，一个完整的包可能会被TCP拆分成多个包进行发送，也有可能把多个小的包封装成一个大的数据包发送，这就是所谓的TCP粘包和拆包问题。<br>即应用层的请求和传输层是不对应的。</p>
+<p>假设客户端分别发送了两个数据包D1和D2给服务端，由于服务端一次读取的字节数是不定的，故可能存在以下四种情况。<br>(1) 服务端分两次读取到了两个独立的数据包，分别是D1和D2，没有粘包和拆包；<br>(2) 服务端一次接收到了两个数据包，D1和D2粘合在一起，被称为TCP粘包；<br>(3) 服务端分两次读取到了两个数据包，第一次读取到了完整的D1包和D2包的部分内容，第二次读取到了D2包的剩余内容，这被称为TCP拆包；<br>(4) 服务端分两次读取到了两个数据包，第一次读取到了D1包的部分内容D1_1，第二次读取到了D1包的剩余内容D1_2和D2包的整包。</p>
+<h1 id="传输层解决是耍流氓"><a href="#传输层解决是耍流氓" class="headerlink" title="传输层解决是耍流氓"></a>传输层解决是耍流氓</h1><p>比如关闭Nagle算法，接受方立刻从缓冲池里拿数据，都是基于传输层的，是没有意义的。</p>
+<p>因为tcp是基于流的，传输层没有包，包是应用层自己规定的，那么自然应该在应用层再解析出包来。</p>
+<h1 id="应用层分割"><a href="#应用层分割" class="headerlink" title="应用层分割"></a>应用层分割</h1><p>以netty为例，有4种粘包处理器，分别是基于回车，基于指定分割符，定长，基于协议。</p>
+<p>其实也就是发送接收双方约定好应用层“包”的接口，接收方在应用层把流解析成包即可。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2020/02/18/2-18技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1622,160 +1769,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2020/02/05/2-5技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/blog/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/blog/2020/02/05/2-5技术笔记/" itemprop="url">线程同步方法</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-02-05T10:45:49+08:00">
-                2020-02-05
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/blog/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="互斥锁"><a href="#互斥锁" class="headerlink" title="互斥锁"></a>互斥锁</h1><p>即最简单的锁机制，这样多线程只会同时有一个执行关键代码。</p>
-<p>显然锁操作有四种，申请锁，上锁，解锁，销毁锁。</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;cstdio&gt;  </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;cstdlib&gt;  </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;  </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;pthread.h&gt;  </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"iostream"</span>  </span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"><span class="keyword">pthread_mutex_t</span> mutex = PTHREAD_MUTEX_INITIALIZER;  </span><br><span class="line"><span class="keyword">int</span> tmp;  </span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">thread</span><span class="params">(<span class="keyword">void</span> *arg)</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"thread id is "</span> &lt;&lt; pthread_self() &lt;&lt; <span class="built_in">endl</span>;  </span><br><span class="line">    pthread_mutex_lock(&amp;mutex);  </span><br><span class="line">    tmp = <span class="number">12</span>;  </span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"Now a is "</span> &lt;&lt; tmp &lt;&lt; <span class="built_in">endl</span>;  </span><br><span class="line">    pthread_mutex_unlock(&amp;mutex);  </span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="keyword">pthread_t</span> id;  </span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"main thread id is "</span> &lt;&lt; pthread_self() &lt;&lt; <span class="built_in">endl</span>;  </span><br><span class="line">    tmp = <span class="number">3</span>;  </span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"In main func tmp = "</span> &lt;&lt; tmp &lt;&lt; <span class="built_in">endl</span>;  </span><br><span class="line">    <span class="keyword">if</span> (!pthread_create(&amp;id, <span class="literal">NULL</span>, thread, <span class="literal">NULL</span>))  </span><br><span class="line">    &#123;  </span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"Create thread success!"</span> &lt;&lt; <span class="built_in">endl</span>;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="keyword">else</span>  </span><br><span class="line">    &#123;  </span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"Create thread failed!"</span> &lt;&lt; <span class="built_in">endl</span>;  </span><br><span class="line">    &#125;  </span><br><span class="line">    pthread_join(id, <span class="literal">NULL</span>);  </span><br><span class="line">    pthread_mutex_destroy(&amp;mutex);  </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p># </p>
-<h1 id="条件变量-cond"><a href="#条件变量-cond" class="headerlink" title="条件变量(cond)"></a>条件变量(cond)</h1><p>条件变量是利用线程间共享全局变量进行同步的一种机制。条件变量上的基本操作有：触发条件(当条件变为 true 时)；等待条件，挂起线程直到其他线程触发条件。</p>
-<p>有四个操作，初始化，等待，激活，销毁。</p>
-<p>比如：Jack开着一辆出租车来到一个站点停车，看见没人就走了。过段时间，Susan来到站点准备乘车，但是车没有来，于是就等着。过了一会Mike开着车来到了这个站点，Sunsan就上了Mike的车走了</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;  </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;  </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;  </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;pthread.h&gt;  </span></span></span><br><span class="line">  </span><br><span class="line"><span class="keyword">pthread_cond_t</span> taxicond = PTHREAD_COND_INITIALIZER;  </span><br><span class="line"><span class="keyword">pthread_mutex_t</span> taximutex = PTHREAD_MUTEX_INITIALIZER;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">traveler_arrive</span><span class="params">(<span class="keyword">void</span> *name)</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="keyword">char</span> *p = (<span class="keyword">char</span> *)name;  </span><br><span class="line">  </span><br><span class="line">    <span class="built_in">printf</span> (<span class="string">"Travelr: %s need a taxi now!\n"</span>, p);  </span><br><span class="line">    <span class="comment">// 加锁，把信号量加入队列，释放信号量</span></span><br><span class="line">    pthread_mutex_lock(&amp;taximutex);  </span><br><span class="line">    pthread_cond_wait(&amp;taxicond, &amp;taximutex);  </span><br><span class="line">    pthread_mutex_unlock(&amp;taximutex);  </span><br><span class="line">    <span class="built_in">printf</span> (<span class="string">"traveler: %s now got a taxi!\n"</span>, p);  </span><br><span class="line">    pthread_exit(<span class="literal">NULL</span>);  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">taxi_arrive</span><span class="params">(<span class="keyword">void</span> *name)</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="keyword">char</span> *p = (<span class="keyword">char</span> *)name;  </span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span> (<span class="string">"Taxi: %s arrives.\n"</span>, p);</span><br><span class="line">    <span class="comment">// 给线程或者条件发信号，一定要在改变条件状态后再给线程发信号</span></span><br><span class="line">    pthread_cond_signal(&amp;taxicond);  </span><br><span class="line">    pthread_exit(<span class="literal">NULL</span>);  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span> <span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> **argv)</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="keyword">char</span> *name;  </span><br><span class="line">    <span class="keyword">pthread_t</span> thread;  </span><br><span class="line">    <span class="keyword">pthread_attr_t</span> threadattr; <span class="comment">// 线程属性 </span></span><br><span class="line">    pthread_attr_init(&amp;threadattr);  <span class="comment">// 线程属性初始化</span></span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 创建三个线程</span></span><br><span class="line">    name = <span class="string">"Jack"</span>;  </span><br><span class="line">    pthread_create(&amp;thread, &amp;threadattr, taxi_arrive, (<span class="keyword">void</span> *)name);  </span><br><span class="line">    sleep(<span class="number">1</span>);  </span><br><span class="line">    name = <span class="string">"Susan"</span>;  </span><br><span class="line">    pthread_create(&amp;thread, &amp;threadattr, traveler_arrive, (<span class="keyword">void</span> *)name);  </span><br><span class="line">    sleep(<span class="number">1</span>);  </span><br><span class="line">    name = <span class="string">"Mike"</span>;  </span><br><span class="line">    pthread_create(&amp;thread, &amp;threadattr, taxi_arrive, (<span class="keyword">void</span> *)name);  </span><br><span class="line">    sleep(<span class="number">1</span>);  </span><br><span class="line">  </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>互斥量的解锁和在条件变量上挂起都是自动进行的。因此，在条件变量被触发前，如果所有的线程都要对互斥量加锁，这种机制可保证在线程加锁互斥量和进入等待条件变量期间，条件变量不被触发。条件变量要和互斥量相联结，以避免出现条件竞争——个线程预备等待一个条件变量，当它在真正进入等待之前，另一个线程恰好触发了该条件（条件满足信号有可能在测试条件和调用pthread_cond_wait函数（block）之间被发出，从而造成无限制的等待）。</p>
-<h1 id="读写锁"><a href="#读写锁" class="headerlink" title="读写锁"></a>读写锁</h1><p>读写锁是互斥锁更高级的形式，读写锁可以有3种状态：<strong>读模式下加锁状态、写模式加锁状态、不加锁状态</strong>。</p>
-<p>  <strong>一次只有一个线程可以占有写模式的读写锁，但是多个线程可以同时占有读模式的读写锁（允许多个线程读但只允许一个线程写）</strong>。</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 一个使用读写锁来实现 4 个线程读写一段数据是实例。</span></span><br><span class="line"><span class="comment">// 在此示例程序中，共创建了 4 个线程，</span></span><br><span class="line"><span class="comment">// 其中两个线程用来写入数据，两个线程用来读取数据</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;  </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;  </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;pthread.h&gt;  </span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">pthread_rwlock_t</span> rwlock; <span class="comment">//读写锁  </span></span><br><span class="line"><span class="keyword">int</span> num = <span class="number">1</span>;  </span><br><span class="line">  </span><br><span class="line"><span class="comment">//读操作，其他线程允许读操作，却不允许写操作  </span></span><br><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">fun1</span><span class="params">(<span class="keyword">void</span> *arg)</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>)  </span><br><span class="line">    &#123;  </span><br><span class="line">        pthread_rwlock_rdlock(&amp;rwlock);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"read num first == %d\n"</span>, num);</span><br><span class="line">        pthread_rwlock_unlock(&amp;rwlock);</span><br><span class="line">        sleep(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">  </span><br><span class="line"><span class="comment">//读操作，其他线程允许读操作，却不允许写操作  </span></span><br><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">fun2</span><span class="params">(<span class="keyword">void</span> *arg)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        pthread_rwlock_rdlock(&amp;rwlock);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"read num second == %d\n"</span>, num);</span><br><span class="line">        pthread_rwlock_unlock(&amp;rwlock);</span><br><span class="line">        sleep(<span class="number">2</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="comment">//写操作，其它线程都不允许读或写操作  </span></span><br><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">fun3</span><span class="params">(<span class="keyword">void</span> *arg)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        pthread_rwlock_wrlock(&amp;rwlock);</span><br><span class="line">        num++;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"write thread first\n"</span>);</span><br><span class="line">        pthread_rwlock_unlock(&amp;rwlock);</span><br><span class="line">        sleep(<span class="number">2</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="comment">//写操作，其它线程都不允许读或写操作  </span></span><br><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">fun4</span><span class="params">(<span class="keyword">void</span> *arg)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">    &#123;  </span><br><span class="line">        pthread_rwlock_wrlock(&amp;rwlock);  </span><br><span class="line">        num++;  </span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"write thread second\n"</span>);  </span><br><span class="line">        pthread_rwlock_unlock(&amp;rwlock);  </span><br><span class="line">        sleep(<span class="number">1</span>);  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span>  </span></span><br><span class="line"><span class="function"></span>&#123;  </span><br><span class="line">    <span class="keyword">pthread_t</span> ptd1, ptd2, ptd3, ptd4;  </span><br><span class="line">      </span><br><span class="line">    pthread_rwlock_init(&amp;rwlock, <span class="literal">NULL</span>);<span class="comment">//初始化一个读写锁  </span></span><br><span class="line">      </span><br><span class="line">    <span class="comment">//创建线程  </span></span><br><span class="line">    pthread_create(&amp;ptd1, <span class="literal">NULL</span>, fun1, <span class="literal">NULL</span>);  </span><br><span class="line">    pthread_create(&amp;ptd2, <span class="literal">NULL</span>, fun2, <span class="literal">NULL</span>);  </span><br><span class="line">    pthread_create(&amp;ptd3, <span class="literal">NULL</span>, fun3, <span class="literal">NULL</span>);  </span><br><span class="line">    pthread_create(&amp;ptd4, <span class="literal">NULL</span>, fun4, <span class="literal">NULL</span>);  </span><br><span class="line">      </span><br><span class="line">    <span class="comment">//等待线程结束，回收其资源  </span></span><br><span class="line">    pthread_join(ptd1, <span class="literal">NULL</span>);  </span><br><span class="line">    pthread_join(ptd2, <span class="literal">NULL</span>);  </span><br><span class="line">    pthread_join(ptd3, <span class="literal">NULL</span>);  </span><br><span class="line">    pthread_join(ptd4, <span class="literal">NULL</span>);  </span><br><span class="line">      </span><br><span class="line">    pthread_rwlock_destroy(&amp;rwlock);<span class="comment">//销毁读写锁  </span></span><br><span class="line">      </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="信号量"><a href="#信号量" class="headerlink" title="信号量"></a>信号量</h1><p>线程也可以用信号量，轻量版本的。和进程类似，pv操作。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1826,7 +1819,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">229</span>
+                  <span class="site-state-item-count">230</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

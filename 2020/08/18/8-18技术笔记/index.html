@@ -81,18 +81,18 @@
 
 
 
-<meta name="description" content="都知道持久化有AOF和RDB两种，那么是什么的全称呢，AOF是Append Only File，RDB是Redis DataBas。 AOF后写日志AOF日志的全称是Append Only File,从名字上我们就能看出来,它是一个追加写入的日志文件。与数据库不同，redis为了性能，AOF是先写数据，后写日志，那么必然会有数据写成功了日志还没写的情况，redis为了性能，容忍丢数据。 刷盘时机r">
+<meta name="description" content="都知道持久化有AOF和RDB两种，那么是什么的全称呢，AOF是Append Only File，RDB是Redis DataBase。 AOF后写日志AOF日志的全称是Append Only File,从名字上我们就能看出来,它是一个追加写入的日志文件。与数据库不同，redis为了性能，AOF是先写数据，后写日志，那么必然会有数据写成功了日志还没写的情况，redis为了性能，容忍丢数据。 刷盘时机">
 <meta name="keywords" content="redis">
 <meta property="og:type" content="article">
 <meta property="og:title" content="AOF">
 <meta property="og:url" content="http://yoursite.com/blog/2020/08/18/8-18技术笔记/index.html">
 <meta property="og:site_name" content="Arvense">
-<meta property="og:description" content="都知道持久化有AOF和RDB两种，那么是什么的全称呢，AOF是Append Only File，RDB是Redis DataBas。 AOF后写日志AOF日志的全称是Append Only File,从名字上我们就能看出来,它是一个追加写入的日志文件。与数据库不同，redis为了性能，AOF是先写数据，后写日志，那么必然会有数据写成功了日志还没写的情况，redis为了性能，容忍丢数据。 刷盘时机r">
+<meta property="og:description" content="都知道持久化有AOF和RDB两种，那么是什么的全称呢，AOF是Append Only File，RDB是Redis DataBase。 AOF后写日志AOF日志的全称是Append Only File,从名字上我们就能看出来,它是一个追加写入的日志文件。与数据库不同，redis为了性能，AOF是先写数据，后写日志，那么必然会有数据写成功了日志还没写的情况，redis为了性能，容忍丢数据。 刷盘时机">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2020-08-19T03:32:00.157Z">
+<meta property="og:updated_time" content="2020-08-27T12:57:25.831Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="AOF">
-<meta name="twitter:description" content="都知道持久化有AOF和RDB两种，那么是什么的全称呢，AOF是Append Only File，RDB是Redis DataBas。 AOF后写日志AOF日志的全称是Append Only File,从名字上我们就能看出来,它是一个追加写入的日志文件。与数据库不同，redis为了性能，AOF是先写数据，后写日志，那么必然会有数据写成功了日志还没写的情况，redis为了性能，容忍丢数据。 刷盘时机r">
+<meta name="twitter:description" content="都知道持久化有AOF和RDB两种，那么是什么的全称呢，AOF是Append Only File，RDB是Redis DataBase。 AOF后写日志AOF日志的全称是Append Only File,从名字上我们就能看出来,它是一个追加写入的日志文件。与数据库不同，redis为了性能，AOF是先写数据，后写日志，那么必然会有数据写成功了日志还没写的情况，redis为了性能，容忍丢数据。 刷盘时机">
 
 
 
@@ -344,7 +344,7 @@
       
 
       
-        <p>都知道持久化有AOF和RDB两种，那么是什么的全称呢，AOF是Append Only File，RDB是Redis DataBas。</p>
+        <p>都知道持久化有AOF和RDB两种，那么是什么的全称呢，AOF是Append Only File，RDB是Redis DataBase。</p>
 <h2 id="AOF"><a href="#AOF" class="headerlink" title="AOF"></a>AOF</h2><h3 id="后写日志"><a href="#后写日志" class="headerlink" title="后写日志"></a>后写日志</h3><p><em>AOF</em>日志的<em>全称</em>是Append Only File,从名字上我们就能看出来,它是一个追加写入的日志文件。与数据库不同，redis为了性能，AOF是先写数据，后写日志，那么必然会有数据写成功了日志还没写的情况，redis为了性能，容忍丢数据。</p>
 <h3 id="刷盘时机"><a href="#刷盘时机" class="headerlink" title="刷盘时机"></a>刷盘时机</h3><p>redis是用标准C写的，写日志调用的是write函数，其实并不是真正的写入磁盘了，操作系统会在内核缓存write做的修改，当然可以调用fsync函数强制os写入到磁盘。</p>
 <p>调用fsync函数强制os写入到磁盘的时机有三种，显然性能越高可靠性越低。</p>
@@ -393,8 +393,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/blog/2020/08/25/8-25技术笔记/" rel="prev" title="8-25技术笔记">
-                8-25技术笔记 <i class="fa fa-chevron-right"></i>
+              <a href="/blog/2020/08/25/8-25技术笔记/" rel="prev" title="范围查询与索引">
+                范围查询与索引 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -472,7 +472,7 @@
               
                 <a href="/blog/archives/">
               
-                  <span class="site-state-item-count">229</span>
+                  <span class="site-state-item-count">230</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
