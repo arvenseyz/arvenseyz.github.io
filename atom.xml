@@ -6,7 +6,7 @@
   <link href="/blog/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/blog/"/>
-  <updated>2020-09-08T07:42:41.887Z</updated>
+  <updated>2020-09-09T08:20:58.373Z</updated>
   <id>http://yoursite.com/blog/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>散列函数</title>
+    <link href="http://yoursite.com/blog/2020/09/09/9-9%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/blog/2020/09/09/9-9技术笔记/</id>
+    <published>2020-09-09T07:56:30.000Z</published>
+    <updated>2020-09-09T08:20:58.373Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="线性探测法"><a href="#线性探测法" class="headerlink" title="线性探测法"></a>线性探测法</h2><p>思路很简单，如果发生哈希冲突，那么看一下【下一个】位置，如果有空，那么就放在下一个，没空，继续迭代。</p><p>问题不在插入，而在于搜索和删除。</p><p>我们将检查表中是否存在与搜索关键字匹配的元素成为探测。线性探测法的特点是每次探测有3种可能结果：<br>（1）搜索命中（当前位置上的元素关键字与搜索关键字匹配，停止搜索），<br>（2）搜索失败（搜索位置为空，停止搜索），<br>（3）不匹配（搜索位置非空，但是不匹配，继续搜索下一位置）。</p><p>删除更麻烦。</p><p>因为当移走后形成的空位会导致其后面元素的搜索失败（空位终止向后搜索）。因此，应该将删除位置与其右边的下一个空位之间所有元素重新散列插入到表中。</p><p>可以想像到，当哈希表比较满时，搜索会很慢，删除代价会相当大。</p><h2 id="平方探测法"><a href="#平方探测法" class="headerlink" title="平方探测法"></a>平方探测法</h2><p>线性探测法还有个显而易见的问题，因为冲突总是取下一个空位，会导致数据比较集中。一个比较简单的改良是，冲突时不取下一个空位，而是加减平方。即看+-1，+-4的位置，会减少聚集。</p><h2 id="双重散列法"><a href="#双重散列法" class="headerlink" title="双重散列法"></a>双重散列法</h2><p>是对平方探测法的再次改进，即步进由另一个哈希函数决定。</p><p>即</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> newIndex = (index + i * index2) % TABLE_SIZE;</span><br></pre></td></tr></table></figure><p>但是删除问题更大，因为待删除关键字有可能影响整个表中的关键字，解决办法是：用一个观察哨代替已删除元素，表示该位置被占用，不与任何关键字匹配。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;线性探测法&quot;&gt;&lt;a href=&quot;#线性探测法&quot; class=&quot;headerlink&quot; title=&quot;线性探测法&quot;&gt;&lt;/a&gt;线性探测法&lt;/h2&gt;&lt;p&gt;思路很简单，如果发生哈希冲突，那么看一下【下一个】位置，如果有空，那么就放在下一个，没空，继续迭代。&lt;/p&gt;
+&lt;p&gt;
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="数据结构" scheme="http://yoursite.com/blog/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/"/>
+    
+  </entry>
   
   <entry>
     <title>redis主从，哨兵，集群</title>
@@ -511,32 +537,6 @@
       
     
     </summary>
-    
-    
-      <category term="计算机网络" scheme="http://yoursite.com/blog/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>三次握手与time_awiat</title>
-    <link href="http://yoursite.com/blog/2020/02/24/2-24%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/blog/2020/02/24/2-24技术笔记/</id>
-    <published>2020-02-24T06:59:48.000Z</published>
-    <updated>2020-02-24T07:25:27.505Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="为什么建立链接需要三次"><a href="#为什么建立链接需要三次" class="headerlink" title="为什么建立链接需要三次"></a>为什么建立链接需要三次</h2><p>在这里我们假设是俩次握手：</p><p>客户端第一次向服务器发送一个请求，由于网络阻塞服务器没有收到该请求。</p><p>客户端等不及了，又向服务器发送了一次请求，这次网络不阻塞了，双方经过俩次握手成功建立了一次对话。</p><p>与此同时，客户端第一次发送的请求到达了服务器，服务器又向客户端发送一个请求，但是此时客户端不认账了，不回去理会这个请求报文，而服务器以为已经建立好了链接，傻傻的等待客户端发送数据过来，这样的链接如果太多，使得服务器性能大大降低。</p><p>俩次握手不能阻止客户端失效的请求链接到达服务器，而且造成服务器以为建立好链接的假象，造成系统的性能降低；</p><h2 id="TIME-WAIT"><a href="#TIME-WAIT" class="headerlink" title="TIME_WAIT"></a>TIME_WAIT</h2><p>为了理解 TIME_WAIT 状态的必要性，我们先来假设没有这么一种状态会导致的问题。暂以 A、B 来代指 TCP 连接的两端，A 为主动关闭的一端。</p><ul><li><p>四次挥手中，A 发 FIN， B 响应 ACK，B 再发 FIN，A 响应 ACK 实现连接的关闭。而如果 A 响应的 ACK 包丢失，B 会以为 A 没有收到自己的关闭请求，然后会重试向 A 再发 FIN 包。</p><p>如果没有 TIME_WAIT 状态，A 不再保存这个连接的信息，收到一个不存在的连接的包，A 会响应 RST 包，导致 B 端异常响应。</p><p>此时， TIME_WAIT 是为了保证全双工的 TCP 连接正常终止。</p></li><li><p>我们还知道，TCP 下的 IP 层协议是无法保证包传输的先后顺序的。如果双方挥手之后，一个网络四元组（src/dst ip/port）被回收，而此时网络中还有一个迟到的数据包没有被 B 接收，A 应用程序又立刻使用了同样的四元组再创建了一个新的连接后，这个迟到的数据包才到达 B，那么这个数据包就会让 B 以为是 A 刚发过来的。</p><p>此时， TIME_WAIT 的存在是为了保证网络中迷失的数据包正常过期。</p></li></ul>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h2 id=&quot;为什么建立链接需要三次&quot;&gt;&lt;a href=&quot;#为什么建立链接需要三次&quot; class=&quot;headerlink&quot; title=&quot;为什么建立链接需要三次&quot;&gt;&lt;/a&gt;为什么建立链接需要三次&lt;/h2&gt;&lt;p&gt;在这里我们假设是俩次握手：&lt;/p&gt;
-&lt;p&gt;客户端第一次向服务器发送一
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/blog/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
       <category term="计算机网络" scheme="http://yoursite.com/blog/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
