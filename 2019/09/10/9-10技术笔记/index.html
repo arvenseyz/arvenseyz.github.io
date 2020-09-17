@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="linux,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Arvense" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="条件命令在bash脚本编程中，我们经常做一些条件判断， 我们主要用到了三种，test，单中括号，双中括号。 12345[ $? –eq 0 ][[ $myvar == “mysql” ]]test 1 -eq 0 testtest是bash内建命令 12yangzhuo@n224-019-077:~/file$ test 1 -ne 0 &amp;amp;&amp;amp;echo okok ne是不等于的意思，">
+<meta name="keywords" content="linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="shellscript选择与循环">
+<meta property="og:url" content="http://https://arvenseyz.github.io/2019/09/10/9-10技术笔记/index.html">
+<meta property="og:site_name" content="Arvense">
+<meta property="og:description" content="条件命令在bash脚本编程中，我们经常做一些条件判断， 我们主要用到了三种，test，单中括号，双中括号。 12345[ $? –eq 0 ][[ $myvar == “mysql” ]]test 1 -eq 0 testtest是bash内建命令 12yangzhuo@n224-019-077:~/file$ test 1 -ne 0 &amp;amp;&amp;amp;echo okok ne是不等于的意思，">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-09-10T10:42:26.915Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="shellscript选择与循环">
+<meta name="twitter:description" content="条件命令在bash脚本编程中，我们经常做一些条件判断， 我们主要用到了三种，test，单中括号，双中括号。 12345[ $? –eq 0 ][[ $myvar == “mysql” ]]test 1 -eq 0 testtest是bash内建命令 12yangzhuo@n224-019-077:~/file$ test 1 -ne 0 &amp;amp;&amp;amp;echo okok ne是不等于的意思，">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://https://arvenseyz.github.io/2019/09/10/9-10技术笔记/">
+
+
+
+
+
+  <title>shellscript选择与循环 | Arvense</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Arvense</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://https://arvenseyz.github.io/2019/09/10/9-10技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">shellscript选择与循环</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-10T15:30:22+08:00">
+                2019-09-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="条件命令"><a href="#条件命令" class="headerlink" title="条件命令"></a>条件命令</h2><p>在bash脚本编程中，我们经常做一些条件判断， 我们主要用到了三种，test，单中括号，双中括号。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[ $? –eq 0 ]</span><br><span class="line"></span><br><span class="line">[[ $myvar == “mysql” ]]</span><br><span class="line"></span><br><span class="line">test 1 -eq 0</span><br></pre></td></tr></table></figure>
+<h3 id="test"><a href="#test" class="headerlink" title="test"></a>test</h3><p>test是bash内建命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ <span class="built_in">test</span> 1 -ne 0 &amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
+<p>ne是不等于的意思，即1不等于0，就输出ok.</p>
+<p>man test可以看见所有参数用法，摘录一点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">( EXPRESSION )</span><br><span class="line">       EXPRESSION is true</span><br><span class="line"></span><br><span class="line">! EXPRESSION</span><br><span class="line">       EXPRESSION is false</span><br><span class="line"></span><br><span class="line">EXPRESSION1 -a EXPRESSION2</span><br><span class="line">       both EXPRESSION1 and EXPRESSION2 are true</span><br><span class="line"></span><br><span class="line">EXPRESSION1 -o EXPRESSION2</span><br><span class="line">       either EXPRESSION1 or EXPRESSION2 is true</span><br><span class="line">       </span><br><span class="line">       STRING1 = STRING2</span><br><span class="line">       the strings are equal</span><br><span class="line"></span><br><span class="line">STRING1 != STRING2</span><br><span class="line">       the strings are not equal</span><br><span class="line"></span><br><span class="line">INTEGER1 -eq INTEGER2</span><br><span class="line">       INTEGER1 is equal to INTEGER2</span><br><span class="line"></span><br><span class="line">INTEGER1 -ge INTEGER2</span><br><span class="line">       INTEGER1 is greater than or equal to INTEGER2</span><br><span class="line"></span><br><span class="line">INTEGER1 -gt INTEGER2</span><br><span class="line">       INTEGER1 is greater than INTEGER2</span><br></pre></td></tr></table></figure>
+<h3 id="单中括号"><a href="#单中括号" class="headerlink" title="单中括号"></a>单中括号</h3><p>实际上[ 这个是个内建命令，可以执行which [查看。</p>
+<p>这样就可以理解奇怪的规定。即然是命令，那么命令与后面的参数就得用空格隔开，使用[时后面需要有一个空格的原因。所以[1=2]这样的写法将会报错。单中括号与test命令是等价的。</p>
+<p>这里有一个陷阱，既然 <code>都是以参数的形式传递给</code>test` 命令的， 那么如果参数解析的结果是空或者带空格，那么就会因为缺少参数或者参数数量不丢而崩掉。</p>
+<p>所以最好参数用双引号包起来。</p>
+<h3 id="双中括号"><a href="#双中括号" class="headerlink" title="双中括号"></a>双中括号</h3><p>双中括号不是命令，而是shell关键字。因为不是命令，因此不受制与 Shell 的 <strong>参数展开</strong>，比如 不需要用引号包裹所有变量，也支持类似 <code>&amp;&amp;</code>，<code>||</code> 这样的逻辑操作而不需要用类似 <code>-a</code>，<code>-o</code> 这样的参数。</p>
+<h3 id="双小括号"><a href="#双小括号" class="headerlink" title="双小括号"></a>双小括号</h3><p>算术展开的语法是  <code>$((expression))</code>，这是从其他编程语言来的人最顺手的算术操作方式。与  <code>test</code>  命令相比，</p>
+<ul>
+<li>C 风格的算术操作语法</li>
+<li>Shell 会把  <code>expression</code>  内容的每一项都当做就像被引号包裹了一样。</li>
+<li>会依次进行<strong>参数展开</strong>、<strong>命令替换</strong>，和  <strong>引号移除</strong>。</li>
+</ul>
+<p>因此可以不需要像  <code>test</code>  命令那样用引号包裹所有变量，也不需要注意空格，也可以写 C 风格的操作。</p>
+<p>然后，对于C，1是ture，0是false。bah相反。</p>
+<h3 id="逻辑运算符"><a href="#逻辑运算符" class="headerlink" title="逻辑运算符"></a>逻辑运算符</h3><p>因为test和[]是命令，所以逻辑运算符是以参数的形式体现。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [ 1 -ne 0 ]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br><span class="line">yangzhuo@n224-019-077:~/file$ [ 1 -ne 0 || 1 -gt 0 ]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">-bash: [: missing `]<span class="string">'</span></span><br><span class="line"><span class="string">-bash: 1: command not found</span></span><br></pre></td></tr></table></figure>
+<p>只能这样</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [ 1 -ne 0 ] || [ 1 -gt 0 ]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
+<p>当然[[]]就不受限制</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [[ 1 -ne 0  ||  1 -gt 0 ]]&amp;&amp;echo ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
+<p>甚至</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [[ 1 != 0  ||  1 &gt; 0 ]]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
+<h2 id="选择语句"><a href="#选择语句" class="headerlink" title="选择语句"></a>选择语句</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">read</span> -p <span class="string">"num?"</span> num</span><br><span class="line"><span class="keyword">if</span> [ <span class="variable">$&#123;num&#125;</span> -gt 10 ]; <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"big"</span></span><br><span class="line"><span class="keyword">elif</span> [ <span class="variable">$&#123;num&#125;</span> - eq 10]; <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"equal"</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"small"</span></span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+<h2 id="循环"><a href="#循环" class="headerlink" title="循环"></a>循环</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> [ <span class="string">"<span class="variable">$&#123;yn&#125;</span>"</span> != <span class="string">"yes"</span> -a <span class="string">"<span class="variable">$&#123;yn&#125;</span>"</span> != <span class="string">"YES"</span> ]</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line"><span class="built_in">read</span> -p <span class="string">"Please input yes/YES to stop this program: "</span> yn </span><br><span class="line"><span class="keyword">done</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"OK! you input the correct answer."</span></span><br></pre></td></tr></table></figure>
+<p>while do done结构，也有until do done，直到。。。其实没啥用</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">s=0 <span class="comment"># 这是加总的数值变量</span></span><br><span class="line">i=0 <span class="comment"># 这是累计的数值，亦即是 1, 2, 3....</span></span><br><span class="line"><span class="keyword">while</span> [ <span class="string">"<span class="variable">$&#123;i&#125;</span>"</span> != <span class="string">"100"</span> ]</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line">i=$（（<span class="variable">$i</span>+1）） <span class="comment"># 每次 i 都会增加 1</span></span><br><span class="line">s=$（（<span class="variable">$s</span>+<span class="variable">$i</span>）） <span class="comment"># 每次都会加总一次！</span></span><br><span class="line"><span class="keyword">done</span> <span class="built_in">echo</span> <span class="string">"The result of '1+2+3+...+100' is ==&gt; <span class="variable">$s</span>"</span></span><br></pre></td></tr></table></figure>
+<p>这是while的一般用法。</p>
+<p>for循环支持for in 和三段式</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">read</span> -p <span class="string">"Please input a number, I will count for 1+2+...+your_input: "</span> nu</span><br><span class="line">s=0</span><br><span class="line"><span class="keyword">for</span> （（ i=1; i&lt;=<span class="variable">$&#123;nu&#125;</span>; i=i+1 ））</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line">s=$（（<span class="variable">$&#123;s&#125;</span>+<span class="variable">$&#123;i&#125;</span>））</span><br><span class="line"><span class="keyword">done</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"The result of '1+2+3+...+<span class="variable">$&#123;nu&#125;</span>' is ==&gt; <span class="variable">$&#123;s&#125;</span>"</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> animal <span class="keyword">in</span> dog cat elephant</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"There are <span class="variable">$&#123;animal&#125;</span>s.... "</span> <span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+<p>即in后面接空格隔开的，或者seq联系数字.</p>
+<p>也可以直接使用 bash 的内置机制来处理！可以使用 {1..100} 来取代 $（seq 1 100） 。 大括号内的前面/后面用两个字符，中间以两个小数点来代表连续出现的意思。例如要持续输出 a, b, c…g 的话， 就可以使用“ echo {a..g} ”这样的表 示方式！</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> sitenu <span class="keyword">in</span> $（seq 1 100） <span class="comment"># seq 为 sequence（连续） 的缩写之意</span></span><br><span class="line"><span class="keyword">do</span></span><br><span class="line"><span class="comment"># 下面的程序在取得 ping 的回传值是正确的还是失败的！</span></span><br><span class="line">ping -c 1 -w 1 <span class="variable">$&#123;network&#125;</span>.<span class="variable">$&#123;sitenu&#125;</span> &amp;&gt; /dev/null &amp;&amp; result=0 || result=1</span><br><span class="line"><span class="comment"># 开始显示结果是正确的启动 （UP） 还是错误的没有连通 （DOWN）</span></span><br><span class="line">    <span class="keyword">if</span> [ <span class="string">"<span class="variable">$&#123;result&#125;</span>"</span> == 0 ]; <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"Server <span class="variable">$&#123;network&#125;</span>.<span class="variable">$&#123;sitenu&#125;</span> is UP."</span> </span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"Server <span class="variable">$&#123;network&#125;</span>.<span class="variable">$&#123;sitenu&#125;</span> is DOWN."</span> </span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line"><span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/linux/" rel="tag"># linux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/09/08/9-8技术笔记/" rel="next" title="shellScript入门">
+                <i class="fa fa-chevron-left"></i> shellScript入门
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/09/17/9-17技术笔记-1/" rel="prev" title="shellscript数组与函数">
+                shellscript数组与函数 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Arvense</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">233</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">66</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#条件命令"><span class="nav-number">1.</span> <span class="nav-text">条件命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#test"><span class="nav-number">1.1.</span> <span class="nav-text">test</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#单中括号"><span class="nav-number">1.2.</span> <span class="nav-text">单中括号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#双中括号"><span class="nav-number">1.3.</span> <span class="nav-text">双中括号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#双小括号"><span class="nav-number">1.4.</span> <span class="nav-text">双小括号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#逻辑运算符"><span class="nav-number">1.5.</span> <span class="nav-text">逻辑运算符</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#选择语句"><span class="nav-number">2.</span> <span class="nav-text">选择语句</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#循环"><span class="nav-number">3.</span> <span class="nav-text">循环</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a>Arvense</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">blog   </div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
