@@ -40,7 +40,7 @@
 
   
   
-  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+  <link href="/blog/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
 
 
 
@@ -48,21 +48,21 @@
 
 
 
-<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+<link href="/blog/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
 
-<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
-
-
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+<link href="/blog/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
 
 
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+  <link rel="apple-touch-icon" sizes="180x180" href="/blog/images/apple-touch-icon-next.png?v=5.1.4">
 
 
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+  <link rel="icon" type="image/png" sizes="32x32" href="/blog/images/favicon-32x32-next.png?v=5.1.4">
 
 
-  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+  <link rel="icon" type="image/png" sizes="16x16" href="/blog/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/blog/images/logo.svg?v=5.1.4" color="#222">
 
 
 
@@ -74,7 +74,7 @@
 
 
 
-  <link rel="alternate" href="/atom.xml" title="Arvense" type="application/atom+xml">
+  <link rel="alternate" href="/blog/atom.xml" title="Arvense" type="application/atom+xml">
 
 
 
@@ -85,7 +85,7 @@
 <meta name="keywords" content="动态规划">
 <meta property="og:type" content="article">
 <meta property="og:title" content="网格最短路径，网格路径数">
-<meta property="og:url" content="http://https://arvenseyz.github.io/2019/03/28/leetcode63-64/index.html">
+<meta property="og:url" content="http://yoursite.com/blog/2019/03/28/leetcode63-64/index.html">
 <meta property="og:site_name" content="Arvense">
 <meta property="og:description" content="64题目最小路径： Input:[  [1,3,1],  [1,5,1],  [4,2,1]]Output: 7Explanation: Because the path 1→3→1→1→1 minimizes the sum. 解答其实和之前那道路径数差不多，相当于带权的，然后比较即可。 到一个点的最短距离，等于【到他上面然后往下走一步】和【到他左边往右走一步】两者中较小的一个。 这就是动规方程">
 <meta property="og:locale" content="default">
@@ -99,7 +99,7 @@
 <script type="text/javascript" id="hexo.configurations">
   var NexT = window.NexT || {};
   var CONFIG = {
-    root: '/',
+    root: '/blog/',
     scheme: 'Muse',
     version: '5.1.4',
     sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
@@ -122,7 +122,7 @@
 
 
 
-  <link rel="canonical" href="http://https://arvenseyz.github.io/2019/03/28/leetcode63-64/">
+  <link rel="canonical" href="http://yoursite.com/blog/2019/03/28/leetcode63-64/">
 
 
 
@@ -156,7 +156,7 @@
     
 
     <div class="custom-logo-site-title">
-      <a href="/" class="brand" rel="start">
+      <a href="/blog/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
         <span class="site-title">Arvense</span>
         <span class="logo-line-after"><i></i></span>
@@ -184,7 +184,7 @@
       
         
         <li class="menu-item menu-item-home">
-          <a href="/" rel="section">
+          <a href="/blog/" rel="section">
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
             
@@ -194,7 +194,7 @@
       
         
         <li class="menu-item menu-item-tags">
-          <a href="/tags/" rel="section">
+          <a href="/blog/tags/" rel="section">
             
               <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
             
@@ -204,7 +204,7 @@
       
         
         <li class="menu-item menu-item-categories">
-          <a href="/categories/" rel="section">
+          <a href="/blog/categories/" rel="section">
             
               <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
             
@@ -214,7 +214,7 @@
       
         
         <li class="menu-item menu-item-archives">
-          <a href="/archives/" rel="section">
+          <a href="/blog/archives/" rel="section">
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
             
@@ -255,12 +255,12 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://https://arvenseyz.github.io/2019/03/28/leetcode63-64/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/blog/2019/03/28/leetcode63-64/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Arvense">
       <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="image" content="/blog/images/avatar.gif">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
@@ -307,7 +307,7 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/leetcode/" itemprop="url" rel="index">
+                  <a href="/blog/categories/leetcode/" itemprop="url" rel="index">
                     <span itemprop="name">leetcode</span>
                   </a>
                 </span>
@@ -375,7 +375,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/动态规划/" rel="tag"># 动态规划</a>
+            <a href="/blog/tags/动态规划/" rel="tag"># 动态规划</a>
           
         </div>
       
@@ -388,7 +388,7 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/03/27/leetcode102-104-111-655/" rel="next" title="二叉树层次遍历，二叉树按层输出，二叉树按层输出">
+              <a href="/blog/2019/03/27/leetcode102-104-111-655/" rel="next" title="二叉树层次遍历，二叉树按层输出，二叉树按层输出">
                 <i class="fa fa-chevron-left"></i> 二叉树层次遍历，二叉树按层输出，二叉树按层输出
               </a>
             
@@ -398,7 +398,7 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2019/03/29/leetcode51-52/" rel="prev" title="n皇后问题">
+              <a href="/blog/2019/03/29/leetcode51-52/" rel="prev" title="n皇后问题">
                 n皇后问题 <i class="fa fa-chevron-right"></i>
               </a>
             
@@ -475,7 +475,7 @@
             
               <div class="site-state-item site-state-posts">
               
-                <a href="/archives/">
+                <a href="/blog/archives/">
               
                   <span class="site-state-item-count">233</span>
                   <span class="site-state-item-name">posts</span>
@@ -487,7 +487,7 @@
               
               
               <div class="site-state-item site-state-categories">
-                <a href="/categories/index.html">
+                <a href="/blog/categories/index.html">
                   <span class="site-state-item-count">3</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
@@ -498,7 +498,7 @@
               
               
               <div class="site-state-item site-state-tags">
-                <a href="/tags/index.html">
+                <a href="/blog/tags/index.html">
                   <span class="site-state-item-count">66</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
@@ -509,7 +509,7 @@
 
           
             <div class="feed-link motion-element">
-              <a href="/atom.xml" rel="alternate">
+              <a href="/blog/atom.xml" rel="alternate">
                 <i class="fa fa-rss"></i>
                 RSS
               </a>
@@ -636,57 +636,57 @@
 
   
   
-    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+    <script type="text/javascript" src="/blog/lib/jquery/index.js?v=2.1.3"></script>
   
 
   
   
-    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+    <script type="text/javascript" src="/blog/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
   
 
   
   
-    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+    <script type="text/javascript" src="/blog/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
   
 
   
   
-    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+    <script type="text/javascript" src="/blog/lib/velocity/velocity.min.js?v=1.2.1"></script>
   
 
   
   
-    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+    <script type="text/javascript" src="/blog/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
   
 
   
   
-    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+    <script type="text/javascript" src="/blog/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
   
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
-
-  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
-
-
-
-  
-  
-
-  
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
-
 
 
   
 
 
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+  <script type="text/javascript" src="/blog/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/blog/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/blog/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/blog/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/blog/js/src/bootstrap.js?v=5.1.4"></script>
 
 
 
