@@ -85,7 +85,7 @@
 <meta name="keywords" content="映射,go">
 <meta property="og:type" content="article">
 <meta property="og:title" content="goMap细节">
-<meta property="og:url" content="http://yoursite.com/blog/2019/07/18/7-18技术笔记/index.html">
+<meta property="og:url" content="http://yoursite.com/2019/07/18/7-18技术笔记/index.html">
 <meta property="og:site_name" content="Arvense">
 <meta property="og:description" content="Map实现存储我看来go的Map综合了开放寻址法和拉链法。 核心在于分桶，存储kv数据的在两个桶的数组中，一个数据桶，一个额外数据桶。后者是用于拉链法来解决哈希冲突的。 每个桶中可以存八对kv，在桶中是使用开发寻址法，如果溢出，有指向对应的溢出桶的指针，这时是拉链法。 通过具体的访问过程可知。首先是计算哈希值，这样就找到了对应的桶（此处有旧桶新桶问题），然后进入桶中查找，和桶中已存的一一比较，如果">
 <meta property="og:locale" content="default">
@@ -122,7 +122,7 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/blog/2019/07/18/7-18技术笔记/">
+  <link rel="canonical" href="http://yoursite.com/2019/07/18/7-18技术笔记/">
 
 
 
@@ -255,7 +255,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/blog/arvenseyz.github.io/2019/07/18/7-18技术笔记/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2019/07/18/7-18技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Arvense">
