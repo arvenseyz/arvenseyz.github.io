@@ -251,6 +251,178 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2019/01/31/1-31技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/arvenseyz.github.io/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/arvenseyz.github.io/2019/01/31/1-31技术笔记/" itemprop="url">可见性原子性有序性</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-31T11:43:08+08:00">
+                2019-01-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/arvenseyz.github.io/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="可见性"><a href="#可见性" class="headerlink" title="可见性"></a>可见性</h2><p>volatile是register的反义词，后者是寄存器的意思。变量的值不只在主存，线程会在寄存器里储存为缓存，之后会从缓存读取数据。volatile意思是不能读缓存，必须读主存。</p>
+<p>多个线程操作同一个对象，该对象的成员变量会在临界区。</p>
+<p>理想情况是，任何一个线程修改了临界区的变量，其他线程立刻就知道了。但由于寄存器缓存的存在，其他线程读的可能是滞后的缓存中的值。就导致了其他线程相当于不可见临界区变量的变化。</p>
+<p>比如以下代码，public volatile static int turn = 1;这个成员对象，加不加volatile就会使结果区别。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">volatile</span> <span class="keyword">static</span> <span class="keyword">int</span> turn = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">TaskA</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                <span class="keyword">while</span> (Test.turn == <span class="number">1</span>);</span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;=<span class="number">1000000</span>;i++);</span><br><span class="line">                System.out.println(<span class="string">"A thr"</span>);</span><br><span class="line">                Test.turn = <span class="number">1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">TaskB</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                <span class="keyword">while</span> (Test.turn == <span class="number">0</span>);</span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;=<span class="number">1000000</span>;i++);</span><br><span class="line">                System.out.println(<span class="string">"B thr"</span>);</span><br><span class="line">                Test.turn = <span class="number">0</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">new</span> Test.TaskA().start();</span><br><span class="line">        <span class="keyword">new</span> Test.TaskB().start();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span>(<span class="keyword">true</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>while (Test.turn == 0);是互斥锁，这里单线程就是死循环，多线程环境中，其他线程修改了turn的值，即离开死循环。</p>
+<p>for (int i=0;i&lt;=1000000;i++);是为了等待一下。</p>
+<h3 id="没有volatile"><a href="#没有volatile" class="headerlink" title="没有volatile"></a>没有volatile</h3><p>a线程，while (Test.turn == 1);死循环了。<br>同时b线程，while (Test.turn == 0);不进入，输出”B thr“，turn置为0。<br>a线程继续读缓存，读到的turn是1，还是死循环。<br>程序挂了。</p>
+<h3 id="有volatile"><a href="#有volatile" class="headerlink" title="有volatile"></a>有volatile</h3><p>a线程，while (Test.turn == 1);死循环了。<br>同时b线程，while (Test.turn == 0);不进入，输出”B thr“，turn置为0。<br>a线程读主存，读到的turn是0，离开while循环。turn置为1<br>轮到b线程。</p>
+<p>最后B thr和A thr交替输出。</p>
+<h2 id="原子性"><a href="#原子性" class="headerlink" title="原子性"></a>原子性</h2><p>在Java中，对基本数据类型的变量的读取和赋值操作是原子性操作，即这些操作是不可被中断的，要么执行，要么不执行。</p>
+<p><code>x =`</code>10<code>;</code>//语句1`</p>
+<p><code>y = x;        `</code>//语句2`</p>
+<p><code>x++;          `</code>//语句3`</p>
+<p><code>x = x +`</code>1<code>;</code>//语句4`</p>
+<p>这四句只有第一句是原子性的，第二句有两个操作，读取x，赋值y；第三四句有三个操作，读取x，计算，赋值x。</p>
+<p>volatile不能保证原子性。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">volatile</span> <span class="keyword">int</span> inc = <span class="number">0</span>;</span><br><span class="line">     </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">increase</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        inc++;</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">final</span> Test test = <span class="keyword">new</span> Test();</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;<span class="number">10</span>;i++)&#123;</span><br><span class="line">            <span class="keyword">new</span> Thread()&#123;</span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">for</span>(<span class="keyword">int</span> j=<span class="number">0</span>;j&lt;<span class="number">1000</span>;j++)</span><br><span class="line">                        test.increase();</span><br><span class="line">                &#125;;</span><br><span class="line">            &#125;.start();</span><br><span class="line">        &#125;</span><br><span class="line">         </span><br><span class="line">        <span class="keyword">while</span>(Thread.activeCount()&gt;<span class="number">1</span>)  <span class="comment">//保证前面的线程都执行完</span></span><br><span class="line">            Thread.yield();</span><br><span class="line">        System.out.println(test.inc);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>十个线程，每个数1000，答案不会是10000，而是略小于。</p>
+<p>线程1读inc为100，线程1阻塞。</p>
+<p>线程2读inc为100，线程2计算，inc变为101，线程2赋值，inc为101。</p>
+<p>线程1计算，inc变为101，线程1赋值，inc为101。</p>
+<p>这就是略小于的来源。</p>
+<p><strong>解决方法是AtomicInteger。</strong></p>
+<h2 id="有序性"><a href="#有序性" class="headerlink" title="有序性"></a>有序性</h2><h3 id="不能生效的双重检查锁"><a href="#不能生效的双重检查锁" class="headerlink" title="不能生效的双重检查锁"></a>不能生效的双重检查锁</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 错误的多线程版本</span></span><br><span class="line"><span class="comment">// “双重检验锁”方式</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> Helper helper = <span class="keyword">null</span>;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> Helper <span class="title">getHelper</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (helper == <span class="keyword">null</span>)</span><br><span class="line">      <span class="keyword">synchronized</span>(<span class="keyword">this</span>) &#123;<span class="comment">//1</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (helper == <span class="keyword">null</span>)<span class="comment">//2</span></span><br><span class="line"></span><br><span class="line">          helper = <span class="keyword">new</span> Helper();<span class="comment">//3</span></span><br><span class="line"></span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">return</span> helper;</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="comment">// other functions and members...</span></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="重排序"><a href="#重排序" class="headerlink" title="重排序"></a>重排序</h3><p>假设代码执行以下事件序列：</p>
+<p>1、线程 1 进入 getInstance() 方法。<br>2、由于 instance 为 null，线程 1 在 //1 处进入 synchronized 块。<br>3、线程 1 前进到 //3 处，但在构造函数执行之前，使实例成为非 null。<br>4、线程 1 被线程 2 预占。<br>5、线程 2 检查实例是否为 null。因为实例不为 null，线程 2 将 instance 引用返回给一个构造完整但部分初始化了的 Singleton 对象。<br>6、线程 2 被线程 1 预占。<br>7、线程 1 通过运行 Singleton 对象的构造函数并将引用返回给它，来完成对该对象的初始化。</p>
+<p>最后结果是生成了两个实例。</p>
+<p>原因在于<strong>instance =new Singleton();</strong>是无序的</p>
+<p>执行了下列伪代码：<br>mem = allocate();             //为单例对象分配内存空间.<br>instance = mem;               //注意，instance 引用现在是非空，但还未初始化<br>ctorSingleton(instance);    //为单例对象通过instance调用构造函数</p>
+<h3 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h3><p>使用<strong>volatile</strong>来修饰 instance避免重排序，保证了有序性</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2019/01/30/1-30技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1725,167 +1897,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2018/12/26/12-26技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/arvenseyz.github.io/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/arvenseyz.github.io/2018/12/26/12-26技术笔记/" itemprop="url">手写一个简易的IOC</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-26T11:09:45+08:00">
-                2018-12-26
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/arvenseyz.github.io/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="注解"><a href="#注解" class="headerlink" title="注解"></a>注解</h1><p>首先需要定义两个注解，也就是@Component和@autowired。前者用来标注bean，后者用来装配。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Target</span>(ElementType.TYPE)</span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> MyComponent &#123;</span><br><span class="line"></span><br><span class="line">    <span class="function">String <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> ""</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>@myAutowired同理。</p>
-<h1 id="ApplicationContext-xml"><a href="#ApplicationContext-xml" class="headerlink" title="ApplicationContext.xml"></a>ApplicationContext.xml</h1><p>也就是配置文件，用来指定扫描包的路径</p>
-<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version="1.0" encoding="UTF-8" ?&gt;</span><br><span class="line">&lt;beans&gt;</span><br><span class="line"><span class="code">    &lt;component-scan base-package="com.me"&gt;&lt;/component-scan&gt;</span></span><br><span class="line"></span><br><span class="line">&lt;/beans&gt;</span><br></pre></td></tr></table></figure>
-<h1 id="XMLConfiguration"><a href="#XMLConfiguration" class="headerlink" title="XMLConfiguration"></a>XMLConfiguration</h1><p>通过解析xml的方式,获得扫描的路径</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">XMLConfiguration</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String CONFIG_PATH = <span class="string">"resource/ApplicationContext.xml"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getScanBasePackage</span><span class="params">()</span> <span class="keyword">throws</span> DocumentException </span>&#123;</span><br><span class="line">        String basePackageString = <span class="keyword">null</span>;</span><br><span class="line">        InputStream is = <span class="keyword">this</span>.getClass().getClassLoader().getResourceAsStream(CONFIG_PATH);</span><br><span class="line">        SAXReader saxReader = <span class="keyword">new</span> SAXReader();</span><br><span class="line">        <span class="comment">// 读取文件,用dom4j包来解析xml</span></span><br><span class="line">        Document document = saxReader.read(is);</span><br><span class="line">        Element rootElement = document.getRootElement();</span><br><span class="line">        Element element = rootElement.element(<span class="string">"component-scan"</span>);</span><br><span class="line">        <span class="comment">//判断是否配置扫描</span></span><br><span class="line">        <span class="keyword">if</span>(<span class="keyword">null</span> != element) &#123;</span><br><span class="line">            basePackageString = element.attributeValue(<span class="string">"base-package"</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> basePackageString;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="SpringApplicationContext"><a href="#SpringApplicationContext" class="headerlink" title="SpringApplicationContext"></a>SpringApplicationContext</h1><h2 id="容器与大致步骤"><a href="#容器与大致步骤" class="headerlink" title="容器与大致步骤"></a>容器与大致步骤</h2><p>所谓的bean容器，简单的实现，就是一个Map，存储着bean的名字和bean对象的映射。</p>
-<p>为了完成类的实例化，再加一个类对象的List。</p>
-<p>步骤简单来说是三步：第一步扫描包下所有的类，如果该类有@Component注解，就把它类对象放入List中；第二步，将类对象List中的所有类实例化，这时有两种情况，有无别名，因为@Component注解是支持给bean命名的，如果没有命名，则起个默认名，就是类名首字母小写，然后将别名和对象的映射放入Map中。第三步，依赖注入，用反射获得类所有的域，然后检查有没有@Autowired注解，如果有，则从Map中取出对象，将该域赋值。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//定义一个线程安全的集合，存放类对象</span></span><br><span class="line"> <span class="keyword">public</span> <span class="keyword">static</span> List&lt;Class&lt;?&gt;&gt; basePackageMappingToClass = Collections.synchronizedList(<span class="keyword">new</span> ArrayList&lt;&gt;());</span><br><span class="line"> <span class="comment">//定义一个线程安全的集合，存储别名和类的实例映射</span></span><br><span class="line"> <span class="keyword">public</span> <span class="keyword">static</span> Map&lt;String, Object&gt; aliasMappingInstance = Collections.synchronizedMap(<span class="keyword">new</span> HashMap&lt;&gt;());</span><br><span class="line"> <span class="keyword">private</span> XMLConfiguration xmlConfiguration = <span class="keyword">new</span> XMLConfiguration();</span><br><span class="line"> <span class="function"><span class="keyword">public</span> <span class="title">MySpringApplicationContext</span><span class="params">()</span></span>&#123;</span><br><span class="line">     <span class="comment">//扫描对应包下的被标记的类，并将被标记的类放在basePackageMappingToClass集合中</span></span><br><span class="line">     scanBasePackage(xmlConfiguration.getScanBasePackage());</span><br><span class="line">     <span class="comment">//类的实例化，分有别名和没别名</span></span><br><span class="line">     initAliasMappingToInstance();</span><br><span class="line">     <span class="comment">//完成对象之间的依赖注入操作</span></span><br><span class="line">     initInstanceInjectionObject();</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="扫描包下所有类"><a href="#扫描包下所有类" class="headerlink" title="扫描包下所有类"></a>扫描包下所有类</h2><p>主要是文件操作，将URL转化为文件夹，然后遍历文件夹下所有内容：如果是目录，则递归遍历；如果是文件，则检查类上面是否有@Component注解，有的话，放入List中。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">scanBasePackage</span><span class="params">(String scanBasePackage)</span> <span class="keyword">throws</span> URISyntaxException </span>&#123;</span><br><span class="line">      <span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">      URL url = <span class="keyword">this</span>.getClass().getClassLoader().getResource(scanBasePackage.replaceAll(<span class="string">"\\."</span>, <span class="string">"/"</span>));</span><br><span class="line">      <span class="comment">//获取当前目录下所有文件</span></span><br><span class="line">      File file = <span class="keyword">new</span> File(url.toURI());</span><br><span class="line">      file.listFiles(<span class="keyword">new</span> FileFilter() &#123;</span><br><span class="line">          <span class="meta">@Override</span></span><br><span class="line">          <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">accept</span><span class="params">(File pathname)</span> </span>&#123;</span><br><span class="line">              <span class="comment">//判断是否为目录</span></span><br><span class="line">              <span class="keyword">if</span>(pathname.isDirectory()) &#123;</span><br><span class="line">                  scanBasePackage(scanBasePackage + <span class="string">"."</span> + pathname.getName());</span><br><span class="line">              &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">                  <span class="comment">//获取当前类的类路径</span></span><br><span class="line">                  String classPath = scanBasePackage + <span class="string">"."</span> + pathname.getName().replaceAll(<span class="string">"\\.class"</span>, <span class="string">""</span>);</span><br><span class="line">                  <span class="comment">//通过类的路径获取类的对象</span></span><br><span class="line"></span><br><span class="line">                  Class&lt;?&gt; clazz = <span class="keyword">this</span>.getClass().getClassLoader().loadClass(classPath);</span><br><span class="line">                  <span class="comment">//判断类上面是否有@MyController,@MyRepository,@MyService注解</span></span><br><span class="line">                  <span class="keyword">if</span>(clazz.isAnnotationPresent(MyController.class)</span><br><span class="line">                          || clazz.isAnnotationPresent(MyRepository.class)</span><br><span class="line">                          || clazz.isAnnotationPresent(MyService.class)) &#123;</span><br><span class="line">                      <span class="comment">//把MySpring管理的类放在集合中</span></span><br><span class="line">                      basePackageMappingToClass.add(clazz);</span><br><span class="line">                  &#125;</span><br><span class="line">              &#125;</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="类的实例化"><a href="#类的实例化" class="headerlink" title="类的实例化"></a>类的实例化</h2><p>获得名字，将名字和类实例放入Map。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initAliasMappingToInstance</span><span class="params">()</span> <span class="keyword">throws</span> IllegalAccessException, InstantiationException </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; basePackageMappingToClass.size(); i++) &#123;</span><br><span class="line">            Class&lt;?&gt; clazz = basePackageMappingToClass.get(i);</span><br><span class="line">            String alias = getBeanAlias(clazz);</span><br><span class="line">            aliasMappingInstance.put(alias, clazz.newInstance());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<p>具体获得别名的方法，就是看注解有没有值，有值赋值，没有值赋类的名称首字母小写</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">getBeanAlias</span><span class="params">(Class&lt;?&gt; clazz)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//定义类的别名，默认类的别名为类的名称首字母小写</span></span><br><span class="line">        String alias = clazz.getSimpleName();</span><br><span class="line">        alias = getLowerClassName(alias);</span><br><span class="line">        <span class="comment">//获取当前类上注解</span></span><br><span class="line">        MyController myController = clazz.getAnnotation(MyController.class);</span><br><span class="line">        MyRepository myRepository = clazz.getAnnotation(MyRepository.class);</span><br><span class="line">        MyService myService = clazz.getAnnotation(MyService.class);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(myController != <span class="keyword">null</span> &amp;&amp; !<span class="string">""</span>.equals(myController.value())) &#123;</span><br><span class="line">            alias = myController.value();</span><br><span class="line">        &#125;<span class="keyword">else</span> <span class="keyword">if</span>(myRepository != <span class="keyword">null</span> &amp;&amp; !<span class="string">""</span>.equals(myRepository.value())) &#123;</span><br><span class="line">            alias = myRepository.value();</span><br><span class="line">        &#125;<span class="keyword">else</span> <span class="keyword">if</span>(myService != <span class="keyword">null</span> &amp;&amp; !<span class="string">""</span>.equals(myService.value())) &#123;</span><br><span class="line">            alias = myService.value();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> alias;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="依赖注入"><a href="#依赖注入" class="headerlink" title="依赖注入"></a>依赖注入</h2><p>对于类对象List里的每一个类，取出它的类对象后，算出它的别名，然后从Map容器里取出需要依赖注入的对象的实例。</p>
-<p>用反射的方法获得需要依赖注入的对象的所有的域，如果这个域有@autowired注解，看它的别名的情况，反正通过别名或者默认的方式，从Map容器中取出依赖注入的对象，用反射的field.set()方法，对域设置，完成依赖注入。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initInstanceInjectionObject</span><span class="params">()</span> <span class="keyword">throws</span> IllegalAccessException </span>&#123;</span><br><span class="line">       <span class="keyword">if</span>(basePackageMappingToClass.size() == <span class="number">0</span>) &#123;</span><br><span class="line">           <span class="keyword">return</span>;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; basePackageMappingToClass.size(); i++) &#123;</span><br><span class="line">           Class&lt;?&gt; clazz = basePackageMappingToClass.get(i);</span><br><span class="line">           String instanceAlias = getBeanAlias(clazz);</span><br><span class="line">           <span class="comment">//获取需要依赖注入的对象</span></span><br><span class="line">           Object needInjectionObj = aliasMappingInstance.get(instanceAlias);</span><br><span class="line">           <span class="comment">//获取当前类对应的字段</span></span><br><span class="line">           Field[] fields = clazz.getDeclaredFields();</span><br><span class="line">           <span class="keyword">if</span>(<span class="keyword">null</span> != fields &amp;&amp; fields.length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">               <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; fields.length; j++) &#123;</span><br><span class="line">                   <span class="comment">//定义存储需要装配的依赖对象</span></span><br><span class="line">                   Object injectObj = <span class="keyword">null</span>;</span><br><span class="line">                   Field field = fields[j];</span><br><span class="line">                   <span class="comment">//判断是否有@MyAutowired注解</span></span><br><span class="line">                   <span class="keyword">if</span>(field.isAnnotationPresent(MyAutowired.class)) &#123;</span><br><span class="line">                       MyAutowired myAutowired = field.getAnnotation(MyAutowired.class);</span><br><span class="line">                       <span class="comment">//判断value是否为空字符串</span></span><br><span class="line">                       <span class="keyword">if</span>(!<span class="string">""</span>.equals(myAutowired.value())) &#123;</span><br><span class="line">                           <span class="comment">//装配别名名称</span></span><br><span class="line">                           String alias = myAutowired.value();</span><br><span class="line">                           <span class="comment">//获取到装配的依赖对象</span></span><br><span class="line">                           injectObj = aliasMappingInstance.get(alias);</span><br><span class="line">                       &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">                           <span class="comment">//按照默认方式装配依赖对象</span></span><br><span class="line">                           Class&lt;?&gt; fieldType = field.getType();</span><br><span class="line">                           <span class="comment">//获取容器中所有实例的类型</span></span><br><span class="line">                           Collection&lt;Object&gt; values = aliasMappingInstance.values();</span><br><span class="line">                           Iterator&lt;Object&gt; iterator = values.iterator();</span><br><span class="line">                           <span class="keyword">while</span> (iterator.hasNext()) &#123;</span><br><span class="line">                               Object object = iterator.next();</span><br><span class="line">                               <span class="comment">//判断是否为同一个类型</span></span><br><span class="line">                               <span class="keyword">if</span>(fieldType.isAssignableFrom(object.getClass())) &#123;</span><br><span class="line">                                   <span class="comment">//找到需要装配依赖对象的实例</span></span><br><span class="line">                                   injectObj = object;</span><br><span class="line">                                   <span class="keyword">break</span>;</span><br><span class="line">                               &#125;</span><br><span class="line">                           &#125;</span><br><span class="line">                       &#125;</span><br><span class="line">                   &#125;</span><br><span class="line">                   <span class="comment">//设置字段访问权限</span></span><br><span class="line">                   field.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">                   <span class="comment">//把依赖对象装配到响应的实例中</span></span><br><span class="line">                   field.set(needInjectionObj, injectObj);</span><br><span class="line"></span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1936,7 +1947,7 @@
               
                 <a href="/arvenseyz.github.io/archives/">
               
-                  <span class="site-state-item-count">233</span>
+                  <span class="site-state-item-count">234</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
