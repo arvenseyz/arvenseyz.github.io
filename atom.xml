@@ -6,7 +6,7 @@
   <link href="/arvenseyz.github.io/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2020-12-23T10:01:10.192Z</updated>
+  <updated>2020-12-24T12:49:27.637Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -15,6 +15,31 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>mongo简单查询</title>
+    <link href="http://yoursite.com/2020/12/24/12-24%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/12/24/12-24技术笔记/</id>
+    <published>2020-12-24T10:17:44.000Z</published>
+    <updated>2020-12-24T12:49:27.637Z</updated>
+    
+    <content type="html"><![CDATA[<p><a href="https://imgchr.com/i/r2lMgf" target="_blank" rel="noopener"><img src="https://s3.ax1x.com/2020/12/24/r2lMgf.jpg" alt="r2lMgf.jpg"></a></p><p>compass各参数解释如下：</p><p>filter：即筛选条件，相当于sql的where，kv写法即等于，其他需要：</p><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123; field: &#123; $lt: value&#125; &#125;</span><br><span class="line">&#123; field: &#123; $gt: value&#125; &#125;</span><br><span class="line">&#123; field: &#123; $lte: value&#125; &#125;</span><br><span class="line">&#123; field: &#123; $gte: value&#125; &#125;</span><br></pre></td></tr></table></figure><p>project：相当于sql中的select，即需要哪些字段，kv写法，1是0否。</p><p>sort：排序方法。1升序，-1降序，可以多字段。</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123; username: -1, date: -1 &#125;</span><br></pre></td></tr></table></figure><p>skip，limit。即offset和limit。</p><p>collation。排序方法.归类允许用户为字符串比较指定特定于语言的规则，例如字母大写和重音符号的规则。比如汉字默认按二进制比较，相当于没有比。内置了按拼音比较的方式。   即图中的所在地。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;&lt;a href=&quot;https://imgchr.com/i/r2lMgf&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;&lt;img src=&quot;https://s3.ax1x.com/2020/12/24/r2lMgf.jpg&quot; alt=&quot;r2lMgf.jpg
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="mongo" scheme="http://yoursite.com/tags/mongo/"/>
+    
+  </entry>
   
   <entry>
     <title>mongo安装</title>
@@ -511,31 +536,6 @@
     
     
       <category term="计算机网络" scheme="http://yoursite.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Mysql-proxy</title>
-    <link href="http://yoursite.com/2020/03/11/3-11%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/2020/03/11/3-11技术笔记/</id>
-    <published>2020-03-11T12:40:31.000Z</published>
-    <updated>2020-03-11T12:42:50.079Z</updated>
-    
-    <content type="html"><![CDATA[<p> MySQL Proxy就是这么一个中间层代理，简单的说，MySQL Proxy就是一个连接池，负责将前台应用的连接请求转发给后台的数据库，并且通过使用lua脚本，可以实现复杂的连接控制和过滤，<br>    从而实现读写分离和负载平衡。对于应用来说，MySQL Proxy是完全透明的，应用则只需要连接到MySQL Proxy的监听端口即可。</p><p>当然，这样proxy机器可能成为单点失效，但完全可以使用多个proxy机器做为冗余，在应用服务器的连接池配置中配置到多 个proxy的连接参数即可。</p><p>这么看MySQL Proxy就类似nginx，通过代理能实现负载均衡/主写从读/失败重试等功能。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt; MySQL Proxy就是这么一个中间层代理，简单的说，MySQL Proxy就是一个连接池，负责将前台应用的连接请求转发给后台的数据库，并且通过使用lua脚本，可以实现复杂的连接控制和过滤，&lt;br&gt;    从而实现读写分离和负载平衡。对于应用来说，MySQL Proxy
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="数据库" scheme="http://yoursite.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
     
   </entry>
   
