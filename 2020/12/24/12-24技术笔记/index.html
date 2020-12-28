@@ -90,7 +90,7 @@
 <meta property="og:description" content="compass各参数解释如下： filter：即筛选条件，相当于sql的where，kv写法即等于，其他需要： 1234&amp;#123; field: &amp;#123; $lt: value&amp;#125; &amp;#125;&amp;#123; field: &amp;#123; $gt: value&amp;#125; &amp;#125;&amp;#123; field: &amp;#123; $lte: value&amp;#125; &amp;#125;&amp;#123;">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://s3.ax1x.com/2020/12/24/r2lMgf.jpg">
-<meta property="og:updated_time" content="2020-12-24T12:49:27.637Z">
+<meta property="og:updated_time" content="2020-12-28T06:51:53.705Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="mongo简单查询">
 <meta name="twitter:description" content="compass各参数解释如下： filter：即筛选条件，相当于sql的where，kv写法即等于，其他需要： 1234&amp;#123; field: &amp;#123; $lt: value&amp;#125; &amp;#125;&amp;#123; field: &amp;#123; $gt: value&amp;#125; &amp;#125;&amp;#123; field: &amp;#123; $lte: value&amp;#125; &amp;#125;&amp;#123;">
@@ -355,6 +355,8 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123; username: -1, date: -1 &#125;</span><br></pre></td></tr></table></figure>
 <p>skip，limit。即offset和limit。</p>
 <p>collation。排序方法.归类允许用户为字符串比较指定特定于语言的规则，例如字母大写和重音符号的规则。比如汉字默认按二进制比较，相当于没有比。内置了按拼音比较的方式。   即图中的所在地。</p>
+<p>and和or。and连着写就好，or需要用$or运算符</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">db.col.find(&#123;&quot;date&quot;: &#123;$gt:50&#125;, $or: [&#123;&quot;username&quot;: &quot;阿萨萨&quot;&#125;,&#123;&quot;title&quot;: &quot;StudentFile&quot;&#125;]&#125;).pretty()</span><br></pre></td></tr></table></figure>
 
       
     </div>
@@ -394,6 +396,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/arvenseyz.github.io/2020/12/28/12-28技术笔记/" rel="prev" title="mongo的数据类型和bson">
+                mongo的数据类型和bson <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -461,7 +467,7 @@
               
                 <a href="/arvenseyz.github.io/archives/">
               
-                  <span class="site-state-item-count">236</span>
+                  <span class="site-state-item-count">237</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
