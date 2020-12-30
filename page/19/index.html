@@ -251,6 +251,151 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2018/10/25/10-25技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/arvenseyz.github.io/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/arvenseyz.github.io/2018/10/25/10-25技术笔记/" itemprop="url">范式</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-10-25T17:18:52+08:00">
+                2018-10-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/arvenseyz.github.io/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="第一范式"><a href="#第一范式" class="headerlink" title="第一范式"></a>第一范式</h1><p>第一范式很简单，是关系型数据库的基础，简单来说，每个属性，即每列，只有一个值。</p>
+<h1 id="第二范式"><a href="#第二范式" class="headerlink" title="第二范式"></a>第二范式</h1><p>第二范式开始考虑依赖，数据库很多列，一些列的存在依赖于其他列，这就是依赖关系。比如说，学生表，属性有学号，姓名，性别，年龄。后三个属性都依赖于学号，也就是说，只要给一个学号，就能给出其他三个属性的值，反之则不能。<br>属性的集合有很多元素，从中找到一组最基础的元素，其他元素都可以由这组元素得出，这组元素则为联合主键。比如选课表，属性有学号，姓名，性别，课程码，课程名，授课老师，授课老师电话，成绩。则联合主键为（学号，课程码），姓名、性别由学号决定，课程名、老师、授课老师电话由课程码决定，成绩由学号课程码联合决定。<br>那么此时，非联合主键中的元素，一些由联合主键全部元素决定，另一些由联合主键中部分元素决定。前者叫完全依赖，后者叫部分依赖。<br>第二范式就是不能有部分依赖。如果有部分依赖，应该拆表。<br>比如选课表就应该拆成三个，姓名、性别由学号决定：是学生表；课程名、老师、授课老师电话由课程码决定；是课程表；成绩由学号、课程码联合决定，是选课表。  </p>
+<h1 id="第三范式"><a href="#第三范式" class="headerlink" title="第三范式"></a>第三范式</h1><p>我们单独再看课程表，虽然对于任何一个课程码，我们都可以说出课程名、老师、授课老师电话，但是其实这些非主键元素，内部依然有依赖关系。我们并不是直接知道授课老师电话的，实际上授课老师电话依赖于老师，我们通过课程码知道老师，通过老师知道了电话，这之间有个传递的过程，这就是传递依赖。<br>第三范式就是讲，不能有传递依赖。为解决继续拆表。<br>老师电话依赖于老师，拆出一个通讯录表。</p>
+<h1 id="BC范式"><a href="#BC范式" class="headerlink" title="BC范式"></a>BC范式</h1><p>BC范式相当于是3.5范式，相比于第三范式，追加了要求，不但非主键元素不依赖，主键元素也不能有依赖关系。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2018/10/24/反派最重要的是品味/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1691,177 +1836,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2018/09/30/9-30技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/arvenseyz.github.io/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/arvenseyz.github.io/2018/09/30/9-30技术笔记/" itemprop="url">策略模式，状态模式</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-30T16:32:12+08:00">
-                2018-09-30
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/arvenseyz.github.io/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="策略模式"><a href="#策略模式" class="headerlink" title="策略模式"></a>策略模式</h1><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>策略模式需要一个可选择的策略，策略是对用户可见的，用户来选择策略，比如说布局管理器，对于一个界面，用户需要选择一个布局策略。</p>
-<h2 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h2><ol>
-<li><p>策略基类</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public abstract class LayoutManager &#123;</span><br><span class="line">    protected abstract void show();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>具体策略类</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public class LayoutA extends LayoutManager &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void show() &#123;</span><br><span class="line">        System.out.println(&quot;布局A&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">public class LayoutB extends LayoutManager&#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void show() &#123;</span><br><span class="line">        System.out.println(&quot;布局B&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>环境类，持有策略对象，具体策略设值注入</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class Panel &#123;</span><br><span class="line">    private LayoutManager layoutManager;</span><br><span class="line">    public void setLayoutManager(LayoutManager layoutManager)&#123;</span><br><span class="line">        this.layoutManager=layoutManager;</span><br><span class="line">    &#125;</span><br><span class="line">    public void execute()&#123;</span><br><span class="line">        layoutManager.show();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>客户端使用，用户自己指定策略</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public class Client &#123;</span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">        Panel panel = new Panel();</span><br><span class="line">        LayoutManager layoutManager = new LayoutA();</span><br><span class="line">        panel.setLayoutManager(layoutManager);</span><br><span class="line">        panel.execute();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<h1 id="状态模式"><a href="#状态模式" class="headerlink" title="状态模式"></a>状态模式</h1><h2 id="使用场景-1"><a href="#使用场景-1" class="headerlink" title="使用场景"></a>使用场景</h2><p>对象有多个状态，不同的状态有不同的行为模式，比如账户有正常，冻结状态，冻结就不能再取钱了，只能存钱。将状态独立出来，由上下文持有状态，操作上下文，即状态模式。</p>
-<h2 id="使用方法-1"><a href="#使用方法-1" class="headerlink" title="使用方法"></a>使用方法</h2><ol>
-<li><p>状态抽象基类</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Water &#123;</span><br><span class="line">    abstract void up();</span><br><span class="line">    abstract void down();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>各种具体状态类</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">//水的气态</span><br><span class="line">public class Steam extends Water &#123;</span><br><span class="line">    @Override</span><br><span class="line">    void up() &#123;</span><br><span class="line">        System.out.println(&quot;no change&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    void down() &#123;</span><br><span class="line">        System.out.println(&quot;气液化&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">//水的液态</span><br><span class="line">public class Liquid extends Water&#123;</span><br><span class="line">    @Override</span><br><span class="line">    void up() &#123;</span><br><span class="line">        System.out.println(&quot;水蒸发&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    void down() &#123;</span><br><span class="line">        System.out.println(&quot;水凝固&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">//水的固态</span><br><span class="line">public class Ice extends Water&#123;</span><br><span class="line">    @Override</span><br><span class="line">    void up() &#123;</span><br><span class="line">        System.out.println(&quot;冰融化&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    void down() &#123;</span><br><span class="line">        System.out.println(&quot;no change&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>上下文来持有水，持有水的各个状态，有水的状态变化方法，反馈现在状态方法，以及实际操作方法调用状态中的方法。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">public class Context &#123;</span><br><span class="line">    private Water water;</span><br><span class="line">    private static Water  ice, liquid, steam;</span><br><span class="line">    int tem;</span><br><span class="line"></span><br><span class="line">    Water change() &#123;</span><br><span class="line">        if(tem &lt; 0) &#123;</span><br><span class="line">            water = ice;</span><br><span class="line">        &#125;else if(tem &lt; 100) &#123;</span><br><span class="line">            water = liquid;</span><br><span class="line">        &#125;else &#123;</span><br><span class="line">            water = steam;</span><br><span class="line">        &#125;</span><br><span class="line">        return water;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Context(int tem) &#123;</span><br><span class="line">        ice = new Ice();</span><br><span class="line">        liquid = new Liquid();</span><br><span class="line">        steam = new Steam();</span><br><span class="line">        this.tem = tem;</span><br><span class="line">        water = change();</span><br><span class="line">    &#125;</span><br><span class="line">    public void getState()&#123;</span><br><span class="line">        if(water instanceof Liquid)&#123;</span><br><span class="line">            System.out.println(&quot;liquid&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        if(water instanceof Ice)&#123;</span><br><span class="line">            System.out.println(&quot;ice&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        if(water instanceof Steam)&#123;</span><br><span class="line">            System.out.println(&quot;steam&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    public void tohot(int ch) &#123;</span><br><span class="line">        tem += ch;</span><br><span class="line">        water.up();</span><br><span class="line">        change();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void tocold(int ch) &#123;</span><br><span class="line">        tem -= ch;</span><br><span class="line">        water.down();</span><br><span class="line">        change();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>使用时操控上下文即可</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class Client &#123;</span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">        Context context=new Context(5);</span><br><span class="line">        context.tocold(10);</span><br><span class="line">        context.tohot(200);</span><br><span class="line">        context.getState();</span><br><span class="line">        Context context1=new Context(-50);</span><br><span class="line">        context.getState();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1912,7 +1886,7 @@
               
                 <a href="/arvenseyz.github.io/archives/">
               
-                  <span class="site-state-item-count">238</span>
+                  <span class="site-state-item-count">239</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

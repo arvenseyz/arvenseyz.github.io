@@ -6,7 +6,7 @@
   <link href="/arvenseyz.github.io/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2020-12-29T07:06:28.979Z</updated>
+  <updated>2020-12-30T07:05:33.879Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -15,6 +15,33 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>mongo分布式一致性</title>
+    <link href="http://yoursite.com/2020/12/30/12-30%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/12/30/12-30技术笔记/</id>
+    <published>2020-12-30T03:07:26.000Z</published>
+    <updated>2020-12-30T07:05:33.879Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="CAP与BASE"><a href="#CAP与BASE" class="headerlink" title="CAP与BASE"></a>CAP与BASE</h1><p>CAP原理为基础，实际上现在大部分系统都是BASE的，其实BASE很好理解，即基本可用，最终一致。是一种可用性与一致性平衡的状态。</p><p>具体在实践中，指：一主多从，主写从读，主挂了切从，选举的时候只能读不能写（基本可用），从库不保证能读到刚写入的数据。</p><p>这里个角度看，mongo的分布式一致性与mysql主从架构是一致的。</p><p>mongo现在使用的是副本集形式。</p><p>集群拥有一个主节点和多个从节点，这一点与主从复制模式类似，且主从节点所负责的工作也类似，但是副本集与主从复制的区别在于：当集群中主节点发生故障时，副本集可以自动投票，选举出新的主节点，并引导其余的从节点连接新的主节点，而且这个过程对应用是透明的。  </p><h1 id="Replica-Set"><a href="#Replica-Set" class="headerlink" title="Replica Set"></a>Replica Set</h1><p>可以说，MongoDB 的副本集是自带故障转移功能的主从复制。  </p><p>MongoDB 副本集使用的是 N 个 mongod 节点构建的具备自动容错功能、自动恢复功能的高可用方案。在副本集中，任何节点都可作为主节点，但为了维持数据一致性，只能有一个主节点。  </p><p>主节点负责数据的写入和更新，并在更新数据的同时，将操作信息写入名为 oplog 的日志文件当中。主节点还负责指定其他节点为从节点，并设置从节点数据的可读性，从而让从节点来分担集群读取数据的压力。  </p><p>另外，从节点会定时轮询读取 oplog 日志，根据日志内容同步更新自身的数据，保持与主节点一致。  </p><p>在一些场景中，用户还可以使用副本集来扩展读性能，客户端有能力发送读写操作给不同的服务器，也可以在不同的数据中心获取不同的副本来扩展分布式应用的能力。  </p><p>在副本集中还有一个额外的仲裁节点（不需要使用专用的硬件设备），负责在主节点发生故障时，参与选举新节点作为主节点。  选举使用的是raft算法。</p><p>副本集中的各节点会通过心跳信息来检测各自的健康状况，当主节点出现故障时，多个从节点会触发一次新的选举操作，并选举其中一个作为新的主节点。为了保证选举票数不同，副本集的节点数保持为奇数。</p><h1 id="读写一致性"><a href="#读写一致性" class="headerlink" title="读写一致性"></a>读写一致性</h1><h2 id="swrite-concern"><a href="#swrite-concern" class="headerlink" title="swrite-concern"></a>swrite-concern</h2><p><a href="https://imgchr.com/i/rLib0f" target="_blank" rel="noopener"><img src="https://s3.ax1x.com/2020/12/30/rLib0f.png" alt="rLib0f.png"></a></p><p>　write concern表示对于写操作，MongoDB在什么情况下给予客户端响应。包括下面三个字段：</p><blockquote><p>　　{ w: <value>, j: <boolean>, wtimeout: <number> }</number></boolean></value></p></blockquote><p>先看journal，默认开启，即写入了日志文件再返回，不然就是写入了内存就返回了。</p><p>指定超时等待写入咨询Write concern的写操作仅表示所需数量的副本集成员未在wtimeout时间段内确认写操作。它不一定表示主节点Primary未能应用写入。</p><p>w: 表示当写请求在value个MongoDB实例处理之后才向客户端返回。取值范围：</p><p>0表示直接返回，显然性能高，容易丢数据。</p><p>1是默认值，即写入主节点返回。</p><p>majority是指写入从的大部分节点才返回。</p><p>一般默认配置是，write concern为1，journal为true，这样宕机也能通过journal找回数据，但是依然会丢数据。即主库刚写入就挂了，新选的从库没有这条数据了。</p><h2 id="Read-preference"><a href="#Read-preference" class="headerlink" title="Read preference"></a>Read preference</h2><p>读跟写不一样，为了保持一致性，写只能通过主节点，但读可以选择主节点，也可以选择副本节点，区别是主节点数据最新，副本节点因为同步问题可能会有延迟，但从副本节点读取数据可以分散对主节点的压力。</p><p>读偏好指的是读主还是读从，可以想象到有这么四种，强制读主，优先读主，强制读从，优先读从。还有第五种，主从一致，基于延迟选择。</p><h2 id="read-concern"><a href="#read-concern" class="headerlink" title="read concern"></a>read concern</h2><p>有三个级别，local和majority以及linearizable。</p><p>majority  的初衷在于解决『脏读』的问题，比如用户从 MongoDB 的 primary 上读取了某一条数据，但这条数据并没有同步到大多数节点，然后 primary 就故障了，重新恢复后 这个primary 节点会将未同步到大多数节点的数据回滚掉，导致用户读到了『脏数据』。</p><p>当指定 readConcern 级别为 majority 时，能保证用户读到的数据『已经写入到大多数节点』，而这样的数据肯定不会发生回滚，避免了脏读的问题。</p><p>需要注意的是，<code>majority</code> 能保证读到的数据『不会发生回滚』，但并不能保证读到的数据是最新的，无论何种级别的 <code>majority</code>，客户端都只会从『某一个确定的节点』（具体是哪个节点由 readPreference 决定）读取数据，该节点根据自己看到的同步状态视图，只会返回已经同步到大多数节点的数据。</p><p>（因为他还不知道大多数节点已经更新了）</p><p><a href="https://www.docs4dev.com/docs/en/mongodb/v3.6/reference/reference-read-concern-majority.html" target="_blank" rel="noopener">https://www.docs4dev.com/docs/en/mongodb/v3.6/reference/reference-read-concern-majority.html</a></p><p>其实majority是有bug的，就是无法面对网络分区的所带来的多主问题，出现了解决方案，即“<strong>线性化</strong>”读取问题。使用此属性，mongo会在发出读取操作的结果之前检查其主节点并查看大多数节点。但是，对于“多数”使用此“读取关注点”会有性能成本的损失，因此这不能替代“多数”读取关注点。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;CAP与BASE&quot;&gt;&lt;a href=&quot;#CAP与BASE&quot; class=&quot;headerlink&quot; title=&quot;CAP与BASE&quot;&gt;&lt;/a&gt;CAP与BASE&lt;/h1&gt;&lt;p&gt;CAP原理为基础，实际上现在大部分系统都是BASE的，其实BASE很好理解，即基本可用，最终
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="分布式" scheme="http://yoursite.com/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"/>
+    
+      <category term="mongo" scheme="http://yoursite.com/tags/mongo/"/>
+    
+  </entry>
   
   <entry>
     <title>mongo索引</title>
@@ -512,29 +539,6 @@
     </summary>
     
       <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="数据库" scheme="http://yoursite.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>不及格，优秀，前三名sql</title>
-    <link href="http://yoursite.com/2020/05/06/5-6%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>http://yoursite.com/2020/05/06/5-6技术笔记-1/</id>
-    <published>2020-05-06T07:37:13.000Z</published>
-    <updated>2020-05-11T03:25:59.582Z</updated>
-    
-    <content type="html"><![CDATA[<h3 id="不及格的学生"><a href="#不及格的学生" class="headerlink" title="不及格的学生"></a>不及格的学生</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> uid,<span class="keyword">name</span>,<span class="keyword">avg</span>(score) <span class="keyword">as</span> avg_score <span class="keyword">from</span> qtest </span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> uid <span class="keyword">having</span> avg_score&lt;<span class="number">60</span></span><br></pre></td></tr></table></figure><h3 id="每门课成绩都不低于80的学生"><a href="#每门课成绩都不低于80的学生" class="headerlink" title="每门课成绩都不低于80的学生"></a>每门课成绩都不低于80的学生</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">distinct</span> uid </span><br><span class="line"><span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">where</span> uid <span class="keyword">not</span> <span class="keyword">in</span> (</span><br><span class="line"><span class="keyword">select</span> uid </span><br><span class="line"><span class="keyword">from</span> qtest </span><br><span class="line"><span class="keyword">where</span> score&lt;<span class="number">80</span>)</span><br></pre></td></tr></table></figure><h3 id="总成绩前三名"><a href="#总成绩前三名" class="headerlink" title="总成绩前三名"></a>总成绩前三名</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span>  uid,<span class="keyword">sum</span>(score) <span class="keyword">as</span> sum_score <span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> uid</span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> sum_score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">3</span></span><br></pre></td></tr></table></figure><h3 id="语文第二名"><a href="#语文第二名" class="headerlink" title="语文第二名"></a>语文第二名</h3><p>先查第三名语文的分数</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> score <span class="keyword">from</span> qtest <span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">order</span> <span class="keyword">by</span> score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">2</span>,<span class="number">1</span>;</span><br></pre></td></tr></table></figure><p>再找人</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span>,uid <span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">and</span> score=(</span><br><span class="line"><span class="keyword">select</span> score <span class="keyword">from</span> qtest <span class="keyword">where</span> subject = <span class="string">"语文"</span> <span class="keyword">order</span> <span class="keyword">by</span> score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">2</span>,<span class="number">1</span>)</span><br></pre></td></tr></table></figure><h3 id="各门功课前三"><a href="#各门功课前三" class="headerlink" title="各门功课前三"></a>各门功课前三</h3><p>相同思路，先找第三名分数，再找人</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> qtest <span class="keyword">as</span> x <span class="keyword">where</span> score &gt;</span><br><span class="line">(<span class="keyword">select</span> score <span class="keyword">from</span> qtest <span class="keyword">where</span> subject=x.subject <span class="keyword">ORDER</span> <span class="keyword">BY</span> score <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">2</span>,<span class="number">1</span>);</span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h3 id=&quot;不及格的学生&quot;&gt;&lt;a href=&quot;#不及格的学生&quot; class=&quot;headerlink&quot; title=&quot;不及格的学生&quot;&gt;&lt;/a&gt;不及格的学生&lt;/h3&gt;&lt;figure class=&quot;highlight sql&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutte
-      
-    
-    </summary>
     
     
       <category term="数据库" scheme="http://yoursite.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>

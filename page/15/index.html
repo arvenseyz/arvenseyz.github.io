@@ -251,6 +251,180 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2019/01/22/1-22技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/arvenseyz.github.io/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/arvenseyz.github.io/2019/01/22/1-22技术笔记/" itemprop="url">bean生命周期,类型</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-22T18:02:21+08:00">
+                2019-01-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/arvenseyz.github.io/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="Bean-Scope"><a href="#Bean-Scope" class="headerlink" title="Bean Scope"></a>Bean Scope</h2><p>在bean上使用@Scope注解，可以指定bean的作用范围，默认是Singleton即单例的，与之对应的还有Prototype原型模式产生的bean。另外还有三种很不常用的，</p>
+<ul>
+<li>Request - 每一次 HTTP 请求都会产生一个新的 Bean 实例，并且该 Bean 仅在当前 HTTP 请求内有效。</li>
+<li>Session - 每一个的 Session 都会产生一个新的 Bean 实例，同时该 Bean 仅在当前 HTTP Session 内有效。</li>
+<li>Application - 每一个 Web Application 都会产生一个新的 Bean ，同时该 Bean 仅在当前 Web Application 内有效。</li>
+</ul>
+<h1 id="原型模式Bean"><a href="#原型模式Bean" class="headerlink" title="原型模式Bean"></a>原型模式Bean</h1><p>仅仅将bean作用范围声明为原型模式，实际上并不会奏效，是因为在自动装配依赖注入时：被注入的Bean,即Class A的scope是默认的singleton，因此Context只会创建Class A的bean一次，所以也就只有一次注入依赖的机会，容器也就无法每次给Class A提供一个新的Class B（原型模式的Bean）。</p>
+<p>Spring有方法层面的注解<strong>@Lookup</strong>，被其标注的方法会被重写，然后根据其返回值的类型，容器调用BeanFactory的getBean()方法来返回一个bean。即解决了这个问题。</p>
+<p>另有一种原式不好的解决方法是，ClassA实现ApplicationContextAware接口，能够在每次需要到Class B的时候手动去Context里找到新的bean。</p>
+<h1 id="线程安全"><a href="#线程安全" class="headerlink" title="线程安全"></a>线程安全</h1><p>单例的bean不是线程安全的，相比于让单例bean线程安全，更有意义的是，让单例bean中没有可变的状态。</p>
+<h1 id="Bean生命周期"><a href="#Bean生命周期" class="headerlink" title="Bean生命周期"></a>Bean生命周期</h1><p><img src="https://i.loli.net/2019/02/19/5c6be3e8a58ec.png" alt="5c6be3e8a58ec"></p>
+<p><img src="https://i.loli.net/2019/02/19/5c6be3f8b0301.png" alt="5c6be3f8b0301"></p>
+<ol>
+<li><p>实例化bean对象，设置对象属性。</p>
+</li>
+<li><p>围绕实例化和设置对象属性的接口是InstantiationAwareBeanPostProcessor的一些方法。</p>
+</li>
+<li><p>调用Aware方法，分别来setBeanName，setBeanFactory，setBeanApplication。可以实现这三个接口，来自定义其设置。</p>
+</li>
+<li><p>调用init_method</p>
+</li>
+<li><p>围绕4的接口是BeanPostProcessor，后置处理器，可以实现后做一些后置处理。以及InitializingBean接口。</p>
+</li>
+<li><p>单例bean放在ioc容器中，模版bean交给客户端。</p>
+</li>
+<li><p>调用destrory-method方法。</p>
+</li>
+<li><p>在7之前的接口是disposableBean。</p>
+</li>
+</ol>
+<h1 id="自动装配注解"><a href="#自动装配注解" class="headerlink" title="自动装配注解"></a>自动装配注解</h1><p><code>@Required</code>注解，应用于 Bean 属性 setter 方法。</p>
+<p><code>@Autowired</code>注解，可以更准确地控制应该在何处以及如何进行自动装配。</p>
+<p>当创建多个<strong>相同类型</strong>的 Bean ，并希望仅使用属性装配<strong>其中一个</strong>Bean 时，可以使用<code>@Qualifier</code>注解和<code>@Autowired</code>通过指定 ID 应该装配哪个<strong>确切的</strong>Bean 来消除歧义。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2019/01/21/1-21技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1741,167 +1915,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2018/12/14/12-14技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/arvenseyz.github.io/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/arvenseyz.github.io/2018/12/14/12-14技术笔记/" itemprop="url">dubbo使用细节</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-14T10:50:32+08:00">
-                2018-12-14
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/arvenseyz.github.io/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="容器"><a href="#容器" class="headerlink" title="容器"></a>容器</h2><p>Dubbo的Container详解模块，是一个独立的容器，因为服务通常不需要Tomcat/JBoss等Web容器的特性，没必要用Web容器去加载服务。</p>
-<p>即Dubbo用自己的容器，不需要Web容器。</p>
-<p>内置了三个服务容器，Spring，jetty，log4j。分别用于加载Spring，汇报状态，配置日志。默认调用SpringContainer。</p>
-<p>通过JDK的ShutdownHook来完成优雅停机。</p>
-<h2 id="服务注册与发现的流程"><a href="#服务注册与发现的流程" class="headerlink" title="服务注册与发现的流程"></a>服务注册与发现的流程</h2><p><a href="https://imgchr.com/i/FN4q10" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2018/12/14/FN4q10.md.png" alt="FN4q10.md.png"></a></p>
-<p><img src="https://i.loli.net/2018/12/14/5c131d5942525.png" alt="5c131d5942525"></p>
-<h2 id="服务宕机"><a href="#服务宕机" class="headerlink" title="服务宕机"></a>服务宕机</h2><p>Dubbo中zookeeper做注册中心，如果注册中心集群都挂掉，发布者和订阅者之间还能通信么？<br>可以的，启动dubbo时，消费者会从zk拉取注册的生产者的地址接口等数据，缓存在本地。每次调用时，按照本地存储的地址进行调用</p>
-<p>注册中心对等集群，任意一台宕掉后，会自动切换到另一台<br>注册中心全部宕掉，服务提供者和消费者仍可以通过本地缓存通讯<br>服务提供者无状态，任一台 宕机后，不影响使用<br>服务提供者全部宕机，服务消费者会无法使用，并无限次重连等待服务者恢复</p>
-<h2 id="异步调用"><a href="#异步调用" class="headerlink" title="异步调用"></a>异步调用</h2><p>默认是同步等待结果阻塞的，支持异步调用。</p>
-<p>Dubbo 是基于 NIO 的非阻塞实现并行调用，客户端不需要启动多线程即可完成并行调用多个远程服务，相对多线程开销较小，异步调用会返回一个 Future 对象。</p>
-<h2 id="安全机制"><a href="#安全机制" class="headerlink" title="安全机制"></a>安全机制</h2><p>Dubbo通过Token令牌防止用户绕过注册中心直连，然后在注册中心上管理授权。Dubbo还提供服务黑白名单，来控制服务所允许的调用方</p>
-<h2 id="服务端配置消费者属性"><a href="#服务端配置消费者属性" class="headerlink" title="服务端配置消费者属性"></a>服务端配置消费者属性</h2><p>1）timeout：方法调用超时<br>2）retries：失败重试次数，默认重试 2 次<br>3）loadbalance：负载均衡算法，默认随机<br>4）actives 消费者端，最大并发调用限制</p>
-<h2 id="启动时检查"><a href="#启动时检查" class="headerlink" title="启动时检查"></a>启动时检查</h2><p>缺省会在启动时检查依赖的服务是否可用，不可用时会抛出异常，阻止Spring初始化完成，也可以关闭</p>
-<h2 id="直连消费者"><a href="#直连消费者" class="headerlink" title="直连消费者"></a>直连消费者</h2><p>在开发及测试环境下，经常需要绕过注册中心，只测试指定服务提供者，这时候可能需要点对点直连，<br>点对点直联方式，将以服务接口为单位，忽略注册中心的提供者列表。</p>
-<h2 id="服务分组"><a href="#服务分组" class="headerlink" title="服务分组"></a>服务分组</h2><p>当一个接口有多种实现时，可以用group区分。</p>
-<h2 id="多版本"><a href="#多版本" class="headerlink" title="多版本"></a>多版本</h2><p>当一个接口实现，出现不兼容升级时，可以用版本号过渡，版本号不同的服务相互间不引用。<br>一般处理步骤</p>
-<p> 1）在低压力时间段，先升级一半提供者为新版本 </p>
-<p>2）再将所有消费者升级为新版本 </p>
-<p>3）然后将剩下的一半提供者升级为新版本</p>
-<h2 id="延迟暴露"><a href="#延迟暴露" class="headerlink" title="延迟暴露"></a>延迟暴露</h2><p>如果你的服务需要Warmup时间，比如初始化缓存，等待相关资源就位等，可以使用delay进行延迟暴露。 &lt;dubbo:provider delay=”-1” /&gt; 当然，也可以配置到服务级别。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1952,7 +1965,7 @@
               
                 <a href="/arvenseyz.github.io/archives/">
               
-                  <span class="site-state-item-count">238</span>
+                  <span class="site-state-item-count">239</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
