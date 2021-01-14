@@ -6,7 +6,7 @@
   <link href="/arvenseyz.github.io/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2020-12-30T07:05:33.879Z</updated>
+  <updated>2021-01-14T07:59:24.965Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -15,6 +15,37 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>缓存的数据一致性问题</title>
+    <link href="http://yoursite.com/2021/01/14/1-14%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2021/01/14/1-14技术笔记/</id>
+    <published>2021-01-14T07:13:03.000Z</published>
+    <updated>2021-01-14T07:59:24.965Z</updated>
+    
+    <content type="html"><![CDATA[<p> 一般来说，缓存有以下三种模式：</p><ul><li><p>Cache Aside 更新模式</p></li><li><p>Read/Write Through 更新模式</p></li><li><p>Write Behind Caching 更新模式</p></li></ul><p>通俗一点来讲就是，同时更新缓存和数据库（Cache Aside 更新模式）；先更新缓存，缓存负责同步更新数据库（Read/Write Through 更新模式）；先更新缓存，缓存定时异步更新数据库（Write Behind Caching 更新模式）</p><h1 id="Cache-Aside-旁路缓存-策略"><a href="#Cache-Aside-旁路缓存-策略" class="headerlink" title="Cache Aside(旁路缓存)策略"></a>Cache Aside(旁路缓存)策略</h1><h2 id="更新缓存的问题"><a href="#更新缓存的问题" class="headerlink" title="更新缓存的问题"></a>更新缓存的问题</h2><p>首先是缓存更新还是删除，采用删除，原因有两点：</p><ol><li><p>对于对象类型，或者文本类型，修改缓存value的成本较高。</p></li><li><p>有并发问题。</p></li></ol><p>即同时有请求A和请求B进行更新操作，那么会出现<br>（1）线程A更新了数据库<br>（2）线程B更新了数据库<br>（3）线程B更新了缓存<br>（4）线程A更新了缓存<br>这就出现请求A更新缓存应该比请求B更新缓存早才对，但是因为网络等原因，B却比A更早更新了缓存。这就导致了脏数据，因此不考虑。</p><h2 id="先删缓存的问题"><a href="#先删缓存的问题" class="headerlink" title="先删缓存的问题"></a>先删缓存的问题</h2><p>其次是先删缓存还是先改数据库。</p><p>都有问题。</p><p>先删缓存问题如下：</p><h3 id="并发问题"><a href="#并发问题" class="headerlink" title="并发问题"></a>并发问题</h3><p>同时有一个请求A进行更新操作，另一个请求B进行查询操作。那么会出现如下情形:<br>（1）请求A进行写操作，删除缓存<br>（2）请求B查询发现缓存不存在<br>（3）请求B去数据库查询得到旧值<br>（4）请求B将旧值写入缓存<br>（5）请求A将新值写入数据库<br>上述情况就会导致不一致的情形出现。而且，如果不采用给缓存设置过期时间策略，该数据永远都是脏数据。</p><h3 id="主从同步问题"><a href="#主从同步问题" class="headerlink" title="主从同步问题"></a>主从同步问题</h3><p>两个请求，一个请求A进行更新操作，另一个请求B进行查询操作。  </p><p>（1）请求A进行写操作，删除缓存<br>（2）请求A将数据写入数据库了，<br>（3）请求B查询缓存发现，缓存没有值<br>（4）请求B去从库查询，这时，还没有完成主从同步，因此查询到的是旧值<br>（5）请求B将旧值写入缓存<br>（6）数据库完成主从同步，从库变为新值</p><h3 id="异步双删"><a href="#异步双删" class="headerlink" title="异步双删"></a>异步双删</h3><p>等一定时间（主从同步时间）后，再次删除</p><h2 id="先更新数据库的问题"><a href="#先更新数据库的问题" class="headerlink" title="先更新数据库的问题"></a>先更新数据库的问题</h2><h3 id="原子性问题"><a href="#原子性问题" class="headerlink" title="原子性问题"></a>原子性问题</h3><p>更新数据库成功，删除缓存失败，不好处理。</p><h3 id="并发问题-1"><a href="#并发问题-1" class="headerlink" title="并发问题"></a>并发问题</h3><p>假设这会有两个请求，一个请求A做查询操作，一个请求B做更新操作，那么会有如下情形产生<br>（1）缓存刚好失效<br>（2）请求A查询数据库，得一个旧值<br>（3）请求B将新值写入数据库<br>（4）请求B删除缓存<br>（5）请求A将查到的旧值写入缓存<br>ok，如果发生上述情况，确实是会发生脏数据。</p><p>但是这种问题，出现在写操作比读操作慢，一般不会发生。</p><h3 id="异步双删-1"><a href="#异步双删-1" class="headerlink" title="异步双删"></a>异步双删</h3><p>也可以解决这个问题。</p><p>异步第二次删除失败怎么处理，搞个失败队列啥的。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt; 一般来说，缓存有以下三种模式：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Cache Aside 更新模式&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Read/Write Through 更新模式&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Write Behind Caching 更新模式&lt;/p&gt;
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="redis" scheme="http://yoursite.com/tags/redis/"/>
+    
+  </entry>
   
   <entry>
     <title>mongo分布式一致性</title>
@@ -517,31 +548,6 @@
     
     
       <category term="计算机网络" scheme="http://yoursite.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>exist</title>
-    <link href="http://yoursite.com/2020/05/11/5-11%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>http://yoursite.com/2020/05/11/5-11技术笔记/</id>
-    <published>2020-05-11T03:04:16.000Z</published>
-    <updated>2020-05-11T04:00:22.071Z</updated>
-    
-    <content type="html"><![CDATA[<h3 id="选了语文没选英语的"><a href="#选了语文没选英语的" class="headerlink" title="选了语文没选英语的"></a>选了语文没选英语的</h3><p>exist语法可以理解为：将主查询的数据，放到子查询中做条件验证，根据验证结果（TRUE 或 FALSE）来决定主查询的数据结果是否得以保留。</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">distinct</span> uid <span class="keyword">from</span> qtest <span class="keyword">as</span> T</span><br><span class="line"><span class="keyword">where</span> <span class="keyword">exists</span> (<span class="keyword">select</span> <span class="number">1</span> <span class="keyword">from</span> qtest <span class="keyword">where</span> subject=<span class="string">"数学"</span> <span class="keyword">and</span> T.uid=uid)</span><br><span class="line"><span class="keyword">and</span> <span class="keyword">not</span> <span class="keyword">exists</span> (<span class="keyword">select</span> <span class="number">1</span> <span class="keyword">from</span> qtest <span class="keyword">where</span> subject=<span class="string">"英语"</span> <span class="keyword">and</span> T.uid=uid)</span><br></pre></td></tr></table></figure><h3 id="同时选了两科的"><a href="#同时选了两科的" class="headerlink" title="同时选了两科的"></a>同时选了两科的</h3><p>其实group by 后的having 的字段，不一定得是选的字段</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span>  <span class="keyword">name</span> <span class="keyword">from</span> student <span class="keyword">where</span> uid <span class="keyword">in</span>(</span><br><span class="line"><span class="keyword">select</span> uid <span class="keyword">from</span> score <span class="keyword">group</span> <span class="keyword">by</span> uid </span><br><span class="line"><span class="keyword">having</span> <span class="keyword">count</span>(<span class="keyword">sid</span>)=<span class="number">3</span>)</span><br></pre></td></tr></table></figure><p>考察下里面的自查询</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> uid <span class="keyword">from</span> score <span class="keyword">group</span> <span class="keyword">by</span> <span class="keyword">name</span></span><br><span class="line"> <span class="keyword">having</span> <span class="keyword">count</span>(<span class="keyword">sid</span>)=<span class="number">3</span></span><br></pre></td></tr></table></figure><p>其实和这也是一样的</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> uid,<span class="keyword">count</span>(<span class="keyword">sid</span>)=<span class="number">3</span> <span class="keyword">as</span> <span class="keyword">num</span> <span class="keyword">from</span> score <span class="keyword">group</span> <span class="keyword">by</span> <span class="keyword">name</span></span><br><span class="line"> <span class="keyword">having</span> <span class="keyword">num</span>=<span class="number">3</span></span><br></pre></td></tr></table></figure><p>但是子查询里只能有一列</p><p>其实这里count啥没区别，因为是按uid来group by的。这里uid和sid是联合unique的，所以按uid行数就是该生科目数。</p><p>如果不是联合unique的。比如带上补考的。</p><h3 id="有课补考过"><a href="#有课补考过" class="headerlink" title="有课补考过"></a>有课补考过</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span> <span class="keyword">from</span> student</span><br><span class="line"><span class="keyword">where</span> uid <span class="keyword">in</span>(</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">distinct</span> uid <span class="keyword">from</span> score</span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> uid,<span class="keyword">sid</span></span><br><span class="line"><span class="keyword">having</span> <span class="keyword">count</span>(*)=<span class="number">2</span>)</span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h3 id=&quot;选了语文没选英语的&quot;&gt;&lt;a href=&quot;#选了语文没选英语的&quot; class=&quot;headerlink&quot; title=&quot;选了语文没选英语的&quot;&gt;&lt;/a&gt;选了语文没选英语的&lt;/h3&gt;&lt;p&gt;exist语法可以理解为：将主查询的数据，放到子查询中做条件验证，根据验证结果（TR
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="数据库" scheme="http://yoursite.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
     
   </entry>
   

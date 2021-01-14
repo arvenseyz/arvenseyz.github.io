@@ -251,6 +251,171 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2019/03/13/leetcode75-127/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/arvenseyz.github.io/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/arvenseyz.github.io/2019/03/13/leetcode75-127/" itemprop="url">快排，单词变形次数</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-03-13T17:36:07+08:00">
+                2019-03-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/arvenseyz.github.io/categories/leetcode/" itemprop="url" rel="index">
+                    <span itemprop="name">leetcode</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="75"><a href="#75" class="headerlink" title="75"></a>75</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>排序，只有0,1,2三种元素。</p>
+<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><p>快排即可。手写在于。</p>
+<p>1.分左右，分的时候就完成大的右边小的左边，传回索引。</p>
+<p>2.快排左右即可。</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sortColors</span><span class="params">(<span class="keyword">int</span>[] nums)</span> </span>&#123;</span><br><span class="line">       ksort(nums,<span class="number">0</span>,nums.length-<span class="number">1</span>);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">ksort</span><span class="params">(<span class="keyword">int</span>[] nums, <span class="keyword">int</span> l, <span class="keyword">int</span> h)</span> </span>&#123;</span><br><span class="line">       <span class="keyword">if</span>(l&lt;h) &#123;</span><br><span class="line">           <span class="keyword">int</span> index = partition(nums, l, h);</span><br><span class="line">           ksort(nums, l, index - <span class="number">1</span>);</span><br><span class="line">           ksort(nums, index + <span class="number">1</span>, h);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">partition</span><span class="params">(<span class="keyword">int</span>[] nums, <span class="keyword">int</span> l, <span class="keyword">int</span> h)</span> </span>&#123;</span><br><span class="line">       <span class="keyword">int</span> k=nums[l];</span><br><span class="line">       <span class="keyword">while</span> (l&lt;h)&#123;</span><br><span class="line">           <span class="keyword">while</span>(nums[h]&gt;=k&amp;&amp;l&lt;h)&#123;</span><br><span class="line">               --h;</span><br><span class="line">           &#125;</span><br><span class="line">           nums[l]=nums[h];</span><br><span class="line">           <span class="keyword">while</span> (nums[l]&lt;=k&amp;&amp;l&lt;h)&#123;</span><br><span class="line">               ++l;</span><br><span class="line">           &#125;</span><br><span class="line">           nums[h]=nums[l];</span><br><span class="line">       &#125;</span><br><span class="line">       nums[l]=k;</span><br><span class="line">       <span class="keyword">return</span> l;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h2><p>上面的代码怎么写成的，为什么没有交换。</p>
+<p>只是因为取了些巧，有很多省略而已。</p>
+<p>完整代码应该这么写。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">partition</span><span class="params">(<span class="keyword">int</span> a[],<span class="keyword">int</span> left,<span class="keyword">int</span> right)</span></span>&#123; </span><br><span class="line">    <span class="keyword">int</span> k = a[left];                         <span class="comment">// 找到索引</span></span><br><span class="line">    <span class="keyword">while</span>(left &lt; right)&#123;                     <span class="comment">// 循环条件</span></span><br><span class="line">        <span class="keyword">while</span>(left &lt; right)&#123;               <span class="comment">// 从右往左找到第一个小于标记位的元素</span></span><br><span class="line">            <span class="keyword">if</span>(a[right] &gt;= k)&#123;             </span><br><span class="line">                right --;</span><br><span class="line">            &#125;<span class="keyword">else</span>&#123;                         </span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(right == left)&#123;   <span class="comment">// 如果是没找到，那么满足 right == left 条件，那么 break 退出大循环。</span></span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;                 <span class="comment">// 找到了就交换左右索引处的元素</span></span><br><span class="line">                  swap(a, right, left);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">while</span>(left &lt; right)&#123;                 <span class="comment">// 从左往右同理</span></span><br><span class="line">            <span class="keyword">if</span>(a[left] &lt;= k)&#123; </span><br><span class="line">                left ++;</span><br><span class="line">            &#125;<span class="keyword">else</span>&#123; </span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span>(right == left)&#123; </span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123; </span><br><span class="line">            swap(a, left, right);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> left; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>代码只是上面代码的取巧写法。减少了代码行数，微弱提升了性能。</p>
+<p>1.判断放一起，减少判断：nums[h]&gt;=k&amp;&amp;l&lt;h</p>
+<p>2.省略判断，省去了 if(left &lt; right) 判断</p>
+<p> 退出循环只有两种可能，一种是没找到，左右指针碰头（相等），left == right，这种情况下让 a[left] = a[right] 实际上等于 a = a，用自己对自己赋值 ，就算执行了也没什么关系；另一种情况是找到了，left &lt; right，这种情况本来就应该执行 a[left] = a[right];</p>
+<p>3.省去两数交换，</p>
+<p> 省去两个数的交换，因为分区首的第一个数 a[left] 实际上在 k 中保留了拷贝，这里用 a[right] 覆盖 a[left] 即可，相当于把右指针找到的数放到了左边，维持小数居左原则。同时，右指针所在的数是多余的了，可以用来保存其它数。此时，找到的数同时在分区首和右指针的位置保存了两份拷贝。</p>
+<h1 id="127"><a href="#127" class="headerlink" title="127"></a>127</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>给出起始单词和目标单词，以及单词表，求变形次数。</p>
+<p><strong>Input:</strong><br>beginWord = “hit”,<br>endWord = “cog”,<br>wordList = [“hot”,”dot”,”dog”,”lot”,”log”,”cog”]</p>
+<p><strong>Output:</strong> 5</p>
+<p><strong>Explanation:</strong> As one shortest transformation is “hit” -&gt; “hot” -&gt; “dot” -&gt; “dog” -&gt; “cog”,<br>return its length 5.</p>
+<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>广度优先搜索，找到路径。</p>
+<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">ladderLength</span><span class="params">(String beginWord, String endWord, List&lt;String&gt; wordList)</span> </span>&#123;</span><br><span class="line">       Set&lt;String&gt; wordSet = <span class="keyword">new</span> HashSet&lt;&gt;();</span><br><span class="line">       <span class="keyword">for</span> (String s : wordList) &#123;</span><br><span class="line">           wordSet.add(s);</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">if</span>(!wordSet.contains(endWord))&#123;</span><br><span class="line">           <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">       &#125;</span><br><span class="line">       Queue&lt;String&gt; queue = <span class="keyword">new</span> ArrayDeque&lt;&gt;();</span><br><span class="line">       queue.offer(beginWord);</span><br><span class="line">       <span class="keyword">int</span> c = <span class="number">0</span>;</span><br><span class="line">       <span class="keyword">while</span> (!queue.isEmpty()) &#123;</span><br><span class="line">           c++;</span><br><span class="line">           <span class="keyword">for</span> (<span class="keyword">int</span> w = queue.size(); w &gt; <span class="number">0</span>; w--) &#123; <span class="comment">//广搜过程</span></span><br><span class="line">               String word = queue.poll();</span><br><span class="line">               <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; beginWord.length(); i++) &#123; <span class="comment">//从第一个到最后个字母</span></span><br><span class="line">                   <span class="keyword">for</span> (<span class="keyword">char</span> j = <span class="string">'a'</span>; j &lt;= <span class="string">'z'</span>; j++) &#123;  <span class="comment">//从a到z</span></span><br><span class="line">                       String cword=replace(word, j, i);</span><br><span class="line">                       <span class="keyword">if</span>(endWord.equals(cword))&#123;</span><br><span class="line">                           <span class="keyword">return</span> c+<span class="number">1</span>;</span><br><span class="line">                       &#125;</span><br><span class="line">                       <span class="keyword">if</span>(wordSet.contains(cword))&#123;</span><br><span class="line">                           queue.offer(cword);</span><br><span class="line">                           wordSet.remove(cword);</span><br><span class="line">                       &#125;</span><br><span class="line">                   &#125;</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line"></span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">static</span> String <span class="title">replace</span><span class="params">(String mystring, <span class="keyword">char</span> content, <span class="keyword">int</span> location)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">       <span class="keyword">return</span> mystring.substring(<span class="number">0</span>, location) + content + mystring.substring(location + <span class="number">1</span>);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="思考-1"><a href="#思考-1" class="headerlink" title="思考"></a>思考</h2><p>广度优先搜索基本写法</p>
+<p>需要个队列。第一个元素当然先入队，不然没法开始。</p>
+<p>循环{元素出队-&gt;它相邻元素判断-&gt;终点跳出/非终点入队。}</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2019/03/12/leetcode22-37/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1655,162 +1820,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2019/02/19/2-19技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/arvenseyz.github.io/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/arvenseyz.github.io/2019/02/19/2-19技术笔记/" itemprop="url">LinkedHashMap与缓存算法</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-19T11:16:08+08:00">
-                2019-02-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/arvenseyz.github.io/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="LinkedHashMap"><a href="#LinkedHashMap" class="headerlink" title="LinkedHashMap"></a>LinkedHashMap</h1><p>原来一直以为LinkedHashMap就是用链表法的哈希表，也没有意识到哈希表本来就是用链表法的，那linked什么。</p>
-<p>是指，哈希表中所有元素，都用同时用一个双向链表储存起来。</p>
-<p>1</p>
-<p>2-&gt;3</p>
-<p>4-&gt;5</p>
-<p>这是链表法的哈希表。他们的插入顺序21345。那么还同时维护着2\<->1\<->3\<->4\<->5的双向链表。两者同时存在。实际结构。</-></-></-></-></p>
-<p><img src="https://i.loli.net/2019/02/19/5c6bc235219f0.png" alt="5c6bc235219f0"></p>
-<p>这样做的意义是。查询时走哈希，插入删除走链表，速度都达到了o(1)。</p>
-<p>那么代价呢，一是结构复杂，空间占用大。二是操作麻烦，增加删除都得同时考虑这两个数据结构。</p>
-<h1 id="LRU与FIFO"><a href="#LRU与FIFO" class="headerlink" title="LRU与FIFO"></a>LRU与FIFO</h1><p>LRU是缓存替换算法，最近最少使用，但他是基于使用而不是添加，也就是get()操作会影响。</p>
-<p>其实LinkedHashMap也是支持的，首先有个protected方法removeEldestEntry()，基类返回false，什么意思呢，是讲什么时候删除最老的元素（怎么定义最老下文说），其实本来是因为不删除的，因为hashMap会自动扩容，满了扩容即可，所以基类永远返回false。但用于LRU需要删除最近最少使用的元素，并且不想让缓存扩容，所以重写该方法，快达到负载因子密度就删除。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">LinkedHashMap map = <span class="keyword">new</span> LinkedHashMap&lt;K, V&gt;(capacity, DEFAULT_LOAD_FACTORY, <span class="keyword">true</span>) &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">removeEldestEntry</span><span class="params">(Map.Entry&lt;K, V&gt; eldest)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> size() &gt; MAX_CACHE_SIZE;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<p>第二个问题是初始容量，int capacity = (int)Math.ceil(MAX_CACHE_SIZE / DEFAULT_LOAD_FACTORY) + 1;很容易理解，初始容量=缓存大小/负载因子+1；</p>
-<p>第三个问题是，LRU中的最老并不是最早put进hashMap的，而是哈希表中最久没被get的。LinkedHashMap的构造函数第三个参数accessOrder，是boolean类型，它影响了get()操作，如果为ture，get元素时会将改元素重置到双向链表的头部。</p>
-<p>FIFO其实和LRU一样，区别在于最老元素的定义，get不影响，所以accessOrder为false，其他都一样。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1861,7 +1870,7 @@
               
                 <a href="/arvenseyz.github.io/archives/">
               
-                  <span class="site-state-item-count">239</span>
+                  <span class="site-state-item-count">240</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1927,7 +1936,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>

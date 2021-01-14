@@ -251,6 +251,158 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2018/11/19/11-19技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/arvenseyz.github.io/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/arvenseyz.github.io/2018/11/19/11-19技术笔记/" itemprop="url">pipeline及相关组件</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-19T14:31:20+08:00">
+                2018-11-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/arvenseyz.github.io/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>我们通过 if else 逻辑进行逻辑的处理，当我们要处理的指令越来越多的时候，代码会显得越来越臃肿，我们可以通过给 pipeline 添加多个 handler(ChannelInboundHandlerAdapter的子类) 来解决。</p>
+<h2 id="SimpleChannelInboundHandler"><a href="#SimpleChannelInboundHandler" class="headerlink" title="SimpleChannelInboundHandler"></a>SimpleChannelInboundHandler</h2><p>SimpleChannelInboundHandler 对象，类型判断和对象传递的活都自动帮我们实现了，而我们可以专注于处理我们所关心的指令即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//SimpleChannelInboundHandler是泛型，类型是该处理器所处理的消息包</span><br><span class="line">public class LoginRequestHandler extends SimpleChannelInboundHandler&lt;LoginRequestPacket&gt; &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, LoginRequestPacket loginRequestPacket) &#123;</span><br><span class="line">        // 无返回值函数，不用传递对象，基类已经实现，只用关心逻辑。</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="ByteToMessageDecoder"><a href="#ByteToMessageDecoder" class="headerlink" title="ByteToMessageDecoder"></a>ByteToMessageDecoder</h2><p>当我们继承了 ByteToMessageDecoder 这个类之后，我们只需要实现一下 decode() 方法，这里的 in ，传递进来的时候就已经是 ByteBuf 类型，所以我们不再需要强转，第三个参数是 List 类型，通过往这个 List 里面添加解码后的结果对象，就可以自动实现结果往下一个 handler 进行传递，这样就实现了解码的逻辑 handler。<br>最大的优点是，自动内存管理，因为ByteBuf是堆外的，自动内存管理不用担心内存泄漏。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public class PacketDecoder extends ByteToMessageDecoder &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List out) &#123;</span><br><span class="line">        out.add(PacketCodeC.INSTANCE.decode(in));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="MessageToByteEncoder"><a href="#MessageToByteEncoder" class="headerlink" title="MessageToByteEncoder"></a>MessageToByteEncoder</h2><p>编码同样。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public class PacketEncoder extends MessageToByteEncoder&lt;Packet&gt; &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected void encode(ChannelHandlerContext ctx, Packet packet, ByteBuf out) &#123;</span><br><span class="line">        PacketCodeC.INSTANCE.encode(out, packet);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>PacketEncoder 继承自 MessageToByteEncoder，泛型参数 Packet 表示这个类的作用是实现 Packet 类型对象到二进制的转换。</p>
+<p>这里我们只需要实现 encode() 方法，我们注意到，在这个方法里面，第二个参数是 Java 对象，而第三个参数是 ByteBuf 对象，我们在这个方法里面要做的事情就是把 Java 对象里面的字段写到 ByteBuf，我们不再需要自行去分配 ByteBuf。<br>所以编码器也需要变化，编码器里不需要管理ByteBuf,不需要新建和返回ByteBuf（而是作为参数），只需要关注编码即可。</p>
+<h2 id="ChannelInboundHandlerAdapter-与-ChannelOutboundHandlerAdapter"><a href="#ChannelInboundHandlerAdapter-与-ChannelOutboundHandlerAdapter" class="headerlink" title="ChannelInboundHandlerAdapter 与 ChannelOutboundHandlerAdapter"></a>ChannelInboundHandlerAdapter 与 ChannelOutboundHandlerAdapter</h2><p>一个是进一个是出，各自保持一致即可。</p>
+<h2 id="热插拔与身份校验"><a href="#热插拔与身份校验" class="headerlink" title="热插拔与身份校验"></a>热插拔与身份校验</h2><p>可以把身份验证逻辑独立出来，通信时身份验证，实际上，在连接中，只需要第一次需要身份验证，这时pipeline的热插拔机制就有效了。 ctx.pipeline().remove(this);移除自身即可，同时可以重载handlerRemoved()方法，在handler被移除时触发。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">public class AuthHandler extends ChannelInboundHandlerAdapter &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception &#123;</span><br><span class="line">        if (!LoginUtil.hasLogin(ctx.channel())) &#123;</span><br><span class="line">            ctx.channel().close();</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            // 一行代码实现逻辑的删除</span><br><span class="line">            ctx.pipeline().remove(this);</span><br><span class="line">            super.channelRead(ctx, msg);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void handlerRemoved(ChannelHandlerContext ctx) &#123;</span><br><span class="line">        if (LoginUtil.hasLogin(ctx.channel())) &#123;</span><br><span class="line">            System.out.println(&quot;当前连接登录验证完毕，无需再次验证, AuthHandler 被移除&quot;);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            System.out.println(&quot;无登录验证，强制关闭连接!&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="沾包拆包组件"><a href="#沾包拆包组件" class="headerlink" title="沾包拆包组件"></a>沾包拆包组件</h2><p>tcp报文与我们的数据包不一定一样大，导致Netty 应用层面，重新拼装成的ByteBuf与客户端按顺序发送的 ByteBuf 可能是不对等的。解决很简单，就是检测数据包，是一个完整包再解析，手写也不难。Netty封装了四种拆包器handler，分别对应四种不同的数据包：固定大小的；按分隔符分隔的；按行分隔的；数据包头部有该数据包长度的。只需要把它加入到pipeLine中即可。<br>对于最后一种LengthFieldBasedFrameDecoder，有三个参数：第一个参数指的是数据包的最大长度，第二个参数指的是长度域的偏移量，第三个参数指的是长度域的长度，这样一个拆包器写好之后，只需要在 pipeline 的最前面加上这个拆包器。</p>
+<p>我们在拆包时，可以再做点别的事，比如屏蔽非本协议的数据包，继承该类，重写decode()方法，在该方法中如果协议不对，连接关闭即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">public class Spliter extends LengthFieldBasedFrameDecoder &#123;</span><br><span class="line">    private static final int LENGTH_FIELD_OFFSET = 7;</span><br><span class="line">    private static final int LENGTH_FIELD_LENGTH = 4;</span><br><span class="line"></span><br><span class="line">    public Spliter() &#123;</span><br><span class="line">        super(Integer.MAX_VALUE, LENGTH_FIELD_OFFSET, LENGTH_FIELD_LENGTH);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception &#123;</span><br><span class="line">        // 屏蔽非本协议的客户端</span><br><span class="line">        if (in.getInt(in.readerIndex()) != PacketCodeC.MAGIC_NUMBER) &#123;</span><br><span class="line">            ctx.channel().close();</span><br><span class="line">            return null;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return super.decode(ctx, in);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="pipeline"><a href="#pipeline" class="headerlink" title="pipeline"></a>pipeline</h2><p>最后pipeline中有如下组件：拆包及过滤，解码，业务处理，编码。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">bootstrap.handler(new ChannelInitializer&lt;SocketChannel&gt;() &#123;</span><br><span class="line">                    @Override</span><br><span class="line">                    public void initChannel(SocketChannel ch) &#123;</span><br><span class="line">                        ch.pipeline().addLast(new Spliter());</span><br><span class="line">                        ch.pipeline().addLast(new PacketDecoder());</span><br><span class="line">                        ch.pipeline().addLast(new LoginResponseHandler());</span><br><span class="line">                        ch.pipeline().addLast(new MessageResponseHandler());</span><br><span class="line">                        ch.pipeline().addLast(new PacketEncoder());</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br></pre></td></tr></table></figure></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2018/11/16/11-16技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1734,150 +1886,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/arvenseyz.github.io/2018/10/26/10-26技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/arvenseyz.github.io/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/arvenseyz.github.io/2018/10/26/10-26技术笔记/" itemprop="url">push，pull，长轮询</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-10-26T19:12:06+08:00">
-                2018-10-26
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/arvenseyz.github.io/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="push，pull，长轮询"><a href="#push，pull，长轮询" class="headerlink" title="push，pull，长轮询"></a>push，pull，长轮询</h1><h2 id="push"><a href="#push" class="headerlink" title="push"></a>push</h2><p>push模式就是服务器和客户端保持连接，服务器一旦有信息，就“推送”至客户端。但实际上，由于tcp协议的原因，保持连接几乎不可能。问题在于：第一服务端一直在工作压力大，第二客户端处理能力各不相同且不受客户端控制，有客户端堆积的风险。  </p>
-<h2 id="pull"><a href="#pull" class="headerlink" title="pull"></a>pull</h2><p>pull就是，客户端一直在工作，不断从服务端拉取数据保存在本地，只要满足设定的条件，就一直向服务端索取数据。</p>
-<h2 id="长轮询"><a href="#长轮询" class="headerlink" title="长轮询"></a>长轮询</h2><p>服务端不一定一直有消息，每隔一秒问一次有没有数据，结果都没有，这样就很浪费，不如派一个委托，在那里等着，一旦有数据就返回，或者等太久了也返回。这就是长轮询。实际上现在的push一般都是由长轮询实现。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1928,7 +1936,7 @@
               
                 <a href="/arvenseyz.github.io/archives/">
               
-                  <span class="site-state-item-count">239</span>
+                  <span class="site-state-item-count">240</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1994,7 +2002,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
