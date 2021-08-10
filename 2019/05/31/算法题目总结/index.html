@@ -85,7 +85,7 @@
 <meta name="keywords" content="动态规划">
 <meta property="og:type" content="article">
 <meta property="og:title" content="算法题目总结">
-<meta property="og:url" content="https://github.com/arvenseyz/arvenseyz.github.io/2019/05/31/算法题目总结/index.html">
+<meta property="og:url" content="https://arvenseyz.github.io/2019/05/31/算法题目总结/index.html">
 <meta property="og:site_name" content="Arvense">
 <meta property="og:description" content="单调栈42 必须两边高，中间低可以装下水，就可以使用一个单调递减栈，将递减的边界存进去，一旦发现当前的数字大于栈顶元素了，那么就有可能会有能装水的地方产生。此时我们当前的数字是右边界，我们从栈中至少需要有两个数字，才能形成一个坑槽，先取出的那个最小的数字，就是坑槽的最低点，再次取出的数字就是左边界，我们比较左右边界，取其中较小的值为装水的边界，然后此高度减去水槽最低点的高度，乘以左右边界间的距离就">
 <meta property="og:locale" content="default">
@@ -125,7 +125,7 @@
 
 
 
-  <link rel="canonical" href="https://github.com/arvenseyz/arvenseyz.github.io/2019/05/31/算法题目总结/">
+  <link rel="canonical" href="https://arvenseyz.github.io/2019/05/31/算法题目总结/">
 
 
 
@@ -258,7 +258,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://github.com/arvenseyz/arvenseyz.github.io/2019/05/31/算法题目总结/">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/05/31/算法题目总结/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Arvense">
@@ -351,7 +351,7 @@
 <p>必须两边高，中间低可以装下水，就可以使用一个单调递减栈，将递减的边界存进去，一旦发现当前的数字大于栈顶元素了，那么就有可能会有能装水的地方产生。此时我们当前的数字是右边界，我们从栈中至少需要有两个数字，才能形成一个坑槽，先取出的那个最小的数字，就是坑槽的最低点，再次取出的数字就是左边界，我们比较左右边界，取其中较小的值为装水的边界，然后此高度减去水槽最低点的高度，乘以左右边界间的距离就是装水量了。由于需要知道左右边界的位置，所以我们虽然维护的是递减栈，但是栈中数字并不是存递减的高度，而是递减的高度的坐标。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">trap</span><span class="params">(<span class="keyword">int</span>[] height)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(height == <span class="keyword">null</span> || height.length == <span class="number">0</span>) </span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span> sumArea = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        Stack stack = <span class="keyword">new</span> Stack();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> right = <span class="number">0</span>;right &lt; height.length;right++) &#123;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">while</span>(!stack.isEmpty() &amp;&amp; height[stack.peek()] &lt; height[right]) &#123; </span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span>(stack.size() &gt;= <span class="number">2</span>) &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">int</span> j = stack.pop();</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">int</span> left = stack.peek();</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">int</span> curArea = (Math.min(height[right],height[left]) - height[j]) * (right - left - <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">                    sumArea += curArea;</span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line"></span><br><span class="line">                    stack.pop();</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            stack.push(right);</span><br><span class="line"></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> sumArea;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h2 id="503"><a href="#503" class="headerlink" title="503"></a>503</h2><p>给定一个循环数组（最后一个元素的下一个元素是数组的第一个元素），输出每个元素的下一个更大元素。数字 x 的下一个更大的元素是按数组遍历顺序，这个数字之后的第一个比它更大的数，这意味着你应该循环地搜索它的下一个更大的数。如果不存在，则输出 -1。</p>
-<p>题解在这里[<a href="https://arvenseyz.github.io/blog/2019/04/19/leetcode503-895-687/" target="_blank" rel="noopener">https://arvenseyz.github.io/blog/2019/04/19/leetcode503-895-687/</a>]</p>
+<p>题解在这里[<a href="https://arvenseyz.github.io/blog/2019/04/19/leetcode503-895-687/">https://arvenseyz.github.io/blog/2019/04/19/leetcode503-895-687/</a>]</p>
 <p>##</p>
 <h1 id="找出右上角没有点的点"><a href="#找出右上角没有点的点" class="headerlink" title="找出右上角没有点的点"></a>找出右上角没有点的点</h1><p><img src="https://i.loli.net/2019/05/31/5cf095ee2e22197645.png" alt="5cf095ee2e22197645"></p>
 <p>把点按X坐标排列，即转化为单调栈问题。单调栈难点在于，入栈的和比较的，不一定同一个。</p>
@@ -500,7 +500,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">240</span>
+                  <span class="site-state-item-count">241</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -522,7 +522,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">67</span>
+                  <span class="site-state-item-count">68</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

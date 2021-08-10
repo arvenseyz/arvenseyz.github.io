@@ -85,7 +85,7 @@
 <meta name="keywords" content="多线程">
 <meta property="og:type" content="article">
 <meta property="og:title" content="锁原理">
-<meta property="og:url" content="https://github.com/arvenseyz/arvenseyz.github.io/2019/04/11/4-11技术笔记/index.html">
+<meta property="og:url" content="https://arvenseyz.github.io/2019/04/11/4-11技术笔记/index.html">
 <meta property="og:site_name" content="Arvense">
 <meta property="og:description" content="Java对象头里有个Mark Word，记录了锁的状态。 锁是以升级的原因进行的， 偏向锁偏向锁的意思是，自己锁了，自己再进来，没有锁。 当第一个线程尝试进入同步块时，发现Mark Word中线程ID为0，则会使用CAS将自己的线程ID设置到Mark Word中，并且，在当前线程栈中由高到低顺序找到可用的Lock Record，将线程ID记录下。完成这些，此线程就获取了锁对象的偏向锁。 [即：锁的">
 <meta property="og:locale" content="default">
@@ -122,7 +122,7 @@
 
 
 
-  <link rel="canonical" href="https://github.com/arvenseyz/arvenseyz.github.io/2019/04/11/4-11技术笔记/">
+  <link rel="canonical" href="https://arvenseyz.github.io/2019/04/11/4-11技术笔记/">
 
 
 
@@ -255,7 +255,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://github.com/arvenseyz/arvenseyz.github.io/2019/04/11/4-11技术笔记/">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/04/11/4-11技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Arvense">
@@ -479,7 +479,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">240</span>
+                  <span class="site-state-item-count">241</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -501,7 +501,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">67</span>
+                  <span class="site-state-item-count">68</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

@@ -5,9 +5,9 @@
   
   <link href="/atom.xml" rel="self"/>
   
-  <link href="https://github.com/arvenseyz/arvenseyz.github.io/"/>
-  <updated>2021-01-14T07:59:24.965Z</updated>
-  <id>https://github.com/arvenseyz/arvenseyz.github.io/</id>
+  <link href="https://arvenseyz.github.io/"/>
+  <updated>2021-08-10T07:49:48.496Z</updated>
+  <id>https://arvenseyz.github.io/</id>
   
   <author>
     <name>Arvense</name>
@@ -17,9 +17,34 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>ES的store、source、index属性</title>
+    <link href="https://arvenseyz.github.io/2021/08/10/8-10%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>https://arvenseyz.github.io/2021/08/10/8-10技术笔记-1/</id>
+    <published>2021-08-10T06:59:40.000Z</published>
+    <updated>2021-08-10T07:49:48.496Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="index"><a href="#index" class="headerlink" title="index"></a>index</h1><p>index的含义还比较容易简单，一共3个值，no,analyzied，not_analyzied，分别对应’不对该字段进行索引（无法搜索）’，’分词后索引’，’以单个关键词进行索引’。</p><h1 id="source"><a href="#source" class="headerlink" title="source"></a>source</h1><p>es里除了倒排索引，当然还会把文档原文存储一遍，存储的这一遍就是source。</p><p>官方文档解释如下：</p><blockquote><p>默认地，Elasticsearch 在  <code>_source</code>  字段存储代表文档体的JSON字符串。和所有被存储的字段一样，  <code>_source</code>  字段在被写入磁盘之前先会被压缩。</p><p>这个字段的存储几乎总是我们想要的，因为它意味着下面的这些：</p><ul><li>搜索结果包括了整个可用的文档——不需要额外的从另一个的数据仓库来取文档。</li><li>如果没有  <code>_source</code>  字段，部分  <code>update</code>  请求不会生效。</li><li>当你的映射改变时，你需要重新索引你的数据，有了_source字段你可以直接从Elasticsearch这样做，而不必从另一个（通常是速度更慢的）数据仓库取回你的所有文档。</li><li>当你不需要看到整个文档时，单个字段可以从  <code>_source</code>  字段提取和通过  <code>get</code>  或者  <code>search</code>  请求返回。</li><li>调试查询语句更加简单，因为你可以直接看到每个文档包括什么，而不是从一列id猜测它们的内容。</li></ul><p>然而，存储  <code>_source</code>  字段的确要使用磁盘空间。如果上面的原因对你来说没有一个是重要的，你可以用下面的映射禁用  <code>_source</code>  字段。</p></blockquote><p><a href="https://imgtu.com/i/fY9nJ0" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/08/10/fY9nJ0.png" alt="fY9nJ0.png"></a></p><p>当然可以关闭该属性。</p><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"mappings"</span>:&#123;</span><br><span class="line">        <span class="attr">"_source"</span>:&#123;</span><br><span class="line">            <span class="attr">"enabled"</span>:<span class="literal">false</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">"properties"</span>: &#123;</span><br><span class="line">            ... </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>或者选择性开启某些字段</p><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"mappings"</span>:&#123;</span><br><span class="line">        <span class="attr">"_source"</span>: &#123;</span><br><span class="line">          <span class="attr">"includes"</span>: [</span><br><span class="line">            <span class="string">"*.count"</span>,</span><br><span class="line">            <span class="string">"meta.*"</span></span><br><span class="line">          ],</span><br><span class="line">          <span class="attr">"excludes"</span>: [</span><br><span class="line">            <span class="string">"meta.description"</span>,</span><br><span class="line">            <span class="string">"meta.other.*"</span></span><br><span class="line">          ]</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="string">"properties"</span>: &#123;</span><br><span class="line">            ... </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>于是问题来了，既然搜不出，我干嘛要用。</p><p> 答案是，虽然搜不出来，但是可以搜到，比如我们只用es搜索，用这些字段可以搜出id，然后内容存在某个kv数据库中，再用该id去这个kv数据库搜。</p><h1 id="store"><a href="#store" class="headerlink" title="store"></a>store</h1><p>store和source的include似乎结果上是相同的，即某些字段可以被搜出来。</p><p>官方解释</p><blockquote><p>默认情况下，字段值被<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-index.html" title="index" target="_blank" rel="noopener">index</a>以使其可搜索，但它们不会被<em>存储</em>。这意味着可以查询该字段，但无法检索原始字段值。</p><p>通常这无关紧要。字段值已经是<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-source-field.html" title="_source 字段" target="_blank" rel="noopener"><code>_source</code>字段的</a>一部分， 默认情况下存储。如果您只想检索单个字段或几个字段的值，而不是整个<code>_source</code>，那么这可以通过<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-fields.html#source-filtering" title="_source 选项" target="_blank" rel="noopener">源过滤</a>来实现 。</p><p>在某些情况下，它可能对<code>store</code>某个领域有意义。例如，如果您有一个包含 a <code>title</code>、 a<code>date</code>和一个非常大的<code>content</code> 字段的文档，您可能只想检索 the<code>title</code>和 the<code>date</code>而不必从大<code>_source</code>字段中提取这些字段：</p></blockquote>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;index&quot;&gt;&lt;a href=&quot;#index&quot; class=&quot;headerlink&quot; title=&quot;index&quot;&gt;&lt;/a&gt;index&lt;/h1&gt;&lt;p&gt;index的含义还比较容易简单，一共3个值，no,analyzied，not_analyzied，分别对应’不对该字
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="ES" scheme="https://arvenseyz.github.io/tags/ES/"/>
+    
+  </entry>
+  
+  <entry>
     <title>缓存的数据一致性问题</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2021/01/14/1-14%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2021/01/14/1-14技术笔记/</id>
+    <link href="https://arvenseyz.github.io/2021/01/14/1-14%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2021/01/14/1-14技术笔记/</id>
     <published>2021-01-14T07:13:03.000Z</published>
     <updated>2021-01-14T07:59:24.965Z</updated>
     
@@ -40,17 +65,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="redis" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/redis/"/>
+      <category term="redis" scheme="https://arvenseyz.github.io/tags/redis/"/>
     
   </entry>
   
   <entry>
     <title>mongo分布式一致性</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/12/30/12-30%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/12/30/12-30技术笔记/</id>
+    <link href="https://arvenseyz.github.io/2020/12/30/12-30%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2020/12/30/12-30技术笔记/</id>
     <published>2020-12-30T03:07:26.000Z</published>
     <updated>2020-12-30T07:05:33.879Z</updated>
     
@@ -65,19 +90,19 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="分布式" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"/>
+      <category term="分布式" scheme="https://arvenseyz.github.io/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"/>
     
-      <category term="mongo" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/mongo/"/>
+      <category term="mongo" scheme="https://arvenseyz.github.io/tags/mongo/"/>
     
   </entry>
   
   <entry>
     <title>mongo索引</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/12/29/12-29%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/12/29/12-29技术笔记-1/</id>
+    <link href="https://arvenseyz.github.io/2020/12/29/12-29%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>https://arvenseyz.github.io/2020/12/29/12-29技术笔记-1/</id>
     <published>2020-12-29T03:57:43.000Z</published>
     <updated>2020-12-29T07:06:28.979Z</updated>
     
@@ -93,17 +118,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="mongo" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/mongo/"/>
+      <category term="mongo" scheme="https://arvenseyz.github.io/tags/mongo/"/>
     
   </entry>
   
   <entry>
     <title>mongo的数据类型和bson</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/12/28/12-28%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/12/28/12-28技术笔记/</id>
+    <link href="https://arvenseyz.github.io/2020/12/28/12-28%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2020/12/28/12-28技术笔记/</id>
     <published>2020-12-28T02:32:52.000Z</published>
     <updated>2020-12-28T06:51:56.750Z</updated>
     
@@ -119,17 +144,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="mongo" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/mongo/"/>
+      <category term="mongo" scheme="https://arvenseyz.github.io/tags/mongo/"/>
     
   </entry>
   
   <entry>
     <title>mongo简单查询</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/12/24/12-24%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/12/24/12-24技术笔记/</id>
+    <link href="https://arvenseyz.github.io/2020/12/24/12-24%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2020/12/24/12-24技术笔记/</id>
     <published>2020-12-24T10:17:44.000Z</published>
     <updated>2020-12-28T06:51:53.705Z</updated>
     
@@ -144,17 +169,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="mongo" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/mongo/"/>
+      <category term="mongo" scheme="https://arvenseyz.github.io/tags/mongo/"/>
     
   </entry>
   
   <entry>
     <title>mongo安装</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/12/23/12-23%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/12/23/12-23技术笔记/</id>
+    <link href="https://arvenseyz.github.io/2020/12/23/12-23%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2020/12/23/12-23技术笔记/</id>
     <published>2020-12-23T08:50:57.000Z</published>
     <updated>2020-12-28T06:51:55.334Z</updated>
     
@@ -169,17 +194,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="mongo" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/mongo/"/>
+      <category term="mongo" scheme="https://arvenseyz.github.io/tags/mongo/"/>
     
   </entry>
   
   <entry>
     <title>kafka文件存储</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/09/22/9-22%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/09/22/9-22技术笔记-1/</id>
+    <link href="https://arvenseyz.github.io/2020/09/22/9-22%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>https://arvenseyz.github.io/2020/09/22/9-22技术笔记-1/</id>
     <published>2020-09-22T12:07:38.000Z</published>
     <updated>2020-09-22T12:44:11.689Z</updated>
     
@@ -196,17 +221,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="消息队列" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
+      <category term="消息队列" scheme="https://arvenseyz.github.io/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
     
   </entry>
   
   <entry>
     <title>ARP协议</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/09/15/9-15%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/09/15/9-15技术笔记/</id>
+    <link href="https://arvenseyz.github.io/2020/09/15/9-15%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2020/09/15/9-15技术笔记/</id>
     <published>2020-09-15T11:58:52.000Z</published>
     <updated>2020-09-15T12:16:02.347Z</updated>
     
@@ -222,17 +247,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="计算机网络" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
+      <category term="计算机网络" scheme="https://arvenseyz.github.io/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
     
   </entry>
   
   <entry>
     <title>散列函数</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/09/09/9-9%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/09/09/9-9技术笔记/</id>
+    <link href="https://arvenseyz.github.io/2020/09/09/9-9%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2020/09/09/9-9技术笔记/</id>
     <published>2020-09-09T07:56:30.000Z</published>
     <updated>2020-09-09T08:20:58.373Z</updated>
     
@@ -248,17 +273,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="数据结构" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/"/>
+      <category term="数据结构" scheme="https://arvenseyz.github.io/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/"/>
     
   </entry>
   
   <entry>
     <title>redis主从，哨兵，集群</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/09/02/9-2%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/09/02/9-2技术笔记/</id>
+    <link href="https://arvenseyz.github.io/2020/09/02/9-2%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2020/09/02/9-2技术笔记/</id>
     <published>2020-09-02T09:21:40.000Z</published>
     <updated>2020-09-08T07:42:41.887Z</updated>
     
@@ -274,17 +299,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="redis" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/redis/"/>
+      <category term="redis" scheme="https://arvenseyz.github.io/tags/redis/"/>
     
   </entry>
   
   <entry>
     <title>RDB</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/08/27/8-27%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/08/27/8-27技术笔记-1/</id>
+    <link href="https://arvenseyz.github.io/2020/08/27/8-27%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>https://arvenseyz.github.io/2020/08/27/8-27技术笔记-1/</id>
     <published>2020-08-27T12:22:45.000Z</published>
     <updated>2020-08-27T12:57:23.059Z</updated>
     
@@ -300,17 +325,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="redis" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/redis/"/>
+      <category term="redis" scheme="https://arvenseyz.github.io/tags/redis/"/>
     
   </entry>
   
   <entry>
     <title>范围查询与索引</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/08/25/8-25%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/08/25/8-25技术笔记/</id>
+    <link href="https://arvenseyz.github.io/2020/08/25/8-25%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2020/08/25/8-25技术笔记/</id>
     <published>2020-08-25T06:21:11.000Z</published>
     <updated>2020-08-25T09:48:52.857Z</updated>
     
@@ -325,17 +350,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="数据库" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+      <category term="数据库" scheme="https://arvenseyz.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
     
   </entry>
   
   <entry>
     <title>AOF</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/08/18/8-18%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/08/18/8-18技术笔记/</id>
+    <link href="https://arvenseyz.github.io/2020/08/18/8-18%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2020/08/18/8-18技术笔记/</id>
     <published>2020-08-18T12:30:55.000Z</published>
     <updated>2020-08-27T12:57:25.831Z</updated>
     
@@ -351,17 +376,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="redis" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/redis/"/>
+      <category term="redis" scheme="https://arvenseyz.github.io/tags/redis/"/>
     
   </entry>
   
   <entry>
     <title>redis单线程原理</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/08/14/8-14%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-2/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/08/14/8-14技术笔记-2/</id>
+    <link href="https://arvenseyz.github.io/2020/08/14/8-14%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-2/"/>
+    <id>https://arvenseyz.github.io/2020/08/14/8-14技术笔记-2/</id>
     <published>2020-08-14T06:00:21.000Z</published>
     <updated>2020-08-14T06:24:15.164Z</updated>
     
@@ -378,17 +403,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="redis" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/redis/"/>
+      <category term="redis" scheme="https://arvenseyz.github.io/tags/redis/"/>
     
   </entry>
   
   <entry>
     <title>两协程轮流打印</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/08/07/8-7%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/08/07/8-7技术笔记-1/</id>
+    <link href="https://arvenseyz.github.io/2020/08/07/8-7%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>https://arvenseyz.github.io/2020/08/07/8-7技术笔记-1/</id>
     <published>2020-08-07T10:22:00.000Z</published>
     <updated>2020-08-14T06:00:59.021Z</updated>
     
@@ -406,14 +431,14 @@
     </summary>
     
     
-      <category term="Go" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/Go/"/>
+      <category term="Go" scheme="https://arvenseyz.github.io/tags/Go/"/>
     
   </entry>
   
   <entry>
     <title>蓄水池采样算法</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/08/06/8-6%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/08/06/8-6技术笔记/</id>
+    <link href="https://arvenseyz.github.io/2020/08/06/8-6%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2020/08/06/8-6技术笔记/</id>
     <published>2020-08-06T08:57:36.000Z</published>
     <updated>2020-08-06T12:23:15.817Z</updated>
     
@@ -431,17 +456,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="算法" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/%E7%AE%97%E6%B3%95/"/>
+      <category term="算法" scheme="https://arvenseyz.github.io/tags/%E7%AE%97%E6%B3%95/"/>
     
   </entry>
   
   <entry>
     <title>join中on和where的区别</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/07/21/7-21%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/07/21/7-21技术笔记/</id>
+    <link href="https://arvenseyz.github.io/2020/07/21/7-21%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2020/07/21/7-21技术笔记/</id>
     <published>2020-07-21T02:36:35.000Z</published>
     <updated>2020-07-21T03:51:18.492Z</updated>
     
@@ -458,17 +483,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="数据库" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+      <category term="数据库" scheme="https://arvenseyz.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
     
   </entry>
   
   <entry>
     <title>undo日志</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/06/08/6-8%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/06/08/6-8技术笔记/</id>
+    <link href="https://arvenseyz.github.io/2020/06/08/6-8%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2020/06/08/6-8技术笔记/</id>
     <published>2020-06-08T07:14:53.000Z</published>
     <updated>2020-06-08T08:06:34.471Z</updated>
     
@@ -483,17 +508,17 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="数据库" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+      <category term="数据库" scheme="https://arvenseyz.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
     
   </entry>
   
   <entry>
     <title>redo日志</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/06/02/6-2%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/06/02/6-2技术笔记/</id>
+    <link href="https://arvenseyz.github.io/2020/06/02/6-2%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2020/06/02/6-2技术笔记/</id>
     <published>2020-06-02T08:03:42.000Z</published>
     <updated>2020-06-08T07:18:47.244Z</updated>
     
@@ -508,46 +533,10 @@
     
     </summary>
     
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
     
     
-      <category term="数据库" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>&lt;form&gt; 标签的 enctype</title>
-    <link href="https://github.com/arvenseyz/arvenseyz.github.io/2020/06/01/6-1%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://github.com/arvenseyz/arvenseyz.github.io/2020/06/01/6-1技术笔记/</id>
-    <published>2020-06-01T08:43:41.000Z</published>
-    <updated>2020-06-01T08:56:29.558Z</updated>
-    
-    <content type="html"><![CDATA[<table><thead><tr><th>值</th><th>描述</th></tr></thead><tbody><tr><td>application/x-www-form-urlencoded</td><td>在发送前编码所有字符（默认）</td></tr><tr><td>multipart/form-data</td><td>不对字符编码。数据通过二进制的形式传送。</td></tr><tr><td>text/plain</td><td>空格转换为 “+” 加号，但不对特殊字符编码。</td></tr></tbody></table><p>在Form元素的语法中，EncType表明提交数据的格式 用 Enctype 属性指定将数据回发到服务器时浏览器使用的编码类型。 例如： application/x-www-form-urlencoded： 窗体数据被编码为名称/值对。这是标准的编码格式。 multipart/form-data： 窗体数据被编码为一条消息，页上的每个控件对应消息中的一个部分，这个一般文件上传时用。浏览器会把整个表单以控件为单位分割，并为每个部分加上Content-Disposition(form-data或者file),Content-Type(默认为text/plain),name(控件name)等信息，并加上分割符(boundary)。</p><p> text/plain： 窗体数据以纯文本形式进行编码，其中不含任何控件或格式字符</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;table&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;值&lt;/th&gt;
-&lt;th&gt;描述&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;application/x-www-form-urlencoded&lt;/td&gt;
-&lt;td&gt;在发送前编码所有字符（默认）&lt;/td&gt;
-&lt;
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://github.com/arvenseyz/arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="计算机网络" scheme="https://github.com/arvenseyz/arvenseyz.github.io/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
+      <category term="数据库" scheme="https://arvenseyz.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
     
   </entry>
   

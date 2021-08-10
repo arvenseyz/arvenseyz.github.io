@@ -1,0 +1,554 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Arvense</title>
+  
+  
+  <link href="/arvenseyz.github.io/atom.xml" rel="self"/>
+  
+  <link href="http://yoursite.com/"/>
+  <updated>2021-01-14T07:59:24.965Z</updated>
+  <id>http://yoursite.com/</id>
+  
+  <author>
+    <name>Arvense</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>缓存的数据一致性问题</title>
+    <link href="http://yoursite.com/2021/01/14/1-14%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2021/01/14/1-14技术笔记/</id>
+    <published>2021-01-14T07:13:03.000Z</published>
+    <updated>2021-01-14T07:59:24.965Z</updated>
+    
+    <content type="html"><![CDATA[<p> 一般来说，缓存有以下三种模式：</p><ul><li><p>Cache Aside 更新模式</p></li><li><p>Read/Write Through 更新模式</p></li><li><p>Write Behind Caching 更新模式</p></li></ul><p>通俗一点来讲就是，同时更新缓存和数据库（Cache Aside 更新模式）；先更新缓存，缓存负责同步更新数据库（Read/Write Through 更新模式）；先更新缓存，缓存定时异步更新数据库（Write Behind Caching 更新模式）</p><h1 id="Cache-Aside-旁路缓存-策略"><a href="#Cache-Aside-旁路缓存-策略" class="headerlink" title="Cache Aside(旁路缓存)策略"></a>Cache Aside(旁路缓存)策略</h1><h2 id="更新缓存的问题"><a href="#更新缓存的问题" class="headerlink" title="更新缓存的问题"></a>更新缓存的问题</h2><p>首先是缓存更新还是删除，采用删除，原因有两点：</p><ol><li><p>对于对象类型，或者文本类型，修改缓存value的成本较高。</p></li><li><p>有并发问题。</p></li></ol><p>即同时有请求A和请求B进行更新操作，那么会出现<br>（1）线程A更新了数据库<br>（2）线程B更新了数据库<br>（3）线程B更新了缓存<br>（4）线程A更新了缓存<br>这就出现请求A更新缓存应该比请求B更新缓存早才对，但是因为网络等原因，B却比A更早更新了缓存。这就导致了脏数据，因此不考虑。</p><h2 id="先删缓存的问题"><a href="#先删缓存的问题" class="headerlink" title="先删缓存的问题"></a>先删缓存的问题</h2><p>其次是先删缓存还是先改数据库。</p><p>都有问题。</p><p>先删缓存问题如下：</p><h3 id="并发问题"><a href="#并发问题" class="headerlink" title="并发问题"></a>并发问题</h3><p>同时有一个请求A进行更新操作，另一个请求B进行查询操作。那么会出现如下情形:<br>（1）请求A进行写操作，删除缓存<br>（2）请求B查询发现缓存不存在<br>（3）请求B去数据库查询得到旧值<br>（4）请求B将旧值写入缓存<br>（5）请求A将新值写入数据库<br>上述情况就会导致不一致的情形出现。而且，如果不采用给缓存设置过期时间策略，该数据永远都是脏数据。</p><h3 id="主从同步问题"><a href="#主从同步问题" class="headerlink" title="主从同步问题"></a>主从同步问题</h3><p>两个请求，一个请求A进行更新操作，另一个请求B进行查询操作。  </p><p>（1）请求A进行写操作，删除缓存<br>（2）请求A将数据写入数据库了，<br>（3）请求B查询缓存发现，缓存没有值<br>（4）请求B去从库查询，这时，还没有完成主从同步，因此查询到的是旧值<br>（5）请求B将旧值写入缓存<br>（6）数据库完成主从同步，从库变为新值</p><h3 id="异步双删"><a href="#异步双删" class="headerlink" title="异步双删"></a>异步双删</h3><p>等一定时间（主从同步时间）后，再次删除</p><h2 id="先更新数据库的问题"><a href="#先更新数据库的问题" class="headerlink" title="先更新数据库的问题"></a>先更新数据库的问题</h2><h3 id="原子性问题"><a href="#原子性问题" class="headerlink" title="原子性问题"></a>原子性问题</h3><p>更新数据库成功，删除缓存失败，不好处理。</p><h3 id="并发问题-1"><a href="#并发问题-1" class="headerlink" title="并发问题"></a>并发问题</h3><p>假设这会有两个请求，一个请求A做查询操作，一个请求B做更新操作，那么会有如下情形产生<br>（1）缓存刚好失效<br>（2）请求A查询数据库，得一个旧值<br>（3）请求B将新值写入数据库<br>（4）请求B删除缓存<br>（5）请求A将查到的旧值写入缓存<br>ok，如果发生上述情况，确实是会发生脏数据。</p><p>但是这种问题，出现在写操作比读操作慢，一般不会发生。</p><h3 id="异步双删-1"><a href="#异步双删-1" class="headerlink" title="异步双删"></a>异步双删</h3><p>也可以解决这个问题。</p><p>异步第二次删除失败怎么处理，搞个失败队列啥的。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt; 一般来说，缓存有以下三种模式：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Cache Aside 更新模式&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Read/Write Through 更新模式&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Write Behind Caching 更新模式&lt;/p&gt;
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="redis" scheme="http://yoursite.com/tags/redis/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>mongo分布式一致性</title>
+    <link href="http://yoursite.com/2020/12/30/12-30%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/12/30/12-30技术笔记/</id>
+    <published>2020-12-30T03:07:26.000Z</published>
+    <updated>2020-12-30T07:05:33.879Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="CAP与BASE"><a href="#CAP与BASE" class="headerlink" title="CAP与BASE"></a>CAP与BASE</h1><p>CAP原理为基础，实际上现在大部分系统都是BASE的，其实BASE很好理解，即基本可用，最终一致。是一种可用性与一致性平衡的状态。</p><p>具体在实践中，指：一主多从，主写从读，主挂了切从，选举的时候只能读不能写（基本可用），从库不保证能读到刚写入的数据。</p><p>这里个角度看，mongo的分布式一致性与mysql主从架构是一致的。</p><p>mongo现在使用的是副本集形式。</p><p>集群拥有一个主节点和多个从节点，这一点与主从复制模式类似，且主从节点所负责的工作也类似，但是副本集与主从复制的区别在于：当集群中主节点发生故障时，副本集可以自动投票，选举出新的主节点，并引导其余的从节点连接新的主节点，而且这个过程对应用是透明的。  </p><h1 id="Replica-Set"><a href="#Replica-Set" class="headerlink" title="Replica Set"></a>Replica Set</h1><p>可以说，MongoDB 的副本集是自带故障转移功能的主从复制。  </p><p>MongoDB 副本集使用的是 N 个 mongod 节点构建的具备自动容错功能、自动恢复功能的高可用方案。在副本集中，任何节点都可作为主节点，但为了维持数据一致性，只能有一个主节点。  </p><p>主节点负责数据的写入和更新，并在更新数据的同时，将操作信息写入名为 oplog 的日志文件当中。主节点还负责指定其他节点为从节点，并设置从节点数据的可读性，从而让从节点来分担集群读取数据的压力。  </p><p>另外，从节点会定时轮询读取 oplog 日志，根据日志内容同步更新自身的数据，保持与主节点一致。  </p><p>在一些场景中，用户还可以使用副本集来扩展读性能，客户端有能力发送读写操作给不同的服务器，也可以在不同的数据中心获取不同的副本来扩展分布式应用的能力。  </p><p>在副本集中还有一个额外的仲裁节点（不需要使用专用的硬件设备），负责在主节点发生故障时，参与选举新节点作为主节点。  选举使用的是raft算法。</p><p>副本集中的各节点会通过心跳信息来检测各自的健康状况，当主节点出现故障时，多个从节点会触发一次新的选举操作，并选举其中一个作为新的主节点。为了保证选举票数不同，副本集的节点数保持为奇数。</p><h1 id="读写一致性"><a href="#读写一致性" class="headerlink" title="读写一致性"></a>读写一致性</h1><h2 id="swrite-concern"><a href="#swrite-concern" class="headerlink" title="swrite-concern"></a>swrite-concern</h2><p><a href="https://imgchr.com/i/rLib0f" target="_blank" rel="noopener"><img src="https://s3.ax1x.com/2020/12/30/rLib0f.png" alt="rLib0f.png"></a></p><p>　write concern表示对于写操作，MongoDB在什么情况下给予客户端响应。包括下面三个字段：</p><blockquote><p>　　{ w: <value>, j: <boolean>, wtimeout: <number> }</number></boolean></value></p></blockquote><p>先看journal，默认开启，即写入了日志文件再返回，不然就是写入了内存就返回了。</p><p>指定超时等待写入咨询Write concern的写操作仅表示所需数量的副本集成员未在wtimeout时间段内确认写操作。它不一定表示主节点Primary未能应用写入。</p><p>w: 表示当写请求在value个MongoDB实例处理之后才向客户端返回。取值范围：</p><p>0表示直接返回，显然性能高，容易丢数据。</p><p>1是默认值，即写入主节点返回。</p><p>majority是指写入从的大部分节点才返回。</p><p>一般默认配置是，write concern为1，journal为true，这样宕机也能通过journal找回数据，但是依然会丢数据。即主库刚写入就挂了，新选的从库没有这条数据了。</p><h2 id="Read-preference"><a href="#Read-preference" class="headerlink" title="Read preference"></a>Read preference</h2><p>读跟写不一样，为了保持一致性，写只能通过主节点，但读可以选择主节点，也可以选择副本节点，区别是主节点数据最新，副本节点因为同步问题可能会有延迟，但从副本节点读取数据可以分散对主节点的压力。</p><p>读偏好指的是读主还是读从，可以想象到有这么四种，强制读主，优先读主，强制读从，优先读从。还有第五种，主从一致，基于延迟选择。</p><h2 id="read-concern"><a href="#read-concern" class="headerlink" title="read concern"></a>read concern</h2><p>有三个级别，local和majority以及linearizable。</p><p>majority  的初衷在于解决『脏读』的问题，比如用户从 MongoDB 的 primary 上读取了某一条数据，但这条数据并没有同步到大多数节点，然后 primary 就故障了，重新恢复后 这个primary 节点会将未同步到大多数节点的数据回滚掉，导致用户读到了『脏数据』。</p><p>当指定 readConcern 级别为 majority 时，能保证用户读到的数据『已经写入到大多数节点』，而这样的数据肯定不会发生回滚，避免了脏读的问题。</p><p>需要注意的是，<code>majority</code> 能保证读到的数据『不会发生回滚』，但并不能保证读到的数据是最新的，无论何种级别的 <code>majority</code>，客户端都只会从『某一个确定的节点』（具体是哪个节点由 readPreference 决定）读取数据，该节点根据自己看到的同步状态视图，只会返回已经同步到大多数节点的数据。</p><p>（因为他还不知道大多数节点已经更新了）</p><p><a href="https://www.docs4dev.com/docs/en/mongodb/v3.6/reference/reference-read-concern-majority.html" target="_blank" rel="noopener">https://www.docs4dev.com/docs/en/mongodb/v3.6/reference/reference-read-concern-majority.html</a></p><p>其实majority是有bug的，就是无法面对网络分区的所带来的多主问题，出现了解决方案，即“<strong>线性化</strong>”读取问题。使用此属性，mongo会在发出读取操作的结果之前检查其主节点并查看大多数节点。但是，对于“多数”使用此“读取关注点”会有性能成本的损失，因此这不能替代“多数”读取关注点。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;CAP与BASE&quot;&gt;&lt;a href=&quot;#CAP与BASE&quot; class=&quot;headerlink&quot; title=&quot;CAP与BASE&quot;&gt;&lt;/a&gt;CAP与BASE&lt;/h1&gt;&lt;p&gt;CAP原理为基础，实际上现在大部分系统都是BASE的，其实BASE很好理解，即基本可用，最终
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="分布式" scheme="http://yoursite.com/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"/>
+    
+      <category term="mongo" scheme="http://yoursite.com/tags/mongo/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>mongo索引</title>
+    <link href="http://yoursite.com/2020/12/29/12-29%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>http://yoursite.com/2020/12/29/12-29技术笔记-1/</id>
+    <published>2020-12-29T03:57:43.000Z</published>
+    <updated>2020-12-29T07:06:28.979Z</updated>
+    
+    <content type="html"><![CDATA[<p>在现在的引擎即wiredTiger下，mongo索引也用的是B+树。</p><h1 id="为什么要用B-树"><a href="#为什么要用B-树" class="headerlink" title="为什么要用B+树"></a>为什么要用B+树</h1><p>原因和mysql一样，B+树很宽，这样树很扁，减少了磁盘io。</p><h1 id="B-树什么样子的"><a href="#B-树什么样子的" class="headerlink" title="B+树什么样子的"></a>B+树什么样子的</h1><p><a href="https://imgchr.com/i/rHRpfx" target="_blank" rel="noopener"><img src="https://s3.ax1x.com/2020/12/29/rHRpfx.png" alt="rHRpfx.png"></a></p><p>在整个B-Tree中，从上往下依次为Root结点、内部结点和叶子结点，每个结点就是一个Page，数据以Page为单位在内存和磁盘间进行调度，每个Page的大小决定了相应结点的分支数量，每条索引记录会包含一个数据指针，指向一条数据记录所在文件的偏移量。</p><p>如上图，假设每个结点100个分支，那么所有叶子结点合起来可以包含100万个键值（等于100<em>100</em>100）。通常情况下Root结点和内部结点的Page会驻留在内存中，所以查找一条数据可能只需2次磁盘I/O。但随着数据不断的插入、删除，会涉及到B-Tree结点的分裂、位置提升及合并等操作，因此维护一个B-Tree的平衡也是比较耗时的。</p><p>B<strong>+</strong> Tree中的leaf page包含一个页头（page header）、块头（block header）和真正的数据（key/value），其中页头定义了页的类型、页中实际载荷数据的大小、页中记录条数等信息；块头定义了此页的checksum、块在磁盘上的寻址位置等信息。</p><p>WiredTiger有一个块设备管理的模块，用来为page分配block。如果要定位某一行数据（key/value）的位置，可以先通过block的位置找到此page（相对于文件起始位置的偏移量），再通过page找到行数据的相对位置，最后可以得到行数据相对于文件起始位置的偏移量offsets。由于offsets是一个8字节大小的变量，所以WiredTiger磁盘文件的大小，其最大值可以非常大(2^64bit)。</p><h1 id="叶子节点里有什么"><a href="#叶子节点里有什么" class="headerlink" title="叶子节点里有什么"></a>叶子节点里有什么</h1><p><a href="https://imgchr.com/i/rH4CUH" target="_blank" rel="noopener"><img src="https://s3.ax1x.com/2020/12/29/rH4CUH.png" alt="rH4CUH.png"></a></p><p>对数据的查询，修改，新增，都是先到内存，后到磁盘。</p><ul><li><p>内存上的leaf page会维护一个WT_ROW结构的数组变量，将保存从磁盘leaf page读取的keys/values值，每一条记录还有一个cell_offset变量，表示这条记录在page上的偏移量；</p></li><li><p>内存上的leaf page会维护一个WT_UPDATE结构的数组变量，每条被修改的记录都会有一个数组元素与之对应，如果某条记录被多次修改，则会将所有修改值以链表形式保存。</p></li><li><p>内存上的leaf page会维护一个WT_INSERT_HEAD结构的数组变量，具体插入的data会保存在WT_INSERT_HEAD结构中的WT_UPDATE属性上，且通过key属性的offset和size可以计算出此条记录待插入的位置；同时，为了提高寻找待插入位置的效率，每个WT_INSERT_HEAD变量以跳转链表的形式构成。</p></li></ul><h1 id="索引分类"><a href="#索引分类" class="headerlink" title="索引分类"></a>索引分类</h1><h2 id="id-字段索引"><a href="#id-字段索引" class="headerlink" title="_id 字段索引"></a>_id 字段索引</h2><p>默认情况下，MongoDB 在创建一个 collection 的时候，会创建一个 _id 字段，该字段是一个唯一索引，保证不会重复插入两份相同的 documents；同时，该字段是不允许被删除的；</p><h2 id="单字段和复合索引"><a href="#单字段和复合索引" class="headerlink" title="单字段和复合索引"></a>单字段和复合索引</h2><p>类似与mysql。还能指定顺序，sort时也走索引。</p><h2 id="数组索引"><a href="#数组索引" class="headerlink" title="数组索引"></a>数组索引</h2><p>如果为一个数组类型的key建立了索引，实际上是给数组中的每一个元素建立了一条索引。</p><p>可以为某个数组字段的每一个元素建立索引，但有限制</p><ol><li><p>不能同时在两个数组字段上建立一个复合索引</p></li><li><p>不能使用数组索引( Multikey Indexes )来做为分片主键( Sharded Key )</p></li><li><p>不能用作 Hashed Indexes</p></li><li><p>如果查询条件是需要完整匹配整个数组的元素，包含顺序；那么这个时候，数组索引只能作用到第一个查询元素上，它会查询所有的数组中包含该元素的数组，然后再从这些数组中依次匹配，找到完全匹配的数组项</p></li></ol><h1 id="索引变种"><a href="#索引变种" class="headerlink" title="索引变种"></a>索引变种</h1><h2 id="唯一索引"><a href="#唯一索引" class="headerlink" title="唯一索引"></a>唯一索引</h2><p>同mysql，也支持联合unique。</p><h2 id="部分索引"><a href="#部分索引" class="headerlink" title="部分索引"></a>部分索引</h2><p>有时候，如果对所有的数据都创建索引，非常浪费资源而且可能会导致性能问题；所以，通过 Partial Indexes 可以通过对需要被索引的字段设置过滤条件，进而只在该字段的部分数据集上创建索引，有针对性的提升查询性能。</p><h2 id="稀疏索引"><a href="#稀疏索引" class="headerlink" title="稀疏索引"></a>稀疏索引</h2><p>MongoDB 中同一个 collection M 中的不同 document 的结构是随性的，是可以不相同的，document A 可以包含 Field X 但是 document B 可以不包含 Field X，包含的却是另外一个字段 Field X；所以，假设，我们按照常规索引的方式对 Field X 创建索引，这个时候，MongoDB 会对整个 collection M 中的记录创建索引，当 document B 不存在该字段 Field X 的时候，会使用 X = <code>null</code> 的方式为其同样的创建索引；这样的话，就造成了不必要的空间浪费，所以，稀疏索引既是 Sparse Indexes 诞生了，它诞生的目的就是为了解决上述的情况，当 document B 不存在 Field X 的时候，直接将该记录跳过，不为该记录其创建任何索引；</p><h2 id="生死索引-Time-To-Alive-Indexes-TTL-Indexes"><a href="#生死索引-Time-To-Alive-Indexes-TTL-Indexes" class="headerlink" title="生死索引( Time To Alive Indexes, TTL Indexes )"></a>生死索引( Time To Alive Indexes, TTL Indexes )</h2><p>TTL index 是在某个<code>日期字段</code>上所创建的一种索引，其作用是，为其设置声明时间，如果超过了声明时间，那么 MongoDB 将会自动的去删除该记录( document )；</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;在现在的引擎即wiredTiger下，mongo索引也用的是B+树。&lt;/p&gt;
+&lt;h1 id=&quot;为什么要用B-树&quot;&gt;&lt;a href=&quot;#为什么要用B-树&quot; class=&quot;headerlink&quot; title=&quot;为什么要用B+树&quot;&gt;&lt;/a&gt;为什么要用B+树&lt;/h1&gt;&lt;p&gt;原因和m
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="mongo" scheme="http://yoursite.com/tags/mongo/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>mongo的数据类型和bson</title>
+    <link href="http://yoursite.com/2020/12/28/12-28%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/12/28/12-28技术笔记/</id>
+    <published>2020-12-28T02:32:52.000Z</published>
+    <updated>2020-12-28T06:51:56.750Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="bosn"><a href="#bosn" class="headerlink" title="bosn"></a>bosn</h1><p>mongo的数据格式很像json，但是有所不同，因为json有所缺陷，</p><p>例如,JSON没有日期类型,只有一种数字类型,无法区分浮点数和整数,更别说区分32为和64位数字了。再者,JSON无法表示其他一些通用类型,如正则表达式或函数。所以mongo使用的bson，相当于是json在类型上进行了扩展。</p><h1 id="数字类型"><a href="#数字类型" class="headerlink" title="数字类型"></a>数字类型</h1><p>值得说明的是其数字类型，mongoDb默认将数字认为double类型，如果想使用其他的类型，需要使用转化函数。</p><p>值得注意的是，mongodb shell实际上是一个js引擎，使用数字时，是先转化成double，继续转，所以可能先失真了一次。例如大整数时失真。</p><h1 id="type-运算符"><a href="#type-运算符" class="headerlink" title="$type 运算符"></a>$type 运算符</h1><p>如果想获取 “col” 集合中 title 为 String 的数据，可以使用以下命令：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">db.col.find(&#123;&quot;title&quot; : &#123;$type : 2&#125;&#125;)</span><br><span class="line">或</span><br><span class="line">db.col.find(&#123;&quot;title&quot; : &#123;$type : &apos;string&apos;&#125;&#125;)</span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;bosn&quot;&gt;&lt;a href=&quot;#bosn&quot; class=&quot;headerlink&quot; title=&quot;bosn&quot;&gt;&lt;/a&gt;bosn&lt;/h1&gt;&lt;p&gt;mongo的数据格式很像json，但是有所不同，因为json有所缺陷，&lt;/p&gt;
+&lt;p&gt;例如,JSON没有日期类型,只有一种数
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="mongo" scheme="http://yoursite.com/tags/mongo/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>mongo简单查询</title>
+    <link href="http://yoursite.com/2020/12/24/12-24%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/12/24/12-24技术笔记/</id>
+    <published>2020-12-24T10:17:44.000Z</published>
+    <updated>2020-12-28T06:51:53.705Z</updated>
+    
+    <content type="html"><![CDATA[<p><a href="https://imgchr.com/i/r2lMgf" target="_blank" rel="noopener"><img src="https://s3.ax1x.com/2020/12/24/r2lMgf.jpg" alt="r2lMgf.jpg"></a></p><p>compass各参数解释如下：</p><p>filter：即筛选条件，相当于sql的where，kv写法即等于，其他需要：</p><figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123; field: &#123; $lt: value&#125; &#125;</span><br><span class="line">&#123; field: &#123; $gt: value&#125; &#125;</span><br><span class="line">&#123; field: &#123; $lte: value&#125; &#125;</span><br><span class="line">&#123; field: &#123; $gte: value&#125; &#125;</span><br></pre></td></tr></table></figure><p>project：相当于sql中的select，即需要哪些字段，kv写法，1是0否。</p><p>sort：排序方法。1升序，-1降序，可以多字段。</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123; username: -1, date: -1 &#125;</span><br></pre></td></tr></table></figure><p>skip，limit。即offset和limit。</p><p>collation。排序方法.归类允许用户为字符串比较指定特定于语言的规则，例如字母大写和重音符号的规则。比如汉字默认按二进制比较，相当于没有比。内置了按拼音比较的方式。   即图中的所在地。</p><p>and和or。and连着写就好，or需要用$or运算符</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">db.col.find(&#123;&quot;date&quot;: &#123;$gt:50&#125;, $or: [&#123;&quot;username&quot;: &quot;阿萨萨&quot;&#125;,&#123;&quot;title&quot;: &quot;StudentFile&quot;&#125;]&#125;).pretty()</span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;&lt;a href=&quot;https://imgchr.com/i/r2lMgf&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;&lt;img src=&quot;https://s3.ax1x.com/2020/12/24/r2lMgf.jpg&quot; alt=&quot;r2lMgf.jpg
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="mongo" scheme="http://yoursite.com/tags/mongo/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>mongo安装</title>
+    <link href="http://yoursite.com/2020/12/23/12-23%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/12/23/12-23技术笔记/</id>
+    <published>2020-12-23T08:50:57.000Z</published>
+    <updated>2020-12-28T06:51:55.334Z</updated>
+    
+    <content type="html"><![CDATA[<p>mongo有非常好的官方文档，以及还可以的翻译<a href="https://docs.mongoing.com/shu-ju-mo-xing/schema-validation" target="_blank" rel="noopener">https://docs.mongoing.com/shu-ju-mo-xing/schema-validation</a></p><p>安装按照其教程。</p><p>官方出品的客户端mongo compass并不好用，可以直接使用datagrip。</p><p>聚合函数使用 aggregate() 方法</p><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">db.opLog.aggregate(&#123;$match: &#123;</span><br><span class="line">  "timestamp" : &#123;$gte:new Date("2016-12-11T00:00:00.000Z")&#125;</span><br><span class="line">&#125;&#125;, &#123;$group: &#123;</span><br><span class="line">  _id: "$user_name",</span><br><span class="line">  num: &#123;</span><br><span class="line">    $sum: 1</span><br><span class="line">  &#125;</span><br><span class="line">&#125;&#125;, &#123;$sort: &#123;</span><br><span class="line">  "num": -1</span><br><span class="line">&#125;&#125;, &#123;$limit: 20&#125;)</span><br></pre></td></tr></table></figure><p>即</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">num</span> </span><br><span class="line"><span class="keyword">from</span> opLog</span><br><span class="line"><span class="keyword">where</span> <span class="built_in">timestamp</span>&gt;<span class="string">'2016-12-11T00:00:00.000Z'</span></span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> <span class="string">'user_name'</span></span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> <span class="keyword">num</span> <span class="keyword">desc</span></span><br><span class="line"><span class="keyword">limit</span> <span class="number">20</span></span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;mongo有非常好的官方文档，以及还可以的翻译&lt;a href=&quot;https://docs.mongoing.com/shu-ju-mo-xing/schema-validation&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;https://docs.m
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="mongo" scheme="http://yoursite.com/tags/mongo/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>kafka文件存储</title>
+    <link href="http://yoursite.com/2020/09/22/9-22%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>http://yoursite.com/2020/09/22/9-22技术笔记-1/</id>
+    <published>2020-09-22T12:07:38.000Z</published>
+    <updated>2020-09-22T12:44:11.689Z</updated>
+    
+    <content type="html"><![CDATA[<p>partition对应一个文件夹，partition会分割成一个一个的segment，它们大小相等。</p><p><img src="/images/partition.jpg" alt="partition"></p><p>每个segment还有两个索引文件，偏移量索引和时间戳索引。</p><p>segment的命名体现了其offset，比如00000000000000368769.log。</p><p>想要找到offset在哪个索引中，只需要在offset<strong>二分查找</strong>文件列表，就可以找到对应的索引文件。</p><p>segment index file采取稀疏索引存储方式，也就是说，并不是所有的offset都会被索引，从中按照个数/大小间隔选一些来索引即可。它比稠密索引节省了更多的存储空间，但查找起来需要消耗更多的时间。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;partition对应一个文件夹，partition会分割成一个一个的segment，它们大小相等。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/partition.jpg&quot; alt=&quot;partition&quot;&gt;&lt;/p&gt;
+&lt;p&gt;每个segment还有两个索引文件，偏移量索
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="消息队列" scheme="http://yoursite.com/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>ARP协议</title>
+    <link href="http://yoursite.com/2020/09/15/9-15%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/09/15/9-15技术笔记/</id>
+    <published>2020-09-15T11:58:52.000Z</published>
+    <updated>2020-09-15T12:16:02.347Z</updated>
+    
+    <content type="html"><![CDATA[<p>在网络中通讯，都是知道对方的IP地址后，才能发起连接，IP地址所在的层是网络层，而在网络层下面是数据链路层，这里IP数据包继续被封装成以太网数据帧，当然还有别的数据链路层格式，但是数据链路层也需要寻址机制，常常就是48bit的硬件地址,又叫MAC地址。</p><p>主机 A 与主机 B 进行通信，需要获取其 MAC 地址，基本流程如下：</p><ul><li>主机 A 以广播形式向局域网中所有主机发送 ARP 请求，请求包中包含了目标 IP 地址 192.168.1.2。</li><li>主机 B 接收到请求，发现自己就是主机 A 要找的主机，返回响应，响应包中包含自己的 MAC 地址。</li></ul><p>为了避免重复发送 ARP 请求，每台主机都有一个 ARP 高速缓存。当主机得到 ARP 响应后，将目标主机的 IP 地址和物理地址存入本机 ARP 缓存中，并保留一定时间。  </p><p>只要在这个时间范围内，下次请求 MAC 地址时，直接查询 ARP 缓存，而无须再发送 ARP 请求，从而节约了网络资源。</p><p>如果ARP请求是从一个网络主机发送到另一个网络主机，那么连接这两个主机的路由器就可以回答该请求，这个过程称为委托ARP或者ARP代理。</p><p>我们知道IP路由选择，如果主机不相连，我们就把数据报发送到一默认路由上，由路由器来转发该数据报。在ARP协议中，我们发往网络的请求主机物理地址也会由路由器回答，得到的就是路由器的物理地址，发送方就根据这个物理地址把数据报发送到路由器，由路由器转发，再下面的事情由路由器完成，那是属于IP协议的事了，当然在那个过程中，也不断使用ARP协议获取每一步的物理地址。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;在网络中通讯，都是知道对方的IP地址后，才能发起连接，IP地址所在的层是网络层，而在网络层下面是数据链路层，这里IP数据包继续被封装成以太网数据帧，当然还有别的数据链路层格式，但是数据链路层也需要寻址机制，常常就是48bit的硬件地址,又叫MAC地址。&lt;/p&gt;
+&lt;p&gt;主机 
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="计算机网络" scheme="http://yoursite.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>散列函数</title>
+    <link href="http://yoursite.com/2020/09/09/9-9%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/09/09/9-9技术笔记/</id>
+    <published>2020-09-09T07:56:30.000Z</published>
+    <updated>2020-09-09T08:20:58.373Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="线性探测法"><a href="#线性探测法" class="headerlink" title="线性探测法"></a>线性探测法</h2><p>思路很简单，如果发生哈希冲突，那么看一下【下一个】位置，如果有空，那么就放在下一个，没空，继续迭代。</p><p>问题不在插入，而在于搜索和删除。</p><p>我们将检查表中是否存在与搜索关键字匹配的元素成为探测。线性探测法的特点是每次探测有3种可能结果：<br>（1）搜索命中（当前位置上的元素关键字与搜索关键字匹配，停止搜索），<br>（2）搜索失败（搜索位置为空，停止搜索），<br>（3）不匹配（搜索位置非空，但是不匹配，继续搜索下一位置）。</p><p>删除更麻烦。</p><p>因为当移走后形成的空位会导致其后面元素的搜索失败（空位终止向后搜索）。因此，应该将删除位置与其右边的下一个空位之间所有元素重新散列插入到表中。</p><p>可以想像到，当哈希表比较满时，搜索会很慢，删除代价会相当大。</p><h2 id="平方探测法"><a href="#平方探测法" class="headerlink" title="平方探测法"></a>平方探测法</h2><p>线性探测法还有个显而易见的问题，因为冲突总是取下一个空位，会导致数据比较集中。一个比较简单的改良是，冲突时不取下一个空位，而是加减平方。即看+-1，+-4的位置，会减少聚集。</p><h2 id="双重散列法"><a href="#双重散列法" class="headerlink" title="双重散列法"></a>双重散列法</h2><p>是对平方探测法的再次改进，即步进由另一个哈希函数决定。</p><p>即</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> newIndex = (index + i * index2) % TABLE_SIZE;</span><br></pre></td></tr></table></figure><p>但是删除问题更大，因为待删除关键字有可能影响整个表中的关键字，解决办法是：用一个观察哨代替已删除元素，表示该位置被占用，不与任何关键字匹配。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;线性探测法&quot;&gt;&lt;a href=&quot;#线性探测法&quot; class=&quot;headerlink&quot; title=&quot;线性探测法&quot;&gt;&lt;/a&gt;线性探测法&lt;/h2&gt;&lt;p&gt;思路很简单，如果发生哈希冲突，那么看一下【下一个】位置，如果有空，那么就放在下一个，没空，继续迭代。&lt;/p&gt;
+&lt;p&gt;
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="数据结构" scheme="http://yoursite.com/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>redis主从，哨兵，集群</title>
+    <link href="http://yoursite.com/2020/09/02/9-2%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/09/02/9-2技术笔记/</id>
+    <published>2020-09-02T09:21:40.000Z</published>
+    <updated>2020-09-08T07:42:41.887Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="主从"><a href="#主从" class="headerlink" title="主从"></a>主从</h1><p>最简单的主写从读结构，无法强保证一致性。</p><h2 id="首次同步"><a href="#首次同步" class="headerlink" title="首次同步"></a>首次同步</h2><p>主从第一次同步的方式是发送RDB文件，主从通过replicaof指令建立连接后，从库向主库发送psync命令，主库返回runID和目前的复制进度offset。</p><p>主库执行bgsave，生成RDB文件，从库按照收到的RDB来同步。</p><p>主从同步时，主库可能数据发生了变化，主库把变化的写操作，记录下来，即replication buffer，同步完后，再同步这些变化即可。</p><p>因为fork子进程是阻塞的，所以可以采用级连的方式，即从库从从库同步。</p><h2 id="断连恢复"><a href="#断连恢复" class="headerlink" title="断连恢复"></a>断连恢复</h2><p>当主从库断连后，主库会把断连期间收到的写操作命令，写入 replication buffer，同时也会把这些操作命令也写入 repl_backlog_buffer 这个环形缓冲区。</p><p>环形缓冲区记录了主库写和从库读的进度，从库断连恢复后，从该缓冲区，就可以追回进度。</p><p>然而有个问题，缓冲区是环形的，差距太大的话，还没同步的操作已经被覆盖了，就会有不一致。</p><h1 id="哨兵"><a href="#哨兵" class="headerlink" title="哨兵"></a>哨兵</h1><p>哨兵监控了主库状态，如果主库挂了，选一个从库来继续充当主库。</p><h2 id="判断主库存活"><a href="#判断主库存活" class="headerlink" title="判断主库存活"></a>判断主库存活</h2><p>哨兵实际上无法判读主库挂了，因为收不到心跳可能是网络问题。解决方法是多加几个哨兵，哨兵也是集群，集群来判断主库挂了。</p><p>哨兵集群部分节点挂了，那么哨兵集群还能工作吗？这个问题就是拜占庭将军问题。答案是，只要大多数节点正常的，就可以。</p><h2 id="选新主"><a href="#选新主" class="headerlink" title="选新主"></a>选新主</h2><p>哨兵集群判断出主库“主观下线”后，会选出一个“哨兵领导者”，之后整个过程由它来完成主从切换。  </p><p>但是如何选出“哨兵领导者”？即共识算法，指的是集群中多个节点如何就一个问题达成共识。共识算法有很多种，例如Paxos、Raft，这里哨兵集群采用的类似于Raft的共识算法。</p><p>选的过程两部，第一步筛选，即筛掉经常断连的从库。</p><p>第二步打分，依次按照优先级高，同步程度近，id小来打分，选出一个新的主库。</p><p>显然，会丢数据，无法保证一致性。</p><p>主故障时不可用，无法保证可用性。</p><h1 id="集群"><a href="#集群" class="headerlink" title="集群"></a>集群</h1><p>集群是把数据分开存，采用的是哈希槽的形式，即把16384哈希槽分给实例，key对16384取模，拿到哈希槽。</p><p>所以客户端需要知道哈希槽在哪个实例。</p><p>一般来说，客户端和集群实例建立连接后，实例就会把哈希槽的分配信息发给客户端。单Redis 实例会把自己的哈希槽信息发给和它相连接的其它实例，来完成哈希槽分配信息的扩散。当实例之间相互连接后，每个实例就有所有哈希槽的映射关系了。</p><p>客户端收到哈希槽信息后，会把哈希槽信息缓存在本地。当客户端请求键值对时，会先计算键所对应的哈希槽，然后就可以给相应的实例发送请求了。</p><p>如果实例有新增删除，导致槽对应的实例变化，请求实例时，会返回一个重定向，这样客户端可以更新缓存。</p><p>另一种情况是rehash，这时可能部分数据在一个实例，部分在另一个，也是靠实例返回ASK来交互。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;主从&quot;&gt;&lt;a href=&quot;#主从&quot; class=&quot;headerlink&quot; title=&quot;主从&quot;&gt;&lt;/a&gt;主从&lt;/h1&gt;&lt;p&gt;最简单的主写从读结构，无法强保证一致性。&lt;/p&gt;
+&lt;h2 id=&quot;首次同步&quot;&gt;&lt;a href=&quot;#首次同步&quot; class=&quot;headerli
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="redis" scheme="http://yoursite.com/tags/redis/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>RDB</title>
+    <link href="http://yoursite.com/2020/08/27/8-27%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>http://yoursite.com/2020/08/27/8-27技术笔记-1/</id>
+    <published>2020-08-27T12:22:45.000Z</published>
+    <updated>2020-08-27T12:57:23.059Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="RDB"><a href="#RDB" class="headerlink" title="RDB"></a>RDB</h1><p>rdb是内存快照，即把内存数据复制一份写入磁盘。</p><p>但是快照显然是耗时的，耗时的话，会阻塞主线程吗？如果采取bgsave的方式，redis会fork一个进程，来进行快照，从这里看是不会阻塞的，但是和AOF一样，虽然是新的进程来工作，但是fork这个动作本身是阻塞的。</p><p>虽然是新的进程来写入快照，但是写入快照的时候，如果数据还在更改，似乎就更不对了，那就不是快照了（但似乎也没问题？）。所以还是AOF中所说的，写时复制的技术，</p><p><img src="https://s1.ax1x.com/2020/08/27/d4bWdI.png" alt="d4bWdI.png"></p><p>bgsave 子进程是由主线程 fork 生成的，可以共享主线程的所有内存数据。bgsave 子进程运行后，开始读取主线程的内存数据，并把它们写入 RDB 文件。此时，如果主线程对这些数据也都是读操作（例如图中的键值对 A），那么，主线程和 bgsave 子进程相互不影响。但是，如果主线程要修改一块数据（例如图中的键值对 C），那么，这块数据就会被复制一份，生成该数据的副本。然后，bgsave 子进程会把这个副本数据写入 RDB 文件，而在这个过程中，主线程仍然可以直接修改原来的数据。</p><h1 id="现行策略"><a href="#现行策略" class="headerlink" title="现行策略"></a>现行策略</h1><p>简单来说，内存快照以一定的频率执行，在两次快照之间，使用 AOF 日志记录这期间的所有命令操作。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;RDB&quot;&gt;&lt;a href=&quot;#RDB&quot; class=&quot;headerlink&quot; title=&quot;RDB&quot;&gt;&lt;/a&gt;RDB&lt;/h1&gt;&lt;p&gt;rdb是内存快照，即把内存数据复制一份写入磁盘。&lt;/p&gt;
+&lt;p&gt;但是快照显然是耗时的，耗时的话，会阻塞主线程吗？如果采取bgsave
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="redis" scheme="http://yoursite.com/tags/redis/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>范围查询与索引</title>
+    <link href="http://yoursite.com/2020/08/25/8-25%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/08/25/8-25技术笔记/</id>
+    <published>2020-08-25T06:21:11.000Z</published>
+    <updated>2020-08-25T09:48:52.857Z</updated>
+    
+    <content type="html"><![CDATA[<p>最左前缀匹配原则，非常重要的原则，mysql会一直向右匹配直到遇到范围查询(&gt;、&lt;、between、like)就停止匹配，比如a = 1 and b = 2 and c &gt; 3 and d = 4 如果建立(a,b,c,d)顺序的索引，d是用不到索引的，如果建立(a,b,d,c)的索引则都可以用到，a,b,d的顺序可以任意调整。</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">   <span class="keyword">count</span>(*) </span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">   task </span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">   <span class="keyword">status</span>=<span class="number">2</span> </span><br><span class="line">   <span class="keyword">and</span> operator_id=<span class="number">20839</span> </span><br><span class="line">   <span class="keyword">and</span> operate_time&gt;<span class="number">1371169729</span> </span><br><span class="line">   <span class="keyword">and</span> operate_time&lt;<span class="number">1371174603</span> </span><br><span class="line">   <span class="keyword">and</span> <span class="keyword">type</span>=<span class="number">2</span>;</span><br></pre></td></tr></table></figure><p>如果索引是(operate_time,status,type,operator_id)，则只有operate_time参与索引。</p><p>即索引应该建为(status,type,operator_id,operate_time)。</p><p>总的来说，如果索引中某字段是范围查询，那么它应该在最后的字段。否则它右边的字段不参与索引。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;最左前缀匹配原则，非常重要的原则，mysql会一直向右匹配直到遇到范围查询(&amp;gt;、&amp;lt;、between、like)就停止匹配，比如a = 1 and b = 2 and c &amp;gt; 3 and d = 4 如果建立(a,b,c,d)顺序的索引，d是用不到索引的，如
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="数据库" scheme="http://yoursite.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>AOF</title>
+    <link href="http://yoursite.com/2020/08/18/8-18%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/08/18/8-18技术笔记/</id>
+    <published>2020-08-18T12:30:55.000Z</published>
+    <updated>2020-08-27T12:57:25.831Z</updated>
+    
+    <content type="html"><![CDATA[<p>都知道持久化有AOF和RDB两种，那么是什么的全称呢，AOF是Append Only File，RDB是Redis DataBase。</p><h2 id="AOF"><a href="#AOF" class="headerlink" title="AOF"></a>AOF</h2><h3 id="后写日志"><a href="#后写日志" class="headerlink" title="后写日志"></a>后写日志</h3><p><em>AOF</em>日志的<em>全称</em>是Append Only File,从名字上我们就能看出来,它是一个追加写入的日志文件。与数据库不同，redis为了性能，AOF是先写数据，后写日志，那么必然会有数据写成功了日志还没写的情况，redis为了性能，容忍丢数据。</p><h3 id="刷盘时机"><a href="#刷盘时机" class="headerlink" title="刷盘时机"></a>刷盘时机</h3><p>redis是用标准C写的，写日志调用的是write函数，其实并不是真正的写入磁盘了，操作系统会在内核缓存write做的修改，当然可以调用fsync函数强制os写入到磁盘。</p><p>调用fsync函数强制os写入到磁盘的时机有三种，显然性能越高可靠性越低。</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">appendonly yes              //启用aof持久化方式</span><br><span class="line"># appendfsync always      //每次收到写命令就立即强制写入磁盘，最慢的，但是保证完全的持久化，不推荐使用</span><br><span class="line">appendfsync everysec     //每秒钟强制写入磁盘一次，在性能和持久化方面做了很好的折中，推荐</span><br><span class="line"># appendfsync no    //完全依赖os，性能最好,持久化没保证</span><br></pre></td></tr></table></figure><h3 id="日志整理"><a href="#日志整理" class="headerlink" title="日志整理"></a>日志整理</h3><p>AOF一直往后面追加，日志文件为越来越大。比如对同一个key的操作，可以简化整理，方法如下。</p><p>redis调用fork，新起一个子进程，子进程不是根据老的日志文件进行整理，而是根据现在内存中的数据进行整理。</p><p>有这样一些细节：fork会让主进程把内存拷贝给子进程，拷贝不可能瞬间拷贝整个内存的，而是采用操作系统提供的写时复制(Copy On Write)机制，即先拷贝页表等数据结构，就是在写发生时，才真正拷贝内存真正的数据。</p><p>内存拷贝完成后，子进程开始处理，这时主进程依然在接受请求，父进程继续处理client请求，除了把写命令写入到原来的aof文件中。同时把收到的写命令缓存起来。这样就能保证如果子进程重写失败的话并不会出问题。当子进程把快照内容写入已命令方式写到临时文件中后，子进程发信号通知父进程。然后父进程把缓存的写命令也写入到临时文件。现在父进程可以使用临时文件替换老的aof文件，并重命名，后面收到的写命令也开始往新的aof文件中追加。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;都知道持久化有AOF和RDB两种，那么是什么的全称呢，AOF是Append Only File，RDB是Redis DataBase。&lt;/p&gt;
+&lt;h2 id=&quot;AOF&quot;&gt;&lt;a href=&quot;#AOF&quot; class=&quot;headerlink&quot; title=&quot;AOF&quot;&gt;&lt;/a&gt;AO
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="redis" scheme="http://yoursite.com/tags/redis/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>redis单线程原理</title>
+    <link href="http://yoursite.com/2020/08/14/8-14%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-2/"/>
+    <id>http://yoursite.com/2020/08/14/8-14技术笔记-2/</id>
+    <published>2020-08-14T06:00:21.000Z</published>
+    <updated>2020-08-14T06:24:15.164Z</updated>
+    
+    <content type="html"><![CDATA[<p>redis单线程指的是工作线程是单线程，还有很多辅助线程。</p><p>redis单线程快，合理的说法是，多线程不能提升redis性能，所以没必要使用多线程。</p><p>考虑单核处理器，多线程并不能增加cpu使用总时间，反而会增加上下文切换消耗。那为什么我们平时要多线程呢？</p><p>因为IO速度比cpu慢太多，多线程是为了防止/减少IO阻塞。</p><p>IO分为两部分，磁盘和网络，redis纯内存，没有IO。至于网络，redis用了select/epoll的多路复用，相当于多线程。（这里其实有优化空间，多路复用也可以多线程多路复用，redis6.0已经优化）。</p><p>考虑多核处理器的情况，多线程的确能并行使用多个cpu，但对于redis来说，cpu并不是瓶颈，，Redis的瓶颈最有可能是机器内存的大小或者网络带宽。既然单线程容易实现，而且CPU不会成为瓶颈，那就顺理成章地采用单线程的方案了。</p><h2 id="select-epoll"><a href="#select-epoll" class="headerlink" title="select/epoll"></a>select/epoll</h2><p><img src="https://s1.ax1x.com/2020/08/14/dCyZEq.jpg" alt="dCyZEq.jpg"></p><p>套接字，文件描述符什么的，目前还不懂。但简单的来说，是同时注册多个，基于回调，回调后入一个事件处理队列，redis的工作线程只需要不断得从队列取，进行工作即可。那么就无需轮询客户端是否有请求。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;redis单线程指的是工作线程是单线程，还有很多辅助线程。&lt;/p&gt;
+&lt;p&gt;redis单线程快，合理的说法是，多线程不能提升redis性能，所以没必要使用多线程。&lt;/p&gt;
+&lt;p&gt;考虑单核处理器，多线程并不能增加cpu使用总时间，反而会增加上下文切换消耗。那为什么我们平时要多线
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="redis" scheme="http://yoursite.com/tags/redis/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>两协程轮流打印</title>
+    <link href="http://yoursite.com/2020/08/07/8-7%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>http://yoursite.com/2020/08/07/8-7技术笔记-1/</id>
+    <published>2020-08-07T10:22:00.000Z</published>
+    <updated>2020-08-14T06:00:59.021Z</updated>
+    
+    <content type="html"><![CDATA[<p>读空channel会阻塞，利用这点即可。</p><p>即第一个协程先读后写，第二个协程先写后读。</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"sync"</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br><span class="line">wg:=sync.WaitGroup&#123;&#125;</span><br><span class="line"></span><br><span class="line">wg.Add(<span class="number">1</span>)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line"><span class="keyword">defer</span> wg.Done()</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">1</span>; i &lt;= <span class="number">20</span>; i++ &#123;</span><br><span class="line"><span class="built_in">println</span>(<span class="string">"g1:"</span>, &lt;-ch)  <span class="comment">// 执行步骤1， 执行步骤5</span></span><br><span class="line">i++  <span class="comment">//执行步骤6</span></span><br><span class="line">ch &lt;- i <span class="comment">// 执行步骤7</span></span><br><span class="line">&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">wg.Add(<span class="number">1</span>)</span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line"><span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line"><span class="built_in">close</span>(ch)</span><br><span class="line">wg.Done()</span><br><span class="line">&#125;()</span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">20</span>; i++ &#123;</span><br><span class="line">i++  <span class="comment">// 执行步骤2</span></span><br><span class="line">ch &lt;- i  <span class="comment">//执行步骤3</span></span><br><span class="line"><span class="built_in">println</span>(<span class="string">"g2:"</span>, &lt;-ch) <span class="comment">//执行步骤4</span></span><br><span class="line">&#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;读空channel会阻塞，利用这点即可。&lt;/p&gt;
+&lt;p&gt;即第一个协程先读后写，第二个协程先写后读。&lt;/p&gt;
+&lt;figure class=&quot;highlight go&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;
+      
+    
+    </summary>
+    
+    
+      <category term="Go" scheme="http://yoursite.com/tags/Go/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>蓄水池采样算法</title>
+    <link href="http://yoursite.com/2020/08/06/8-6%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/08/06/8-6技术笔记/</id>
+    <published>2020-08-06T08:57:36.000Z</published>
+    <updated>2020-08-06T12:23:15.817Z</updated>
+    
+    <content type="html"><![CDATA[<p>蓄水池采样算法（Reservoir Sampling）。算法的过程：</p><p>假设数据序列的规模为  n，需要采样的数量的为  k。</p><p>首先构建一个可容纳  k  个元素的数组，将序列的前  k  个元素放入数组中。</p><p>然后从第  k+1  个元素开始，以  k/n  的概率来决定该元素是否被替换到数组中（数组中的元素被替换的概率是相同的）。 当遍历完所有元素之后，数组中剩下的元素即为所需采取的样本。</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line"><span class="string">"fmt"</span></span><br><span class="line"><span class="string">"math/rand"</span></span><br><span class="line"><span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">from:=<span class="built_in">make</span>([]<span class="keyword">int64</span>,<span class="number">0</span>)</span><br><span class="line"><span class="keyword">for</span> i:=<span class="number">0</span>;i&lt;<span class="number">100</span>;i++ &#123;</span><br><span class="line">from=<span class="built_in">append</span>(from,<span class="keyword">int64</span>(i))</span><br><span class="line">&#125;</span><br><span class="line">res:=reservoir(from)</span><br><span class="line">fmt.Print(res)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reservoir</span><span class="params">(form []<span class="keyword">int64</span> )</span> []<span class="title">int64</span></span> &#123;</span><br><span class="line">about:=<span class="number">10</span></span><br><span class="line">res:=<span class="built_in">make</span>([]<span class="keyword">int64</span>,<span class="number">0</span>,<span class="number">10</span>)</span><br><span class="line">rand.Seed(time.Now().UnixNano())</span><br><span class="line"><span class="keyword">for</span> key, value := <span class="keyword">range</span> form &#123;</span><br><span class="line"><span class="keyword">if</span> key&lt;about&#123;</span><br><span class="line">res=<span class="built_in">append</span>(res,value)</span><br><span class="line">&#125;<span class="keyword">else</span> &#123;</span><br><span class="line">randNum:=rand.Intn(key)</span><br><span class="line"><span class="keyword">if</span> randNum&lt;about&#123;</span><br><span class="line">res[randNum]=value</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;蓄水池采样算法（Reservoir Sampling）。算法的过程：&lt;/p&gt;
+&lt;p&gt;假设数据序列的规模为  n，需要采样的数量的为  k。&lt;/p&gt;
+&lt;p&gt;首先构建一个可容纳  k  个元素的数组，将序列的前  k  个元素放入数组中。&lt;/p&gt;
+&lt;p&gt;然后从第  k+1  个
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="算法" scheme="http://yoursite.com/tags/%E7%AE%97%E6%B3%95/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>join中on和where的区别</title>
+    <link href="http://yoursite.com/2020/07/21/7-21%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/07/21/7-21技术笔记/</id>
+    <published>2020-07-21T02:36:35.000Z</published>
+    <updated>2020-07-21T03:51:18.492Z</updated>
+    
+    <content type="html"><![CDATA[<p>两个表在，join时，首先做一个笛卡尔积，on后面的条件是对这个笛卡尔积做一个过滤形成一张临时表，如果没有where就直接返回结果，如果有where就对上一步的临时表再进行过滤。</p><p>在使用left jion时，on和where条件的区别如下：</p><p>1、on条件是在生成临时表时使用的条件，它不管on中的条件是否为真，都会返回左边表中的记录。</p><p>2、where条件是在临时表生成好后，再对临时表进行过滤的条件。这时已经没有left join的含义（必须返回左边表的记录）了，条件不为真的就全部过滤掉。</p><p>从这来看，从结果的角度，对于inner join来说，条件在where还是on没有区别，只是在哪一层过滤而已。</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> orders <span class="keyword">inner</span> <span class="keyword">join</span> sub_orders <span class="keyword">on</span> orders.order_id = sub_orders.order_id <span class="keyword">and</span> orders.order_id=<span class="number">6851559448792635150</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> orders <span class="keyword">inner</span> <span class="keyword">join</span> sub_orders <span class="keyword">on</span> orders.order_id = sub_orders.order_id <span class="keyword">where</span> orders.order_id=<span class="number">6851559448792635150</span></span><br></pre></td></tr></table></figure><p>对于left join就不一样了，因为left join要留下左表所有的数据。对于left join，on是连接右表的条件，而不是查找左边的条件。也就是说，on 后面的and，筛不了左表。比如这么写</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> sub_orders <span class="keyword">left</span> <span class="keyword">join</span> orders <span class="keyword">on</span> (orders.order_id = sub_orders.order_id <span class="keyword">and</span> sub_orders.order_id=<span class="number">6843974166572439310</span>)</span><br></pre></td></tr></table></figure><p>会返回左表所有数据，右表只有order_id=6843974166572439310的数据，其他全是null。</p><p>如果条件写在where里</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> sub_orders <span class="keyword">left</span> <span class="keyword">join</span> orders <span class="keyword">on</span> orders.order_id = sub_orders.order_id <span class="keyword">where</span> orders.order_id=<span class="number">6843974166572439310</span></span><br></pre></td></tr></table></figure><p>可获得想要的结果。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;两个表在，join时，首先做一个笛卡尔积，on后面的条件是对这个笛卡尔积做一个过滤形成一张临时表，如果没有where就直接返回结果，如果有where就对上一步的临时表再进行过滤。&lt;/p&gt;
+&lt;p&gt;在使用left jion时，on和where条件的区别如下：&lt;/p&gt;
+&lt;p&gt;1、
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="数据库" scheme="http://yoursite.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>undo日志</title>
+    <link href="http://yoursite.com/2020/06/08/6-8%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/06/08/6-8技术笔记/</id>
+    <published>2020-06-08T07:14:53.000Z</published>
+    <updated>2020-06-08T08:06:34.471Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="undo-log"><a href="#undo-log" class="headerlink" title="undo log"></a>undo log</h2><h3 id="产生原因"><a href="#产生原因" class="headerlink" title="产生原因"></a>产生原因</h3><p><strong>undo log的意义有两个，保证原子性，mvcc</strong></p><p>事务执行过程中，系统异常或者手动callback，都要求数据回滚到之前的版本，解决方法看起来很简单，就是记录之前的版本，即undo log.</p><h3 id="事务id"><a href="#事务id" class="headerlink" title="事务id"></a>事务id</h3><p>如果某个事务执行过程中对某个表执行了增、删、改操作，那么InnoDB存储引擎就会给它分配一个独一无二的<code>事务id</code></p><p>服务器会在内存中维护一个全局变量，每当需要为某个事务分配一个<code>事务id</code>时，就会把该变量的值当作<code>事务id</code>分配给该事务，并且把该变量自增1。</p><p>数据行有一隐藏列，即事务id，修改了它的事务的id。</p><h3 id="日志格式"><a href="#日志格式" class="headerlink" title="日志格式"></a>日志格式</h3><p>undolog，如果做成物理日志，并不合理，因为涉及页比较多。所以做法是反向的逻辑日志。</p><h2 id="mvcc"><a href="#mvcc" class="headerlink" title="mvcc"></a>mvcc</h2><p>每行数据有两个隐藏列，trx_id和roll_pointer。</p><ul><li><p>trx_id：每次一个事务对某条聚簇索引记录进行改动时，都会把该事务的<code>事务id</code>赋值给trx_id隐藏列。</p></li><li><p>roll_pointer：每次对某条聚簇索引记录进行改动时，都会把旧的版本写入到undo日志中，然后这个隐藏列就相当于一个指针，可以通过它来找到该记录修改前的信息。</p></li></ul><p>这两个隐藏列结合undo log，就完成了mvcc。</p><p>因为他们把undolog链了起来。</p><p><img src="https://s1.ax1x.com/2020/06/08/tfAXaq.png" alt="dd"></p><h3 id="读已提交"><a href="#读已提交" class="headerlink" title="读已提交"></a>读已提交</h3><p>有事务id为100和200两个事务，修改了同一行数据，此时他们都还未提交。这时有个select语句，应该读到最之前的那条数据。</p><p>从系统变量中读取，当前活跃的最小的事务id100，和最大的事务id200。顺着链表读数据，凡事数据行的事务id，在这个范围内的，都是还未提交的事务对其的修改，都不该读到，知道读到第一个小于活跃的最小的事务id的数据行。</p><p>即抛弃200，200，100，100，四条记录，拿到最后一条80的记录。</p><p>然后100这事务提交了，此时再读，最小的事务id已经变成200了。只抛弃200，200两条数据，拿得到100提交的数据。</p><h3 id="可重复读"><a href="#可重复读" class="headerlink" title="可重复读"></a>可重复读</h3><p>可重复读的区别在于，事务中最小的事务id不变的，这样别的事务提交了，也读不到它提交的数据。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;undo-log&quot;&gt;&lt;a href=&quot;#undo-log&quot; class=&quot;headerlink&quot; title=&quot;undo log&quot;&gt;&lt;/a&gt;undo log&lt;/h2&gt;&lt;h3 id=&quot;产生原因&quot;&gt;&lt;a href=&quot;#产生原因&quot; class=&quot;headerlink&quot; 
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="数据库" scheme="http://yoursite.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>redo日志</title>
+    <link href="http://yoursite.com/2020/06/02/6-2%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/06/02/6-2技术笔记/</id>
+    <published>2020-06-02T08:03:42.000Z</published>
+    <updated>2020-06-08T07:18:47.244Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="物理日志和逻辑日志"><a href="#物理日志和逻辑日志" class="headerlink" title="物理日志和逻辑日志"></a>物理日志和逻辑日志</h2><p>mysql数据最终落盘是分页的，undo log和bin log是并没有记录最终落盘的数据，而是执行的操作，增删改，所以是逻辑日志。redo log记录的纬度不是操作，而是最终落盘的数据，是物理日志。</p><h2 id="redo-log"><a href="#redo-log" class="headerlink" title="redo log"></a>redo log</h2><h3 id="产生原因"><a href="#产生原因" class="headerlink" title="产生原因"></a>产生原因</h3><p> <strong>redo log的意义有两个，保证持久性，提高性能</strong></p><p>对事务的操作，并不是直接落盘的，而是先到缓冲区，即页缓存上的，为了保证持久性，即重启等操作后，缓冲区清空，已提交的事务只在缓冲区，没有落盘。</p><p>最简单的办法是，每当有事务提交，在事务提交完成之前把该事务所修改的所有页面都刷新到磁盘。但是有两个问题。</p><ul><li><p>刷新一个完整的数据页太浪费了</p><p>有时候我们仅仅修改了某个页面中的一个字节，但是我们知道在<code>InnoDB</code>中是以页为单位来进行磁盘IO的，也就是说我们在该事务提交时不得不将一个完整的页面从内存中刷新到磁盘，我们又知道一个页面默认是16KB大小，只修改一个字节就要刷新16KB的数据到磁盘上显然是太浪费了。</p></li><li><p>随机IO刷起来比较慢</p><p>一个事务可能包含很多语句，即使是一条语句也可能修改许多页面，倒霉催的是该事务修改的这些页面可能并不相邻，这就意味着在将某个事务修改的<code>Buffer Pool</code>中的页面刷新到磁盘时，需要进行很多的随机IO，随机IO比顺序IO要慢。</p></li></ul><p>更好解决的方法是redo log。即事务提交时，把修改的字段写入一个文件中，比如重启恢复时，按照该文件恢复即可。</p><h3 id="redo日志格式"><a href="#redo日志格式" class="headerlink" title="redo日志格式"></a>redo日志格式</h3><p>如果简单的想，记录一下在某个页面的某个偏移量处修改了几个字节的值，具体被修改的内容是啥就好了。那么redo日志只需要类型、表空间ID、页号、偏移量、修改的内容长度，修改的内容即可。（实际上修改的内容长度被隐含在类型中，比如MLOG_8BYTE表示在页面的某个偏移量处写入8个字节的redo日志类型。）</p><p>但实际上，很多时候没这么简单，因为修改一条数据，会涉及多页的变化，比如插入数据导致页分裂，更新字段有索引要更新索引的b+树，目录页的统计信息会改变。</p><p>解决的方式是逻辑的方式，即redo类型是插入/删除，物理层面看，这些日志都指明了对哪个表空间的哪个页进行了修改。但是逻辑层面看，在系统崩溃重启时，并不能直接根据这些日志里的记载，将页面内的某个偏移量处恢复成某个数据，而是需要调用一些事先准备好的函数，执行完这些函数后才可以将页面恢复成系统崩溃前的样子。</p><h3 id="redo日志刷盘时机"><a href="#redo日志刷盘时机" class="headerlink" title="redo日志刷盘时机"></a>redo日志刷盘时机</h3><p>1.发出commit动作时。已经说明过，commit发出后是否刷日志由变量 innodb_flush_log_at_trx_commit 控制。</p><p>2.每秒刷一次。这个刷日志的频率由变量 innodb_flush_log_at_timeout 值决定，默认是1秒。要注意，这个刷日志频率和commit动作无关。</p><p>3.当log buffer中已经使用的内存超过一半时。</p><p>4.当有checkpoint时，checkpoint在一定程度上代表了刷到磁盘时日志所处的LSN位置。</p><h3 id="LSN"><a href="#LSN" class="headerlink" title="LSN"></a>LSN</h3><p>LSN称为日志的逻辑序列号(log sequence number)，在innodb存储引擎中，lsn占用8个字节。LSN的值会随着日志的写入而逐渐增大。</p><p>LSN不仅存在于redo log中，还存在于数据页中，在每个数据页的头部，有一个<em>fil_page_lsn</em>记录了当前页最终的LSN值是多少。通过数据页中的LSN值和redo log中的LSN值比较，如果页中的LSN值小于redo log中LSN值，则表示数据丢失了一部分，这时候可以通过redo log的记录来恢复到redo log中记录的LSN值时的状态。</p><p>flushed_to_disk_lsn表示刷新到磁盘中的redo日志量的全局变量</p><p>当有新的redo日志写入到log buffer时，首先lsn的值会增长，但flushed_to_disk_lsn不变，随后随着不断有log buffer中的日志被刷新到磁盘上，flushed_to_disk_lsn`的值也跟着增长。如果两者的值相同时，说明log buffer中的所有redo日志都已经刷新到磁盘中了。</p><h3 id="checkpoint"><a href="#checkpoint" class="headerlink" title="checkpoint"></a>checkpoint</h3><p>如果重做日志可以无限地增大，同时缓冲池也足够大，那么是不需要将缓冲池中页的新版本刷新回磁盘。因为当发生宕机时，完全可以通过重做日志来恢复整个数据库系统中的数据到宕机发生的时刻。</p><p>实际上不存在的，第一redolog越写越多后来没地方写了，第二缓冲区不少数据已经刷回了磁盘，这些数据不用再刷盘。所以需要checkPoint。</p><p>Checkpoint发生的时间、条件及脏页的选择等都非常复杂。而Checkpoint所做的事情无外乎是将缓冲池中的脏页刷回到磁盘，不同之处在于每次刷新多少页到磁盘，每次从哪里取脏页，以及什么时间触发Checkpoint。</p><p>Checkpoint分为两种Sharp Checkpoint、Fuzzy Checkpoint，前者全量刷脏页，后者刷一部分的，全量只发生在数据库关闭时，不然会很影响性能。</p><p>检查点触发想来也就这么几种，定时出发， 脏页比例达到一定值时触发。</p><p>checkpoint对应LSN.</p><p>Innodb每次取最老的modified page(last checkpoint)对应的LSN，再将此脏页的LSN作为Checkpoint点记录到日志文件，意思就是“此LSN之前的LSN对应的日志和数据都已经flush到redo log</p><p>当mysql crash的时候，Innodb扫描redo log，从last checkpoint开始apply redo log到buffer pool，直到last checkpoint对应的LSN等于Log flushed up to对应的LSN，则恢复完成</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;物理日志和逻辑日志&quot;&gt;&lt;a href=&quot;#物理日志和逻辑日志&quot; class=&quot;headerlink&quot; title=&quot;物理日志和逻辑日志&quot;&gt;&lt;/a&gt;物理日志和逻辑日志&lt;/h2&gt;&lt;p&gt;mysql数据最终落盘是分页的，undo log和bin log是并没有记录最终落盘
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="数据库" scheme="http://yoursite.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>&lt;form&gt; 标签的 enctype</title>
+    <link href="http://yoursite.com/2020/06/01/6-1%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/06/01/6-1技术笔记/</id>
+    <published>2020-06-01T08:43:41.000Z</published>
+    <updated>2020-06-01T08:56:29.558Z</updated>
+    
+    <content type="html"><![CDATA[<table><thead><tr><th>值</th><th>描述</th></tr></thead><tbody><tr><td>application/x-www-form-urlencoded</td><td>在发送前编码所有字符（默认）</td></tr><tr><td>multipart/form-data</td><td>不对字符编码。数据通过二进制的形式传送。</td></tr><tr><td>text/plain</td><td>空格转换为 “+” 加号，但不对特殊字符编码。</td></tr></tbody></table><p>在Form元素的语法中，EncType表明提交数据的格式 用 Enctype 属性指定将数据回发到服务器时浏览器使用的编码类型。 例如： application/x-www-form-urlencoded： 窗体数据被编码为名称/值对。这是标准的编码格式。 multipart/form-data： 窗体数据被编码为一条消息，页上的每个控件对应消息中的一个部分，这个一般文件上传时用。浏览器会把整个表单以控件为单位分割，并为每个部分加上Content-Disposition(form-data或者file),Content-Type(默认为text/plain),name(控件name)等信息，并加上分割符(boundary)。</p><p> text/plain： 窗体数据以纯文本形式进行编码，其中不含任何控件或格式字符</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;值&lt;/th&gt;
+&lt;th&gt;描述&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;application/x-www-form-urlencoded&lt;/td&gt;
+&lt;td&gt;在发送前编码所有字符（默认）&lt;/td&gt;
+&lt;
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="http://yoursite.com/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="计算机网络" scheme="http://yoursite.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
+    
+  </entry>
+  
+</feed>

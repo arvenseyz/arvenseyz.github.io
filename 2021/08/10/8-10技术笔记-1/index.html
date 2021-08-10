@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="ES,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Arvense" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="indexindex的含义还比较容易简单，一共3个值，no,analyzied，not_analyzied，分别对应’不对该字段进行索引（无法搜索）’，’分词后索引’，’以单个关键词进行索引’。 sourcees里除了倒排索引，当然还会把文档原文存储一遍，存储的这一遍就是source。 官方文档解释如下：  默认地，Elasticsearch 在  _source  字段存储代表文档体的JSON字">
+<meta name="keywords" content="ES">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ES的store、source、index属性">
+<meta property="og:url" content="https://arvenseyz.github.io/2021/08/10/8-10技术笔记-1/index.html">
+<meta property="og:site_name" content="Arvense">
+<meta property="og:description" content="indexindex的含义还比较容易简单，一共3个值，no,analyzied，not_analyzied，分别对应’不对该字段进行索引（无法搜索）’，’分词后索引’，’以单个关键词进行索引’。 sourcees里除了倒排索引，当然还会把文档原文存储一遍，存储的这一遍就是source。 官方文档解释如下：  默认地，Elasticsearch 在  _source  字段存储代表文档体的JSON字">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://z3.ax1x.com/2021/08/10/fY9nJ0.png">
+<meta property="og:updated_time" content="2021-08-10T07:49:48.496Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ES的store、source、index属性">
+<meta name="twitter:description" content="indexindex的含义还比较容易简单，一共3个值，no,analyzied，not_analyzied，分别对应’不对该字段进行索引（无法搜索）’，’分词后索引’，’以单个关键词进行索引’。 sourcees里除了倒排索引，当然还会把文档原文存储一遍，存储的这一遍就是source。 官方文档解释如下：  默认地，Elasticsearch 在  _source  字段存储代表文档体的JSON字">
+<meta name="twitter:image" content="https://z3.ax1x.com/2021/08/10/fY9nJ0.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://arvenseyz.github.io/2021/08/10/8-10技术笔记-1/">
+
+
+
+
+
+  <title>ES的store、source、index属性 | Arvense</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Arvense</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/08/10/8-10技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ES的store、source、index属性</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-08-10T14:59:40+08:00">
+                2021-08-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="index"><a href="#index" class="headerlink" title="index"></a>index</h1><p>index的含义还比较容易简单，一共3个值，no,analyzied，not_analyzied，分别对应’不对该字段进行索引（无法搜索）’，’分词后索引’，’以单个关键词进行索引’。</p>
+<h1 id="source"><a href="#source" class="headerlink" title="source"></a>source</h1><p>es里除了倒排索引，当然还会把文档原文存储一遍，存储的这一遍就是source。</p>
+<p>官方文档解释如下：</p>
+<blockquote>
+<p>默认地，Elasticsearch 在  <code>_source</code>  字段存储代表文档体的JSON字符串。和所有被存储的字段一样，  <code>_source</code>  字段在被写入磁盘之前先会被压缩。</p>
+<p>这个字段的存储几乎总是我们想要的，因为它意味着下面的这些：</p>
+<ul>
+<li>搜索结果包括了整个可用的文档——不需要额外的从另一个的数据仓库来取文档。</li>
+<li>如果没有  <code>_source</code>  字段，部分  <code>update</code>  请求不会生效。</li>
+<li>当你的映射改变时，你需要重新索引你的数据，有了_source字段你可以直接从Elasticsearch这样做，而不必从另一个（通常是速度更慢的）数据仓库取回你的所有文档。</li>
+<li>当你不需要看到整个文档时，单个字段可以从  <code>_source</code>  字段提取和通过  <code>get</code>  或者  <code>search</code>  请求返回。</li>
+<li>调试查询语句更加简单，因为你可以直接看到每个文档包括什么，而不是从一列id猜测它们的内容。</li>
+</ul>
+<p>然而，存储  <code>_source</code>  字段的确要使用磁盘空间。如果上面的原因对你来说没有一个是重要的，你可以用下面的映射禁用  <code>_source</code>  字段。</p>
+</blockquote>
+<p><a href="https://imgtu.com/i/fY9nJ0" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/08/10/fY9nJ0.png" alt="fY9nJ0.png"></a></p>
+<p>当然可以关闭该属性。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"mappings"</span>:&#123;</span><br><span class="line">        <span class="attr">"_source"</span>:&#123;</span><br><span class="line">            <span class="attr">"enabled"</span>:<span class="literal">false</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">"properties"</span>: &#123;</span><br><span class="line">            ... </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>或者选择性开启某些字段</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"mappings"</span>:&#123;</span><br><span class="line">        <span class="attr">"_source"</span>: &#123;</span><br><span class="line">          <span class="attr">"includes"</span>: [</span><br><span class="line">            <span class="string">"*.count"</span>,</span><br><span class="line">            <span class="string">"meta.*"</span></span><br><span class="line">          ],</span><br><span class="line">          <span class="attr">"excludes"</span>: [</span><br><span class="line">            <span class="string">"meta.description"</span>,</span><br><span class="line">            <span class="string">"meta.other.*"</span></span><br><span class="line">          ]</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="string">"properties"</span>: &#123;</span><br><span class="line">            ... </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>于是问题来了，既然搜不出，我干嘛要用。</p>
+<p> 答案是，虽然搜不出来，但是可以搜到，比如我们只用es搜索，用这些字段可以搜出id，然后内容存在某个kv数据库中，再用该id去这个kv数据库搜。</p>
+<h1 id="store"><a href="#store" class="headerlink" title="store"></a>store</h1><p>store和source的include似乎结果上是相同的，即某些字段可以被搜出来。</p>
+<p>官方解释</p>
+<blockquote>
+<p>默认情况下，字段值被<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-index.html" title="index" target="_blank" rel="noopener">index</a>以使其可搜索，但它们不会被<em>存储</em>。这意味着可以查询该字段，但无法检索原始字段值。</p>
+<p>通常这无关紧要。字段值已经是<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-source-field.html" title="_source 字段" target="_blank" rel="noopener"><code>_source</code>字段的</a>一部分， 默认情况下存储。如果您只想检索单个字段或几个字段的值，而不是整个<code>_source</code>，那么这可以通过<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-fields.html#source-filtering" title="_source 选项" target="_blank" rel="noopener">源过滤</a>来实现 。</p>
+<p>在某些情况下，它可能对<code>store</code>某个领域有意义。例如，如果您有一个包含 a <code>title</code>、 a<code>date</code>和一个非常大的<code>content</code> 字段的文档，您可能只想检索 the<code>title</code>和 the<code>date</code>而不必从大<code>_source</code>字段中提取这些字段：</p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/ES/" rel="tag"># ES</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/01/14/1-14技术笔记/" rel="next" title="缓存的数据一致性问题">
+                <i class="fa fa-chevron-left"></i> 缓存的数据一致性问题
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Arvense</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">241</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">68</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#index"><span class="nav-number">1.</span> <span class="nav-text">index</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#source"><span class="nav-number">2.</span> <span class="nav-text">source</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#store"><span class="nav-number">3.</span> <span class="nav-text">store</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a>Arvense</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">blog   </div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
