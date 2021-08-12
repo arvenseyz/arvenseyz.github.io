@@ -251,6 +251,149 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/08/12/8-12技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/08/12/8-12技术笔记-1/" itemprop="url">8-12技术笔记</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-08-12T15:59:37+08:00">
+                2021-08-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>说到ES，就想到倒排索引，但是有个问题，我们在数字比大小的场景，倒排索引怎么实现呢？</p>
+<p>即range怎么实现的？</p>
+<p>早期的ES，只能把范围转化成in，最多再多一些小优化，自动产生一些区间的term，在大范围时依然没用。</p>
+<p>现在版本，ES对于数字类型，用的不是倒排索引，而是 Block k-d tree</p>
+<h1 id="Block-k-d-tree"><a href="#Block-k-d-tree" class="headerlink" title="Block k-d tree"></a>Block k-d tree</h1><h2 id="k-d-tree"><a href="#k-d-tree" class="headerlink" title="k-d tree"></a>k-d tree</h2><p>k-d树（k-dimensional树的简称），是一种分割k维数据空间的数据结构。主要应用于多维空间关键数据的搜索（如：范围搜索和最近邻搜索）。</p>
+<p>我们想象下二分搜索树：</p>
+<p><strong>二叉搜索树则是在二叉树的基础上加了一些规则</strong>：</p>
+<ul>
+<li>左子树的值都小于父节点</li>
+<li>右子树的值都大于父节点</li>
+</ul>
+<p>如果把BST中的所有元素看成一维线段上的所有点，从树的根节点开始每个节点都会把线段分成两段。</p>
+<p>[<img src="https://z3.ax1x.com/2021/08/12/fwv8oQ.jp" alt="fwv8oQ.jpg"></p>
+<p>所以BST本质上就是一维K-D树(或者叫做1-D树)</p>
+<p>现在将树中的元素推广到二维平面上的点，树的每一层按照维度轮流划分。比如，奇数层按x轴划分，偶数层按y轴划分，这样就得到一棵二维K-D树(2-d树)</p>
+<p><a href="https://imgtu.com/i/fwvro4" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/08/12/fwvro4.jpg" alt="fwvro4.jpg"></a></p>
+<p>很明显，K-D树和BST一样不仅可以精确查找，也更适合做范围查询，但K-D树比BST更强，它能对多个维度进行范围查询。</p>
+<p>比如：</p>
+<p>Person1(age:18,hight:176)，Person2(age:19,height:181) … Person10(age:23,height:171)</p>
+<p>想要查找年龄在20岁以上并且身高在170到180之间的所有人，用K-D树就能很好的解决。</p>
+<h2 id="K-D-B树"><a href="#K-D-B树" class="headerlink" title="K-D-B树"></a>K-D-B树</h2><p>既然KD树是高维的二叉搜索树，那么它自然也会继承二叉搜索树的缺点：会退化成链表。</p>
+<p>二叉搜索树解决这个问题的办法是：AVL树，红黑树。那么这个办法能否推广到高维空间呢，答案是不能。</p>
+<p>还有个解决方法是B树。有没有高维B树呢，有的：</p>
+<p><a href="https://imgtu.com/i/fwjZvV" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/08/12/fwjZvV.gif" alt="fwjZvV.gif"></a></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/08/10/8-10技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1674,158 +1817,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/09/09/9-9技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/09/09/9-9技术笔记/" itemprop="url">散列函数</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-09-09T15:56:30+08:00">
-                2020-09-09
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="线性探测法"><a href="#线性探测法" class="headerlink" title="线性探测法"></a>线性探测法</h2><p>思路很简单，如果发生哈希冲突，那么看一下【下一个】位置，如果有空，那么就放在下一个，没空，继续迭代。</p>
-<p>问题不在插入，而在于搜索和删除。</p>
-<p>我们将检查表中是否存在与搜索关键字匹配的元素成为探测。线性探测法的特点是每次探测有3种可能结果：<br>（1）搜索命中（当前位置上的元素关键字与搜索关键字匹配，停止搜索），<br>（2）搜索失败（搜索位置为空，停止搜索），<br>（3）不匹配（搜索位置非空，但是不匹配，继续搜索下一位置）。</p>
-<p>删除更麻烦。</p>
-<p>因为当移走后形成的空位会导致其后面元素的搜索失败（空位终止向后搜索）。因此，应该将删除位置与其右边的下一个空位之间所有元素重新散列插入到表中。</p>
-<p>可以想像到，当哈希表比较满时，搜索会很慢，删除代价会相当大。</p>
-<h2 id="平方探测法"><a href="#平方探测法" class="headerlink" title="平方探测法"></a>平方探测法</h2><p>线性探测法还有个显而易见的问题，因为冲突总是取下一个空位，会导致数据比较集中。一个比较简单的改良是，冲突时不取下一个空位，而是加减平方。即看+-1，+-4的位置，会减少聚集。</p>
-<h2 id="双重散列法"><a href="#双重散列法" class="headerlink" title="双重散列法"></a>双重散列法</h2><p>是对平方探测法的再次改进，即步进由另一个哈希函数决定。</p>
-<p>即</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> newIndex = (index + i * index2) % TABLE_SIZE;</span><br></pre></td></tr></table></figure>
-<p>但是删除问题更大，因为待删除关键字有可能影响整个表中的关键字，解决办法是：用一个观察哨代替已删除元素，表示该位置被占用，不与任何关键字匹配。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1876,7 +1867,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">241</span>
+                  <span class="site-state-item-count">242</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
