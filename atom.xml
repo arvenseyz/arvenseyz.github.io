@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2021-08-12T08:10:17.754Z</updated>
+  <updated>2021-08-12T08:35:00.776Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -17,13 +17,13 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>8-12技术笔记</title>
+    <title>BDK树</title>
     <link href="https://arvenseyz.github.io/2021/08/12/8-12%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
     <id>https://arvenseyz.github.io/2021/08/12/8-12技术笔记-1/</id>
-    <published>2021-08-12T07:59:37.000Z</published>
-    <updated>2021-08-12T08:10:17.754Z</updated>
+    <published>2021-08-12T08:27:52.000Z</published>
+    <updated>2021-08-12T08:35:00.776Z</updated>
     
-    <content type="html"><![CDATA[<p>说到ES，就想到倒排索引，但是有个问题，我们在数字比大小的场景，倒排索引怎么实现呢？</p><p>即range怎么实现的？</p><p>早期的ES，只能把范围转化成in，最多再多一些小优化，自动产生一些区间的term，在大范围时依然没用。</p><p>现在版本，ES对于数字类型，用的不是倒排索引，而是 Block k-d tree</p><h1 id="Block-k-d-tree"><a href="#Block-k-d-tree" class="headerlink" title="Block k-d tree"></a>Block k-d tree</h1><h2 id="k-d-tree"><a href="#k-d-tree" class="headerlink" title="k-d tree"></a>k-d tree</h2><p>k-d树（k-dimensional树的简称），是一种分割k维数据空间的数据结构。主要应用于多维空间关键数据的搜索（如：范围搜索和最近邻搜索）。</p><p>我们想象下二分搜索树：</p><p><strong>二叉搜索树则是在二叉树的基础上加了一些规则</strong>：</p><ul><li>左子树的值都小于父节点</li><li>右子树的值都大于父节点</li></ul><p>如果把BST中的所有元素看成一维线段上的所有点，从树的根节点开始每个节点都会把线段分成两段。</p><p>[<img src="https://z3.ax1x.com/2021/08/12/fwv8oQ.jp" alt="fwv8oQ.jpg"></p><p>所以BST本质上就是一维K-D树(或者叫做1-D树)</p><p>现在将树中的元素推广到二维平面上的点，树的每一层按照维度轮流划分。比如，奇数层按x轴划分，偶数层按y轴划分，这样就得到一棵二维K-D树(2-d树)</p><p><a href="https://imgtu.com/i/fwvro4" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/08/12/fwvro4.jpg" alt="fwvro4.jpg"></a></p><p>很明显，K-D树和BST一样不仅可以精确查找，也更适合做范围查询，但K-D树比BST更强，它能对多个维度进行范围查询。</p><p>比如：</p><p>Person1(age:18,hight:176)，Person2(age:19,height:181) … Person10(age:23,height:171)</p><p>想要查找年龄在20岁以上并且身高在170到180之间的所有人，用K-D树就能很好的解决。</p><h2 id="K-D-B树"><a href="#K-D-B树" class="headerlink" title="K-D-B树"></a>K-D-B树</h2><p>既然KD树是高维的二叉搜索树，那么它自然也会继承二叉搜索树的缺点：会退化成链表。</p><p>二叉搜索树解决这个问题的办法是：AVL树，红黑树。那么这个办法能否推广到高维空间呢，答案是不能。</p><p>还有个解决方法是B树。有没有高维B树呢，有的：</p><p><a href="https://imgtu.com/i/fwjZvV" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/08/12/fwjZvV.gif" alt="fwjZvV.gif"></a></p>]]></content>
+    <content type="html"><![CDATA[<p>说到ES，就想到倒排索引，但是有个问题，我们在数字比大小的场景，倒排索引怎么实现呢？</p><p>即range怎么实现的？</p><p>早期的ES，只能把范围转化成in，最多再多一些小优化，自动产生一些区间的term，在大范围时依然没用。</p><p>现在版本，ES对于数字类型，用的不是倒排索引，而是 Block k-d tree</p><h1 id="Block-k-d-tree"><a href="#Block-k-d-tree" class="headerlink" title="Block k-d tree"></a>Block k-d tree</h1><h2 id="k-d-tree"><a href="#k-d-tree" class="headerlink" title="k-d tree"></a>k-d tree</h2><p>k-d树（k-dimensional树的简称），是一种分割k维数据空间的数据结构。主要应用于多维空间关键数据的搜索（如：范围搜索和最近邻搜索）。</p><p>我们想象下二分搜索树：</p><p><strong>二叉搜索树则是在二叉树的基础上加了一些规则</strong>：</p><ul><li>左子树的值都小于父节点</li><li>右子树的值都大于父节点</li></ul><p>如果把BST中的所有元素看成一维线段上的所有点，从树的根节点开始每个节点都会把线段分成两段。</p><p><img src="https://s3.bmp.ovh/imgs/2021/08/365f9e0e6ca0052c.jpeg" alt></p><p>所以BST本质上就是一维K-D树(或者叫做1-D树)</p><p>现在将树中的元素推广到二维平面上的点，树的每一层按照维度轮流划分。比如，奇数层按x轴划分，偶数层按y轴划分，这样就得到一棵二维K-D树(2-d树)</p><p><img src="https://s3.bmp.ovh/imgs/2021/08/345c1f9a74431519.jpeg" alt></p><p>很明显，K-D树和BST一样不仅可以精确查找，也更适合做范围查询，但K-D树比BST更强，它能对多个维度进行范围查询。</p><p>比如：</p><p>Person1(age:18,hight:176)，Person2(age:19,height:181) … Person10(age:23,height:171)</p><p>想要查找年龄在20岁以上并且身高在170到180之间的所有人，用K-D树就能很好的解决。</p><h2 id="K-D-B树"><a href="#K-D-B树" class="headerlink" title="K-D-B树"></a>K-D-B树</h2><p>既然KD树是高维的二叉搜索树，那么它自然也会继承二叉搜索树的缺点：会退化成链表。</p><p>二叉搜索树解决这个问题的办法是：AVL树，红黑树。那么这个办法能否推广到高维空间呢，答案是不能。</p><p>还有个解决方法是B树。有没有高维B树呢，有的：</p><p><img src="https://s3.bmp.ovh/imgs/2021/08/5871bb9a6111b295.jpeg" alt></p><p>但是B树也有问题：B树如果节点中的子节点树超过规定的阶数，就会发生节点分裂（数据库中经常称之为“页”分裂）。</p><p><img src="https://s3.bmp.ovh/imgs/2021/08/15b47785e81116d8.gif" alt></p><p>高维B树当然也继承了这个问题，并且更加严重页分裂的时候不能以B树“一刀切”的方式解决。</p><p>以二维K-D-B树为例，一个节点数据过多，需要分裂时，就需要拆分区域。拆分区域的过程中大概率会出现拆分该区域的子区域。</p><p>所以写入性能很差</p><h2 id="B-K-D树"><a href="#B-K-D树" class="headerlink" title="B-K-D树"></a>B-K-D树</h2><p>再次优化</p>]]></content>
     
     <summary type="html">
     
@@ -37,6 +37,10 @@
     
     </summary>
     
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="ES" scheme="https://arvenseyz.github.io/tags/ES/"/>
     
   </entry>
   

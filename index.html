@@ -270,7 +270,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2021/08/12/8-12技术笔记-1/" itemprop="url">8-12技术笔记</a></h1>
+                <a class="post-title-link" href="/2021/08/12/8-12技术笔记-1/" itemprop="url">BDK树</a></h1>
         
 
         <div class="post-meta">
@@ -282,7 +282,7 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-08-12T15:59:37+08:00">
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-08-12T16:27:52+08:00">
                 2021-08-12
               </time>
             
@@ -292,6 +292,28 @@
             
           </span>
 
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -334,10 +356,10 @@
 <li>右子树的值都大于父节点</li>
 </ul>
 <p>如果把BST中的所有元素看成一维线段上的所有点，从树的根节点开始每个节点都会把线段分成两段。</p>
-<p>[<img src="https://z3.ax1x.com/2021/08/12/fwv8oQ.jp" alt="fwv8oQ.jpg"></p>
+<p><img src="https://s3.bmp.ovh/imgs/2021/08/365f9e0e6ca0052c.jpeg" alt></p>
 <p>所以BST本质上就是一维K-D树(或者叫做1-D树)</p>
 <p>现在将树中的元素推广到二维平面上的点，树的每一层按照维度轮流划分。比如，奇数层按x轴划分，偶数层按y轴划分，这样就得到一棵二维K-D树(2-d树)</p>
-<p><a href="https://imgtu.com/i/fwvro4" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/08/12/fwvro4.jpg" alt="fwvro4.jpg"></a></p>
+<p><img src="https://s3.bmp.ovh/imgs/2021/08/345c1f9a74431519.jpeg" alt></p>
 <p>很明显，K-D树和BST一样不仅可以精确查找，也更适合做范围查询，但K-D树比BST更强，它能对多个维度进行范围查询。</p>
 <p>比如：</p>
 <p>Person1(age:18,hight:176)，Person2(age:19,height:181) … Person10(age:23,height:171)</p>
@@ -345,7 +367,13 @@
 <h2 id="K-D-B树"><a href="#K-D-B树" class="headerlink" title="K-D-B树"></a>K-D-B树</h2><p>既然KD树是高维的二叉搜索树，那么它自然也会继承二叉搜索树的缺点：会退化成链表。</p>
 <p>二叉搜索树解决这个问题的办法是：AVL树，红黑树。那么这个办法能否推广到高维空间呢，答案是不能。</p>
 <p>还有个解决方法是B树。有没有高维B树呢，有的：</p>
-<p><a href="https://imgtu.com/i/fwjZvV" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/08/12/fwjZvV.gif" alt="fwjZvV.gif"></a></p>
+<p><img src="https://s3.bmp.ovh/imgs/2021/08/5871bb9a6111b295.jpeg" alt></p>
+<p>但是B树也有问题：B树如果节点中的子节点树超过规定的阶数，就会发生节点分裂（数据库中经常称之为“页”分裂）。</p>
+<p><img src="https://s3.bmp.ovh/imgs/2021/08/15b47785e81116d8.gif" alt></p>
+<p>高维B树当然也继承了这个问题，并且更加严重页分裂的时候不能以B树“一刀切”的方式解决。</p>
+<p>以二维K-D-B树为例，一个节点数据过多，需要分裂时，就需要拆分区域。拆分区域的过程中大概率会出现拆分该区域的子区域。</p>
+<p>所以写入性能很差</p>
+<h2 id="B-K-D树"><a href="#B-K-D树" class="headerlink" title="B-K-D树"></a>B-K-D树</h2><p>再次优化</p>
 
           
         
