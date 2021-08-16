@@ -251,6 +251,168 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/06/08/6-8技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/06/08/6-8技术笔记/" itemprop="url">undo日志</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-06-08T15:14:53+08:00">
+                2020-06-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="undo-log"><a href="#undo-log" class="headerlink" title="undo log"></a>undo log</h2><h3 id="产生原因"><a href="#产生原因" class="headerlink" title="产生原因"></a>产生原因</h3><p><strong>undo log的意义有两个，保证原子性，mvcc</strong></p>
+<p>事务执行过程中，系统异常或者手动callback，都要求数据回滚到之前的版本，解决方法看起来很简单，就是记录之前的版本，即undo log.</p>
+<h3 id="事务id"><a href="#事务id" class="headerlink" title="事务id"></a>事务id</h3><p>如果某个事务执行过程中对某个表执行了增、删、改操作，那么InnoDB存储引擎就会给它分配一个独一无二的<code>事务id</code></p>
+<p>服务器会在内存中维护一个全局变量，每当需要为某个事务分配一个<code>事务id</code>时，就会把该变量的值当作<code>事务id</code>分配给该事务，并且把该变量自增1。</p>
+<p>数据行有一隐藏列，即事务id，修改了它的事务的id。</p>
+<h3 id="日志格式"><a href="#日志格式" class="headerlink" title="日志格式"></a>日志格式</h3><p>undolog，如果做成物理日志，并不合理，因为涉及页比较多。所以做法是反向的逻辑日志。</p>
+<h2 id="mvcc"><a href="#mvcc" class="headerlink" title="mvcc"></a>mvcc</h2><p>每行数据有两个隐藏列，trx_id和roll_pointer。</p>
+<ul>
+<li><p>trx_id：每次一个事务对某条聚簇索引记录进行改动时，都会把该事务的<code>事务id</code>赋值给trx_id隐藏列。</p>
+</li>
+<li><p>roll_pointer：每次对某条聚簇索引记录进行改动时，都会把旧的版本写入到undo日志中，然后这个隐藏列就相当于一个指针，可以通过它来找到该记录修改前的信息。</p>
+</li>
+</ul>
+<p>这两个隐藏列结合undo log，就完成了mvcc。</p>
+<p>因为他们把undolog链了起来。</p>
+<p><img src="https://s1.ax1x.com/2020/06/08/tfAXaq.png" alt="dd"></p>
+<h3 id="读已提交"><a href="#读已提交" class="headerlink" title="读已提交"></a>读已提交</h3><p>有事务id为100和200两个事务，修改了同一行数据，此时他们都还未提交。这时有个select语句，应该读到最之前的那条数据。</p>
+<p>从系统变量中读取，当前活跃的最小的事务id100，和最大的事务id200。顺着链表读数据，凡事数据行的事务id，在这个范围内的，都是还未提交的事务对其的修改，都不该读到，知道读到第一个小于活跃的最小的事务id的数据行。</p>
+<p>即抛弃200，200，100，100，四条记录，拿到最后一条80的记录。</p>
+<p>然后100这事务提交了，此时再读，最小的事务id已经变成200了。只抛弃200，200两条数据，拿得到100提交的数据。</p>
+<h3 id="可重复读"><a href="#可重复读" class="headerlink" title="可重复读"></a>可重复读</h3><p>可重复读的区别在于，事务中最小的事务id不变的，这样别的事务提交了，也读不到它提交的数据。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/06/02/6-2技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1622,139 +1784,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/02/25/2-25技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/02/25/2-25技术笔记-1/" itemprop="url">Http1.1\2.0</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-02-25T17:06:21+08:00">
-                2020-02-25
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="1-1"><a href="#1-1" class="headerlink" title="1.1"></a>1.1</h1><p>1.0只是初创版本，1.1自1999年至今广泛使用，是真正完善的版本。</p>
-<p>主要区别在于长连接，HTTP 1.1支持长连接（PersistentConnection）和请求的流水线（Pipelining）处理，在一个TCP连接上可以传送多个HTTP请求和响应，减少了建立和关闭连接的消耗和延迟，在HTTP1.1中默认开启Connection： keep-alive，一定程度上弥补了HTTP1.0每次请求都要创建连接的缺点。</p>
-<p>其他一些小区别，更多的缓存策略，断点续传/请求资源的部分，更多的错误码，必须带主机名。</p>
-<h2 id="2-0"><a href="#2-0" class="headerlink" title="2.0"></a>2.0</h2><p>2.0是基于<strong>SPDY</strong>协议的。主要区别在于</p>
-<ol>
-<li><p>基于二进制而不是1.1的文本，实现方便且健壮。</p>
-</li>
-<li><p>多路复用，一个request对应一个id，这样一个连接上可以有多个request，每个连接的request可以随机的混杂在一起，接收方可以根据request的 id将request再归属到各自不同的服务端请求里面。多路复用的实现基础就是协议基于二进制的，这样是分帧传输的，请求和响应可以交错甚至可以复用。</p>
-</li>
-<li><p>header压缩，1.1的header里有大量信息，2.0使用了Hpack算法压缩了头部，大概原理是双方同时维护缩写的动态和静态表，后来可以增量更改。</p>
-</li>
-<li><p>服务端推送。</p>
-</li>
-</ol>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1805,7 +1834,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">242</span>
+                  <span class="site-state-item-count">243</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
