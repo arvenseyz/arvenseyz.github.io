@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2021-08-17T08:16:47.348Z</updated>
+  <updated>2021-09-14T07:38:12.910Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -17,11 +17,36 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>ES的search after</title>
+    <link href="https://arvenseyz.github.io/2021/09/14/9-14%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2021/09/14/9-14技术笔记/</id>
+    <published>2021-09-14T06:29:27.000Z</published>
+    <updated>2021-09-14T07:38:12.910Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="search-after"><a href="#search-after" class="headerlink" title="search after"></a>search after</h1><p>es搜索带sort字段时，也会返回，sort对应的值</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?pretty</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span>,</span><br><span class="line">  <span class="attr">"sort"</span>: &#123;</span><br><span class="line">    <span class="attr">"date"</span>: <span class="string">"asc"</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">"hits" : [</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">"_index"</span> : <span class="string">"yz_test"</span>,</span><br><span class="line">    <span class="attr">"_type"</span> : <span class="string">"_doc"</span>,</span><br><span class="line">    <span class="attr">"_id"</span> : <span class="string">"1"</span>,</span><br><span class="line">    <span class="attr">"_score"</span> : <span class="literal">null</span>,</span><br><span class="line">    <span class="attr">"_source"</span> : &#123;</span><br><span class="line">      <span class="attr">"title"</span> : <span class="string">"Some short title"</span>,</span><br><span class="line">      <span class="attr">"date"</span> : <span class="string">"2015-01-01"</span>,</span><br><span class="line">      <span class="attr">"content"</span> : <span class="string">"A very long content field..."</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"sort"</span> : [</span><br><span class="line">      <span class="number">1420070400000</span></span><br><span class="line">    ]</span><br><span class="line">  &#125;,</span><br></pre></td></tr></table></figure><p>这时把sort的值，放到search after里，可以继续往下搜</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?pretty</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span>,</span><br><span class="line">  <span class="attr">"sort"</span>: &#123;</span><br><span class="line">    <span class="attr">"date"</span>: <span class="string">"asc"</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">"search_after"</span>: [</span><br><span class="line">    <span class="number">1420070400000</span></span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">"hits" : [</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">"_index"</span> : <span class="string">"yz_test2"</span>,</span><br><span class="line">    <span class="attr">"_type"</span> : <span class="string">"_doc"</span>,</span><br><span class="line">    <span class="attr">"_id"</span> : <span class="string">"3"</span>,</span><br><span class="line">    <span class="attr">"_score"</span> : <span class="literal">null</span>,</span><br><span class="line">    <span class="attr">"_source"</span> : &#123;</span><br><span class="line">      <span class="attr">"title"</span> : <span class="string">"Some short title2"</span>,</span><br><span class="line">      <span class="attr">"date"</span> : <span class="string">"2016-01-01"</span>,</span><br><span class="line">      <span class="attr">"content"</span> : <span class="string">"A very long content field..."</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"sort"</span> : [</span><br><span class="line">      <span class="number">1451606400000</span></span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure><p>search after的好处是，不用把前n页的数据全部拿到，但是searchAfter也是全部搜索了一遍，只不过在collect过程中添加了一个上一页最后doc和当前返回的doc对比，这个过程时间复杂度为o(n)，也就是说，相比于search，并不能优化速度，时间复杂度还是o(n)，但是至少不会oom，可以搜出来。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;search-after&quot;&gt;&lt;a href=&quot;#search-after&quot; class=&quot;headerlink&quot; title=&quot;search after&quot;&gt;&lt;/a&gt;search after&lt;/h1&gt;&lt;p&gt;es搜索带sort字段时，也会返回，sort对应的值&lt;/p&gt;
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="ES" scheme="https://arvenseyz.github.io/tags/ES/"/>
+    
+  </entry>
+  
+  <entry>
     <title>ES分布式</title>
     <link href="https://arvenseyz.github.io/2021/08/17/8-17%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>https://arvenseyz.github.io/2021/08/17/8-17技术笔记/</id>
     <published>2021-08-17T06:58:31.000Z</published>
-    <updated>2021-08-17T08:16:47.348Z</updated>
+    <updated>2021-08-17T08:19:38.824Z</updated>
     
     <content type="html"><![CDATA[<h2 id="并发控制"><a href="#并发控制" class="headerlink" title="并发控制"></a>并发控制</h2><p>Elasticsearch 是分布式的。当文档创建、更新或删除时， 新版本的文档必须复制到集群中的其他节点。Elasticsearch 也是异步和并发的，这意味着这些复制请求被并行发送，并且到达目的地时也许  <em>顺序是乱的</em>  。 Elasticsearch 需要一种方法确保文档的旧版本不会覆盖新的版本。</p><p>当我们之前讨论  <code>index</code>  ，  <code>GET</code>  和  <code>delete</code>  请求时，我们指出每个文档都有一个  <code>_version</code>  （版本）号，当文档被修改时版本号递增。 Elasticsearch 使用这个  <code>_version</code>  号来确保变更以正确顺序得到执行。如果旧版本的文档在新版本之后到达，它可以被简单的忽略。</p><p>操作数据时，可以指定版本，这样如果我们指定的版本号，小于当前版本号，会返回失败。</p><h2 id="选主"><a href="#选主" class="headerlink" title="选主"></a>选主</h2><p>ES集群中也会选举一个节点成为<strong>主节点</strong>，主节点它的职责是维护全局集群状态，在节点加入或离开集群的时候重新分配分片。</p><ul><li>集群层面的配置</li><li>集群内有哪些节点</li><li>各索引的设置，映射，分析器和别名等</li><li>索引内各分片所在的节点位置</li></ul><p>所有主要的文档级别API（索引，删除，搜索）都不与主节点通信，主节点并不需要涉及到文档级别的变更和搜索等操作，所以当集群只拥有一个主节点的情况下，即使流量的增加它也不会成为瓶颈。 任何节点都可以成为主节点。如果集群中就只有一个节点，那么它同时也就是主节点。</p><h5 id="Bully算法"><a href="#Bully算法" class="headerlink" title="Bully算法"></a>Bully算法</h5><p>每个节点有一个唯一ID，然后对集群中所有的节点ID进行排序，选取其中最小的ID所属的节点作为Master。<br>Bully算法的问题： 假设当前Master因为负载过重而假死，然后ID第二大的被选举为新的Master，这时旧的Master恢复然后又被选举为Master然后又会因为负载过重而假死……</p><h3 id="Zen-Discovery"><a href="#Zen-Discovery" class="headerlink" title="Zen Discovery"></a>Zen Discovery</h3><p>例如，Master负载过重而假死，集群拥有第二大ID的节点被选为新主，这时原来的Master恢复，再次被选为新主，然后又假死<br>ES 通过推迟选举，直到当前的 Master 失效来解决上述问题，只要当前主节点不挂掉，就不重新选主。但是容易产生脑裂（双主），为此，再通过“法定得票人数过半”解决脑裂问题</p><p>只有一个 Leader将当前版本的全局集群状态推送到每个节点。 ZenDiscovery（默认）过程就是这样的:</p><p>每个节点计算最高的已知节点ID，并向该节点发送领导投票<br>如果一个节点收到足够多的票数，并且该节点也为自己投票，那么它将扮演领导者的角色，开始发布集群状态。<br>所有节点都会参数选举,并参与投票,但是,只有有资格成为 master 的节点的投票才有效.<br>————————————————</p><ol><li><p>过滤出具有Master资格的节点（filterPingResponses）</p></li><li><p>选出临时Master。根据PingResponse结果构建两个列表：activeMasters和masterCandidates。</p><p>– 如果activeMasters非空，则从activeMasters中选择最合适的作为Master；</p><p>– 如果activeMasters为空，则从masterCandidates中选举，结果可能选举成功，也可能选举失败。</p></li><li><p>判断临时Master是否是本节点。</p><p>– 如果临时Master是本节点：则等待其他节点选我，默认30秒超时，成功的话就发布新的clusterState。（当选总统候选人，只等选票过半了）</p><p>– 如果临时Master是其他节点：则不再接受其他节点的join请求，并向Master节点发送加入请求。（没资格选举，就只能送人头了）</p></li></ol><h3 id="Raft"><a href="#Raft" class="headerlink" title="Raft"></a>Raft</h3><p>7版本后已改用Raft</p>]]></content>
     
@@ -510,34 +535,6 @@
     
     
       <category term="Go" scheme="https://arvenseyz.github.io/tags/Go/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>蓄水池采样算法</title>
-    <link href="https://arvenseyz.github.io/2020/08/06/8-6%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://arvenseyz.github.io/2020/08/06/8-6技术笔记/</id>
-    <published>2020-08-06T08:57:36.000Z</published>
-    <updated>2020-08-06T12:23:15.817Z</updated>
-    
-    <content type="html"><![CDATA[<p>蓄水池采样算法（Reservoir Sampling）。算法的过程：</p><p>假设数据序列的规模为  n，需要采样的数量的为  k。</p><p>首先构建一个可容纳  k  个元素的数组，将序列的前  k  个元素放入数组中。</p><p>然后从第  k+1  个元素开始，以  k/n  的概率来决定该元素是否被替换到数组中（数组中的元素被替换的概率是相同的）。 当遍历完所有元素之后，数组中剩下的元素即为所需采取的样本。</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line"><span class="string">"fmt"</span></span><br><span class="line"><span class="string">"math/rand"</span></span><br><span class="line"><span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">from:=<span class="built_in">make</span>([]<span class="keyword">int64</span>,<span class="number">0</span>)</span><br><span class="line"><span class="keyword">for</span> i:=<span class="number">0</span>;i&lt;<span class="number">100</span>;i++ &#123;</span><br><span class="line">from=<span class="built_in">append</span>(from,<span class="keyword">int64</span>(i))</span><br><span class="line">&#125;</span><br><span class="line">res:=reservoir(from)</span><br><span class="line">fmt.Print(res)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reservoir</span><span class="params">(form []<span class="keyword">int64</span> )</span> []<span class="title">int64</span></span> &#123;</span><br><span class="line">about:=<span class="number">10</span></span><br><span class="line">res:=<span class="built_in">make</span>([]<span class="keyword">int64</span>,<span class="number">0</span>,<span class="number">10</span>)</span><br><span class="line">rand.Seed(time.Now().UnixNano())</span><br><span class="line"><span class="keyword">for</span> key, value := <span class="keyword">range</span> form &#123;</span><br><span class="line"><span class="keyword">if</span> key&lt;about&#123;</span><br><span class="line">res=<span class="built_in">append</span>(res,value)</span><br><span class="line">&#125;<span class="keyword">else</span> &#123;</span><br><span class="line">randNum:=rand.Intn(key)</span><br><span class="line"><span class="keyword">if</span> randNum&lt;about&#123;</span><br><span class="line">res[randNum]=value</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;蓄水池采样算法（Reservoir Sampling）。算法的过程：&lt;/p&gt;
-&lt;p&gt;假设数据序列的规模为  n，需要采样的数量的为  k。&lt;/p&gt;
-&lt;p&gt;首先构建一个可容纳  k  个元素的数组，将序列的前  k  个元素放入数组中。&lt;/p&gt;
-&lt;p&gt;然后从第  k+1  个
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="算法" scheme="https://arvenseyz.github.io/tags/%E7%AE%97%E6%B3%95/"/>
     
   </entry>
   

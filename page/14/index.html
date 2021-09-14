@@ -251,6 +251,152 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/03/01/3-1技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/03/01/3-1技术笔记/" itemprop="url">尾递归</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-03-01T16:26:20+08:00">
+                2019-03-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>普通递归很容易栈溢出，比如用递归算阶乘，f(n)依赖于f(n-1)，于是f(n-1)入栈，多次递归后栈溢出。</p>
+<p>尾递归可以部分解决问题，方法很简单，就是把计算结果放在参数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">facttail</span><span class="params">(<span class="keyword">int</span> n, <span class="keyword">int</span> res)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (n &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span>(n == <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span>(n == <span class="number">1</span>)</span><br><span class="line">        <span class="keyword">return</span> res;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="keyword">return</span> facttail(n - <span class="number">1</span>, n *res);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>res（初始化为1）维护递归层次的深度。这就让我们避免了每次还需要将返回值再乘以n。然而，在每次递归调用中，令res=n*res并且n=n－1。继续递归调用，直到n=1，这满足结束条件，此时直接返回res即可。</p>
+<p>实际上，java中，尾递归并不实用，我们为什么不直接使用循环呢？</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/02/28/2-28技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1732,169 +1878,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/02/12/2-12技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/02/12/2-12技术笔记/" itemprop="url">动态规划与LCS</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-12T11:11:32+08:00">
-                2019-02-12
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/leetcode/" itemprop="url" rel="index">
-                    <span itemprop="name">leetcode</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="动态规划的条件"><a href="#动态规划的条件" class="headerlink" title="动态规划的条件"></a>动态规划的条件</h2><p>动态规划问题的两个条件是（1）最优子结构（2）重叠子问题。这两点在LCS问题中体现方式如下。</p>
-<h3 id="最优子结构"><a href="#最优子结构" class="headerlink" title="最优子结构"></a>最优子结构</h3><p>设 X=(x1,x2,…..xn) 和 Y={y1,y2,…..ym} 是两个序列，将 X 和 Y 的最长公共子序列记为LCS(X,Y)<br>找出LCS(X,Y)就是一个最优化问题。因为，我们需要找到X 和 Y中最长的那个公共子序列。而要找X 和 Y的LCS，首先考虑X的最后一个元素和Y的最后一个元素。</p>
-<h4 id="if-xn-ym"><a href="#if-xn-ym" class="headerlink" title="if xn=ym"></a>if xn=ym</h4><p>如果 xn=ym，即X的最后一个元素与Y的最后一个元素相同，这说明该元素一定位于公共子序列中。因此，现在只需要找：LCS(Xn-1，Ym-1)</p>
-<p> LCS(Xn-1，Ym-1)就是原问题的一个子问题。为什么叫子问题？因为它的规模比原问题小。</p>
-<p>为什么是最优的子问题？ 这里是不是最优没有意义，因为一直一种，没有对比。</p>
-<h4 id="if-xn-ym-1"><a href="#if-xn-ym-1" class="headerlink" title="if xn != ym"></a>if xn != ym</h4><p>如果xn != ym，产生了两个子问题：LCS(Xn-1，Ym) 和 LCS(Xn，Ym-1)</p>
-<p>因为序列X 和 序列Y 的最后一个元素不相等，说明最后一个元素不可能是最长公共子序列中的元素嘛。</p>
-<p>LCS(Xn-1，Ym)表示：最长公共序列可以在(x1,x2,….x(n-1)) 和 (y1,y2,…yn)中找。</p>
-<p>LCS(Xn，Ym-1)表示：最长公共序列可以在(x1,x2,….xn) 和 (y1,y2,…y(n-1))中找。</p>
-<p>求解上面两个子问题，得到的公共子序列谁最长，那谁就是 LCS（X,Y）。用数学表示就是：</p>
-<p>LCS=max{LCS(Xn-1，Ym)，LCS(Xn，Ym-1)}</p>
-<p>由于条件 1)  和  2)  考虑到了所有可能的情况。因此，我们成功地把原问题 转化 成了 三个规模更小的子问题。</p>
-<p>最优子问题的最优，即体现在这个MAX()</p>
-<h3 id="重叠子问题"><a href="#重叠子问题" class="headerlink" title="重叠子问题"></a>重叠子问题</h3><p>问题发展到这里，似乎用递归已经可以解决了。        </p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if(xn=yn)&#123;</span><br><span class="line">    f(xn,yn)=f(xn-1,yn-1)+1;</span><br><span class="line">&#125;</span><br><span class="line">else&#123;</span><br><span class="line">    f(n)=max(f(xn-1,yn),f(xn,yn-1);</span><br></pre></td></tr></table></figure>
-<p>然而用递归的结果是栈溢出，原因是重复计算了。</p>
-<h4 id="重复计算原因"><a href="#重复计算原因" class="headerlink" title="重复计算原因"></a>重复计算原因</h4><p>最简单的动态规划问题可能是斐波那契数列。对比下LCS问题。<br>f(n)=f(n-1)+f(n-2);递归直接就解决了，但如果问题规模大，也会栈溢出。对比下动态规划解法，a[n]=a[n-1]+a[n-2];<br>这两种解法的区别在于。<br>计算f(n)时计算了一次f(n-2),计算f(n-1)时，f(n-1)=f(n-1-1)+f(n-1-2);这里又计算了一次f(n-2);<br>问题越往下分解，重复计算的子问题就越多。而动态规划的解法时，a[n]=a[n-1]+a[n-2];一边计算，一边把子问题的答案记录了下来，需要时不再计算，而是查表，这样避免了重复子问题。</p>
-<h3 id="状态转移方程"><a href="#状态转移方程" class="headerlink" title="状态转移方程"></a>状态转移方程</h3><p>复现上面的推论</p>
-<p><img src="https://i.loli.net/2019/02/20/5c6cfcac671d8.png" alt="5c6cfcac671d8"></p>
-<h3 id="打表记录"><a href="#打表记录" class="headerlink" title="打表记录"></a>打表记录</h3><p>动态规划的区别在于，他是从前到后的，同时记录了每一步的结果。比如与LCS问题，记录了c[i][j]的所有结果。</p>
-<p>以一个二维数组记录，用以上的方程填满表格即可。</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;cstdio&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;cstring&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;algorithm&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"><span class="keyword">const</span> <span class="keyword">int</span> N = <span class="number">1000</span>;</span><br><span class="line"><span class="keyword">char</span> a[N],b[N];</span><br><span class="line"><span class="keyword">int</span> dp[N][N];</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> lena,lenb,i,j;</span><br><span class="line">    <span class="keyword">while</span>(<span class="built_in">scanf</span>(<span class="string">"%s%s"</span>,a,b)!=EOF)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">memset</span>(dp,<span class="number">0</span>,<span class="keyword">sizeof</span>(dp));<span class="comment">//方程第一行</span></span><br><span class="line"></span><br><span class="line">        lena=<span class="built_in">strlen</span>(a);</span><br><span class="line">        lenb=<span class="built_in">strlen</span>(b);</span><br><span class="line">        <span class="keyword">for</span>(i=<span class="number">1</span>;i&lt;=lena;i++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">for</span>(j=<span class="number">1</span>;j&lt;=lenb;j++)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span>(a[i<span class="number">-1</span>]==b[j<span class="number">-1</span>])</span><br><span class="line">                &#123;</span><br><span class="line">                    dp[i][j]=dp[i<span class="number">-1</span>][j<span class="number">-1</span>]+<span class="number">1</span>;<span class="comment">//方程第二行</span></span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    dp[i][j]=max(dp[i<span class="number">-1</span>][j],dp[i][j<span class="number">-1</span>]);<span class="comment">//方程第三行</span></span><br><span class="line"></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%d\n"</span>,dp[lena][lenb]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1945,7 +1928,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">244</span>
+                  <span class="site-state-item-count">245</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
