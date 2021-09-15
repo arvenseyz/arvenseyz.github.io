@@ -251,6 +251,155 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/15/9-15技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/09/15/9-15技术笔记-1/" itemprop="url">ES的Scroll查询</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-09-15T16:27:28+08:00">
+                2021-09-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>如scroll=1m则把查询结果在下一次请求上来时暂存1分钟，response比传统的返回多了一个scroll_id，下次带上这个scroll_id即可找回这个缓存的结果。这里就scroll完成的逻辑。</p>
+<p>Scroll方式通过一次查询请求后维护一个临时的索引快照的search context，此后的增删查改操作并不会影响这个快照数据信息，后续的查询只需要根据游标去取数据，直到结果集中返回的 hits 字段为空，就表示遍历结束。效率比较高。在5.x之后，还可以通过slice分片来实现并行导出。</p>
+<p>它的缺点就是维护一个search context需要占用很多资源，而且在快照建立之后数据变化如删除和更新操作是不能被感知到的，所以不能够用于实时和高并发的场景。</p>
+<p>scroll先从各个分片根据搜索结果获取文档ID排序后返回到协调节点，协调节点再进行排序，第一次和from+size流程一样，区别在于通过scroll会把这次搜索的文档ID都汇总到协调节点并缓存起来，下次根据分页获取的时候不再重新构造，而是直接从缓存里获取</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?scroll=2m</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"_scroll_id"</span> : <span class="string">"DnF1ZXJ5VGhlbkZldGNoAwAAAAAAsiN1FkpGQ2dUa1BNUVUyeUpVSzY1bUduVEEAAAAAAMAg5RZNaWx1TmFSUVRYUzBmV3dpOGRYUUpnAAAAAADAIOQWTWlsdU5hUlFUWFMwZld3aThkWFFKZw=="</span>,</span><br><span class="line">  <span class="attr">"took"</span> : <span class="number">10</span>,</span><br><span class="line">  ....</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>第二次搜索的时候，只需要用srcollid搜即可</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GET /_search/scroll</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">"scroll"</span>: <span class="string">"2m"</span>, </span><br><span class="line">    <span class="attr">"scroll_id"</span> : <span class="string">"DnF1ZXJ5VGhlbkZldGNoAwAAAAAAwDyLFk1pbHVOYVJRVFhTMGZXd2k4ZFhRSmcAAAAAALI-KhZKRkNnVGtQTVFVMnlKVUs2NW1HblRBAAAAAACyPisWSkZDZ1RrUE1RVTJ5SlVLNjVtR25UQQ=="</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/14/9-14技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -351,6 +500,11 @@
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?pretty</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span>,</span><br><span class="line">  <span class="attr">"sort"</span>: &#123;</span><br><span class="line">    <span class="attr">"date"</span>: <span class="string">"asc"</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">"search_after"</span>: [</span><br><span class="line">    <span class="number">1420070400000</span></span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">"hits" : [</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">"_index"</span> : <span class="string">"yz_test2"</span>,</span><br><span class="line">    <span class="attr">"_type"</span> : <span class="string">"_doc"</span>,</span><br><span class="line">    <span class="attr">"_id"</span> : <span class="string">"3"</span>,</span><br><span class="line">    <span class="attr">"_score"</span> : <span class="literal">null</span>,</span><br><span class="line">    <span class="attr">"_source"</span> : &#123;</span><br><span class="line">      <span class="attr">"title"</span> : <span class="string">"Some short title2"</span>,</span><br><span class="line">      <span class="attr">"date"</span> : <span class="string">"2016-01-01"</span>,</span><br><span class="line">      <span class="attr">"content"</span> : <span class="string">"A very long content field..."</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"sort"</span> : [</span><br><span class="line">      <span class="number">1451606400000</span></span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
 <p>search after的好处是，不用把前n页的数据全部拿到，但是searchAfter也是全部搜索了一遍，只不过在collect过程中添加了一个上一页最后doc和当前返回的doc对比，这个过程时间复杂度为o(n)，也就是说，相比于search，并不能优化速度，时间复杂度还是o(n)，但是至少不会oom，可以搜出来。</p>
+<p>举个例子。</p>
+<p>一共10个分片，每个分片10条数据。现在需要第91到100条。</p>
+<p>from+size的方式，必须的每个分片都吐出所有数据，然后协调者把这100条排序。</p>
+<p>因为每个分片不知道其他分片数据的情况。</p>
+<p>而search after的数据，只需要每个分片给出大于第90数据的数据即可。但是这个分片依然要扫描所有数据，才知道哪些数据大于90的。</p>
 
           
         
@@ -1738,158 +1892,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/12/24/12-24技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/12/24/12-24技术笔记/" itemprop="url">mongo简单查询</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-12-24T18:17:44+08:00">
-                2020-12-24
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p><a href="https://imgchr.com/i/r2lMgf" target="_blank" rel="noopener"><img src="https://s3.ax1x.com/2020/12/24/r2lMgf.jpg" alt="r2lMgf.jpg"></a></p>
-<p>compass各参数解释如下：</p>
-<p>filter：即筛选条件，相当于sql的where，kv写法即等于，其他需要：</p>
-<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123; field: &#123; $lt: value&#125; &#125;</span><br><span class="line">&#123; field: &#123; $gt: value&#125; &#125;</span><br><span class="line">&#123; field: &#123; $lte: value&#125; &#125;</span><br><span class="line">&#123; field: &#123; $gte: value&#125; &#125;</span><br></pre></td></tr></table></figure>
-<p>project：相当于sql中的select，即需要哪些字段，kv写法，1是0否。</p>
-<p>sort：排序方法。1升序，-1降序，可以多字段。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123; username: -1, date: -1 &#125;</span><br></pre></td></tr></table></figure>
-<p>skip，limit。即offset和limit。</p>
-<p>collation。排序方法.归类允许用户为字符串比较指定特定于语言的规则，例如字母大写和重音符号的规则。比如汉字默认按二进制比较，相当于没有比。内置了按拼音比较的方式。   即图中的所在地。</p>
-<p>and和or。and连着写就好，or需要用$or运算符</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">db.col.find(&#123;&quot;date&quot;: &#123;$gt:50&#125;, $or: [&#123;&quot;username&quot;: &quot;阿萨萨&quot;&#125;,&#123;&quot;title&quot;: &quot;StudentFile&quot;&#125;]&#125;).pretty()</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1940,7 +1942,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">245</span>
+                  <span class="site-state-item-count">246</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

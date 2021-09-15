@@ -89,7 +89,7 @@
 <meta property="og:site_name" content="Arvense">
 <meta property="og:description" content="search afteres搜索带sort字段时，也会返回，sort对应的值 1234567GET yz_alias/_search?pretty&amp;#123;  &quot;size&quot;: 10,  &quot;sort&quot;: &amp;#123;    &quot;date&quot;: &quot;asc&quot;  &amp;#125;&amp;#125; 123456789101112131415&quot;hits&quot; : [  &amp;#123;    &quot;_index&quot; : &quot;yz_te">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2021-09-14T07:38:12.910Z">
+<meta property="og:updated_time" content="2021-09-15T08:27:14.906Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ES的search after">
 <meta name="twitter:description" content="search afteres搜索带sort字段时，也会返回，sort对应的值 1234567GET yz_alias/_search?pretty&amp;#123;  &quot;size&quot;: 10,  &quot;sort&quot;: &amp;#123;    &quot;date&quot;: &quot;asc&quot;  &amp;#125;&amp;#125; 123456789101112131415&quot;hits&quot; : [  &amp;#123;    &quot;_index&quot; : &quot;yz_te">
@@ -351,6 +351,11 @@
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?pretty</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span>,</span><br><span class="line">  <span class="attr">"sort"</span>: &#123;</span><br><span class="line">    <span class="attr">"date"</span>: <span class="string">"asc"</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">"search_after"</span>: [</span><br><span class="line">    <span class="number">1420070400000</span></span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">"hits" : [</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">"_index"</span> : <span class="string">"yz_test2"</span>,</span><br><span class="line">    <span class="attr">"_type"</span> : <span class="string">"_doc"</span>,</span><br><span class="line">    <span class="attr">"_id"</span> : <span class="string">"3"</span>,</span><br><span class="line">    <span class="attr">"_score"</span> : <span class="literal">null</span>,</span><br><span class="line">    <span class="attr">"_source"</span> : &#123;</span><br><span class="line">      <span class="attr">"title"</span> : <span class="string">"Some short title2"</span>,</span><br><span class="line">      <span class="attr">"date"</span> : <span class="string">"2016-01-01"</span>,</span><br><span class="line">      <span class="attr">"content"</span> : <span class="string">"A very long content field..."</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"sort"</span> : [</span><br><span class="line">      <span class="number">1451606400000</span></span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
 <p>search after的好处是，不用把前n页的数据全部拿到，但是searchAfter也是全部搜索了一遍，只不过在collect过程中添加了一个上一页最后doc和当前返回的doc对比，这个过程时间复杂度为o(n)，也就是说，相比于search，并不能优化速度，时间复杂度还是o(n)，但是至少不会oom，可以搜出来。</p>
+<p>举个例子。</p>
+<p>一共10个分片，每个分片10条数据。现在需要第91到100条。</p>
+<p>from+size的方式，必须的每个分片都吐出所有数据，然后协调者把这100条排序。</p>
+<p>因为每个分片不知道其他分片数据的情况。</p>
+<p>而search after的数据，只需要每个分片给出大于第90数据的数据即可。但是这个分片依然要扫描所有数据，才知道哪些数据大于90的。</p>
 
       
     </div>
@@ -390,6 +395,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/09/15/9-15技术笔记-1/" rel="prev" title="ES的Scroll查询">
+                ES的Scroll查询 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -466,7 +475,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">245</span>
+                  <span class="site-state-item-count">246</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
