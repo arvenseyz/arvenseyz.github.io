@@ -89,7 +89,7 @@
 <meta property="og:site_name" content="Arvense">
 <meta property="og:description" content="如scroll=1m则把查询结果在下一次请求上来时暂存1分钟，response比传统的返回多了一个scroll_id，下次带上这个scroll_id即可找回这个缓存的结果。这里就scroll完成的逻辑。 Scroll方式通过一次查询请求后维护一个临时的索引快照的search context，此后的增删查改操作并不会影响这个快照数据信息，后续的查询只需要根据游标去取数据，直到结果集中返回的 hits">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2021-09-15T09:38:21.493Z">
+<meta property="og:updated_time" content="2021-09-18T10:04:43.513Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ES的Scroll查询">
 <meta name="twitter:description" content="如scroll=1m则把查询结果在下一次请求上来时暂存1分钟，response比传统的返回多了一个scroll_id，下次带上这个scroll_id即可找回这个缓存的结果。这里就scroll完成的逻辑。 Scroll方式通过一次查询请求后维护一个临时的索引快照的search context，此后的增删查改操作并不会影响这个快照数据信息，后续的查询只需要根据游标去取数据，直到结果集中返回的 hits">
@@ -346,6 +346,7 @@
       
         <p>如scroll=1m则把查询结果在下一次请求上来时暂存1分钟，response比传统的返回多了一个scroll_id，下次带上这个scroll_id即可找回这个缓存的结果。这里就scroll完成的逻辑。</p>
 <p>Scroll方式通过一次查询请求后维护一个临时的索引快照的search context，此后的增删查改操作并不会影响这个快照数据信息，后续的查询只需要根据游标去取数据，直到结果集中返回的 hits 字段为空，就表示遍历结束。效率比较高。在5.x之后，还可以通过slice分片来实现并行导出。</p>
+<p>想象下，srcoll没有from，只能从头开始，比如size10，某种sort，分片接到请求后，构建优先队列，拿到top10返回，然后保存该优先队列。第二次请求，协调者可以告诉该分片，这次需要大于多少的10个。节点接着操作该树即可。</p>
 <p>它的缺点就是维护一个search context需要占用很多资源，而且在快照建立之后数据变化如删除和更新操作是不能被感知到的，所以不能够用于实时和高并发的场景。</p>
 <p>scroll先从各个分片根据搜索结果获取文档ID排序后返回到协调节点，协调节点再进行排序，第一次和from+size流程一样，区别在于通过scroll会把这次搜索的文档ID都汇总到协调节点并缓存起来，下次根据分页获取的时候不再重新构造，而是直接从缓存里获取</p>
 <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?scroll=2m</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -391,6 +392,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/09/18/9-16技术笔记/" rel="prev" title="ES的搜索阶段">
+                ES的搜索阶段 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -458,7 +463,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">246</span>
+                  <span class="site-state-item-count">247</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

@@ -251,6 +251,156 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/08/29/8-29技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/08/29/8-29技术笔记/" itemprop="url">流</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-29T14:22:39+08:00">
+                2018-08-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="字节流和字符流"><a href="#字节流和字符流" class="headerlink" title="字节流和字符流"></a>字节流和字符流</h2><p><img src="https://www.runoob.com/wp-content/uploads/2013/12/iostream2xx.png" alt="流">  </p>
+<ol>
+<li>字节流在操作的时候本身是不会用到缓冲区（内存）的，是与文件本身直接操作的，而字符流在操作的时候是使用到缓冲区的</li>
+<li>字节流在操作文件时，即使不关闭资源（close方法），文件也能输出，但是如果字符流不使用close方法的话，则不会输出任何内容，说明字符流用的是缓冲区，并且可以使用flush方法强制进行刷新缓冲区，这时才能在不close的情况下输出内容</li>
+<li>Reader类的read()方法返回类型为int ：作为整数读取的字符（占两个字节共16位），范围在 0 到 65535 之间 (0x00-0xffff)，如果已到达流的末尾，则返回 -1<br>inputStream的read()虽然也返回int，但由于此类是面向字节流的，一个字节占8个位，所以返回 0 到 255 范围内的 int 字节值。如果因为已经到达流末尾而没有可用的字节，则返回值 -1。因此对于不能用0-255来表示的值就得用字符流来读取！比如说汉字.</li>
+<li>字节流与字符流主要的区别是他们的的处理方式：字节流处理字节和字节数组或二进制对象；字符流处理字符、字符数组或字符串。<h2 id="两者转换"><a href="#两者转换" class="headerlink" title="两者转换"></a>两者转换</h2></li>
+</ol>
+<p>InputStreamReader用于将一个字节流中的字节解码成字符：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public void Test() throws Exception &#123;</span><br><span class="line">	InputStream in = new FileInputStream(&quot;C:/hello.txt&quot;);// 读取文件的数据,注意文件编码为UTF-8,防止读取乱码</span><br><span class="line">	// 将输入的字节流  ------转换成----&gt;  字符流</span><br><span class="line">	InputStreamReader isr = new InputStreamReader(in);// 读取</span><br><span class="line">	char[] data = new char[1024];</span><br><span class="line">	int len = isr.read(data);//读取字符流中的数据，用char[]数组一次性接收</span><br><span class="line">	System.err.println(new String(data, 0, len));</span><br><span class="line">	isr.close();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>OutputStreamWriter用于将写入的字符编码成字节后写入一个字节流:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public void Test() throws Exception &#123;		</span><br><span class="line">	OutputStream out = System.err;// 打印到控制台，也可以输出到文件</span><br><span class="line">	OutputStreamWriter osr = new OutputStreamWriter(out);//输出 往out里面准备写内容，内容在下面</span><br><span class="line">	String str = &quot;Hello World!&quot;;</span><br><span class="line">	osr.write(str);//写</span><br><span class="line">	//osr.flush();//如果用于网络传输，记得强制刷新缓冲区，否则输出的数据只停留在缓冲区中，而无法进行网络传输</span><br><span class="line">	osr.close();//关闭资源</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/08/28/8-28技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1645,209 +1795,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/08/13/8-13技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/08/13/8-13技术笔记/" itemprop="url">RocketMQ</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-13T15:14:22+08:00">
-                2018-08-13
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h1><p><img src="https://upload-images.jianshu.io/upload_images/6332814-7885601f065a3556.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="组织"><br>如图，RocketMQ的结构由四部分组成，第一部分生产者，产生消息；第二部门Broker，储存消息的地方，有多个消息队列，按照Topic和Queue机制储存不同的消息；第三部分NameServer,作用类似于域名服务器，通过Topic信息找到对应的Broker；第四部门消费者，获得接受消息。</p>
-<h1 id="模式"><a href="#模式" class="headerlink" title="模式"></a>模式</h1><ol>
-<li>Push Consumer，应用通常向Consumer对象注册一个Listener接口，一旦收到消息，Consumer对象立刻回调Listener接口方法。所以，所谓Push指的是客户端内部的回调机制，并不是与服务端之间的机制。</li>
-<li>Pull Consumer，应用通常主动调用Consumer从服务端拉消息，consumer 向 broker 发送拉消息请求， PullMessageService 服务通过一个线程将阻塞队列 LinkedBlockingQueue 中的 PullRequest 到 broker 拉取消息，长轮询向broker拉取消息是批量拉取的，默认设置批量的值为pullBatchSize = 32， 可配置。主动权由应用控制，这用的就是短轮询方式了，在不同情况下，与长轮询各有优点。  </li>
-</ol>
-<h1 id="消息发送方式"><a href="#消息发送方式" class="headerlink" title="消息发送方式"></a>消息发送方式</h1><table>
-<thead>
-<tr>
-<th style="text-align:left">发送方式</th>
-<th style="text-align:left">发送TPS</th>
-<th>发送结果响应</th>
-<th>可靠性</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left">同步发送</td>
-<td style="text-align:left">小</td>
-<td>有</td>
-<td>不丢失</td>
-</tr>
-<tr>
-<td style="text-align:left">异步发送</td>
-<td style="text-align:left">中</td>
-<td>有</td>
-<td>不丢失</td>
-</tr>
-<tr>
-<td style="text-align:left">单向发送</td>
-<td style="text-align:left">大</td>
-<td>没有</td>
-<td>可能丢失</td>
-</tr>
-</tbody>
-</table>
-<h1 id="消息接受方式"><a href="#消息接受方式" class="headerlink" title="消息接受方式"></a>消息接受方式</h1><p>消费同一类消息的多个 consumer 实例组成一个消费者组，也可以称为一个 consumer 集群，这些 consumer 实例使用同一个 group name。需要注意一点，除了使用同一个 group name，订阅的 tag 也必须是一样的，只有符合这两个条件的 consumer 实例才能组成 consumer 集群。</p>
-<ol>
-<li><p>集群消费  </p>
-<p>broker把一个集群看作一个个体，集群中任一消费者接受到消息，则意味着该集群已经接受到消息。</p>
-</li>
-<li><p>广播消费  </p>
-<p>broker眼中没有集群，向集群里每个个体发送全部消息</p>
-</li>
-<li><p>用集群消费的方式模拟广播  </p>
-<p>如果业务上确实需要使用广播消费，那么我们可以通过创建多个 consumer 实例，每个 consumer 实例属于不同的 consumer group，但是它们都订阅同一个 topic。  </p>
-</li>
-</ol>
-<h1 id="消息类型"><a href="#消息类型" class="headerlink" title="消息类型"></a>消息类型</h1><ol>
-<li><p>普通消息  </p>
-<p>不保证消息顺序。发送123，收到231</p>
-</li>
-<li><p>全局有序消息  </p>
-<p>消息接受完全按发送顺讯。发送123，收到123</p>
-</li>
-<li><p>局部有序消息  </p>
-<p>消息分组，每组内有组，组间无序。发送abc123,收到a1b23c。整体无序，但只看字母有序，只看数字也有序。</p>
-<p>生产者</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">public class Producer &#123;</span><br><span class="line"> public static void main(String[] args) throws UnsupportedEncodingException &#123;</span><br><span class="line">     try &#123;</span><br><span class="line">         // 声明并初始化一个producer</span><br><span class="line">         // 需要一个producer group名字作为构造方法的参数，这里为ordered_producer</span><br><span class="line">         DefaultMQProducer orderedProducer = new DefaultMQProducer(&quot;ordered_producer&quot;);</span><br><span class="line"></span><br><span class="line">         // 设置NameServer地址,此处应改为实际NameServer地址，多个地址之间用；分隔</span><br><span class="line">         //NameServer的地址必须有，但是也可以通过环境变量的方式设置，不一定非得写死在代码里</span><br><span class="line">         orderedProducer.setNamesrvAddr(&quot;10.1.54.121:9876;10.1.54.122:9876&quot;);</span><br><span class="line"></span><br><span class="line">         // 调用start()方法启动一个producer实例</span><br><span class="line">         orderedProducer.start();</span><br><span class="line"></span><br><span class="line">         // 自定义一个tag数组</span><br><span class="line">         String[] tags = new String[]&#123;&quot;TagA&quot;, &quot;TagB&quot;, &quot;TagC&quot;, &quot;TagD&quot;, &quot;TagE&quot;&#125;;</span><br><span class="line"></span><br><span class="line">         // 发送10条消息到Topic为TopicTestOrdered，tag为tags数组按顺序取值，</span><br><span class="line">         // key值为“KEY”拼接上i的值，消息内容为“Hello RocketMQ”拼接上i的值</span><br><span class="line">         for (int i = 0; i &lt; 10; i++) &#123;</span><br><span class="line">             int orderId = i % 10;</span><br><span class="line">             Message msg =</span><br><span class="line">                     new Message(&quot;TopicTestOrdered&quot;, tags[i % tags.length], &quot;KEY&quot; + i,</span><br><span class="line">                             (&quot;Hello RocketMQ &quot; + i).getBytes(RemotingHelper.DEFAULT_CHARSET));</span><br><span class="line"></span><br><span class="line">             SendResult sendResult = orderedProducer.send(msg, new MessageQueueSelector() &#123;</span><br><span class="line"></span><br><span class="line">                 // 选择发送消息的队列</span><br><span class="line">                 @Override</span><br><span class="line">                 public MessageQueue select(List&lt;MessageQueue&gt; mqs, Message msg, Object arg) &#123;</span><br><span class="line"></span><br><span class="line">                     // arg的值其实就是orderId</span><br><span class="line">                     Integer id = (Integer) arg;</span><br><span class="line"></span><br><span class="line">                     // mqs是队列集合，也就是topic所对应的所有队列</span><br><span class="line">                     int index = id % mqs.size();</span><br><span class="line"></span><br><span class="line">                     // 这里根据前面的id对队列集合大小求余来返回所对应的队列</span><br><span class="line">                     return mqs.get(index);</span><br><span class="line">                 &#125;</span><br><span class="line">             &#125;, orderId);</span><br><span class="line"></span><br><span class="line">             System.out.println(sendResult);</span><br><span class="line">         &#125;</span><br><span class="line">         orderedProducer.shutdown();</span><br><span class="line">     &#125; catch (MQClientException e) &#123;</span><br><span class="line">         e.printStackTrace();</span><br><span class="line">     &#125; catch (RemotingException e) &#123;</span><br><span class="line">         e.printStackTrace();</span><br><span class="line">     &#125; catch (MQBrokerException e) &#123;</span><br><span class="line">         e.printStackTrace();</span><br><span class="line">     &#125; catch (InterruptedException e) &#123;</span><br><span class="line">         e.printStackTrace();</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<p>   消费者</p>
-   <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">public class Consumer &#123;</span><br><span class="line"></span><br><span class="line"> public static void main(String[] args) throws MQClientException &#123;</span><br><span class="line"></span><br><span class="line">     //声明并初始化一个consumer</span><br><span class="line">     //需要一个consumer group名字作为构造方法的参数，这里为concurrent_consumer</span><br><span class="line">     DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(&quot;ordered_consumer&quot;);</span><br><span class="line"></span><br><span class="line">     //同样也要设置NameServer地址</span><br><span class="line">     consumer.setNamesrvAddr(&quot;10.1.54.121:9876;10.1.54.122:9876&quot;);</span><br><span class="line"></span><br><span class="line">     //这里设置的是一个consumer的消费策略</span><br><span class="line">     //CONSUME_FROM_LAST_OFFSET 默认策略，从该队列最尾开始消费，即跳过历史消息</span><br><span class="line">     //CONSUME_FROM_FIRST_OFFSET 从队列最开始开始消费，即历史消息（还储存在broker的）全部消费一遍</span><br><span class="line">     //CONSUME_FROM_TIMESTAMP 从某个时间点开始消费，和setConsumeTimestamp()配合使用，默认是半个小时以前</span><br><span class="line">     consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);</span><br><span class="line"></span><br><span class="line">     //设置consumer所订阅的Topic和Tag</span><br><span class="line">     consumer.subscribe(&quot;TopicTestOrdered&quot;, &quot;TagA || TagC || TagD&quot;);</span><br><span class="line"></span><br><span class="line">     //设置一个Listener，主要进行消息的逻辑处理</span><br><span class="line">     //注意这里使用的是MessageListenerOrderly这个接口</span><br><span class="line">     consumer.registerMessageListener(new MessageListenerOrderly() &#123;</span><br><span class="line"></span><br><span class="line">         @Override</span><br><span class="line">         public ConsumeOrderlyStatus consumeMessage(List&lt;MessageExt&gt; msgs, ConsumeOrderlyContext context) &#123;</span><br><span class="line"></span><br><span class="line">             System.out.println(Thread.currentThread().getName() + &quot; Receive New Messages: &quot; + msgs);</span><br><span class="line"></span><br><span class="line">             //返回消费状态</span><br><span class="line">             //SUCCESS 消费成功</span><br><span class="line">             //SUSPEND_CURRENT_QUEUE_A_MOMENT 消费失败，暂停当前队列的消费</span><br><span class="line">             return ConsumeOrderlyStatus.SUCCESS;</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;);</span><br><span class="line"></span><br><span class="line">     //调用start()方法启动consumer</span><br><span class="line">     consumer.start();</span><br><span class="line"></span><br><span class="line">     System.out.println(&quot;Consumer Started.&quot;);</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1898,7 +1845,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">246</span>
+                  <span class="site-state-item-count">247</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

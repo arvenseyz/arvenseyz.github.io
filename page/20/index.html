@@ -251,6 +251,151 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/10/18/10-18技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/10/18/10-18技术笔记/" itemprop="url">Date，Calendar，Time</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-10-18T16:43:25+08:00">
+                2018-10-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="Date"><a href="#Date" class="headerlink" title="Date"></a>Date</h1><p>实际上Date大部分方法都被废弃了，只剩无参构造函数：根据现在时间构造date，Long参数构造函数：根据相对Unix时间戳的时间构造Date，以及各种比较方法。根据我的理解，Date类现在想表达的，是相对时间戳过去的豪秒数。setTime转化为Calendar。</p>
+<h1 id="Calendar"><a href="#Calendar" class="headerlink" title="Calendar"></a>Calendar</h1><p>Calendar就是日期类，静态方法getInstance获得日期对象，set函数设值，getTime转化为Date，add方法调时间，get获得任何想要的。<br><strong>坑点一：月份从0开始编号，或者使用Calendar类中的静态常量。<br>坑点二：每周第一天是星期天，第二天是星期一:)</strong><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Calendar calendar =Calendar.getInstance();</span><br><span class="line">calendar.set(2018,5-1,12,17,24,52);</span><br><span class="line">calendar.set(2018,Calendar.MAY,12);</span><br><span class="line">calendar.add(Calendar.MINUTE,20);</span><br><span class="line">int week = calendar.get(Calendar.DAY_OF_WEEK);</span><br><span class="line">Date i = calendar.getTime();</span><br><span class="line">System.out.println(i);</span><br></pre></td></tr></table></figure></p>
+<h1 id="SimpleDateFormat"><a href="#SimpleDateFormat" class="headerlink" title="SimpleDateFormat"></a>SimpleDateFormat</h1><p>格式化输出Date，构造方法接受一个字符串，为格式化方法，format方法把Date转化为String。parse方法把String转化为Date。<br><strong>注意:MM是月，mm是分钟；HH是24小时制，hh是12小时制;a上午还是下午</strong><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SimpleDateFormat simpleDateFormat = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss a&quot;);</span><br><span class="line">System.out.println(simpleDateFormat.format(new Date()));</span><br><span class="line">date = simpleDateFormat.parse(&quot;2018-10-19 11:08:15 上午&quot;);</span><br><span class="line">System.out.println(date);</span><br></pre></td></tr></table></figure></p>
+<h1 id="Time"><a href="#Time" class="headerlink" title="Time"></a>Time</h1><p>java8新的Time包，优点在于，第一是线程安全；第二是消歧义；精确区分了瞬间，时间段，日期，时刻，时区时间，机器时间等。<br>LocalDate只有日期，LocalTime只有时间，LocalDateTime包括日期和时间，Zonedatetime还包括时区，这四者操作类似。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">LocalDateTime localDateTime = LocalDateTime.now();</span><br><span class="line">localDateTime = LocalDateTime.of(2018,7,13,1,1,50);</span><br><span class="line">int month = localDateTime.getMonthValue(); //是7</span><br><span class="line">System.out.println(localDateTime.getDayOfWeek());//输出FRIDAY</span><br><span class="line">localDateTime.plusDays(40);</span><br><span class="line">localDateTime.plus(1, ChronoUnit.MONTHS);</span><br><span class="line">DateTimeFormatter dateTimeFormatter =  DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span><br><span class="line">System.out.println(localDateTime.format(dateTimeFormatter));</span><br><span class="line">Date date = Date.from( localDateTime.atZone(ZoneId.systemDefault()).toInstant());</span><br></pre></td></tr></table></figure></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/10/17/10-17技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1746,167 +1891,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/09/28/9-28技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/09/28/9-28技术笔记/" itemprop="url">命令模式，解释器模式</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-28T16:41:13+08:00">
-                2018-09-28
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="命令模式"><a href="#命令模式" class="headerlink" title="命令模式"></a>命令模式</h1><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>命令式操控，使用命令模式，独立出命令对象，使得命令发出者和接受者解耦。</p>
-<h2 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h2><ol>
-<li><p>命令接收者，执行任务</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public class Receiver &#123;</span><br><span class="line">    public void DoA()&#123;System.out.println(&quot;DoA&quot;);&#125;</span><br><span class="line">    public void DoB()&#123;System.out.println(&quot;DoB&quot;);&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>命令接口</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public interface Command &#123;</span><br><span class="line">    void Execute();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>具体任务类，持有接受者对象，通过构造函数注入，执行调用接受者的执行方法。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public class CommandB implements Command &#123;</span><br><span class="line">    private Receiver receiver;</span><br><span class="line"></span><br><span class="line">    CommandB(Receiver receiver) &#123;</span><br><span class="line">        this.receiver = receiver;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void Execute() &#123;</span><br><span class="line">        this.receiver.DoB();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">//多个具体任务类  </span><br><span class="line">public class CommandA implements Command &#123;</span><br><span class="line">    private Receiver receiver;</span><br><span class="line"></span><br><span class="line">    CommandA(Receiver receiver) &#123;</span><br><span class="line">        this.receiver = receiver;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void Execute() &#123;</span><br><span class="line">        this.receiver.DoA();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>命令发起者类持有命令对象，通过设置函数注入，执行任务调用命令的执行方法。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class Invoker &#123;</span><br><span class="line">    private Command command =null;</span><br><span class="line"></span><br><span class="line">    public void setCommand(Command command) &#123;</span><br><span class="line">        this.command = command;</span><br><span class="line">    &#125;</span><br><span class="line">    public void run()&#123;</span><br><span class="line">        command.Execute();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>具体使用，构造接受者和命令发起者对象，命令发起者设置函数设命令，然后命令者执行。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class Client &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Receiver receiver = new Receiver();</span><br><span class="line">        Invoker invoker = new Invoker();</span><br><span class="line">        invoker.setCommand(new CommandA(receiver));</span><br><span class="line">        invoker.run();</span><br><span class="line">        invoker.setCommand(new CommandB(receiver));</span><br><span class="line">        invoker.run();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<h2 id="感受"><a href="#感受" class="headerlink" title="感受"></a>感受</h2><p>虽然命令发起者与接受者解耦了，但命令的接受者即执行者和命令本身是耦合的。这并不要紧，因为本来命令就依赖于命令的执行者如何执行。</p>
-<h1 id="解释器模式"><a href="#解释器模式" class="headerlink" title="解释器模式"></a>解释器模式</h1><p>类似于编译器或者文法词法分析器这样，解析一串表达式，实际上无论是数学表达式，xml，json，java都有自己的解析库。<br>该模式，大抵来讲，把节点分为终结节点和非终结节点，非终结节点持有其上下对点对象，或者持有整个数组，然后通过递归调用等方式，完成解释。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1957,7 +1941,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">246</span>
+                  <span class="site-state-item-count">247</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

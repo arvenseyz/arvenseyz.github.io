@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2021-09-15T09:38:21.493Z</updated>
+  <updated>2021-09-18T09:48:31.610Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -17,13 +17,38 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>ES的搜索阶段</title>
+    <link href="https://arvenseyz.github.io/2021/09/18/9-16%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2021/09/18/9-16技术笔记/</id>
+    <published>2021-09-18T08:54:44.000Z</published>
+    <updated>2021-09-18T09:48:31.610Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="查询阶段"><a href="#查询阶段" class="headerlink" title="查询阶段"></a>查询阶段</h1><p>在初始 <em>查询阶段</em> 时， 查询会广播到索引中每一个分片拷贝（主分片或者副本分片）。 每个分片在本地执行搜索并构建一个匹配文档的 <em>优先队列</em>。</p><p>查询阶段包含以下三个步骤:</p><ol><li>客户端发送一个  search  请求到   一个节点 ， 该节点 会创建一个大小为  <code>from + size</code>  的空优先队列。</li><li>节点将查询请求转发到索引的每个主分片或副本分片中。每个分片在本地执行查询并添加结果到大小为  <code>from + size</code>  的本地有序优先队列中。</li><li>每个分片返回各自优先队列中所有文档的 ID 和排序值给协调节点  ，它合并这些值到自己的优先队列中来产生一个全局排序后的结果列表。</li></ol><p>当一个搜索请求被发送到某个节点时，这个节点就变成了协调节点。 这个节点的任务是广播查询请求到所有相关分片并将它们的响应整合成全局排序后的结果集合，这个结果集合会返回给客户端。</p><h1 id="取回阶段"><a href="#取回阶段" class="headerlink" title="取回阶段"></a>取回阶段</h1><p>分布式阶段由以下步骤构成：</p><ol><li>协调节点辨别出哪些文档需要被取回并向相关的分片提交多个  <code>GET</code>  请求。</li><li>每个分片加载并  <em>丰富</em>  文档，如果有需要的话，接着返回文档给协调节点。</li><li>一旦所有的文档都被取回了，协调节点返回结果给客户端。</li></ol><p>协调节点首先决定哪些文档  <em>确实</em>  需要被取回。例如，如果我们的查询指定了  <code>{ &quot;from&quot;: 90, &quot;size&quot;: 10 }</code>  ，最初的90个结果会被丢弃，只有从第91个开始的10个结果需要被取回。这些文档可能来自和最初搜索请求有关的一个、多个甚至全部分片。</p><p>协调节点给持有相关文档的每个分片创建一个  <a href="https://www.elastic.co/guide/cn/elasticsearch/guide/2.x/distrib-multi-doc.html" title="多文档模式" target="_blank" rel="noopener">multi-get request</a>  ，并发送请求给同样处理查询阶段的分片副本。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;查询阶段&quot;&gt;&lt;a href=&quot;#查询阶段&quot; class=&quot;headerlink&quot; title=&quot;查询阶段&quot;&gt;&lt;/a&gt;查询阶段&lt;/h1&gt;&lt;p&gt;在初始 &lt;em&gt;查询阶段&lt;/em&gt; 时， 查询会广播到索引中每一个分片拷贝（主分片或者副本分片）。 每个分片在本地执行搜索并
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="ES" scheme="https://arvenseyz.github.io/tags/ES/"/>
+    
+  </entry>
+  
+  <entry>
     <title>ES的Scroll查询</title>
     <link href="https://arvenseyz.github.io/2021/09/15/9-15%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
     <id>https://arvenseyz.github.io/2021/09/15/9-15技术笔记-1/</id>
     <published>2021-09-15T08:27:28.000Z</published>
-    <updated>2021-09-15T09:38:21.493Z</updated>
+    <updated>2021-09-18T10:04:43.513Z</updated>
     
-    <content type="html"><![CDATA[<p>如scroll=1m则把查询结果在下一次请求上来时暂存1分钟，response比传统的返回多了一个scroll_id，下次带上这个scroll_id即可找回这个缓存的结果。这里就scroll完成的逻辑。</p><p>Scroll方式通过一次查询请求后维护一个临时的索引快照的search context，此后的增删查改操作并不会影响这个快照数据信息，后续的查询只需要根据游标去取数据，直到结果集中返回的 hits 字段为空，就表示遍历结束。效率比较高。在5.x之后，还可以通过slice分片来实现并行导出。</p><p>它的缺点就是维护一个search context需要占用很多资源，而且在快照建立之后数据变化如删除和更新操作是不能被感知到的，所以不能够用于实时和高并发的场景。</p><p>scroll先从各个分片根据搜索结果获取文档ID排序后返回到协调节点，协调节点再进行排序，第一次和from+size流程一样，区别在于通过scroll会把这次搜索的文档ID都汇总到协调节点并缓存起来，下次根据分页获取的时候不再重新构造，而是直接从缓存里获取</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?scroll=2m</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"_scroll_id"</span> : <span class="string">"DnF1ZXJ5VGhlbkZldGNoAwAAAAAAsiN1FkpGQ2dUa1BNUVUyeUpVSzY1bUduVEEAAAAAAMAg5RZNaWx1TmFSUVRYUzBmV3dpOGRYUUpnAAAAAADAIOQWTWlsdU5hUlFUWFMwZld3aThkWFFKZw=="</span>,</span><br><span class="line">  <span class="attr">"took"</span> : <span class="number">10</span>,</span><br><span class="line">  ....</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure><p>第二次搜索的时候，只需要用srcollid搜即可</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GET /_search/scroll</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">"scroll"</span>: <span class="string">"2m"</span>, </span><br><span class="line">    <span class="attr">"scroll_id"</span> : <span class="string">"DnF1ZXJ5VGhlbkZldGNoAwAAAAAAwDyLFk1pbHVOYVJRVFhTMGZXd2k4ZFhRSmcAAAAAALI-KhZKRkNnVGtQTVFVMnlKVUs2NW1HblRBAAAAAACyPisWSkZDZ1RrUE1RVTJ5SlVLNjVtR25UQQ=="</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+    <content type="html"><![CDATA[<p>如scroll=1m则把查询结果在下一次请求上来时暂存1分钟，response比传统的返回多了一个scroll_id，下次带上这个scroll_id即可找回这个缓存的结果。这里就scroll完成的逻辑。</p><p>Scroll方式通过一次查询请求后维护一个临时的索引快照的search context，此后的增删查改操作并不会影响这个快照数据信息，后续的查询只需要根据游标去取数据，直到结果集中返回的 hits 字段为空，就表示遍历结束。效率比较高。在5.x之后，还可以通过slice分片来实现并行导出。</p><p>想象下，srcoll没有from，只能从头开始，比如size10，某种sort，分片接到请求后，构建优先队列，拿到top10返回，然后保存该优先队列。第二次请求，协调者可以告诉该分片，这次需要大于多少的10个。节点接着操作该树即可。</p><p>它的缺点就是维护一个search context需要占用很多资源，而且在快照建立之后数据变化如删除和更新操作是不能被感知到的，所以不能够用于实时和高并发的场景。</p><p>scroll先从各个分片根据搜索结果获取文档ID排序后返回到协调节点，协调节点再进行排序，第一次和from+size流程一样，区别在于通过scroll会把这次搜索的文档ID都汇总到协调节点并缓存起来，下次根据分页获取的时候不再重新构造，而是直接从缓存里获取</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?scroll=2m</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"_scroll_id"</span> : <span class="string">"DnF1ZXJ5VGhlbkZldGNoAwAAAAAAsiN1FkpGQ2dUa1BNUVUyeUpVSzY1bUduVEEAAAAAAMAg5RZNaWx1TmFSUVRYUzBmV3dpOGRYUUpnAAAAAADAIOQWTWlsdU5hUlFUWFMwZld3aThkWFFKZw=="</span>,</span><br><span class="line">  <span class="attr">"took"</span> : <span class="number">10</span>,</span><br><span class="line">  ....</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure><p>第二次搜索的时候，只需要用srcollid搜即可</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GET /_search/scroll</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">"scroll"</span>: <span class="string">"2m"</span>, </span><br><span class="line">    <span class="attr">"scroll_id"</span> : <span class="string">"DnF1ZXJ5VGhlbkZldGNoAwAAAAAAwDyLFk1pbHVOYVJRVFhTMGZXd2k4ZFhRSmcAAAAAALI-KhZKRkNnVGtQTVFVMnlKVUs2NW1HblRBAAAAAACyPisWSkZDZ1RrUE1RVTJ5SlVLNjVtR25UQQ=="</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
     
     <summary type="html">
     
@@ -501,33 +526,6 @@
       
         &lt;p&gt;都知道持久化有AOF和RDB两种，那么是什么的全称呢，AOF是Append Only File，RDB是Redis DataBase。&lt;/p&gt;
 &lt;h2 id=&quot;AOF&quot;&gt;&lt;a href=&quot;#AOF&quot; class=&quot;headerlink&quot; title=&quot;AOF&quot;&gt;&lt;/a&gt;AO
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="redis" scheme="https://arvenseyz.github.io/tags/redis/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>redis单线程原理</title>
-    <link href="https://arvenseyz.github.io/2020/08/14/8-14%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-2/"/>
-    <id>https://arvenseyz.github.io/2020/08/14/8-14技术笔记-2/</id>
-    <published>2020-08-14T06:00:21.000Z</published>
-    <updated>2020-08-14T06:24:15.164Z</updated>
-    
-    <content type="html"><![CDATA[<p>redis单线程指的是工作线程是单线程，还有很多辅助线程。</p><p>redis单线程快，合理的说法是，多线程不能提升redis性能，所以没必要使用多线程。</p><p>考虑单核处理器，多线程并不能增加cpu使用总时间，反而会增加上下文切换消耗。那为什么我们平时要多线程呢？</p><p>因为IO速度比cpu慢太多，多线程是为了防止/减少IO阻塞。</p><p>IO分为两部分，磁盘和网络，redis纯内存，没有IO。至于网络，redis用了select/epoll的多路复用，相当于多线程。（这里其实有优化空间，多路复用也可以多线程多路复用，redis6.0已经优化）。</p><p>考虑多核处理器的情况，多线程的确能并行使用多个cpu，但对于redis来说，cpu并不是瓶颈，，Redis的瓶颈最有可能是机器内存的大小或者网络带宽。既然单线程容易实现，而且CPU不会成为瓶颈，那就顺理成章地采用单线程的方案了。</p><h2 id="select-epoll"><a href="#select-epoll" class="headerlink" title="select/epoll"></a>select/epoll</h2><p><img src="https://s1.ax1x.com/2020/08/14/dCyZEq.jpg" alt="dCyZEq.jpg"></p><p>套接字，文件描述符什么的，目前还不懂。但简单的来说，是同时注册多个，基于回调，回调后入一个事件处理队列，redis的工作线程只需要不断得从队列取，进行工作即可。那么就无需轮询客户端是否有请求。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;redis单线程指的是工作线程是单线程，还有很多辅助线程。&lt;/p&gt;
-&lt;p&gt;redis单线程快，合理的说法是，多线程不能提升redis性能，所以没必要使用多线程。&lt;/p&gt;
-&lt;p&gt;考虑单核处理器，多线程并不能增加cpu使用总时间，反而会增加上下文切换消耗。那为什么我们平时要多线
       
     
     </summary>
