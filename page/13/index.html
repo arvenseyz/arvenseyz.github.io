@@ -251,6 +251,161 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/03/28/leetcode63-64/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/03/28/leetcode63-64/" itemprop="url">网格最短路径，网格路径数</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-03-28T17:15:25+08:00">
+                2019-03-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/leetcode/" itemprop="url" rel="index">
+                    <span itemprop="name">leetcode</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="64"><a href="#64" class="headerlink" title="64"></a>64</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>最小路径：</p>
+<p><strong>Input:</strong><br>[<br>  [1,3,1],<br>  [1,5,1],<br>  [4,2,1]<br>]<br><strong>Output:</strong> 7<br><strong>Explanation:</strong> Because the path 1→3→1→1→1 minimizes the sum.</p>
+<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><p>其实和之前那道路径数差不多，相当于带权的，然后比较即可。</p>
+<p>到一个点的最短距离，等于【到他上面然后往下走一步】和【到他左边往右走一步】两者中较小的一个。</p>
+<p>这就是动规方程咯。</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">minPathSum</span><span class="params">(<span class="keyword">int</span>[][] grid)</span> </span>&#123;</span><br><span class="line">     <span class="keyword">int</span>[][] dp =grid.clone();</span><br><span class="line">     <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">1</span>;i&lt;grid.length;i++)&#123;</span><br><span class="line">         dp[i][<span class="number">0</span>]=dp[i-<span class="number">1</span>][<span class="number">0</span>]+grid[i][<span class="number">0</span>];</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">for</span>(<span class="keyword">int</span> j=<span class="number">1</span>;j&lt;grid[<span class="number">0</span>].length;j++)&#123;</span><br><span class="line">         dp[<span class="number">0</span>][j]=dp[<span class="number">0</span>][j-<span class="number">1</span>]+grid[<span class="number">0</span>][j];</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">for</span>(<span class="keyword">int</span> i= <span class="number">1</span>;i&lt;grid.length;i++)&#123;</span><br><span class="line">         <span class="keyword">for</span> (<span class="keyword">int</span> j =<span class="number">1</span>;j&lt;grid[<span class="number">0</span>].length;j++)&#123;</span><br><span class="line">             dp[i][j]=Math.min(dp[i-<span class="number">1</span>][j],dp[i][j-<span class="number">1</span>])+grid[i][j];</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">return</span> dp[grid.length-<span class="number">1</span>][grid[<span class="number">0</span>].length-<span class="number">1</span>];</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<h1 id="63"><a href="#63" class="headerlink" title="63"></a>63</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>路径数，和之前差不多，区别在于中间有路障。</p>
+<p><strong>Input:</strong> [<br>  [0,0,0],<br> [0,1,0],<br>  [0,0,0]<br>]<br><strong>Output:</strong> 2<br><strong>Explanation:</strong><br>There is one obstacle in the middle of the 3x3 grid above.<br>There are two ways to reach the bottom-right corner:</p>
+<ol>
+<li>Right -&gt; Right -&gt; Down -&gt; Down</li>
+<li>Down -&gt; Down -&gt; Right -&gt; Right</li>
+</ol>
+<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>其实解法也差不多，遇到路障特殊处理就行了。把不可达路径赋为0。</p>
+<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">uniquePathsWithObstacles</span><span class="params">(<span class="keyword">int</span>[][] obstacleGrid)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span>[][] dp =obstacleGrid.clone();</span><br><span class="line">        <span class="keyword">if</span>(obstacleGrid[<span class="number">0</span>][<span class="number">0</span>]==<span class="number">1</span>)&#123;</span><br><span class="line">            dp[<span class="number">0</span>][<span class="number">0</span>]=<span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            dp[<span class="number">0</span>][<span class="number">0</span>]=<span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">1</span>;i&lt;obstacleGrid.length;i++)&#123;</span><br><span class="line">            <span class="keyword">if</span>(obstacleGrid[i][<span class="number">0</span>]==<span class="number">1</span>||dp[i-<span class="number">1</span>][<span class="number">0</span>]==<span class="number">0</span>)&#123;</span><br><span class="line">                dp[i][<span class="number">0</span>]=<span class="number">0</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span>&#123;</span><br><span class="line">                dp[i][<span class="number">0</span>]=<span class="number">1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">1</span>;i&lt;obstacleGrid[<span class="number">0</span>].length;i++)&#123;</span><br><span class="line">            <span class="keyword">if</span>(obstacleGrid[<span class="number">0</span>][i]==<span class="number">1</span>||dp[<span class="number">0</span>][i-<span class="number">1</span>]==<span class="number">0</span>)&#123;</span><br><span class="line">                dp[<span class="number">0</span>][i]=<span class="number">0</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span>&#123;</span><br><span class="line">                dp[<span class="number">0</span>][i]=<span class="number">1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i= <span class="number">1</span>;i&lt;obstacleGrid.length;i++)&#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> j =<span class="number">1</span>;j&lt;obstacleGrid[<span class="number">0</span>].length;j++)&#123;</span><br><span class="line">                <span class="keyword">if</span>(obstacleGrid[i][j]==<span class="number">1</span>)&#123;</span><br><span class="line">                    dp[i][j]=<span class="number">0</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span> <span class="keyword">if</span>(obstacleGrid[i-<span class="number">1</span>][j]==<span class="number">1</span>||dp[i-<span class="number">1</span>][j]==<span class="number">0</span>)&#123;</span><br><span class="line">                    dp[i][j]=dp[i][j-<span class="number">1</span>];</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span> <span class="keyword">if</span>(obstacleGrid[i][j-<span class="number">1</span>]==<span class="number">1</span>||dp[i][j-<span class="number">1</span>]==<span class="number">0</span>)&#123;</span><br><span class="line">                    dp[i][j]=dp[i-<span class="number">1</span>][j];</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span> <span class="keyword">if</span>(dp[i][j-<span class="number">1</span>]==<span class="number">0</span>&amp;&amp;dp[i-<span class="number">1</span>][j]==<span class="number">0</span>)&#123;</span><br><span class="line">                    dp[i][j]=<span class="number">0</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span> &#123;</span><br><span class="line">                    dp[i][j]=dp[i-<span class="number">1</span>][j]+dp[i][j-<span class="number">1</span>];</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> dp[obstacleGrid.length-<span class="number">1</span>][obstacleGrid[<span class="number">0</span>].length-<span class="number">1</span>];</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/03/27/leetcode102-104-111-655/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1656,166 +1811,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/03/12/leetcode22-37/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/03/12/leetcode22-37/" itemprop="url">括号的正确匹配，解数独</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-03-12T17:21:14+08:00">
-                2019-03-12
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/leetcode/" itemprop="url" rel="index">
-                    <span itemprop="name">leetcode</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="22"><a href="#22" class="headerlink" title="22"></a>22</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>给一个数，给出所有括号的正确匹配。</p>
-<p>比如说3</p>
-<p>答案应该是</p>
-<p>[<br>  “((()))”,<br>  “(()())”,<br>  “(())()”,<br>  “()(())”,<br>  “()()()”<br>]</p>
-<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><p>匹配总数是知道的，即n!，有点类似于全排列。参见这篇文章</p>
-<blockquote>
-<p><a href="https://blog.csdn.net/yyyds/article/details/51712604" target="_blank" rel="noopener">https://blog.csdn.net/yyyds/article/details/51712604</a></p>
-</blockquote>
-<p>区别在于，左右括号同时进行，左小于终点，右小于左。</p>
-<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">     <span class="function"><span class="keyword">public</span> List&lt;String&gt; <span class="title">generateParenthesis</span><span class="params">(<span class="keyword">int</span> n)</span> </span>&#123;</span><br><span class="line">        List&lt;String&gt; ans = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">         dfs(n,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="string">""</span>,ans);</span><br><span class="line">        <span class="keyword">return</span> ans;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">dfs</span><span class="params">(<span class="keyword">int</span> n, <span class="keyword">int</span> c,<span class="keyword">int</span> l,<span class="keyword">int</span> r, String a ,List&lt;String&gt; ans)</span></span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(a.length()==<span class="number">2</span>*n)&#123;</span><br><span class="line">            ans.add(a);</span><br><span class="line">            <span class="keyword">return</span> ;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span>(l&lt;n)&#123;</span><br><span class="line">            dfs(n,c+<span class="number">1</span>,l+<span class="number">1</span>,r,a+<span class="string">"("</span>,ans);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span>(r&lt;l)&#123;</span><br><span class="line">            dfs(n,c+<span class="number">1</span>, l, r+<span class="number">1</span>, a+<span class="string">")"</span>,ans);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="37"><a href="#37" class="headerlink" title="37"></a>37</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>解数独</p>
-<p>9*9的格子，每行每列，每3*3的小格子，数字都不能重复。</p>
-<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>首先是判断这个数能不能放入的工具方法，大的行列好判断，小格子定位的方法是。</p>
-<p>x-x%3。</p>
-<p>y同理，这样就分成了9个小格子，在小格子左上角了。</p>
-<p>接下来的问题还是深度优先搜索，更像全排列问题。</p>
-<p>至于搜索停止条件，那就是格子数完了，如果是基础已给定格子，则跳过并搜索下一个，如果是空格子，看能不能放数，可以放就放下数，搜索下一个。</p>
-<p>回溯的关键是，dfs（）往后搜索之后，需要再把自己重新置为空格子状态。</p>
-<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">solveSudoku</span><span class="params">(<span class="keyword">char</span>[][] board)</span> </span>&#123;</span><br><span class="line">       dfs(<span class="number">0</span>,board);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="function"><span class="keyword">boolean</span> <span class="title">dfs</span><span class="params">(<span class="keyword">int</span> c,<span class="keyword">char</span>[][] board)</span> </span>&#123;</span><br><span class="line">       <span class="keyword">if</span>(c &gt;= <span class="number">81</span>) &#123;</span><br><span class="line">           <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">if</span>(board[c / <span class="number">9</span>][c % <span class="number">9</span>] != <span class="string">'.'</span>) &#123;</span><br><span class="line">           <span class="keyword">return</span> dfs(c + <span class="number">1</span>, board);</span><br><span class="line">       &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">           <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">9</span>; i++) &#123;</span><br><span class="line">               <span class="keyword">char</span> it = (<span class="keyword">char</span>) (i + <span class="string">'0'</span>);</span><br><span class="line"></span><br><span class="line">               <span class="keyword">if</span>(fit(c / <span class="number">9</span>, c % <span class="number">9</span>, it, board)) &#123;</span><br><span class="line">                   board[c / <span class="number">9</span>][c % <span class="number">9</span>] = it;</span><br><span class="line">                   <span class="keyword">if</span>(dfs(c + <span class="number">1</span>, board)) &#123;</span><br><span class="line">                       <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">                   &#125;</span><br><span class="line">                   board[c / <span class="number">9</span>][c % <span class="number">9</span>] = <span class="string">'.'</span>;</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">           <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">boolean</span> <span class="title">fit</span><span class="params">(<span class="keyword">int</span> x,<span class="keyword">int</span> y, <span class="keyword">char</span> n,<span class="keyword">char</span>[][] board)</span></span>&#123;</span><br><span class="line">       <span class="keyword">for</span>(<span class="keyword">int</span> i =<span class="number">0</span> ;i&lt;<span class="number">9</span>;i++)&#123;</span><br><span class="line">           <span class="keyword">if</span>(board[x][i]==n||board[i][y]==n)&#123;</span><br><span class="line">               <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">int</span> xt=x-x%<span class="number">3</span>;</span><br><span class="line">       <span class="keyword">int</span> yt=y-y%<span class="number">3</span>;</span><br><span class="line">       <span class="keyword">for</span>(<span class="keyword">int</span> i =xt;i&lt;xt+<span class="number">3</span>;i++)&#123;</span><br><span class="line">           <span class="keyword">for</span>(<span class="keyword">int</span> j =yt;j&lt;yt+<span class="number">3</span>;j++)&#123;</span><br><span class="line">               <span class="keyword">if</span>(board[i][j]==n)&#123;</span><br><span class="line">                   <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1866,7 +1861,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">248</span>
+                  <span class="site-state-item-count">249</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

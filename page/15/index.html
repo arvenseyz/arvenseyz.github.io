@@ -251,6 +251,155 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/02/18/2-18技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/02/18/2-18技术笔记/" itemprop="url">countdownlatch，CyclicBarrier</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-18T17:39:03+08:00">
+                2019-02-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="countdownlatch"><a href="#countdownlatch" class="headerlink" title="countdownlatch"></a>countdownlatch</h1><p>官方解释：CountDownLatch是一个同步的辅助类，允许一个或多个线程，等待其他一组线程完成操作，再继续执行。</p>
+<p>例子：在玩LOL英雄联盟时会出现十个人不同加载状态，游戏系统自动等待所有玩家的状态都准备好，才展现游戏画面。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CountDownLatchTst</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        CountDownLatch latch = <span class="keyword">new</span> CountDownLatch(<span class="number">10</span>);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">            <span class="keyword">int</span> finalI = i;</span><br><span class="line">            <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    System.out.println(finalI);</span><br><span class="line">                    Thread.sleep((<span class="keyword">long</span>) Math.random() * <span class="number">1000</span> * <span class="number">3</span>);</span><br><span class="line">                    System.out.println(finalI+<span class="string">"ok"</span>);</span><br><span class="line">                    latch.countDown();</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;).start();</span><br><span class="line">        &#125;</span><br><span class="line">        latch.await();</span><br><span class="line">        System.out.println(<span class="string">"ok"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>countDown()计数器减一，await()等待计数器归零。</p>
+<p># </p>
+<h1 id="CyclicBarrier"><a href="#CyclicBarrier" class="headerlink" title="CyclicBarrier"></a>CyclicBarrier</h1><p>所有线程先依次完成任务一，等待所有线程完成任务一后，再同时开始任务二。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"> <span class="class"><span class="keyword">class</span> <span class="title">UpCar</span> <span class="keyword">implements</span> <span class="title">Runnable</span></span>&#123;</span><br><span class="line">        <span class="keyword">private</span> CyclicBarrier cyclicBarrier ;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">int</span> name;</span><br><span class="line">        UpCar(CyclicBarrier cyclicBarrier,<span class="keyword">int</span> name)&#123;</span><br><span class="line">            <span class="keyword">this</span>.cyclicBarrier=cyclicBarrier;</span><br><span class="line">            <span class="keyword">this</span>.name=name;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                Thread.sleep((<span class="keyword">long</span>) Math.random()*<span class="number">1000</span>*<span class="number">5</span>);</span><br><span class="line">                System.out.println(name+<span class="string">"刷卡"</span>);</span><br><span class="line">                cyclicBarrier.await();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException | BrokenBarrierException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">     <span class="class"><span class="keyword">class</span> <span class="title">GoPark</span> <span class="keyword">implements</span> <span class="title">Runnable</span></span>&#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            System.out.println(<span class="string">"出发"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CyclicBarrierTst</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        CyclicBarrier cyclicBarrier = <span class="keyword">new</span> CyclicBarrier(<span class="number">3</span>,<span class="keyword">new</span> GoPark());</span><br><span class="line">        ExecutorService executorService = Executors.newFixedThreadPool(<span class="number">3</span>);</span><br><span class="line">        executorService.submit(<span class="keyword">new</span> Thread(<span class="keyword">new</span> UpCar(cyclicBarrier,<span class="number">1</span>)));</span><br><span class="line">        executorService.submit(<span class="keyword">new</span> Thread(<span class="keyword">new</span> UpCar(cyclicBarrier,<span class="number">2</span>)));</span><br><span class="line">        executorService.submit(<span class="keyword">new</span> Thread(<span class="keyword">new</span> UpCar(cyclicBarrier,<span class="number">3</span>)));</span><br><span class="line">        executorService.shutdown();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>首先是三个人上车，都上车后，出发。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/02/14/2-14技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1756,180 +1905,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/01/22/1-22技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/22/1-22技术笔记/" itemprop="url">bean生命周期,类型</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-22T18:02:21+08:00">
-                2019-01-22
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="Bean-Scope"><a href="#Bean-Scope" class="headerlink" title="Bean Scope"></a>Bean Scope</h2><p>在bean上使用@Scope注解，可以指定bean的作用范围，默认是Singleton即单例的，与之对应的还有Prototype原型模式产生的bean。另外还有三种很不常用的，</p>
-<ul>
-<li>Request - 每一次 HTTP 请求都会产生一个新的 Bean 实例，并且该 Bean 仅在当前 HTTP 请求内有效。</li>
-<li>Session - 每一个的 Session 都会产生一个新的 Bean 实例，同时该 Bean 仅在当前 HTTP Session 内有效。</li>
-<li>Application - 每一个 Web Application 都会产生一个新的 Bean ，同时该 Bean 仅在当前 Web Application 内有效。</li>
-</ul>
-<h1 id="原型模式Bean"><a href="#原型模式Bean" class="headerlink" title="原型模式Bean"></a>原型模式Bean</h1><p>仅仅将bean作用范围声明为原型模式，实际上并不会奏效，是因为在自动装配依赖注入时：被注入的Bean,即Class A的scope是默认的singleton，因此Context只会创建Class A的bean一次，所以也就只有一次注入依赖的机会，容器也就无法每次给Class A提供一个新的Class B（原型模式的Bean）。</p>
-<p>Spring有方法层面的注解<strong>@Lookup</strong>，被其标注的方法会被重写，然后根据其返回值的类型，容器调用BeanFactory的getBean()方法来返回一个bean。即解决了这个问题。</p>
-<p>另有一种原式不好的解决方法是，ClassA实现ApplicationContextAware接口，能够在每次需要到Class B的时候手动去Context里找到新的bean。</p>
-<h1 id="线程安全"><a href="#线程安全" class="headerlink" title="线程安全"></a>线程安全</h1><p>单例的bean不是线程安全的，相比于让单例bean线程安全，更有意义的是，让单例bean中没有可变的状态。</p>
-<h1 id="Bean生命周期"><a href="#Bean生命周期" class="headerlink" title="Bean生命周期"></a>Bean生命周期</h1><p><img src="https://i.loli.net/2019/02/19/5c6be3e8a58ec.png" alt="5c6be3e8a58ec"></p>
-<p><img src="https://i.loli.net/2019/02/19/5c6be3f8b0301.png" alt="5c6be3f8b0301"></p>
-<ol>
-<li><p>实例化bean对象，设置对象属性。</p>
-</li>
-<li><p>围绕实例化和设置对象属性的接口是InstantiationAwareBeanPostProcessor的一些方法。</p>
-</li>
-<li><p>调用Aware方法，分别来setBeanName，setBeanFactory，setBeanApplication。可以实现这三个接口，来自定义其设置。</p>
-</li>
-<li><p>调用init_method</p>
-</li>
-<li><p>围绕4的接口是BeanPostProcessor，后置处理器，可以实现后做一些后置处理。以及InitializingBean接口。</p>
-</li>
-<li><p>单例bean放在ioc容器中，模版bean交给客户端。</p>
-</li>
-<li><p>调用destrory-method方法。</p>
-</li>
-<li><p>在7之前的接口是disposableBean。</p>
-</li>
-</ol>
-<h1 id="自动装配注解"><a href="#自动装配注解" class="headerlink" title="自动装配注解"></a>自动装配注解</h1><p><code>@Required</code>注解，应用于 Bean 属性 setter 方法。</p>
-<p><code>@Autowired</code>注解，可以更准确地控制应该在何处以及如何进行自动装配。</p>
-<p>当创建多个<strong>相同类型</strong>的 Bean ，并希望仅使用属性装配<strong>其中一个</strong>Bean 时，可以使用<code>@Qualifier</code>注解和<code>@Autowired</code>通过指定 ID 应该装配哪个<strong>确切的</strong>Bean 来消除歧义。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1980,7 +1955,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">248</span>
+                  <span class="site-state-item-count">249</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

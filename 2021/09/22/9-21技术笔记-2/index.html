@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Arvense, NexT">
+  <meta name="keywords" content="ES,">
 
 
 
@@ -81,13 +81,20 @@
 
 
 
-<meta property="og:type" content="website">
-<meta property="og:title" content="Arvense">
-<meta property="og:url" content="https://arvenseyz.github.io/tags/数组/index.html">
+<meta name="description" content="在进行查询的时候经常会进行组合查询，比如查询同时包含choice和the的文档，那么就需要分别查出包含这两个单词的文档的id，然后取这两个id列表的交集；如果是查包含choice或者the的文档，那么就需要分别查出posting list然后取并集。为了能够高效的进行交集和并集的操作，posting list里面的id都是有序的。同时为了减小存储空间，所有的id都会进行delta编码（delta-">
+<meta name="keywords" content="ES">
+<meta property="og:type" content="article">
+<meta property="og:title" content="FOR">
+<meta property="og:url" content="https://arvenseyz.github.io/2021/09/22/9-21技术笔记-2/index.html">
 <meta property="og:site_name" content="Arvense">
+<meta property="og:description" content="在进行查询的时候经常会进行组合查询，比如查询同时包含choice和the的文档，那么就需要分别查出包含这两个单词的文档的id，然后取这两个id列表的交集；如果是查包含choice或者the的文档，那么就需要分别查出posting list然后取并集。为了能够高效的进行交集和并集的操作，posting list里面的id都是有序的。同时为了减小存储空间，所有的id都会进行delta编码（delta-">
 <meta property="og:locale" content="default">
+<meta property="og:image" content="https://s3.bmp.ovh/imgs/2021/09/c8cd99dd7c742a88.png">
+<meta property="og:updated_time" content="2021-09-22T09:15:38.695Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Arvense">
+<meta name="twitter:title" content="FOR">
+<meta name="twitter:description" content="在进行查询的时候经常会进行组合查询，比如查询同时包含choice和the的文档，那么就需要分别查出包含这两个单词的文档的id，然后取这两个id列表的交集；如果是查包含choice或者the的文档，那么就需要分别查出posting list然后取并集。为了能够高效的进行交集和并集的操作，posting list里面的id都是有序的。同时为了减小存储空间，所有的id都会进行delta编码（delta-">
+<meta name="twitter:image" content="https://s3.bmp.ovh/imgs/2021/09/c8cd99dd7c742a88.png">
 
 
 
@@ -117,13 +124,13 @@
 
 
 
-  <link rel="canonical" href="https://arvenseyz.github.io/tags/数组/">
+  <link rel="canonical" href="https://arvenseyz.github.io/2021/09/22/9-21技术笔记-2/">
 
 
 
 
 
-  <title>Tag: 数组 | Arvense</title>
+  <title>FOR | Arvense</title>
   
 
 
@@ -142,7 +149,7 @@
     
   
 
-  <div class="container sidebar-position-left ">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -236,78 +243,174 @@
           <div id="content" class="content">
             
 
-  
-  
-  
-  <div class="post-block tag">
+  <div id="posts" class="posts-expand">
+    
 
-    <div id="posts" class="posts-collapse">
-      <div class="collection-title">
-        <h1>数组<small>Tag</small>
-        </h1>
-      </div>
+  
 
-      
-        
+  
+  
+  
 
   <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/22/9-21技术笔记-2/">
 
-      <h2 class="post-title">
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
         
-            <a class="post-title-link" href="/2019/04/18/leetcode24-905-922/" itemprop="url">
-              
-                <span itemprop="name">成对交换链表节点，数组奇偶排列，数组奇偶排列2</span>
-              
-            </a>
         
-      </h2>
+          <h1 class="post-title" itemprop="name headline">FOR</h1>
+        
 
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2019-04-18T16:48:03+08:00" content="2019-04-18">
-          04-18
-        </time>
-      </div>
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-09-22T17:11:15+08:00">
+                2021-09-22
+              </time>
+            
 
-    </header>
-  </article>
+            
 
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-        
+      
 
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2019/04/08/leetcode215-240/" itemprop="url">
-              
-                <span itemprop="name">第k大元素，二维数组找目标值</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated" datetime="2019-04-08T15:55:21+08:00" content="2019-04-08">
-          04-08
-        </time>
-      </div>
-
-    </header>
-  </article>
-
+      
+        <p>在进行查询的时候经常会进行组合查询，比如查询同时包含<code>choice</code>和<code>the</code>的文档，那么就需要分别查出包含这两个单词的文档的id，然后取这两个id列表的<strong>交集</strong>；如果是查包含<code>choice</code><strong>或者</strong><code>the</code>的文档，那么就需要分别查出posting list然后取<strong>并集</strong>。为了能够高效的进行交集和并集的操作，posting list里面的id都是有序的。同时为了减小存储空间，所有的id都会进行<strong>delta编码</strong>（delta-encoding，我觉得可以翻译成<strong>增量编码</strong>）</p>
+<p>比如现在有id列表<code>[73, 300, 302, 332, 343, 372]</code>，转化成每一个id相对于前一个id的增量值（第一个id的前一个id默认是0，增量就是它自己）列表是<code>[73, 227, 2, 30, 11, 29]</code>。在这个新的列表里面，所有的id都是小于255的，所以每个id只需要<strong>一个字节</strong>存储。</p>
+<p>实际上ES会做的更加精细，它会把所有的文档分成很多个block，每个block正好包含256个文档，然后单独对每个文档进行增量编码，计算出存储这个block里面所有文档最多需要多少位来保存每个id，并且把这个位数作为头信息（header）放在每个block 的前面。这个技术叫Frame of Reference，我翻译成索引帧。</p>
+<p>比如对上面的数据进行压缩（假设每个block只有3个文件而不是256），压缩过程如下</p>
+<p><img src="https://s3.bmp.ovh/imgs/2021/09/c8cd99dd7c742a88.png" alt></p>
+<p>在返回结果的时候，其实也并不需要把所有的数据直接解压然后一股脑全部返回，可以直接返回一个迭代器iterator，直接通过迭代器的next方法逐一取出压缩的id，这样也可以极大的节省计算和内存开销。<br>通过以上的方式可以极大的节省posting list的空间消耗，提高查询性能。不过ES为了提高filter过滤器查询的性能，还做了更多的工作，那就是缓存。</p>
 
       
     </div>
+    
+    
+    
 
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/ES/" rel="tag"># ES</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/09/22/9-22技术笔记-2/" rel="next" title="FST">
+                <i class="fa fa-chevron-left"></i> FST
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
   </div>
   
   
   
+  </article>
 
-  
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -315,6 +418,10 @@
 
 
           
+
+  
+
+
 
         </div>
         
@@ -536,6 +643,10 @@
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 

@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2021-09-22T07:23:18.318Z</updated>
+  <updated>2021-09-22T09:15:38.695Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -15,6 +15,31 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>FOR</title>
+    <link href="https://arvenseyz.github.io/2021/09/22/9-21%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-2/"/>
+    <id>https://arvenseyz.github.io/2021/09/22/9-21技术笔记-2/</id>
+    <published>2021-09-22T09:11:15.000Z</published>
+    <updated>2021-09-22T09:15:38.695Z</updated>
+    
+    <content type="html"><![CDATA[<p>在进行查询的时候经常会进行组合查询，比如查询同时包含<code>choice</code>和<code>the</code>的文档，那么就需要分别查出包含这两个单词的文档的id，然后取这两个id列表的<strong>交集</strong>；如果是查包含<code>choice</code><strong>或者</strong><code>the</code>的文档，那么就需要分别查出posting list然后取<strong>并集</strong>。为了能够高效的进行交集和并集的操作，posting list里面的id都是有序的。同时为了减小存储空间，所有的id都会进行<strong>delta编码</strong>（delta-encoding，我觉得可以翻译成<strong>增量编码</strong>）</p><p>比如现在有id列表<code>[73, 300, 302, 332, 343, 372]</code>，转化成每一个id相对于前一个id的增量值（第一个id的前一个id默认是0，增量就是它自己）列表是<code>[73, 227, 2, 30, 11, 29]</code>。在这个新的列表里面，所有的id都是小于255的，所以每个id只需要<strong>一个字节</strong>存储。</p><p>实际上ES会做的更加精细，它会把所有的文档分成很多个block，每个block正好包含256个文档，然后单独对每个文档进行增量编码，计算出存储这个block里面所有文档最多需要多少位来保存每个id，并且把这个位数作为头信息（header）放在每个block 的前面。这个技术叫Frame of Reference，我翻译成索引帧。</p><p>比如对上面的数据进行压缩（假设每个block只有3个文件而不是256），压缩过程如下</p><p><img src="https://s3.bmp.ovh/imgs/2021/09/c8cd99dd7c742a88.png" alt></p><p>在返回结果的时候，其实也并不需要把所有的数据直接解压然后一股脑全部返回，可以直接返回一个迭代器iterator，直接通过迭代器的next方法逐一取出压缩的id，这样也可以极大的节省计算和内存开销。<br>通过以上的方式可以极大的节省posting list的空间消耗，提高查询性能。不过ES为了提高filter过滤器查询的性能，还做了更多的工作，那就是缓存。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;在进行查询的时候经常会进行组合查询，比如查询同时包含&lt;code&gt;choice&lt;/code&gt;和&lt;code&gt;the&lt;/code&gt;的文档，那么就需要分别查出包含这两个单词的文档的id，然后取这两个id列表的&lt;strong&gt;交集&lt;/strong&gt;；如果是查包含&lt;code&gt;choic
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="ES" scheme="https://arvenseyz.github.io/tags/ES/"/>
+    
+  </entry>
   
   <entry>
     <title>FST</title>
@@ -508,31 +533,6 @@
     
     
       <category term="redis" scheme="https://arvenseyz.github.io/tags/redis/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>范围查询与索引</title>
-    <link href="https://arvenseyz.github.io/2020/08/25/8-25%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://arvenseyz.github.io/2020/08/25/8-25技术笔记/</id>
-    <published>2020-08-25T06:21:11.000Z</published>
-    <updated>2020-08-25T09:48:52.857Z</updated>
-    
-    <content type="html"><![CDATA[<p>最左前缀匹配原则，非常重要的原则，mysql会一直向右匹配直到遇到范围查询(&gt;、&lt;、between、like)就停止匹配，比如a = 1 and b = 2 and c &gt; 3 and d = 4 如果建立(a,b,c,d)顺序的索引，d是用不到索引的，如果建立(a,b,d,c)的索引则都可以用到，a,b,d的顺序可以任意调整。</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span></span><br><span class="line">   <span class="keyword">count</span>(*) </span><br><span class="line"><span class="keyword">from</span></span><br><span class="line">   task </span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">   <span class="keyword">status</span>=<span class="number">2</span> </span><br><span class="line">   <span class="keyword">and</span> operator_id=<span class="number">20839</span> </span><br><span class="line">   <span class="keyword">and</span> operate_time&gt;<span class="number">1371169729</span> </span><br><span class="line">   <span class="keyword">and</span> operate_time&lt;<span class="number">1371174603</span> </span><br><span class="line">   <span class="keyword">and</span> <span class="keyword">type</span>=<span class="number">2</span>;</span><br></pre></td></tr></table></figure><p>如果索引是(operate_time,status,type,operator_id)，则只有operate_time参与索引。</p><p>即索引应该建为(status,type,operator_id,operate_time)。</p><p>总的来说，如果索引中某字段是范围查询，那么它应该在最后的字段。否则它右边的字段不参与索引。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;最左前缀匹配原则，非常重要的原则，mysql会一直向右匹配直到遇到范围查询(&amp;gt;、&amp;lt;、between、like)就停止匹配，比如a = 1 and b = 2 and c &amp;gt; 3 and d = 4 如果建立(a,b,c,d)顺序的索引，d是用不到索引的，如
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="数据库" scheme="https://arvenseyz.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
     
   </entry>
   
