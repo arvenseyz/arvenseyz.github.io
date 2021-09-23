@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="redis,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Arvense" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="一般来说，缓存有以下三种模式：  Cache Aside 更新模式  Read/Write Through 更新模式  Write Behind Caching 更新模式   通俗一点来讲就是，同时更新缓存和数据库（Cache Aside 更新模式）；先更新缓存，缓存负责同步更新数据库（Read/Write Through 更新模式）；先更新缓存，缓存定时异步更新数据库（Write Behind">
+<meta name="keywords" content="redis">
+<meta property="og:type" content="article">
+<meta property="og:title" content="缓存的数据一致性问题">
+<meta property="og:url" content="https://arvenseyz.github.io/2021/01/14/1-14技术笔记/index.html">
+<meta property="og:site_name" content="Arvense">
+<meta property="og:description" content="一般来说，缓存有以下三种模式：  Cache Aside 更新模式  Read/Write Through 更新模式  Write Behind Caching 更新模式   通俗一点来讲就是，同时更新缓存和数据库（Cache Aside 更新模式）；先更新缓存，缓存负责同步更新数据库（Read/Write Through 更新模式）；先更新缓存，缓存定时异步更新数据库（Write Behind">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2021-01-14T07:59:24.965Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="缓存的数据一致性问题">
+<meta name="twitter:description" content="一般来说，缓存有以下三种模式：  Cache Aside 更新模式  Read/Write Through 更新模式  Write Behind Caching 更新模式   通俗一点来讲就是，同时更新缓存和数据库（Cache Aside 更新模式）；先更新缓存，缓存负责同步更新数据库（Read/Write Through 更新模式）；先更新缓存，缓存定时异步更新数据库（Write Behind">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://arvenseyz.github.io/2021/01/14/1-14技术笔记/">
+
+
+
+
+
+  <title>缓存的数据一致性问题 | Arvense</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Arvense</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/01/14/1-14技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">缓存的数据一致性问题</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-01-14T15:13:03+08:00">
+                2021-01-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p> 一般来说，缓存有以下三种模式：</p>
+<ul>
+<li><p>Cache Aside 更新模式</p>
+</li>
+<li><p>Read/Write Through 更新模式</p>
+</li>
+<li><p>Write Behind Caching 更新模式</p>
+</li>
+</ul>
+<p>通俗一点来讲就是，同时更新缓存和数据库（Cache Aside 更新模式）；先更新缓存，缓存负责同步更新数据库（Read/Write Through 更新模式）；先更新缓存，缓存定时异步更新数据库（Write Behind Caching 更新模式）</p>
+<h1 id="Cache-Aside-旁路缓存-策略"><a href="#Cache-Aside-旁路缓存-策略" class="headerlink" title="Cache Aside(旁路缓存)策略"></a>Cache Aside(旁路缓存)策略</h1><h2 id="更新缓存的问题"><a href="#更新缓存的问题" class="headerlink" title="更新缓存的问题"></a>更新缓存的问题</h2><p>首先是缓存更新还是删除，采用删除，原因有两点：</p>
+<ol>
+<li><p>对于对象类型，或者文本类型，修改缓存value的成本较高。</p>
+</li>
+<li><p>有并发问题。</p>
+</li>
+</ol>
+<p>即同时有请求A和请求B进行更新操作，那么会出现<br>（1）线程A更新了数据库<br>（2）线程B更新了数据库<br>（3）线程B更新了缓存<br>（4）线程A更新了缓存<br>这就出现请求A更新缓存应该比请求B更新缓存早才对，但是因为网络等原因，B却比A更早更新了缓存。这就导致了脏数据，因此不考虑。</p>
+<h2 id="先删缓存的问题"><a href="#先删缓存的问题" class="headerlink" title="先删缓存的问题"></a>先删缓存的问题</h2><p>其次是先删缓存还是先改数据库。</p>
+<p>都有问题。</p>
+<p>先删缓存问题如下：</p>
+<h3 id="并发问题"><a href="#并发问题" class="headerlink" title="并发问题"></a>并发问题</h3><p>同时有一个请求A进行更新操作，另一个请求B进行查询操作。那么会出现如下情形:<br>（1）请求A进行写操作，删除缓存<br>（2）请求B查询发现缓存不存在<br>（3）请求B去数据库查询得到旧值<br>（4）请求B将旧值写入缓存<br>（5）请求A将新值写入数据库<br>上述情况就会导致不一致的情形出现。而且，如果不采用给缓存设置过期时间策略，该数据永远都是脏数据。</p>
+<h3 id="主从同步问题"><a href="#主从同步问题" class="headerlink" title="主从同步问题"></a>主从同步问题</h3><p>两个请求，一个请求A进行更新操作，另一个请求B进行查询操作。  </p>
+<p>（1）请求A进行写操作，删除缓存<br>（2）请求A将数据写入数据库了，<br>（3）请求B查询缓存发现，缓存没有值<br>（4）请求B去从库查询，这时，还没有完成主从同步，因此查询到的是旧值<br>（5）请求B将旧值写入缓存<br>（6）数据库完成主从同步，从库变为新值</p>
+<h3 id="异步双删"><a href="#异步双删" class="headerlink" title="异步双删"></a>异步双删</h3><p>等一定时间（主从同步时间）后，再次删除</p>
+<h2 id="先更新数据库的问题"><a href="#先更新数据库的问题" class="headerlink" title="先更新数据库的问题"></a>先更新数据库的问题</h2><h3 id="原子性问题"><a href="#原子性问题" class="headerlink" title="原子性问题"></a>原子性问题</h3><p>更新数据库成功，删除缓存失败，不好处理。</p>
+<h3 id="并发问题-1"><a href="#并发问题-1" class="headerlink" title="并发问题"></a>并发问题</h3><p>假设这会有两个请求，一个请求A做查询操作，一个请求B做更新操作，那么会有如下情形产生<br>（1）缓存刚好失效<br>（2）请求A查询数据库，得一个旧值<br>（3）请求B将新值写入数据库<br>（4）请求B删除缓存<br>（5）请求A将查到的旧值写入缓存<br>ok，如果发生上述情况，确实是会发生脏数据。</p>
+<p>但是这种问题，出现在写操作比读操作慢，一般不会发生。</p>
+<h3 id="异步双删-1"><a href="#异步双删-1" class="headerlink" title="异步双删"></a>异步双删</h3><p>也可以解决这个问题。</p>
+<p>异步第二次删除失败怎么处理，搞个失败队列啥的。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/redis/" rel="tag"># redis</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/12/30/12-30技术笔记/" rel="next" title="mongo分布式一致性">
+                <i class="fa fa-chevron-left"></i> mongo分布式一致性
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/08/10/8-10技术笔记-1/" rel="prev" title="ES的store、source、index属性">
+                ES的store、source、index属性 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Arvense</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">249</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">68</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Cache-Aside-旁路缓存-策略"><span class="nav-number">1.</span> <span class="nav-text">Cache Aside(旁路缓存)策略</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#更新缓存的问题"><span class="nav-number">1.1.</span> <span class="nav-text">更新缓存的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#先删缓存的问题"><span class="nav-number">1.2.</span> <span class="nav-text">先删缓存的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#并发问题"><span class="nav-number">1.2.1.</span> <span class="nav-text">并发问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#主从同步问题"><span class="nav-number">1.2.2.</span> <span class="nav-text">主从同步问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#异步双删"><span class="nav-number">1.2.3.</span> <span class="nav-text">异步双删</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#先更新数据库的问题"><span class="nav-number">1.3.</span> <span class="nav-text">先更新数据库的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#原子性问题"><span class="nav-number">1.3.1.</span> <span class="nav-text">原子性问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#并发问题-1"><span class="nav-number">1.3.2.</span> <span class="nav-text">并发问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#异步双删-1"><span class="nav-number">1.3.3.</span> <span class="nav-text">异步双删</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a>Arvense</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">blog   </div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

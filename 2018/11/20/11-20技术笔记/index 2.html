@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="netty,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Arvense" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="单聊单聊不可能是一个人是服务端一个人是客户端，而应该是两个人都是客户端，把信息发送给同一个服务端，由服务端进行信息处理和转发。 Session服务端里保存了客户端的session信息，用来找到收信人。12345678910111213141516public class Session &amp;#123;    // 用户唯一性标识    private String userId;    privat">
+<meta name="keywords" content="netty">
+<meta property="og:type" content="article">
+<meta property="og:title" content="netty实现单聊">
+<meta property="og:url" content="https://arvenseyz.github.io/2018/11/20/11-20技术笔记/index.html">
+<meta property="og:site_name" content="Arvense">
+<meta property="og:description" content="单聊单聊不可能是一个人是服务端一个人是客户端，而应该是两个人都是客户端，把信息发送给同一个服务端，由服务端进行信息处理和转发。 Session服务端里保存了客户端的session信息，用来找到收信人。12345678910111213141516public class Session &amp;#123;    // 用户唯一性标识    private String userId;    privat">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-11-20T07:39:18.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="netty实现单聊">
+<meta name="twitter:description" content="单聊单聊不可能是一个人是服务端一个人是客户端，而应该是两个人都是客户端，把信息发送给同一个服务端，由服务端进行信息处理和转发。 Session服务端里保存了客户端的session信息，用来找到收信人。12345678910111213141516public class Session &amp;#123;    // 用户唯一性标识    private String userId;    privat">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://arvenseyz.github.io/2018/11/20/11-20技术笔记/">
+
+
+
+
+
+  <title>netty实现单聊 | Arvense</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Arvense</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/11/20/11-20技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">netty实现单聊</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-20T14:47:23+08:00">
+                2018-11-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="单聊"><a href="#单聊" class="headerlink" title="单聊"></a>单聊</h1><p>单聊不可能是一个人是服务端一个人是客户端，而应该是两个人都是客户端，把信息发送给同一个服务端，由服务端进行信息处理和转发。</p>
+<h2 id="Session"><a href="#Session" class="headerlink" title="Session"></a>Session</h2><p>服务端里保存了客户端的session信息，用来找到收信人。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public class Session &#123;</span><br><span class="line">    // 用户唯一性标识</span><br><span class="line">    private String userId;</span><br><span class="line">    private String userName;</span><br><span class="line"></span><br><span class="line">    public Session(String userId, String userName) &#123;</span><br><span class="line">        this.userId = userId;</span><br><span class="line">        this.userName = userName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String toString() &#123;</span><br><span class="line">        return userId + &quot;:&quot; + userName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>对session的管理主要是管理用户和channel的映射，和channel中自设的session属性。前者用来找个用户对应的channel，后者用来验证登陆状况。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">public class SessionUtil &#123;</span><br><span class="line">    private static final Map&lt;String, Channel&gt; userIdChannelMap = new ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    public static void bindSession(Session session, Channel channel) &#123;</span><br><span class="line">        userIdChannelMap.put(session.getUserId(), channel);</span><br><span class="line">        channel.attr(Attributes.SESSION).set(session);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void unBindSession(Channel channel) &#123;</span><br><span class="line">        if (hasLogin(channel)) &#123;</span><br><span class="line">            userIdChannelMap.remove(getSession(channel).getUserId());</span><br><span class="line">            channel.attr(Attributes.SESSION).set(null);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static boolean hasLogin(Channel channel) &#123;</span><br><span class="line"></span><br><span class="line">        return channel.hasAttr(Attributes.SESSION);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static Session getSession(Channel channel) &#123;</span><br><span class="line"></span><br><span class="line">        return channel.attr(Attributes.SESSION).get();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static Channel getChannel(String userId) &#123;</span><br><span class="line"></span><br><span class="line">        return userIdChannelMap.get(userId);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="消息发送"><a href="#消息发送" class="headerlink" title="消息发送"></a>消息发送</h2><p>新起一个控制台线程，如果没有登录，则发送登录数据包；如果登录了，则发送消息包即可。这样一来，客户端发送的消息，不但有消息的内容，还要指定消息发送给谁，即消息数据包里应该多一条目的人的数据。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public class MessageRequestPacket extends Packet &#123;</span><br><span class="line">    private String toUserId;</span><br><span class="line">    private String message;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>具体控制台代码,连接成功后，调用该函数即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">private static void startConsoleThread(Channel channel) &#123;</span><br><span class="line">       Scanner sc = new Scanner(System.in);</span><br><span class="line">       LoginRequestPacket loginRequestPacket = new LoginRequestPacket();</span><br><span class="line"></span><br><span class="line">       new Thread(() -&gt; &#123;</span><br><span class="line">           while (!Thread.interrupted()) &#123;</span><br><span class="line">               if (!SessionUtil.hasLogin(channel)) &#123;</span><br><span class="line">                   System.out.print(&quot;输入用户名登录: &quot;);</span><br><span class="line">                   String username = sc.nextLine();</span><br><span class="line">                   loginRequestPacket.setUserName(username);</span><br><span class="line"></span><br><span class="line">                   // 密码使用默认的</span><br><span class="line">                   loginRequestPacket.setPassword(&quot;pwd&quot;);</span><br><span class="line"></span><br><span class="line">                   // 发送登录数据包</span><br><span class="line">                   channel.writeAndFlush(loginRequestPacket);</span><br><span class="line">                   waitForLoginResponse();</span><br><span class="line">               &#125; else &#123;</span><br><span class="line">                   String toUserId = sc.next();</span><br><span class="line">                   String message = sc.next();</span><br><span class="line">                   channel.writeAndFlush(new MessageRequestPacket(toUserId, message));</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;).start();</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   private static void waitForLoginResponse() &#123;</span><br><span class="line">       try &#123;</span><br><span class="line">           Thread.sleep(1000);</span><br><span class="line">       &#125; catch (InterruptedException ignored) &#123;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="登录"><a href="#登录" class="headerlink" title="登录"></a>登录</h2><p>服务端处理登录，就是接受到登录数据包后，验证账号密码，找到UserID，然后响应登录即可。还有一点，当连接断开，需要取消session的绑定。（重载 channelInactive(ChannelHandlerContext ctx)方法）<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">public class LoginRequestHandler extends SimpleChannelInboundHandler&lt;LoginRequestPacket&gt; &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, LoginRequestPacket loginRequestPacket) &#123;</span><br><span class="line">        LoginResponsePacket loginResponsePacket = new LoginResponsePacket();</span><br><span class="line">        loginResponsePacket.setVersion(loginRequestPacket.getVersion());</span><br><span class="line">        loginResponsePacket.setUserName(loginRequestPacket.getUserName());</span><br><span class="line"></span><br><span class="line">        if (valid(loginRequestPacket)) &#123;</span><br><span class="line">            loginResponsePacket.setSuccess(true);</span><br><span class="line">            String userId = randomUserId();</span><br><span class="line">            loginResponsePacket.setUserId(userId);</span><br><span class="line">            System.out.println(&quot;[&quot; + loginRequestPacket.getUserName() + &quot;]登录成功&quot;);</span><br><span class="line">            SessionUtil.bindSession(new Session(userId, loginRequestPacket.getUserName()), ctx.channel());</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            loginResponsePacket.setReason(&quot;账号密码校验失败&quot;);</span><br><span class="line">            loginResponsePacket.setSuccess(false);</span><br><span class="line">            System.out.println(new Date() + &quot;: 登录失败!&quot;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 登录响应</span><br><span class="line">        ctx.channel().writeAndFlush(loginResponsePacket);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private boolean valid(LoginRequestPacket loginRequestPacket) &#123;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static String randomUserId() &#123;</span><br><span class="line">        return UUID.randomUUID().toString().split(&quot;-&quot;)[0];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void channelInactive(ChannelHandlerContext ctx) &#123;</span><br><span class="line">        SessionUtil.unBindSession(ctx.channel());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="消息转发"><a href="#消息转发" class="headerlink" title="消息转发"></a>消息转发</h2><p>服务端处理消息，找到对应channel，然后转发即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">public class MessageRequestHandler extends SimpleChannelInboundHandler&lt;MessageRequestPacket&gt; &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, MessageRequestPacket messageRequestPacket) &#123;</span><br><span class="line">        // 1.拿到消息发送方的会话信息</span><br><span class="line">        Session session = SessionUtil.getSession(ctx.channel());</span><br><span class="line"></span><br><span class="line">        // 2.通过消息发送方的会话信息构造要发送的消息</span><br><span class="line">        MessageResponsePacket messageResponsePacket = new MessageResponsePacket();</span><br><span class="line">        messageResponsePacket.setFromUserId(session.getUserId());</span><br><span class="line">        messageResponsePacket.setFromUserName(session.getUserName());</span><br><span class="line">        messageResponsePacket.setMessage(messageRequestPacket.getMessage());</span><br><span class="line"></span><br><span class="line">        // 3.拿到消息接收方的 channel</span><br><span class="line">        Channel toUserChannel = SessionUtil.getChannel(messageRequestPacket.getToUserId());</span><br><span class="line"></span><br><span class="line">        // 4.将消息发送给消息接收方</span><br><span class="line">        if (toUserChannel != null &amp;&amp; SessionUtil.hasLogin(toUserChannel)) &#123;</span><br><span class="line">            toUserChannel.writeAndFlush(messageResponsePacket);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            System.err.println(&quot;[&quot; + messageRequestPacket.getToUserId() + &quot;] 不在线，发送失败);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="消息接收"><a href="#消息接收" class="headerlink" title="消息接收"></a>消息接收</h2><p>很简单，接收消息即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class MessageResponseHandler extends SimpleChannelInboundHandler&lt;MessageResponsePacket&gt; &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, MessageResponsePacket messageResponsePacket) &#123;</span><br><span class="line">        String fromUserId = messageResponsePacket.getFromUserId();</span><br><span class="line">        String fromUserName = messageResponsePacket.getFromUserName();</span><br><span class="line">        System.out.println(fromUserId + &quot;:&quot; + fromUserName + &quot; -&gt; &quot; + messageResponsePacket</span><br><span class="line">                .getMessage());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/netty/" rel="tag"># netty</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/19/11-19技术笔记/" rel="next" title="pipeline及相关组件">
+                <i class="fa fa-chevron-left"></i> pipeline及相关组件
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/11/21/11-21技术笔记/" rel="prev" title="netty实现群聊">
+                netty实现群聊 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Arvense</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">249</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">68</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#单聊"><span class="nav-number">1.</span> <span class="nav-text">单聊</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Session"><span class="nav-number">1.1.</span> <span class="nav-text">Session</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#消息发送"><span class="nav-number">1.2.</span> <span class="nav-text">消息发送</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#登录"><span class="nav-number">1.3.</span> <span class="nav-text">登录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#消息转发"><span class="nav-number">1.4.</span> <span class="nav-text">消息转发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#消息接收"><span class="nav-number">1.5.</span> <span class="nav-text">消息接收</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a>Arvense</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">blog   </div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
