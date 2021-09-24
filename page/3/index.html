@@ -251,6 +251,170 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/09/02/9-2技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/09/02/9-2技术笔记/" itemprop="url">redis主从，哨兵，集群</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-09-02T17:21:40+08:00">
+                2020-09-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="主从"><a href="#主从" class="headerlink" title="主从"></a>主从</h1><p>最简单的主写从读结构，无法强保证一致性。</p>
+<h2 id="首次同步"><a href="#首次同步" class="headerlink" title="首次同步"></a>首次同步</h2><p>主从第一次同步的方式是发送RDB文件，主从通过replicaof指令建立连接后，从库向主库发送psync命令，主库返回runID和目前的复制进度offset。</p>
+<p>主库执行bgsave，生成RDB文件，从库按照收到的RDB来同步。</p>
+<p>主从同步时，主库可能数据发生了变化，主库把变化的写操作，记录下来，即replication buffer，同步完后，再同步这些变化即可。</p>
+<p>因为fork子进程是阻塞的，所以可以采用级连的方式，即从库从从库同步。</p>
+<h2 id="断连恢复"><a href="#断连恢复" class="headerlink" title="断连恢复"></a>断连恢复</h2><p>当主从库断连后，主库会把断连期间收到的写操作命令，写入 replication buffer，同时也会把这些操作命令也写入 repl_backlog_buffer 这个环形缓冲区。</p>
+<p>环形缓冲区记录了主库写和从库读的进度，从库断连恢复后，从该缓冲区，就可以追回进度。</p>
+<p>然而有个问题，缓冲区是环形的，差距太大的话，还没同步的操作已经被覆盖了，就会有不一致。</p>
+<h1 id="哨兵"><a href="#哨兵" class="headerlink" title="哨兵"></a>哨兵</h1><p>哨兵监控了主库状态，如果主库挂了，选一个从库来继续充当主库。</p>
+<h2 id="判断主库存活"><a href="#判断主库存活" class="headerlink" title="判断主库存活"></a>判断主库存活</h2><p>哨兵实际上无法判读主库挂了，因为收不到心跳可能是网络问题。解决方法是多加几个哨兵，哨兵也是集群，集群来判断主库挂了。</p>
+<p>哨兵集群部分节点挂了，那么哨兵集群还能工作吗？这个问题就是拜占庭将军问题。答案是，只要大多数节点正常的，就可以。</p>
+<h2 id="选新主"><a href="#选新主" class="headerlink" title="选新主"></a>选新主</h2><p>哨兵集群判断出主库“主观下线”后，会选出一个“哨兵领导者”，之后整个过程由它来完成主从切换。  </p>
+<p>但是如何选出“哨兵领导者”？即共识算法，指的是集群中多个节点如何就一个问题达成共识。共识算法有很多种，例如Paxos、Raft，这里哨兵集群采用的类似于Raft的共识算法。</p>
+<p>选的过程两部，第一步筛选，即筛掉经常断连的从库。</p>
+<p>第二步打分，依次按照优先级高，同步程度近，id小来打分，选出一个新的主库。</p>
+<p>显然，会丢数据，无法保证一致性。</p>
+<p>主故障时不可用，无法保证可用性。</p>
+<h1 id="集群"><a href="#集群" class="headerlink" title="集群"></a>集群</h1><p>集群是把数据分开存，采用的是哈希槽的形式，即把16384哈希槽分给实例，key对16384取模，拿到哈希槽。</p>
+<p>所以客户端需要知道哈希槽在哪个实例。</p>
+<p>一般来说，客户端和集群实例建立连接后，实例就会把哈希槽的分配信息发给客户端。单Redis 实例会把自己的哈希槽信息发给和它相连接的其它实例，来完成哈希槽分配信息的扩散。当实例之间相互连接后，每个实例就有所有哈希槽的映射关系了。</p>
+<p>客户端收到哈希槽信息后，会把哈希槽信息缓存在本地。当客户端请求键值对时，会先计算键所对应的哈希槽，然后就可以给相应的实例发送请求了。</p>
+<p>如果实例有新增删除，导致槽对应的实例变化，请求实例时，会返回一个重定向，这样客户端可以更新缓存。</p>
+<p>另一种情况是rehash，这时可能部分数据在一个实例，部分在另一个，也是靠实例返回ASK来交互。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/08/27/8-27技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1586,176 +1750,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/06/01/6-1技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/06/01/6-1技术笔记/" itemprop="url"><form> 标签的 enctype</form></a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-06-01T16:43:41+08:00">
-                2020-06-01
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <table>
-<thead>
-<tr>
-<th>值</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>application/x-www-form-urlencoded</td>
-<td>在发送前编码所有字符（默认）</td>
-</tr>
-<tr>
-<td>multipart/form-data</td>
-<td>不对字符编码。数据通过二进制的形式传送。</td>
-</tr>
-<tr>
-<td>text/plain</td>
-<td>空格转换为 “+” 加号，但不对特殊字符编码。</td>
-</tr>
-</tbody>
-</table>
-<p>在Form元素的语法中，EncType表明提交数据的格式 用 Enctype 属性指定将数据回发到服务器时浏览器使用的编码类型。 例如： application/x-www-form-urlencoded： 窗体数据被编码为名称/值对。这是标准的编码格式。 multipart/form-data： 窗体数据被编码为一条消息，页上的每个控件对应消息中的一个部分，这个一般文件上传时用。浏览器会把整个表单以控件为单位分割，并为每个部分加上Content-Disposition(form-data或者file),Content-Type(默认为text/plain),name(控件name)等信息，并加上分割符(boundary)。</p>
-<p> text/plain： 窗体数据以纯文本形式进行编码，其中不含任何控件或格式字符</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/25/">25</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/26/">26</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1801,7 +1800,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">250</span>
+                  <span class="site-state-item-count">251</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

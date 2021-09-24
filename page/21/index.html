@@ -251,6 +251,193 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/10/08/10-8技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/10/08/10-8技术笔记/" itemprop="url">备忘录模式，观察者模式</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-10-08T17:15:23+08:00">
+                2018-10-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="备忘录模式"><a href="#备忘录模式" class="headerlink" title="备忘录模式"></a>备忘录模式</h1><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>备忘录模式使用的不多，大抵在软件需要撤销功能，比如说绘图，图像编辑软件等，这时需要保存每一步的状态，以便撤销。</p>
+<h2 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h2><ol>
+<li><p>Memento 包含了要被恢复的对象的状态。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public class Memento &#123;</span><br><span class="line">   private String state;</span><br><span class="line"></span><br><span class="line">   public Memento(String state)&#123;</span><br><span class="line">      this.state = state;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   public String getState()&#123;</span><br><span class="line">      return state;</span><br><span class="line">   &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Originator 创建并在 Memento 对象中存储状态。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">public class Originator &#123;</span><br><span class="line">   private String state;</span><br><span class="line"></span><br><span class="line">   public void setState(String state)&#123;</span><br><span class="line">      this.state = state;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   public String getState()&#123;</span><br><span class="line">      return state;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   public Memento saveStateToMemento()&#123;</span><br><span class="line">      return new Memento(state);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   public void getStateFromMemento(Memento Memento)&#123;</span><br><span class="line">      state = Memento.getState();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Caretaker 对象负责从 Memento 中恢复对象的状态。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public class CareTaker &#123;</span><br><span class="line">   private List&lt;Memento&gt; mementoList = new ArrayList&lt;Memento&gt;();</span><br><span class="line"></span><br><span class="line">   public void add(Memento state)&#123;</span><br><span class="line">      mementoList.add(state);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   public Memento get(int index)&#123;</span><br><span class="line">      return mementoList.get(index);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用 CareTaker 和 Originator 对象。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">public class MementoPatternDemo &#123;</span><br><span class="line">   public static void main(String[] args) &#123;</span><br><span class="line">      Originator originator = new Originator();</span><br><span class="line">      CareTaker careTaker = new CareTaker();</span><br><span class="line">      originator.setState(&quot;State #1&quot;);</span><br><span class="line">      originator.setState(&quot;State #2&quot;);</span><br><span class="line">      careTaker.add(originator.saveStateToMemento());</span><br><span class="line">      originator.setState(&quot;State #3&quot;);</span><br><span class="line">      careTaker.add(originator.saveStateToMemento());</span><br><span class="line">      originator.setState(&quot;State #4&quot;);</span><br><span class="line"></span><br><span class="line">      System.out.println(&quot;Current State: &quot; + originator.getState());    </span><br><span class="line">      originator.getStateFromMemento(careTaker.get(0));</span><br><span class="line">      System.out.println(&quot;First saved State: &quot; + originator.getState());</span><br><span class="line">      originator.getStateFromMemento(careTaker.get(1));</span><br><span class="line">      System.out.println(&quot;Second saved State: &quot; + originator.getState());</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h1 id="观察者模式"><a href="#观察者模式" class="headerlink" title="观察者模式"></a>观察者模式</h1><h2 id="使用场景-1"><a href="#使用场景-1" class="headerlink" title="使用场景"></a>使用场景</h2><p>观察者模式使用很广泛，凡是有消息通知系统，都可以采用观察者模式，如A要通知B，或者所有人，并不需要由A来操作，而是交由观察者来通知。</p>
+<h2 id="使用方法-1"><a href="#使用方法-1" class="headerlink" title="使用方法"></a>使用方法</h2><p>这里模拟一个遭受攻击通知盟友，当玩家遭受攻击，又观察者通知他所有盟友。</p>
+<ol>
+<li><p>抽象被观察者</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">interface Observer &#123;  </span><br><span class="line">    public String getName();  </span><br><span class="line">    public void setName(String name);  </span><br><span class="line">    public void help(); //声明支援盟友方法  </span><br><span class="line">    public void beAttacked(AllyControlCenter acc); //声明遭受攻击方法  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>具体玩家类</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">class Player implements Observer &#123;  </span><br><span class="line">    private String name;  </span><br><span class="line"></span><br><span class="line">    public Player(String name) &#123;  </span><br><span class="line">        this.name = name;  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    public void setName(String name) &#123;  </span><br><span class="line">        this.name = name;  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    public String getName() &#123;  </span><br><span class="line">        return this.name;  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    //支援盟友方法的实现  </span><br><span class="line">    public void help() &#123;  </span><br><span class="line">        System.out.println(&quot;坚持住，&quot; + this.name + &quot;来救你！&quot;);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    //遭受攻击方法的实现，当遭受攻击时将调用战队控制中心类的通知方法notifyObserver()来通知盟友  </span><br><span class="line">    public void beAttacked(AllyControlCenter acc) &#123;  </span><br><span class="line">        System.out.println(this.name + &quot;被攻击！&quot;);  </span><br><span class="line">        acc.notifyObserver(name);         </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>战队控制中心类：目标类  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">abstract class AllyControlCenter &#123;  </span><br><span class="line">    protected String allyName; //战队名称  </span><br><span class="line">    protected ArrayList&lt;Observer&gt; players = new ArrayList&lt;Observer&gt;(); //定义一个集合用于存储战队成员  </span><br><span class="line"></span><br><span class="line">    public void setAllyName(String allyName) &#123;  </span><br><span class="line">        this.allyName = allyName;  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    public String getAllyName() &#123;  </span><br><span class="line">        return this.allyName;  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    //注册方法  </span><br><span class="line">    public void join(Observer obs) &#123;  </span><br><span class="line">        System.out.println(obs.getName() + &quot;加入&quot; + this.allyName + &quot;战队！&quot;);  </span><br><span class="line">        players.add(obs);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    //注销方法  </span><br><span class="line">    public void quit(Observer obs) &#123;  </span><br><span class="line">        System.out.println(obs.getName() + &quot;退出&quot; + this.allyName + &quot;战队！&quot;);  </span><br><span class="line">        players.remove(obs);  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    //声明抽象通知方法  </span><br><span class="line">    public abstract void notifyObserver(String name);  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>具体目标类</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">class ConcreteAllyControlCenter extends AllyControlCenter &#123;  </span><br><span class="line">    public ConcreteAllyControlCenter(String allyName) &#123;  </span><br><span class="line">        System.out.println(allyName + &quot;战队组建成功！&quot;);  </span><br><span class="line">        System.out.println(&quot;----------------------------&quot;);  </span><br><span class="line">        this.allyName = allyName;  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    //实现通知方法  </span><br><span class="line">    public void notifyObserver(String name) &#123;  </span><br><span class="line">        System.out.println(this.allyName + &quot;战队紧急通知，盟友&quot; + name + &quot;遭受敌人攻击！&quot;);  </span><br><span class="line">        //遍历观察者集合，调用每一个盟友（自己除外）的支援方法  </span><br><span class="line">        for(Object obs : players) &#123;  </span><br><span class="line">            if (!((Observer)obs).getName().equalsIgnoreCase(name)) &#123;  </span><br><span class="line">                ((Observer)obs).help();  </span><br><span class="line">            &#125;  </span><br><span class="line">        &#125;         </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>客户端</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">class Client &#123;  </span><br><span class="line">    public static void main(String args[]) &#123;  </span><br><span class="line">        //定义观察目标对象  </span><br><span class="line">AllyControlCenter acc;  </span><br><span class="line">        acc = new ConcreteAllyControlCenter(&quot;金庸群侠&quot;);  </span><br><span class="line"></span><br><span class="line">        //定义四个观察者对象  </span><br><span class="line">        Observer player1,player2,player3,player4;  </span><br><span class="line"></span><br><span class="line">        player1 = new Player(&quot;杨过&quot;);  </span><br><span class="line">        acc.join(player1);  </span><br><span class="line"></span><br><span class="line">        player2 = new Player(&quot;令狐冲&quot;);  </span><br><span class="line">        acc.join(player2);  </span><br><span class="line"></span><br><span class="line">        player3 = new Player(&quot;张无忌&quot;);  </span><br><span class="line">        acc.join(player3);  </span><br><span class="line"></span><br><span class="line">        player4 = new Player(&quot;段誉&quot;);  </span><br><span class="line">        acc.join(player4);  </span><br><span class="line"></span><br><span class="line">        //某成员遭受攻击  </span><br><span class="line">        Player1.beAttacked(acc);  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="java接口实现"><a href="#java接口实现" class="headerlink" title="java接口实现"></a>java接口实现</h2><p>实际上由于观察者模式的广泛应用，java有其实现，Observer接口和Observable基类，观察者和被观察者只有继承和实现其即可。</p>
+<ol>
+<li><p>观察目标，java.util.Observable类充当观察目标类，在Observable中定义了一个向量Vector来存储观察者对象，并且有对观察者对象的增减，以及内部标记变量changed的操作，和通知类操作。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public class User extends Observable &#123;</span><br><span class="line">    private int data = 0;</span><br><span class="line">    public int getData() &#123;</span><br><span class="line">        return data;</span><br><span class="line">    &#125;</span><br><span class="line">    public void setData(int i) &#123;</span><br><span class="line">        if(this.data != i) &#123;</span><br><span class="line">            this.data = i;</span><br><span class="line">            //只有在setChange()被调用后，notifyObservers()才会去调用update()，否则什么都不做</span><br><span class="line">            setChanged();</span><br><span class="line">            notifyObservers();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>观察者。在java.util.Observer接口中只声明一个方法，它充当抽象观察者，当观察目标的状态发生变化时，该方法将会被调用，在Observer的子类中将实现update()方法，即具体观察者可以根据需要具有不同的更新行为。当调用观察目标类Observable的notifyObservers()方法时，将执行观察者类中的update()方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public class MObserver implements java.util.Observer &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void update(Observable o, Object arg) &#123;</span><br><span class="line">        User user=(User)o;</span><br><span class="line">        System.out.println(&quot;现在数据是&quot;+user.getData());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>客户端操作</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class Client &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        MObserver observer = new MObserver();</span><br><span class="line">        User user =new User();</span><br><span class="line">        user.addObserver(observer);</span><br><span class="line">        user.setData(2);</span><br><span class="line">        System.out.println(user.countObservers());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/10/08/文艺作品与装逼艺术/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1675,180 +1862,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/09/21/9-21技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/09/21/9-21技术笔记/" itemprop="url">代理模式，外观模式</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-21T15:01:21+08:00">
-                2018-09-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="代理模式"><a href="#代理模式" class="headerlink" title="代理模式"></a>代理模式</h1><h2 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h2><p>我看来代理模式和装饰模式在代码结构上很像，都是在原有实体的基础上进行了一些“装饰”。<br>但功能逻辑上不同，装饰模式可以让用户选择装饰的方法，好比给房子刷红漆还是蓝漆，力求对用户可见；而代理模式相反，用户指定代理后，甚至隐藏了原实体，的却也是给房子刷漆，但是代理自己决定怎么刷的。</p>
-<h2 id="实现方法"><a href="#实现方法" class="headerlink" title="实现方法"></a>实现方法</h2><ol>
-<li><p>基础抽象基类</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Subject &#123;</span><br><span class="line">    public abstract void request();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>真实实现类</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public class RealSubject extends Subject &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void request() &#123;</span><br><span class="line">        System.out.println(&quot;真实对象操作&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>代理类，持有真实实现类的对象，并对实现过程进行装饰</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public class Proxy extends Subject &#123;</span><br><span class="line">    private RealSubject realSubject = new RealSubject();</span><br><span class="line">    private void preRequest() &#123;</span><br><span class="line">        System.out.println(&quot;前置行为&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">    @Override</span><br><span class="line">    public void request() &#123;</span><br><span class="line">        preRequest();</span><br><span class="line">        realSubject.request();</span><br><span class="line">        postRequest();</span><br><span class="line">    &#125;</span><br><span class="line">    private void postRequest() &#123;</span><br><span class="line">        System.out.println(&quot;后置行为&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>使用时，真实实现不可见</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public class Myuse &#123;</span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">        Proxy proxy = new Proxy();</span><br><span class="line">        proxy.request();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<h1 id="外观模式"><a href="#外观模式" class="headerlink" title="外观模式"></a>外观模式</h1><h2 id="使用场景-1"><a href="#使用场景-1" class="headerlink" title="使用场景"></a>使用场景</h2><p>外观模式就是先建一个对外接口，为子系统中的一组接口提供一个统一的入口。外观模式定义了一个高层接口，这个接口使得这一子系统更加容易使用。</p>
-<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>外观模式实现很简单，外观接口持有调用子接口实现即可。</p>
-<ol>
-<li><p>子系统</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public class SubSystemA &#123;</span><br><span class="line">    public void methodA()&#123;</span><br><span class="line">        System.out.println(&quot;A实现&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">//多子系统</span><br><span class="line">public class SubSystemB &#123;</span><br><span class="line">    public void methodA()&#123;</span><br><span class="line">        System.out.println(&quot;B实现&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>外观类</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class Facede &#123;</span><br><span class="line">    private SubSystemA subSystemA = new SubSystemA();</span><br><span class="line">    private SubSystemB subSystemB = new SubSystemB();</span><br><span class="line">    public void Method()</span><br><span class="line">    &#123;</span><br><span class="line">        subSystemA.methodA();</span><br><span class="line">        subSystemB.methodB();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>使用类，具体使用，子系统是透明的。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public class Weues &#123;</span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">        Facede facede = new Facede();</span><br><span class="line">        facede.Method();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/20/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/20/">20</a><span class="page-number current">21</span><a class="page-number" href="/page/22/">22</a><span class="space">&hellip;</span><a class="page-number" href="/page/25/">25</a><a class="extend next" rel="next" href="/page/22/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/20/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/20/">20</a><span class="page-number current">21</span><a class="page-number" href="/page/22/">22</a><span class="space">&hellip;</span><a class="page-number" href="/page/26/">26</a><a class="extend next" rel="next" href="/page/22/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1894,7 +1912,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">250</span>
+                  <span class="site-state-item-count">251</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

@@ -251,6 +251,138 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/07/15/7-15技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/15/7-15技术笔记/" itemprop="url">Delve开发机调试</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-15T17:41:53+08:00">
+                2019-07-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go get github.com/derekparker/delve/cmd/dlv</span><br></pre></td></tr></table></figure>
+<p>一键安装，可能由于网速等原因，需要等待很久。</p>
+<p>输入dlv version验证安装成功</p>
+<h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><p>dlv debug delve-demo.go</p>
+<p>dlv test – -test.run <test function> </test></p>
+<h1 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h1><p>help输入帮助，b建立断点使用 <code>&lt;package&gt;.&lt;function&gt;</code>或是 <code>&lt;filename&gt;:&lt;line number&gt;</code>的格式。bp查看断点。</p>
+<p>c开始运行程序。</p>
+<p>單部執行： n<br>步入： s<br>步出：stepout  </p>
+<p>看函数参数：args</p>
+<p>看协程：goroutine</p>
+<p>看变量：print</p>
+<h1 id="然而"><a href="#然而" class="headerlink" title="然而"></a>然而</h1><p>1.如果写的是服务端程序，测试的时候是模拟rpc请求，这时自己的身份是rpc的消费者，生产者处打断点没用，生产者似乎无法在启动服务时打断点。</p>
+<p>2.goland有个go remote,可以输入开发机主机，但没有输密码的地方，当然连接不上。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/07/11/7-11技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1676,161 +1808,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/06/18/6-18技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/06/18/6-18技术笔记/" itemprop="url">hexo博客迁移</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-18T19:27:12+08:00">
-                2019-06-18
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>1.保存文件，大概是讲就是历史博客</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">_config.yml</span><br><span class="line"> package.json</span><br><span class="line"> scaffolds/</span><br><span class="line"> source/</span><br><span class="line"> themes/</span><br></pre></td></tr></table></figure>
-<p>2.在新的电脑搭建hexo</p>
-<p>可随便参考网上教程，大概是安装nodejs，安装hexo，生成ssh并添加到github</p>
-<p>3.新建个空目录，执行hexo init，新建一个</p>
-<p>4.把复制的文件拷贝过来</p>
-<p>5.安装各个模块</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">本地测试的时候需要用hexo server</span><br><span class="line">npm i hexo-server</span><br><span class="line">将文章部署到github上的模块</span><br><span class="line">npm install hexo-deployer-git --save</span><br><span class="line">安装RSS插件</span><br><span class="line">npm install hexo-generator-feed --save</span><br><span class="line">添加Sitemap,加速网页收录速度</span><br><span class="line">npm install hexo-generator-sitemap --save</span><br></pre></td></tr></table></figure>
-<p>6.hexo d -g。可观测到成功</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/8/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><span class="page-number current">9</span><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/25/">25</a><a class="extend next" rel="next" href="/page/10/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/8/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><span class="page-number current">9</span><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/26/">26</a><a class="extend next" rel="next" href="/page/10/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1876,7 +1858,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">250</span>
+                  <span class="site-state-item-count">251</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
