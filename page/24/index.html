@@ -345,8 +345,10 @@
         
           
             <h1 id="内部类"><a href="#内部类" class="headerlink" title="内部类"></a>内部类</h1><h2 id="访问权"><a href="#访问权" class="headerlink" title="访问权"></a>访问权</h2><p>内部类能访问其外部对象所有成员，拥有其外部类所有元素控制权。内部类对象的存在依赖于外部类对象。</p>
-<h2 id="new和-this"><a href="#new和-this" class="headerlink" title=".new和.this"></a>.new和.this</h2><p>在内部类中使用，外部类名字.this获得外部类对象。<br>想要直接创建内部类对象，需要先有外部对象,使用外部对象.new，创建内部类对象。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class Outerclass &#123;</span><br><span class="line">    public class Inner&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">//         Outerclass.Inner inner =new  Outerclass.Inner();// **错误** 无法在无外部对象时创建内部对象</span><br><span class="line">        Outerclass outerclass = new Outerclass();</span><br><span class="line">        Inner inner = outerclass.new Inner();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="向上转型"><a href="#向上转型" class="headerlink" title="向上转型"></a>向上转型</h2><p>使用私有或受保护的内部类来实现接口。向上转型为接口的对象，来调用接口内部的方法，通过该过程隐藏了接口的实现。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public interface Fun &#123;</span><br><span class="line">    public void run();</span><br><span class="line">&#125;</span><br><span class="line">public class Outerclass &#123;</span><br><span class="line">    private class Inner implements Fun&#123;</span><br><span class="line">        public void run()&#123;</span><br><span class="line">            System.out.println(&quot;fun,run&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Outerclass outerclass = new Outerclass();</span><br><span class="line">        Fun fun = outerclass.new Inner();</span><br><span class="line">        fun.run();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="new和-this"><a href="#new和-this" class="headerlink" title=".new和.this"></a>.new和.this</h2><p>在内部类中使用，外部类名字.this获得外部类对象。<br>想要直接创建内部类对象，需要先有外部对象,使用外部对象.new，创建内部类对象。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class Outerclass &#123;</span><br><span class="line">    public class Inner&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">//         Outerclass.Inner inner =new  Outerclass.Inner();// **错误** 无法在无外部对象时创建内部对象</span><br><span class="line">        Outerclass outerclass = new Outerclass();</span><br><span class="line">        Inner inner = outerclass.new Inner();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="向上转型"><a href="#向上转型" class="headerlink" title="向上转型"></a>向上转型</h2><p>使用私有或受保护的内部类来实现接口。向上转型为接口的对象，来调用接口内部的方法，通过该过程隐藏了接口的实现。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public interface Fun &#123;</span><br><span class="line">    public void run();</span><br><span class="line">&#125;</span><br><span class="line">public class Outerclass &#123;</span><br><span class="line">    private class Inner implements Fun&#123;</span><br><span class="line">        public void run()&#123;</span><br><span class="line">            System.out.println(&quot;fun,run&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Outerclass outerclass = new Outerclass();</span><br><span class="line">        Fun fun = outerclass.new Inner();</span><br><span class="line">        fun.run();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
           
         
@@ -678,8 +680,7 @@
       
         
           
-            <p>##后端支持：  </p>
-<ol>
+            <h2 id="后端支持："><a href="#后端支持：" class="headerlink" title="后端支持："></a>后端支持：</h2><ol>
 <li>Dao层：PageDto&lt;&gt;设置</li>
 </ol>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">private int totalSize;</span><br><span class="line">private List&lt;T&gt; results;</span><br></pre></td></tr></table></figure>
@@ -1923,7 +1924,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/23/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/23/">23</a><span class="page-number current">24</span><a class="page-number" href="/page/25/">25</a><a class="page-number" href="/page/26/">26</a><a class="extend next" rel="next" href="/page/25/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/23/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/23/">23</a><span class="page-number current">24</span><a class="page-number" href="/page/25/">25</a><a class="extend next" rel="next" href="/page/25/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1969,7 +1970,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">251</span>
+                  <span class="site-state-item-count">250</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1991,7 +1992,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">68</span>
+                  <span class="site-state-item-count">62</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
