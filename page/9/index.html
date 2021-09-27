@@ -251,6 +251,151 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/07/17/7-17技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/17/7-17技术笔记/" itemprop="url">go实现策略模式</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-17T17:02:28+08:00">
+                2019-07-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="传统策略模式"><a href="#传统策略模式" class="headerlink" title="传统策略模式"></a>传统策略模式</h1><p>传统(Java)策略模式依赖于继承，简单来说，各策略里面的实现封装一次，共同继承一个基类或者实现一个接口，然后一个策略工厂持有基类/接口对象，根据输入进行策略选择，得到对应的策略。业务方在使用时，应该首先用策略工厂获得需要的策略，然后调用策略的方法。</p>
+<p>然而，第一，依然没有避免switch，只不过转移到了策略工厂里；第二，策略和策略工厂耦合。</p>
+<h1 id="GO实现"><a href="#GO实现" class="headerlink" title="GO实现"></a>GO实现</h1><p>GO没有继承，但有方法变量，不如把策略先存到一个Map里，即   [策略名]实现方法的映射，这样直接可以从map中取出方法进行调用</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"><span class="keyword">var</span> Strategy <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span></span><br><span class="line"><span class="function"><span class="title">func</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    Strategy := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span>)</span></span><br><span class="line"><span class="function">	<span class="title">Strategy</span>["<span class="title">update</span>"] = <span class="title">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"update table set ? = ?"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	Strategy[<span class="string">"insert"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"insert into table values(?,?,?,?)"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	Strategy[<span class="string">"delete"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"delete from table where ?=?"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	Strategy[<span class="string">"select"</span>] = <span class="function"><span class="keyword">func</span><span class="params">(v ...<span class="keyword">interface</span>&#123;&#125;)</span></span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"select ? from table where ?=?"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	Strategy[<span class="string">"insert"</span>]()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/07/15/7-15技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1650,169 +1795,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/06/18/6-16技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/06/18/6-16技术笔记/" itemprop="url">kite框架简单了解</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-18T19:27:35+08:00">
-                2019-06-18
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="kite"><a href="#kite" class="headerlink" title="kite"></a>kite</h1><p>Kite是RPC库，作为分布式微服务的框架。</p>
-<p>传输层使用SockJS提供的WebSocket,RPC的消息格式使用的是修改过的dnode协议。</p>
-<h1 id="简单通信"><a href="#简单通信" class="headerlink" title="简单通信"></a>简单通信</h1><p>比如服务器和客户端的代码如下</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> <span class="string">"github.com/koding/kite"</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"first"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    k.Config.Port = <span class="number">6000</span></span><br><span class="line">    k.Run()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"github.com/koding/kite"</span></span><br><span class="line">)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"second"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    client := k.NewClient(<span class="string">"http://localhost:6000/kite"</span>)</span><br><span class="line">    client.Dial()</span><br><span class="line">    response, _ := client.Tell(<span class="string">"kite.ping"</span>)</span><br><span class="line">    fmt.Println(response.MustString())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>可以看到，服务端和客户端都通过kite对象交互，New()方法制定了名字和版本，服务端通过属性设置了监听的端口，Run()方法开始了服务。</p>
-<p>客户端制定了连接的URL,而Tell()方法相当于一个方法调用，传入的参数即方法名调用的方法，这里服务端并没有对应的handler，仍能正常交互并返回一个“pong”,是因为这是个默认方法。</p>
-<h1 id="方法调用"><a href="#方法调用" class="headerlink" title="方法调用"></a>方法调用</h1><p>这里再增加一个服务端的handler，完成完整的方法调用。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> <span class="string">"github.com/koding/kite"</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"first"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    k.Config.Port = <span class="number">6000</span></span><br><span class="line">    k.Config.DisableAuthentication = <span class="literal">true</span></span><br><span class="line">    k.HandleFunc(<span class="string">"square"</span>, <span class="function"><span class="keyword">func</span><span class="params">(r *kite.Request)</span> <span class="params">(<span class="keyword">interface</span>&#123;&#125;, error)</span></span> &#123;</span><br><span class="line">        a := r.Args.One().MustFloat64()</span><br><span class="line">        <span class="keyword">return</span> a * a, <span class="literal">nil</span></span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    k.Run()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这里kite注册了一个方法，名称是square，实现是后面的匿名方法，其实就是求下平方，注意其参数是个kite.Request的指针。</p>
-<p>服务端进行方法调用</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"github.com/koding/kite"</span></span><br><span class="line">)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"second"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    client := k.NewClient(<span class="string">"http://localhost:6000/kite"</span>)</span><br><span class="line">    client.Dial()</span><br><span class="line">    response, _ := client.Tell(<span class="string">"square"</span>, <span class="number">4</span>)</span><br><span class="line">    fmt.Println(response.MustFloat64())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="服务注册与发现"><a href="#服务注册与发现" class="headerlink" title="服务注册与发现"></a>服务注册与发现</h1><p>用的是Kontrol。他也是一个Kite。</p>
-<p>服务端Register()方法即注册到了Kontrol</p>
-<p>k.Register(&amp;url.URL{Scheme: “http”, Host: “localhost:6000/kite”})</p>
-<p>客户端用GetKites方法连接到Kontrol</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"github.com/koding/kite"</span></span><br><span class="line">    <span class="string">"github.com/koding/kite/protocol"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"second"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    <span class="comment">// search a kite that has the same username and environment as us, but the</span></span><br><span class="line">    <span class="comment">// kite name should be "first"</span></span><br><span class="line">    kites, _ := k.GetKites(&amp;protocol.KontrolQuery&#123;</span><br><span class="line">        Username:    k.Config.Username,</span><br><span class="line">        Environment: k.Config.Environment,</span><br><span class="line">        Name:        <span class="string">"first"</span>,</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// there might be several kites that matches our query</span></span><br><span class="line">    client := kites[<span class="number">0</span>]</span><br><span class="line">    client.Dial()</span><br><span class="line">    response, _ := client.Tell(<span class="string">"square"</span>, <span class="number">4</span>)</span><br><span class="line">    fmt.Println(response.MustFloat64())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/8/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><span class="page-number current">9</span><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/25/">25</a><a class="extend next" rel="next" href="/page/10/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/8/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><span class="page-number current">9</span><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/26/">26</a><a class="extend next" rel="next" href="/page/10/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1858,7 +1845,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">250</span>
+                  <span class="site-state-item-count">251</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

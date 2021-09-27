@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="java基础,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Arvense" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="函数式接口@FunctionalInterface有且仅有一个抽象方法常用的函数式接口：Runnable，Comparator，ActionListener提供的函数式接口：  Predicate——接收T对象并返回boolean Consumer——接收T对象，不返回值 Function&amp;lt;T, R&amp;gt;——接收T对象，返回R对象 Supplier——提供T对象（例如工厂），不接收值 Un">
+<meta name="keywords" content="java基础">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java8">
+<meta property="og:url" content="https://arvenseyz.github.io/2018/08/03/8-3技术笔记/index.html">
+<meta property="og:site_name" content="Arvense">
+<meta property="og:description" content="函数式接口@FunctionalInterface有且仅有一个抽象方法常用的函数式接口：Runnable，Comparator，ActionListener提供的函数式接口：  Predicate——接收T对象并返回boolean Consumer——接收T对象，不返回值 Function&amp;lt;T, R&amp;gt;——接收T对象，返回R对象 Supplier——提供T对象（例如工厂），不接收值 Un">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-07-11T06:25:24.947Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="java8">
+<meta name="twitter:description" content="函数式接口@FunctionalInterface有且仅有一个抽象方法常用的函数式接口：Runnable，Comparator，ActionListener提供的函数式接口：  Predicate——接收T对象并返回boolean Consumer——接收T对象，不返回值 Function&amp;lt;T, R&amp;gt;——接收T对象，返回R对象 Supplier——提供T对象（例如工厂），不接收值 Un">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://arvenseyz.github.io/2018/08/03/8-3技术笔记/">
+
+
+
+
+
+  <title>java8 | Arvense</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Arvense</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/08/03/8-3技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">java8</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-03T14:18:01+08:00">
+                2018-08-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="函数式接口"><a href="#函数式接口" class="headerlink" title="函数式接口"></a>函数式接口</h1><p>@FunctionalInterface<br>有且仅有一个抽象方法<br>常用的函数式接口：Runnable，Comparator，ActionListener<br>提供的函数式接口：</p>
+<ul>
+<li>Predicate<t>——接收T对象并返回boolean</t></li>
+<li>Consumer<t>——接收T对象，不返回值</t></li>
+<li>Function&lt;T, R&gt;——接收T对象，返回R对象</li>
+<li>Supplier<t>——提供T对象（例如工厂），不接收值</t></li>
+<li>UnaryOperator<t>——接收T对象，返回T对象</t></li>
+<li><p>BinaryOperator<t>——接收两个T对象，返回T对象</t></p>
+<p>在参数为这些接口的地方，可以直接使用lambda表达式  </p>
+</li>
+</ul>
+<h1 id="Stream"><a href="#Stream" class="headerlink" title="Stream"></a>Stream</h1><h2 id="流简介"><a href="#流简介" class="headerlink" title="流简介"></a>流简介</h2><p>Stream的操作有两个特点：可以多个操作链接起来运行；内部迭代；<br>集合和流的区别：集合包含目前的所有元素，你要什么就去集合里取。流是你要什么，然后去计算得到你需要的值。流是按照需求生成的。<br>流只能遍历一次，用完之后就不存在了，只能重新创建流才能使用</p>
+<h2 id="流操作"><a href="#流操作" class="headerlink" title="流操作"></a>流操作</h2><p>使用流一般包含三个动作：生成流，中间操作，终端操作。<br>中间操作（map，filter，limit）等的结果还是流，终端操作（forEach，count，collect）等返回所需结果<br>流操作有点像sql的过程</p>
+<h2 id="构建流"><a href="#构建流" class="headerlink" title="构建流"></a>构建流</h2><p>流可以由值、数组、函数、文件生成，但主要还是由集合生成</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">list.stream()；</span><br></pre></td></tr></table></figure>
+<h2 id="筛选流"><a href="#筛选流" class="headerlink" title="筛选流"></a>筛选流</h2><p> 流的filter方法，参数为Predicate。返回满足Predicate的元素。也就是返回true的元素。<br> 流的distinct方法返回各异的元素，返回的元素不能重复。<br> 流的distinct方法返回各异的元素，返回的元素不能重复。<br> 流的limit方法限制最多返回多少元素。<br> 流的skip方法不要前多n个元素，n大于满足条件的元素个数就返回空的流。  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">List&lt;Integer&gt; list = Arrays.asList(1,2,3,4);</span><br><span class="line">list.stream().filter(i-&gt;i&gt;=2).distinct().limit(2).skip(1).forEach(System.out::println);</span><br></pre></td></tr></table></figure>
+<h2 id="流映射"><a href="#流映射" class="headerlink" title="流映射"></a>流映射</h2><p>流的skip方法不要前多n个元素，n大于满足条件的元素个数就返回空的流。<br>map可以改变Stream的类型，上面就是把Stream<integer>变为Stream<string>了。<br>流的flatMap方法可以把各个数组映射的流合为一个流。例如得到文件字母的个数。   </string></integer></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">List&lt;Integer&gt; list = Arrays.asList(1,2,3,4,2,3);</span><br><span class="line">list.stream().filter(i-&gt;i&gt;=2).map(a-&gt;&quot;map&quot;+a).forEach(System.out::println);</span><br><span class="line">lines.flatMap(line-&gt;Arrays.stream(line.split(&quot;&quot;))).distinct().count();</span><br></pre></td></tr></table></figure>
+<h2 id="查找与匹配"><a href="#查找与匹配" class="headerlink" title="查找与匹配"></a>查找与匹配</h2><p>anyMatch方法参数为Predicate。返回一个boolean值，表示流中是否有元素满足Predicate。<br>allMatch方法与anyMatch差不多，表示所有的元素都满足才返回true。noneMatch方法表示没有元素满足。<br>findAny方法，没有参数，表示返回随机的一个元素。返回一个Optional，因为有可能元素不存在。<br>findFirst方法，没有参数，返回第一个元素。返回Optional。  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">List&lt;Integer&gt; list = Arrays.asList(1,2,3,4,2,3);</span><br><span class="line">boolean result = list.stream().anyMatch(i-&gt;i==2);</span><br></pre></td></tr></table></figure>
+<h2 id="归约"><a href="#归约" class="headerlink" title="归约"></a>归约</h2><p>流的reduce操作就是将流中的元素结合得到一个值。根据reduce方法中的操作，两两结合得到一个值，然后跟下一个元素结合，就这样一直到最后一个元素，得到最终的值。<br>流还有max和min方法，参数为Comparator。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">List&lt;Integer&gt; list = Arrays.asList(1,2,3,4,2,3);</span><br><span class="line">List&lt;Integer&gt; listres=list.stream().filter(x-&gt;x&gt;2).collect(Collectors.toList());</span><br><span class="line">Optional&lt;Integer&gt; sum = list.stream().reduce((a,b)-&gt;&#123;return a+b;&#125;);</span><br><span class="line">Optional&lt;Integer&gt; max = listw.stream().max((a, b)-&gt;&#123;return a&gt;b?1:(a==b?0:-1);&#125;);</span><br><span class="line">collect(Collectors.toList())</span><br></pre></td></tr></table></figure>
+<h2 id="数值流"><a href="#数值流" class="headerlink" title="数值流"></a>数值流</h2><p>上面讲的操作如Stream<integer>会有装箱拆箱的操作。Stream中有IntStream、 DoubleStream和<br>LongStream分别表示流中的元素为int，double，long，这样可以避免装箱拆箱。<br>         mapToInt、 mapToDouble和mapToLong着三个方法可以将Stream<t>转为数值流。数值流中有max，min，sum,average等方法。<br>             boxed() 方法可以将数值流转为对象流。</t></integer></p>
+<h1 id="Optiaonal"><a href="#Optiaonal" class="headerlink" title="Optiaonal"></a>Optiaonal</h1><h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Optional&lt;Integer&gt; a = Optional.ofNullable(value1);//允许为空指针</span><br><span class="line">Optional&lt;Integer&gt; a = Optional.of(value1);//不允许为空指针</span><br><span class="line">boolean res =a.isPresent();//是否存在</span><br><span class="line"></span><br><span class="line">Integer value1 = a.orElse(new Integer(0));  //  如果值存在，返回它，否则返回参数值</span><br><span class="line">Integer value2 = b.get();//  获取值，值需要存在</span><br><span class="line">Integer value3 = a.orElseGet(()-&gt;1);//如果值存在，返回它，否则返回参数接口supplier函数</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/java基础/" rel="tag"># java基础</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/08/02/8-2技术笔记/" rel="next" title="java类库+lamdba">
+                <i class="fa fa-chevron-left"></i> java类库+lamdba
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/03/刨根挖底/" rel="prev" title="刨根挖底，群众反映">
+                刨根挖底，群众反映 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Arvense</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">251</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">68</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#函数式接口"><span class="nav-number">1.</span> <span class="nav-text">函数式接口</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Stream"><span class="nav-number">2.</span> <span class="nav-text">Stream</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#流简介"><span class="nav-number">2.1.</span> <span class="nav-text">流简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#流操作"><span class="nav-number">2.2.</span> <span class="nav-text">流操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#构建流"><span class="nav-number">2.3.</span> <span class="nav-text">构建流</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#筛选流"><span class="nav-number">2.4.</span> <span class="nav-text">筛选流</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#流映射"><span class="nav-number">2.5.</span> <span class="nav-text">流映射</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#查找与匹配"><span class="nav-number">2.6.</span> <span class="nav-text">查找与匹配</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#归约"><span class="nav-number">2.7.</span> <span class="nav-text">归约</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数值流"><span class="nav-number">2.8.</span> <span class="nav-text">数值流</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Optiaonal"><span class="nav-number">3.</span> <span class="nav-text">Optiaonal</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用"><span class="nav-number">3.1.</span> <span class="nav-text">使用</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a>Arvense</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">blog   </div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

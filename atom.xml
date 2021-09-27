@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2021-09-24T07:11:44.965Z</updated>
+  <updated>2021-09-27T09:28:45.295Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -15,6 +15,31 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>es打分方式</title>
+    <link href="https://arvenseyz.github.io/2021/09/27/9-27%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-3/"/>
+    <id>https://arvenseyz.github.io/2021/09/27/9-27技术笔记-3/</id>
+    <published>2021-09-27T09:19:34.000Z</published>
+    <updated>2021-09-27T09:28:45.295Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="计算公式"><a href="#计算公式" class="headerlink" title="计算公式"></a>计算公式</h2><p><code>Lucene</code>和<code>es</code>的打分机制是一个公式。将查询作为输入，使用不同的手段来确定每一篇文档的得分，将每一个因素最后通过公式综合起来，返回该文档的最终得分。这个综合考量的过程，就是我们希望相关的文档被优先返回的考量过程。在<code>Lucene</code>和<code>es</code>中这种相关性称为得分。<br>在开始计算得分之前，<code>es</code>使用了被搜索词条的频率和它有多常见来影响得分，从两个方面理解：</p><ul><li>一个词条在某篇文档中出现的次数越多，该文档就越相关。</li><li>一个词条如果在不同的文档中出现的次数越多，它就越不相关！</li></ul><p>我们称之为<code>TF-IDF</code>，<code>TF</code>是词频（term frequency），而<code>IDF</code>是逆文档频率（inverse document frequency）。</p><p>此外还有两个因素</p><ul><li><p><strong>Document Frequency(DF)文档频率</strong>：即单词出现的文档数。</p></li><li><p><strong>Field-length Norm</strong>：文档越短，相关性越高，field长度，field越长，相关度越弱</p></li></ul><p>逆文档词频是一个重要的因素，用来平衡词条的词频。比如我们搜索<code>the 996.ICU</code>。单词<code>the</code>几乎出现在所有的文档中（中文中比如<code>的</code>），如果这个鬼东西要不被均衡一下，那么<code>the</code>的频率将完全淹没<code>996.ICU</code>。所以，逆文档词频就有效的均衡了<code>the</code>这个常见词的相关性影响。以达到实际的相关性得分将会对查询的词条有一个更准确地描述。<br>当词频和逆文档词频计算完成。就可以使用<code>TF-IDF</code>公式来计算文档的得分了</p><p>我们通过<code>explain=true</code>，es会返回如何打分的</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">GET py1/doc/_search</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"query"</span>: &#123;</span><br><span class="line">    <span class="attr">"match"</span>: &#123;</span><br><span class="line">      <span class="attr">"title"</span>: <span class="string">"北京"</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">"explain"</span>: <span class="literal">true</span>,</span><br><span class="line">  <span class="attr">"_source"</span>: <span class="string">"title"</span>, </span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>会返回一个复杂的公式。</p><h2 id="手动控制"><a href="#手动控制" class="headerlink" title="手动控制"></a>手动控制</h2><p>通过boosting可以人为控制某个字段的在评分过程中的比重，有两种类型：</p><ul><li><p>索引期间的boosting</p></li><li><p>查询期间的boosting</p></li></ul><p>通过在mapping中设置boost参数，可以在索引期间改变字段的评分权重：</p><p>一旦映射建立完成，那么所有name字段都会自动拥有一个boost值，并且是以降低精度的数值存储在Lucene内部的索引结构中。只有一个字节用于存储浮点型数值（存不下就损失精度了），计算文档的最终得分时可能会损失精度。</p><p>另外，boost是应用与词条的。因此，再被boost的字段中如果匹配上了多个词条，就意味着计算多次的boost，这将会进一步增加字段的权重，可能会影响最终的文档得分。</p><p>查询期间的boosting可以避免上述问题。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;计算公式&quot;&gt;&lt;a href=&quot;#计算公式&quot; class=&quot;headerlink&quot; title=&quot;计算公式&quot;&gt;&lt;/a&gt;计算公式&lt;/h2&gt;&lt;p&gt;&lt;code&gt;Lucene&lt;/code&gt;和&lt;code&gt;es&lt;/code&gt;的打分机制是一个公式。将查询作为输入，使用不同的手段来
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="ES" scheme="https://arvenseyz.github.io/tags/ES/"/>
+    
+  </entry>
   
   <entry>
     <title>ES段和段合并</title>
@@ -503,32 +528,6 @@
     
     
       <category term="计算机网络" scheme="https://arvenseyz.github.io/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>散列函数</title>
-    <link href="https://arvenseyz.github.io/2020/09/09/9-9%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://arvenseyz.github.io/2020/09/09/9-9技术笔记/</id>
-    <published>2020-09-09T07:56:30.000Z</published>
-    <updated>2020-09-09T08:20:58.373Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="线性探测法"><a href="#线性探测法" class="headerlink" title="线性探测法"></a>线性探测法</h2><p>思路很简单，如果发生哈希冲突，那么看一下【下一个】位置，如果有空，那么就放在下一个，没空，继续迭代。</p><p>问题不在插入，而在于搜索和删除。</p><p>我们将检查表中是否存在与搜索关键字匹配的元素成为探测。线性探测法的特点是每次探测有3种可能结果：<br>（1）搜索命中（当前位置上的元素关键字与搜索关键字匹配，停止搜索），<br>（2）搜索失败（搜索位置为空，停止搜索），<br>（3）不匹配（搜索位置非空，但是不匹配，继续搜索下一位置）。</p><p>删除更麻烦。</p><p>因为当移走后形成的空位会导致其后面元素的搜索失败（空位终止向后搜索）。因此，应该将删除位置与其右边的下一个空位之间所有元素重新散列插入到表中。</p><p>可以想像到，当哈希表比较满时，搜索会很慢，删除代价会相当大。</p><h2 id="平方探测法"><a href="#平方探测法" class="headerlink" title="平方探测法"></a>平方探测法</h2><p>线性探测法还有个显而易见的问题，因为冲突总是取下一个空位，会导致数据比较集中。一个比较简单的改良是，冲突时不取下一个空位，而是加减平方。即看+-1，+-4的位置，会减少聚集。</p><h2 id="双重散列法"><a href="#双重散列法" class="headerlink" title="双重散列法"></a>双重散列法</h2><p>是对平方探测法的再次改进，即步进由另一个哈希函数决定。</p><p>即</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> newIndex = (index + i * index2) % TABLE_SIZE;</span><br></pre></td></tr></table></figure><p>但是删除问题更大，因为待删除关键字有可能影响整个表中的关键字，解决办法是：用一个观察哨代替已删除元素，表示该位置被占用，不与任何关键字匹配。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h2 id=&quot;线性探测法&quot;&gt;&lt;a href=&quot;#线性探测法&quot; class=&quot;headerlink&quot; title=&quot;线性探测法&quot;&gt;&lt;/a&gt;线性探测法&lt;/h2&gt;&lt;p&gt;思路很简单，如果发生哈希冲突，那么看一下【下一个】位置，如果有空，那么就放在下一个，没空，继续迭代。&lt;/p&gt;
-&lt;p&gt;
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="数据结构" scheme="https://arvenseyz.github.io/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/"/>
     
   </entry>
   
