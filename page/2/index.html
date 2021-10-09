@@ -251,6 +251,169 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/08/16/8-16技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/08/16/8-16技术笔记-1/" itemprop="url">ES索引别名</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-08-16T15:01:50+08:00">
+                2021-08-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="ES别名"><a href="#ES别名" class="headerlink" title="ES别名"></a>ES别名</h1><p>索引别名可以指向一个或多个索引，并且可以在任何需要索引名称的API中使用。</p>
+<h3 id="创建别名"><a href="#创建别名" class="headerlink" title="创建别名"></a>创建别名</h3><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">POST /_aliases?pretty</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"actions"</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">"add"</span>: &#123;</span><br><span class="line">        <span class="attr">"index"</span>: <span class="string">"yz_test"</span>,</span><br><span class="line">        <span class="attr">"alias"</span>: <span class="string">"yz_alias"</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">"add"</span>: &#123;</span><br><span class="line">        <span class="attr">"index"</span>: <span class="string">"yz_test1"</span>,</span><br><span class="line">        <span class="attr">"alias"</span>: <span class="string">"yz_alias"</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="通过别名搜索"><a href="#通过别名搜索" class="headerlink" title="通过别名搜索"></a>通过别名搜索</h3><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"stored_fields"</span>: [ <span class="string">"title"</span>, <span class="string">"date"</span> ] ,</span><br><span class="line">    <span class="attr">"query"</span>: &#123;</span><br><span class="line">    <span class="attr">"bool"</span>: &#123;</span><br><span class="line">      <span class="attr">"must"</span>: &#123;</span><br><span class="line">        <span class="attr">"term"</span>: &#123;</span><br><span class="line">          <span class="attr">"content"</span>:<span class="string">"long"</span></span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"took"</span> : <span class="number">7</span>,</span><br><span class="line">  <span class="attr">"timed_out"</span> : <span class="literal">false</span>,</span><br><span class="line">  <span class="attr">"_shards"</span> : &#123;</span><br><span class="line">    <span class="attr">"total"</span> : <span class="number">2</span>,</span><br><span class="line">    <span class="attr">"successful"</span> : <span class="number">2</span>,</span><br><span class="line">    <span class="attr">"skipped"</span> : <span class="number">0</span>,</span><br><span class="line">    <span class="attr">"failed"</span> : <span class="number">0</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">"hits"</span> : &#123;</span><br><span class="line">    <span class="attr">"total"</span> : &#123;</span><br><span class="line">      <span class="attr">"value"</span> : <span class="number">2</span>,</span><br><span class="line">      <span class="attr">"relation"</span> : <span class="string">"eq"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"max_score"</span> : <span class="number">0.2876821</span>,</span><br><span class="line">    <span class="attr">"hits"</span> : [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">"_index"</span> : <span class="string">"yz_test1"</span>,</span><br><span class="line">        <span class="attr">"_type"</span> : <span class="string">"_doc"</span>,</span><br><span class="line">        <span class="attr">"_id"</span> : <span class="string">"1"</span>,</span><br><span class="line">        <span class="attr">"_score"</span> : <span class="number">0.2876821</span>,</span><br><span class="line">        <span class="attr">"fields"</span> : &#123;</span><br><span class="line">          <span class="attr">"date"</span> : [</span><br><span class="line">            <span class="string">"2015-01-01T00:00:00.000Z"</span></span><br><span class="line">          ],</span><br><span class="line">          <span class="attr">"title"</span> : [</span><br><span class="line">            <span class="string">"Some short title"</span></span><br><span class="line">          ]</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">"_index"</span> : <span class="string">"yz_test"</span>,</span><br><span class="line">        <span class="attr">"_type"</span> : <span class="string">"_doc"</span>,</span><br><span class="line">        <span class="attr">"_id"</span> : <span class="string">"1"</span>,</span><br><span class="line">        <span class="attr">"_score"</span> : <span class="number">0.18232156</span>,</span><br><span class="line">        <span class="attr">"fields"</span> : &#123;</span><br><span class="line">          <span class="attr">"date"</span> : [</span><br><span class="line">            <span class="string">"2015-01-01T00:00:00.000Z"</span></span><br><span class="line">          ],</span><br><span class="line">          <span class="attr">"title"</span> : [</span><br><span class="line">            <span class="string">"Some short title"</span></span><br><span class="line">          ]</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可见，会把相同别名下索引的数据全部搜出来。</p>
+<h3 id="索引模版"><a href="#索引模版" class="headerlink" title="索引模版"></a>索引模版</h3><p>Elasticsearch 不要求你在使用一个索引前创建它。 对于日志记录类应用，依赖于自动创建索引比手动创建要更加方便。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">PUT /_template/yz_template</span><br><span class="line"> &#123;</span><br><span class="line"> <span class="attr">"index_patterns"</span>: <span class="string">"yz_test*"</span>,</span><br><span class="line"> <span class="attr">"order"</span>: <span class="number">1</span>,</span><br><span class="line"> <span class="attr">"settings"</span>: &#123;</span><br><span class="line"> <span class="attr">"number_of_shards"</span>: <span class="number">1</span></span><br><span class="line"> &#125;,</span><br><span class="line">   <span class="attr">"mappings"</span>: &#123;</span><br><span class="line">    <span class="attr">"properties"</span>: &#123;</span><br><span class="line">      <span class="attr">"title"</span>: &#123;</span><br><span class="line">        <span class="attr">"type"</span>: <span class="string">"text"</span>,</span><br><span class="line">        <span class="attr">"store"</span>: <span class="literal">true</span> </span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="attr">"date"</span>: &#123;</span><br><span class="line">        <span class="attr">"type"</span>: <span class="string">"date"</span>,</span><br><span class="line">        <span class="attr">"store"</span>: <span class="literal">true</span> </span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="attr">"content"</span>: &#123;</span><br><span class="line">        <span class="attr">"type"</span>: <span class="string">"text"</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"> &#125;,</span><br><span class="line"> <span class="attr">"aliases"</span>: &#123;</span><br><span class="line"> <span class="attr">"yz_alias"</span>: &#123;&#125;</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个模板指定了所有名字以 <code>yz_test</code> 为起始的索引的默认设置，不论它是手动还是自动创建的。 </p>
+<p>这样我们写入数据时，会自动创建索引：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">PUT yz_test2/_doc/1</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"title"</span>:   <span class="string">"Some short title2"</span>,</span><br><span class="line">  <span class="attr">"date"</span>:    <span class="string">"2015-01-01"</span>,</span><br><span class="line">  <span class="attr">"content"</span>: <span class="string">"A very long content field..."</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这时，我们再使用别名搜索，可以搜出三个索引的数据。</p>
+<h2 id="利用别名重建索引"><a href="#利用别名重建索引" class="headerlink" title="利用别名重建索引"></a>利用别名重建索引</h2><p>我们有一个索引my_index_v1，使用别名my_index</p>
+<p>我们决定修改索引中一个字段的映射。当然，我们不能修改现存的映射，所以我们必须重新索引数据。 首先, 我们用新映射创建索引 <code>my_index_v2</code> </p>
+<p>然后我们将数据从 <code>my_index_v1</code> 重新索引到 <code>my_index_v2</code>。方法如<a href="https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docs-reindex.html" target="_blank" rel="noopener">Reindex API</a></p>
+<p>数据迁移完成后切换别名</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">POST /_aliases</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"actions"</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">"add"</span>: &#123;</span><br><span class="line">        <span class="attr">"index"</span>: <span class="string">"my_index_v2"</span>,</span><br><span class="line">        <span class="attr">"alias"</span>: <span class="string">"my_index"</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">"remove"</span>: &#123;</span><br><span class="line">        <span class="attr">"index"</span>: <span class="string">"my_index_v1"</span>,</span><br><span class="line">        <span class="attr">"alias"</span>: <span class="string">"my_index"</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="filter别名"><a href="#filter别名" class="headerlink" title="filter别名"></a>filter别名</h3><p>别名时设置filter，通过这个别名就只能看到符合过滤器过滤后的结果了</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">POST /_aliases</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">"actions"</span> : [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="attr">"add"</span> : &#123;</span><br><span class="line">                 <span class="attr">"index"</span> : <span class="string">"test1"</span>,</span><br><span class="line">                 <span class="attr">"alias"</span> : <span class="string">"alias2"</span>,</span><br><span class="line">                 <span class="attr">"filter"</span> : &#123; <span class="attr">"term"</span> : &#123; <span class="attr">"user"</span> : <span class="string">"kimchy"</span> &#125; &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="路由别名"><a href="#路由别名" class="headerlink" title="路由别名"></a>路由别名</h3><p>所有具有此别名的操作将自动修改为使用进行路由:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">POST /_aliases</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">"actions"</span> : [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="attr">"add"</span> : &#123;</span><br><span class="line">                 <span class="attr">"index"</span> : <span class="string">"test"</span>,</span><br><span class="line">                 <span class="attr">"alias"</span> : <span class="string">"alias1"</span>,</span><br><span class="line">                 <span class="attr">"routing"</span> : <span class="string">"1"</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>还可以为搜索和索引操作指定不同的路由值</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">POST /_aliases</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">"actions"</span> : [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="attr">"add"</span> : &#123;</span><br><span class="line">                 <span class="attr">"index"</span> : <span class="string">"test"</span>,</span><br><span class="line">                 <span class="attr">"alias"</span> : <span class="string">"alias2"</span>,</span><br><span class="line">                 <span class="attr">"search_routing"</span> : <span class="string">"1,2"</span>,</span><br><span class="line">                 <span class="attr">"index_routing"</span> : <span class="string">"2"</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/08/12/8-12技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1705,157 +1868,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/09/15/9-15技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/09/15/9-15技术笔记/" itemprop="url">ARP协议</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-09-15T19:58:52+08:00">
-                2020-09-15
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>在网络中通讯，都是知道对方的IP地址后，才能发起连接，IP地址所在的层是网络层，而在网络层下面是数据链路层，这里IP数据包继续被封装成以太网数据帧，当然还有别的数据链路层格式，但是数据链路层也需要寻址机制，常常就是48bit的硬件地址,又叫MAC地址。</p>
-<p>主机 A 与主机 B 进行通信，需要获取其 MAC 地址，基本流程如下：</p>
-<ul>
-<li>主机 A 以广播形式向局域网中所有主机发送 ARP 请求，请求包中包含了目标 IP 地址 192.168.1.2。</li>
-<li>主机 B 接收到请求，发现自己就是主机 A 要找的主机，返回响应，响应包中包含自己的 MAC 地址。</li>
-</ul>
-<p>为了避免重复发送 ARP 请求，每台主机都有一个 ARP 高速缓存。当主机得到 ARP 响应后，将目标主机的 IP 地址和物理地址存入本机 ARP 缓存中，并保留一定时间。  </p>
-<p>只要在这个时间范围内，下次请求 MAC 地址时，直接查询 ARP 缓存，而无须再发送 ARP 请求，从而节约了网络资源。</p>
-<p>如果ARP请求是从一个网络主机发送到另一个网络主机，那么连接这两个主机的路由器就可以回答该请求，这个过程称为委托ARP或者ARP代理。</p>
-<p>我们知道IP路由选择，如果主机不相连，我们就把数据报发送到一默认路由上，由路由器来转发该数据报。在ARP协议中，我们发往网络的请求主机物理地址也会由路由器回答，得到的就是路由器的物理地址，发送方就根据这个物理地址把数据报发送到路由器，由路由器转发，再下面的事情由路由器完成，那是属于IP协议的事了，当然在那个过程中，也不断使用ARP协议获取每一步的物理地址。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1906,7 +1918,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">251</span>
+                  <span class="site-state-item-count">252</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

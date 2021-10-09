@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2021-09-27T09:28:45.295Z</updated>
+  <updated>2021-10-09T10:07:21.220Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -15,6 +15,34 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>redis分布式锁缺陷</title>
+    <link href="https://arvenseyz.github.io/2021/10/09/10-9%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>https://arvenseyz.github.io/2021/10/09/10-9技术笔记-1/</id>
+    <published>2021-10-09T06:52:04.000Z</published>
+    <updated>2021-10-09T10:07:21.220Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="Redis是AP系统"><a href="#Redis是AP系统" class="headerlink" title="Redis是AP系统"></a>Redis是AP系统</h2><p>先抛个结论：</p><p>“redis多机房同步是最终一致的，如有分布式锁的需求，会有锁不上的情况，业务可根据文档考虑使用强一致的存储组件！” from redis 用户文档</p><p>因此redis锁只能作为弱校验，而不能作为强依赖，必须要其他强一致的系统保证其一致性。</p><h2 id="Redis锁实现原理"><a href="#Redis锁实现原理" class="headerlink" title="Redis锁实现原理"></a>Redis锁实现原理</h2><p>而redis锁锁不住的原因要从redis锁的实现讲起。redis锁主要基于两个命令，<strong>setnx &amp;</strong> <strong>cad</strong>，（注意不是redlock，redlock和这两个命令没有关系，下面最后一个部分会提）</p><p><strong>加锁setnx</strong></p><p>setnx命令会被redis client解析为</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SET key value NX PX 30000</span><br></pre></td></tr></table></figure><ul><li>其中key通常为我们想锁住的<code>key</code>，而<code>value</code>应当为一个随机数，原因在解锁的部分讲</li><li><code>NX</code>代表只有key为空时才会set成功</li><li><code>PX 30000</code> 指过期时间30s</li></ul><p><strong>解锁</strong>  <strong>cad</strong> <strong>（已被公司级别支持）</strong></p><p>cad指<code>compare and delete</code>操作，该操作其实内部执行Redis lua脚本保证cad操作的中不会被其他操作穿插</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if redis.call(&quot;get&quot;,KEYS[1]) == ARGV[1] then </span><br><span class="line">  return redis.call(&quot;del&quot;,KEYS[1])</span><br><span class="line">else </span><br><span class="line">  return 0 </span><br><span class="line">end</span><br></pre></td></tr></table></figure><ul><li>为什么锁还需要设置随机<code>value</code>去compare？因为虽然redis数据库单线程，但是客户端却可能为多线程，试想以下逻辑：</li></ul><p><a href="https://imgtu.com/i/5FANLj" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/10/09/5FANLj.png" alt="5FANLj.png"></a></p><p>若发生以上时序，client1由于处理请求时被阻塞，导致client2获取的锁会被client1解锁，进而导致锁失效。特别是我们应用代码中通常设置的时长较短（1s - 5s），更增加以上情况出现的几率。</p><ul><li>i/o timeout如何做？</li></ul><p>有些人会觉得奇怪为什么上面的这段代码没有做错误校验，正确的做法是不是应该是这样？</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">err := redis.SetNX(key, value, duration)</span><br><span class="line">if err != nil &#123;</span><br><span class="line">    return </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>其实不然，试想<code>SetNX</code> 发生timeout，但其实Redis客户端<strong>收到</strong>该请求，只是respond<strong>回复超时</strong>，该锁会一直被持有直到timeout。</p><p>比较正确的逻辑为：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">err := redis.SetNX(key, randomNum, duration)</span><br><span class="line">defer redis.CAD(key, randomNum)</span><br><span class="line">if err != nil &#123;</span><br><span class="line">    return </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>由randomNum来保证key有且仅会被本客户端线程解锁，即使失败，也不会把其他客户端线程的锁unlock（因为randomNum不一致，compare阶段错误）。该逻辑更体现了设置randomNum为value的必要性。这个随机数应当可以保证在一段时间内只被同一client持有，比较偷懒的方法是使用server id + unix microsecond时间戳，在大部分场景下应该足够了。</p><ul><li>Expire time如何定？</li></ul><p>其实这也是个两难问题，若超时时间过短，则锁不住整个流程处理时间，可能被抢锁；若超时时间过长，则解锁操作<code>redis.CAD(key, randomNum)</code>失败时，会导致key被锁住过长时间。因此需根据实际业务场景而定。</p><h2 id="分布式redis情况如何？"><a href="#分布式redis情况如何？" class="headerlink" title="分布式redis情况如何？"></a>分布式redis情况如何？</h2><p>即使我们在实现上都按照完美的路径，以上实现也是基于单机情况，在分布式场景下，由于redis多机房同步是最终一致的，当主节点不可用时，系统自动切换到副节点（即failover的过程），由于主从非同步，在failover的过程中会导致锁被抢。试想以下时序：</p><ol><li>master拿到锁a</li><li>slave1-master同步开启</li><li>master宕机，failover开始</li><li>slave1-master同步未完成</li><li>slave1被选举为master，锁a丢失，可被抢</li></ol><p>虽然很多人觉得failover的情况很少，以上可以忽略，实际上根据我们现在的使用方法，某个历史活动的并发情况而言，已经出现大量的并发锁被抢引起的错误（日均300+，from QPS大概400左右的并发请求）。</p><h2 id="正确姿势如何做？"><a href="#正确姿势如何做？" class="headerlink" title="正确姿势如何做？"></a>正确姿势如何做？</h2><p>redis针对单机redis锁的问题，提出了redlock的解决方案，但是redlock也有些争议，同时其不太适合公司的redis架构，在这里不多做讨论。</p><p>如果要了解正确的锁姿势，首先要分析分布式锁的场景，一般来说，可以分为两种，为了效率加锁，和为了正确性加锁。</p><ul><li>为效率加锁，即为了一些计算的重复；即使失败，也只是把某些操作多做一遍，例如条件多校验一遍</li><li>为了正确性加锁，即不允许分布式锁失败；若失败可能产生不可回滚的脏数据</li></ul><p>若为了效率加锁，使用单机的redis锁已经足够，单重要的是清楚单机redis锁在分布式场景下的限制。</p><p>若为了正确性加锁，一定要使用强一致性保障（bytekv，zookeeper）等，基架推荐尝试bytekv。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;Redis是AP系统&quot;&gt;&lt;a href=&quot;#Redis是AP系统&quot; class=&quot;headerlink&quot; title=&quot;Redis是AP系统&quot;&gt;&lt;/a&gt;Redis是AP系统&lt;/h2&gt;&lt;p&gt;先抛个结论：&lt;/p&gt;
+&lt;p&gt;“redis多机房同步是最终一致的，如有分布式锁
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="redis" scheme="https://arvenseyz.github.io/tags/redis/"/>
+    
+      <category term="分布式" scheme="https://arvenseyz.github.io/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"/>
+    
+  </entry>
   
   <entry>
     <title>es打分方式</title>
@@ -502,32 +530,6 @@
     
     
       <category term="消息队列" scheme="https://arvenseyz.github.io/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>ARP协议</title>
-    <link href="https://arvenseyz.github.io/2020/09/15/9-15%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://arvenseyz.github.io/2020/09/15/9-15技术笔记/</id>
-    <published>2020-09-15T11:58:52.000Z</published>
-    <updated>2020-09-15T12:16:02.347Z</updated>
-    
-    <content type="html"><![CDATA[<p>在网络中通讯，都是知道对方的IP地址后，才能发起连接，IP地址所在的层是网络层，而在网络层下面是数据链路层，这里IP数据包继续被封装成以太网数据帧，当然还有别的数据链路层格式，但是数据链路层也需要寻址机制，常常就是48bit的硬件地址,又叫MAC地址。</p><p>主机 A 与主机 B 进行通信，需要获取其 MAC 地址，基本流程如下：</p><ul><li>主机 A 以广播形式向局域网中所有主机发送 ARP 请求，请求包中包含了目标 IP 地址 192.168.1.2。</li><li>主机 B 接收到请求，发现自己就是主机 A 要找的主机，返回响应，响应包中包含自己的 MAC 地址。</li></ul><p>为了避免重复发送 ARP 请求，每台主机都有一个 ARP 高速缓存。当主机得到 ARP 响应后，将目标主机的 IP 地址和物理地址存入本机 ARP 缓存中，并保留一定时间。  </p><p>只要在这个时间范围内，下次请求 MAC 地址时，直接查询 ARP 缓存，而无须再发送 ARP 请求，从而节约了网络资源。</p><p>如果ARP请求是从一个网络主机发送到另一个网络主机，那么连接这两个主机的路由器就可以回答该请求，这个过程称为委托ARP或者ARP代理。</p><p>我们知道IP路由选择，如果主机不相连，我们就把数据报发送到一默认路由上，由路由器来转发该数据报。在ARP协议中，我们发往网络的请求主机物理地址也会由路由器回答，得到的就是路由器的物理地址，发送方就根据这个物理地址把数据报发送到路由器，由路由器转发，再下面的事情由路由器完成，那是属于IP协议的事了，当然在那个过程中，也不断使用ARP协议获取每一步的物理地址。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;在网络中通讯，都是知道对方的IP地址后，才能发起连接，IP地址所在的层是网络层，而在网络层下面是数据链路层，这里IP数据包继续被封装成以太网数据帧，当然还有别的数据链路层格式，但是数据链路层也需要寻址机制，常常就是48bit的硬件地址,又叫MAC地址。&lt;/p&gt;
-&lt;p&gt;主机 
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="计算机网络" scheme="https://arvenseyz.github.io/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
     
   </entry>
   

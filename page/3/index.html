@@ -251,6 +251,157 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/09/15/9-15技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/09/15/9-15技术笔记/" itemprop="url">ARP协议</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-09-15T19:58:52+08:00">
+                2020-09-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>在网络中通讯，都是知道对方的IP地址后，才能发起连接，IP地址所在的层是网络层，而在网络层下面是数据链路层，这里IP数据包继续被封装成以太网数据帧，当然还有别的数据链路层格式，但是数据链路层也需要寻址机制，常常就是48bit的硬件地址,又叫MAC地址。</p>
+<p>主机 A 与主机 B 进行通信，需要获取其 MAC 地址，基本流程如下：</p>
+<ul>
+<li>主机 A 以广播形式向局域网中所有主机发送 ARP 请求，请求包中包含了目标 IP 地址 192.168.1.2。</li>
+<li>主机 B 接收到请求，发现自己就是主机 A 要找的主机，返回响应，响应包中包含自己的 MAC 地址。</li>
+</ul>
+<p>为了避免重复发送 ARP 请求，每台主机都有一个 ARP 高速缓存。当主机得到 ARP 响应后，将目标主机的 IP 地址和物理地址存入本机 ARP 缓存中，并保留一定时间。  </p>
+<p>只要在这个时间范围内，下次请求 MAC 地址时，直接查询 ARP 缓存，而无须再发送 ARP 请求，从而节约了网络资源。</p>
+<p>如果ARP请求是从一个网络主机发送到另一个网络主机，那么连接这两个主机的路由器就可以回答该请求，这个过程称为委托ARP或者ARP代理。</p>
+<p>我们知道IP路由选择，如果主机不相连，我们就把数据报发送到一默认路由上，由路由器来转发该数据报。在ARP协议中，我们发往网络的请求主机物理地址也会由路由器回答，得到的就是路由器的物理地址，发送方就根据这个物理地址把数据报发送到路由器，由路由器转发，再下面的事情由路由器完成，那是属于IP协议的事了，当然在那个过程中，也不断使用ARP协议获取每一步的物理地址。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/09/09/9-9技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1567,168 +1718,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/06/08/6-8技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/06/08/6-8技术笔记/" itemprop="url">undo日志</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-06-08T15:14:53+08:00">
-                2020-06-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="undo-log"><a href="#undo-log" class="headerlink" title="undo log"></a>undo log</h2><h3 id="产生原因"><a href="#产生原因" class="headerlink" title="产生原因"></a>产生原因</h3><p><strong>undo log的意义有两个，保证原子性，mvcc</strong></p>
-<p>事务执行过程中，系统异常或者手动callback，都要求数据回滚到之前的版本，解决方法看起来很简单，就是记录之前的版本，即undo log.</p>
-<h3 id="事务id"><a href="#事务id" class="headerlink" title="事务id"></a>事务id</h3><p>如果某个事务执行过程中对某个表执行了增、删、改操作，那么InnoDB存储引擎就会给它分配一个独一无二的<code>事务id</code></p>
-<p>服务器会在内存中维护一个全局变量，每当需要为某个事务分配一个<code>事务id</code>时，就会把该变量的值当作<code>事务id</code>分配给该事务，并且把该变量自增1。</p>
-<p>数据行有一隐藏列，即事务id，修改了它的事务的id。</p>
-<h3 id="日志格式"><a href="#日志格式" class="headerlink" title="日志格式"></a>日志格式</h3><p>undolog，如果做成物理日志，并不合理，因为涉及页比较多。所以做法是反向的逻辑日志。</p>
-<h2 id="mvcc"><a href="#mvcc" class="headerlink" title="mvcc"></a>mvcc</h2><p>每行数据有两个隐藏列，trx_id和roll_pointer。</p>
-<ul>
-<li><p>trx_id：每次一个事务对某条聚簇索引记录进行改动时，都会把该事务的<code>事务id</code>赋值给trx_id隐藏列。</p>
-</li>
-<li><p>roll_pointer：每次对某条聚簇索引记录进行改动时，都会把旧的版本写入到undo日志中，然后这个隐藏列就相当于一个指针，可以通过它来找到该记录修改前的信息。</p>
-</li>
-</ul>
-<p>这两个隐藏列结合undo log，就完成了mvcc。</p>
-<p>因为他们把undolog链了起来。</p>
-<p><img src="https://s1.ax1x.com/2020/06/08/tfAXaq.png" alt="dd"></p>
-<h3 id="读已提交"><a href="#读已提交" class="headerlink" title="读已提交"></a>读已提交</h3><p>有事务id为100和200两个事务，修改了同一行数据，此时他们都还未提交。这时有个select语句，应该读到最之前的那条数据。</p>
-<p>从系统变量中读取，当前活跃的最小的事务id100，和最大的事务id200。顺着链表读数据，凡事数据行的事务id，在这个范围内的，都是还未提交的事务对其的修改，都不该读到，知道读到第一个小于活跃的最小的事务id的数据行。</p>
-<p>即抛弃200，200，100，100，四条记录，拿到最后一条80的记录。</p>
-<p>然后100这事务提交了，此时再读，最小的事务id已经变成200了。只抛弃200，200两条数据，拿得到100提交的数据。</p>
-<h3 id="可重复读"><a href="#可重复读" class="headerlink" title="可重复读"></a>可重复读</h3><p>可重复读的区别在于，事务中最小的事务id不变的，这样别的事务提交了，也读不到它提交的数据。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1779,7 +1768,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">251</span>
+                  <span class="site-state-item-count">252</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

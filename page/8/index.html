@@ -251,6 +251,156 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/09/08/9-8技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/09/08/9-8技术笔记/" itemprop="url">shellScript入门</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-08T14:56:26+08:00">
+                2019-09-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="使用者输入变量内容"><a href="#使用者输入变量内容" class="headerlink" title="使用者输入变量内容"></a>使用者输入变量内容</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="built_in">read</span> -p <span class="string">"enter cnt"</span> cnt</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"will go <span class="variable">$cnt</span> num"</span></span><br><span class="line"></span><br><span class="line">yangzhuo@n224-019-077:~/file$ vim test.sh</span><br><span class="line">yangzhuo@n224-019-077:~/file$ sh test.sh</span><br><span class="line">enter cnt7</span><br><span class="line">will go 7 num</span><br></pre></td></tr></table></figure>
+<p>read让用户输入参数</p>
+<h2 id="时间处理"><a href="#时间处理" class="headerlink" title="时间处理"></a>时间处理</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">yesterday=`date -d last-day +%Y-%m-%d`</span><br><span class="line"><span class="built_in">echo</span> <span class="variable">$yesterday</span></span><br><span class="line"></span><br><span class="line">curday=`date +%Y-%m-%d`</span><br><span class="line"><span class="built_in">echo</span> <span class="variable">$curday</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"现在时间：`date '+%Y%m%d %T'`"</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"现在时间：`date '+%Y%m%d %H%M%S'`"</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> `date <span class="string">'+%Y%m%d-%H%M%S'</span>`</span><br><span class="line"></span><br><span class="line">send=`date --date=<span class="string">'3 hours ago'</span> <span class="string">'+%Y-%m-%d %H:%M:%S'</span>`</span><br><span class="line"><span class="built_in">echo</span> <span class="variable">$send</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">2019-09-07</span><br><span class="line">2019-09-08</span><br><span class="line">现在时间：20190908 15:14:56</span><br><span class="line">现在时间：20190908 151456</span><br><span class="line">20190908-151456</span><br><span class="line">2019-09-08 12:14:56</span><br></pre></td></tr></table></figure>
+<h2 id="默认参数"><a href="#默认参数" class="headerlink" title="默认参数"></a>默认参数</h2><p><strong><em>= 变量为null时, 同时改变变量值</em></strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[root@linuxidc /]# unset name</span><br><span class="line">[root@linuxidc /]# echo $&#123;name=linuxmi&#125;</span><br><span class="line">linuxmi</span><br><span class="line">[root@linuxidc /]# echo $name</span><br><span class="line">linuxmi</span><br><span class="line">[root@linuxidc /]# name=&quot;&quot;</span><br><span class="line">[root@linuxidc /]# echo $&#123;name=linuxmi&#125;</span><br><span class="line"></span><br><span class="line">[root@linuxidc /]#</span><br></pre></td></tr></table></figure>
+<p><strong><em>-  变量为null时, 取默认值</em></strong></p>
+<p><strong><em>:- 变量为null或空字符时, 取默认值</em></strong></p>
+<p><strong><em>:= 变量为null时, 同时改变变量值</em></strong></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/09/04/9-4技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1760,161 +1910,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/07/18/7-18技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/07/18/7-18技术笔记/" itemprop="url">goMap细节</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-18T14:08:30+08:00">
-                2019-07-18
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="Map实现"><a href="#Map实现" class="headerlink" title="Map实现"></a>Map实现</h1><h2 id="存储"><a href="#存储" class="headerlink" title="存储"></a>存储</h2><p>我看来go的Map综合了开放寻址法和拉链法。</p>
-<p>核心在于分桶，存储kv数据的在两个桶的数组中，一个数据桶，一个额外数据桶。后者是用于拉链法来解决哈希冲突的。</p>
-<p>每个桶中可以存八对kv，在桶中是使用开发寻址法，如果溢出，有指向对应的溢出桶的指针，这时是拉链法。</p>
-<p>通过具体的访问过程可知。首先是计算哈希值，这样就找到了对应的桶（此处有旧桶新桶问题），然后进入桶中查找，和桶中已存的一一比较，如果没有，则看桶链接的下一个桶（如果存在）。</p>
-<p>特色在于快速试错，桶中除了key和value的大小为8的各一个数组外，还有个topbits的数组，即该键值对哈希值的前八位，这样每次访问不用直接比较key，只用比较哈希值的前八位，就可以快速试错。</p>
-<p>其实就像是一级缓存，它存储的是哈希最高的 8 位，而选择桶时使用了桶掩码使用的是最低的几位，这种方式能够帮助我们快速判断当前的键值对是否存在并且减少碰撞。</p>
-<p>有一个问题，哪些类型可以作为key的类型，不能比较的比如函数当然不能，float64语法上能实际上不能吗，原因在于NAN（not a number)，NAN != NAN hash(NAN) != hash(NAN)，以及float64的不能精确存储。</p>
-<h2 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h2><p>扩容就是新建一个两倍大的桶数组，然后数据搬迁过去。问题在于，哈希表过大时，搬迁成本很高，这里解决方法是，同时持有新旧两个数组，逐步搬迁。所以扩容是一个非阻塞的相对缓慢完成的一个过程。</p>
-<p>扩容原因有两个，装载因子过大，或者溢出桶太多。两种情况下扩容方法不一样。</p>
-<p>后者与其说扩容，不如说重整，即是<strong>不改变大小的扩容动作</strong>。而前者会扩容到两倍。</p>
-<p>造成溢出桶数量过多的原因有两种：其一，反复进行插入再删除。先插入一些元素，溢出桶创建了一些，但还没到达负载因子，再把这些元素删了然后又插入一些元素，溢出桶又创建了一些，反复进行后，最后造成负载桶都很空旷，溢出桶中有元素。</p>
-<p>这种情况下，原大小扩容，将老 bucket 中的元素移动到新 bucket。这样，原来在 overflow bucket 中的 key 可以移动到 负载的bucket 中来。</p>
-<p>第二种情况，插入的元素的哈希取模都一样，也就是说，所有的扩容桶都是同一个桶扩的容，这样哈希表退化成了链表，并且该原地扩容无法解决该问题。但造成该问题的原因不在扩容或者负载上，是哈希函数不好。</p>
-<p>扩容完后不会搬迁，真正的搬迁工作，在插入或修改、删除 key 的时候，都会尝试进行搬迁 buckets 的工作。主要是申请到了新的 buckets 空间，然后把相关的标志位都进行了处理：例如标志 nevacuate 被置为 0， 表示当前搬迁进度为 0。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1965,7 +1960,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">251</span>
+                  <span class="site-state-item-count">252</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

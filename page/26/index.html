@@ -251,6 +251,148 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/07/30/7-30技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/07/30/7-30技术笔记/" itemprop="url">RSA加密</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-07-30T19:55:14+08:00">
+                2018-07-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>1.公钥与私钥<br>密钥是接受密文一方即乙方生成的，生成一对公钥和私钥，他将公钥发送给甲方，甲方使用公钥加密，将密文传送回乙方，乙方使用私钥解密。<br>2.加密算法<br>基于np问题，大的合数分解质因数不可解。<br>3.密钥生成过程<br>//加密基础，选质数<br>乙方选一对质数p=3.q=11;<br>//加密过程<br>则N=Pq=33,r=（p-1)(q-1)=20;<br>计算模反元素，即选一个数e，寻找一个数d，使得ed%r=1,这里选定e=3,求d的过程即解不定方程3d-20k=1，其一组解是d=7,k=1。求得e=3,d=7;<br>//获得公私钥<br>则公钥为（33，3）,私钥为(33,7)<br>4.加密过程<br>//加解密原理是费马小定理:假如p是质数，且gcd(a,p)=1，那么 a^(p-1)≡1（mod p)<br>加密公式c = (n^e)%N<br>甲方想对数字24进行加密，计算c = (24^3)%33 = 30，则加密后的结果为30<br>5.解密过程<br>解密公式<br>乙方解密，n = (c^d)%N，n = (30^7)%33 = 24，解密成功，结果为24.</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/07/30/git使用/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -431,7 +573,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">251</span>
+                  <span class="site-state-item-count">252</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
