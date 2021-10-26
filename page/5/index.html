@@ -251,6 +251,335 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/03/03/3-3技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/03/03/3-3技术笔记/" itemprop="url">group by和聚合函数</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-03-03T19:30:41+08:00">
+                2020-03-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="sum"><a href="#sum" class="headerlink" title="sum"></a>sum</h2><p>比如说简单的一张表，学生-学科-成绩。</p>
+<p>要查每个学生的总成绩，用sum和group by可以写</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span>， <span class="keyword">SUM</span>(score) <span class="keyword">as</span> totalscore </span><br><span class="line"><span class="keyword">from</span> stuscore </span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> <span class="keyword">name</span> </span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> totalscore <span class="keyword">desc</span></span><br></pre></td></tr></table></figure>
+<h2 id="group-by-多字段"><a href="#group-by-多字段" class="headerlink" title="group by 多字段"></a>group by 多字段</h2><p>如果 group by 多个字段，那么这些不同的多条数据之间，只有这些字段的值<strong>全部</strong>一致，才会被合并到一条记录中，如果有各别字段不一致，将会生成更多的组。</p>
+<h2 id="同一张表多条件"><a href="#同一张表多条件" class="headerlink" title="同一张表多条件"></a>同一张表多条件</h2><p>比如说，有数学课，并且没有语文课的学生</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> *</span><br><span class="line"><span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">where</span> subject =<span class="string">"数学"</span> <span class="keyword">and</span> subject !=<span class="string">"语文"</span></span><br></pre></td></tr></table></figure>
+<p>这些写显然是<strong>不对</strong>的，where条件里满足了数学，肯定自然满足了没有语文。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">distinct</span> <span class="keyword">NAME</span> <span class="keyword">FROM</span> qtest T </span><br><span class="line"><span class="keyword">WHERE</span> <span class="keyword">EXISTS</span>(<span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">FROM</span> qtest <span class="keyword">WHERE</span> uid=T.uid  <span class="keyword">AND</span> subject=<span class="string">'数学'</span>) <span class="keyword">AND</span> </span><br><span class="line"><span class="keyword">NOT</span> <span class="keyword">EXISTS</span>(<span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">FROM</span> qtest <span class="keyword">WHERE</span> uid=T.uid  <span class="keyword">AND</span> subject=<span class="string">'语文'</span>)</span><br></pre></td></tr></table></figure>
+<p>EXISTS在SQL中的作用是：检验查询是否返回数据。</p>
+<p>select a.* from tb a where exists(select 1 from tb where name =a.name)返回真假，当 where 后面的条件成立，则列出数据，否则为空。</p>
+<h2 id="HAVING"><a href="#HAVING" class="headerlink" title="HAVING"></a>HAVING</h2><p>在 SQL 中增加 HAVING 子句原因是，WHERE 关键字无法与合计函数一起使用。</p>
+<p>找出平均分大于70的学生</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span> </span><br><span class="line"><span class="keyword">from</span> qtest</span><br><span class="line"><span class="keyword">having</span> <span class="keyword">avg</span>(score)&gt;<span class="number">70</span></span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/02/26/2-26技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/02/26/2-26技术笔记/" itemprop="url">数字签名、数字证书与PKI系统</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-02-26T19:53:44+08:00">
+                2020-02-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>实际上网络传输的加密应该分为三部分</p>
+<ol>
+<li>文件内容不能被读取</li>
+<li>文件内容不能被篡改</li>
+<li>文件不能被掉包</li>
+</ol>
+<h1 id="加密"><a href="#加密" class="headerlink" title="加密"></a>加密</h1><p>对称加密需要同一份密钥，密钥在传输时可能被截获，非对称加密密钥不怕被截获，解决了文件内容不能被读取问题。</p>
+<p>算法重要的概念是公钥和私匙。</p>
+<p>先有私钥，再用函数生成公钥。公钥包含了私钥的信息，但也掺杂了其他随机变量，因此不能反推。</p>
+<p>私匙不要泄露，公钥要告诉和你通信的对方。公钥加密，只有对应私钥能解开（保密）；私钥加密，只有对应公钥能解开（不可抵赖）。</p>
+<p>具体有两种情形：</p>
+<p>（1）对方用你的公钥加密信息，你收到后用私钥解开。</p>
+<p>只有你有私钥，所以只有你能解开，换句话说，有私钥才能看到信息，很安全。</p>
+<p>（2）你拿私钥加密信息，对方收到后用你的公钥解开。</p>
+<p>公钥是公开的，所以其他人也可以看到你的信息，不保密。</p>
+<p>私钥加密，只有对应公钥能解开。既然用你的公钥能解开，说明加密一定是你的私钥。私钥只有你有，所以一定是你发送的，你不可抵赖。</p>
+<p>但是假设传输内容被截取，第三方虽然无法解析出文件内容，但是他可以自己生成一个私钥，并用接收方的公钥加密，然后把自己的文件冒充传给接收方，这种情况下接收方收到的就是被篡改的文件。</p>
+<h1 id="数字签名"><a href="#数字签名" class="headerlink" title="数字签名"></a>数字签名</h1><p>数字签名就是用<strong>摘要算法</strong>（sha1,md5）提取出源文件的摘要并用私钥进行加密后的内容。</p>
+<p>针对上面那个问题，甲在发送文件时再附带上源文件的数字签名。如果被黑客截取到加密后的文件和数字签名，黑客即使使用甲的公钥解出了文件摘要，由于摘要算法的特性黑客也无法还原出原始内容。但乙可以解密出文件内容再用同样的摘要算法提取出摘要来和数字签名里的摘要进行比对，摘要一致则说明文件没有被篡改过。</p>
+<p>数字签名在发送方，分两步：（1）从内容算摘要（哈希算法）（2）从摘要明文到摘要密文，也称数字签名（发送方私钥+加密算法）</p>
+<p>数字签名验证在接收方，分两步：（1）从摘要密文（数字签名）到摘要明文（发送方公钥+解密算法）（2）从收到的内容当场计算摘要（哈希算法），与（1）的结果比对是否一致</p>
+<p>如果一致，可以说明两点：</p>
+<p>（1）内容未被篡改（摘要一致）</p>
+<p>（2）内容只能是私钥拥方发送，不可抵赖（密文能够用对方的公钥解开）</p>
+<p>还有一个风险就是乙无法确定自己用的公钥就是甲提供的，如果黑客将乙手里的甲的公钥替换成自己的并用自己的私钥生成数字签名，那么乙还是会受到被篡改的文件。</p>
+<h1 id="数字证书"><a href="#数字证书" class="headerlink" title="数字证书"></a>数字证书</h1><p>数字证书的出现就是为了解决上述提到的问题，数字证书是一个经证书授权中心数字签名的包含公开密钥拥有者信息以及公开密钥的文件。</p>
+<p>数字证书里一般会包含公钥、公钥拥有者名称、CA 的数字签名、有效期、授权中心名称、证书序列号等信息。</p>
+<p>数字证书如何确保列出的用户就是公钥的拥有者呢？关键点是 CA 的数字签名，CA会用自己的私钥将证书内容的摘要进行加密。因为 CA 的公钥是公开的，任何人都可以用公钥解密出 CA 的数字签名的摘要，再用同样的摘要算法提取出证书的摘要和解密 CA 数字签名后的摘要比对，一致则说明这个证书没有被篡改过，可以信任。</p>
+<p>数字证书里有个重要概念，CA,发送方先把自己的公钥给CA，CA对其进行加密得到加密后的发送方公钥（用的是CA的私钥和CA加密算法），也就是CA的数字证书。</p>
+<p>注意这里有两个不同的非对称算法（对应2个公钥私钥对），一个算法是发送方加密摘要的，用于生成数字签名；另一个算法是CA加密发送方公钥的，用于生成数字证书。两个算法相互独立，没有必然联系。</p>
+<p>发送时不仅发送内容、数字签名，还包含发送方的数字证书。接收方拿到后，首先从数字证书中解密出发送方公钥（用的是CA的公钥和CA解密算法），这个公钥必然是可信的。然后就是和前面一样的流程，拿发送方公钥去解密数字证书，得到摘要；最后比对摘要是否一致。</p>
+<h1 id="https"><a href="#https" class="headerlink" title="https"></a>https</h1><p>1、认证服务器。浏览器内置一个受信任的CA机构列表，并保存了这些CA机构的证书。第一阶段服务器会提供经CA机构认证颁发的服务器证书，如果签发该证书的CA，存在于浏览器的受信任CA列表中（也就是签发该证书的CA的根证书，能够与客户端中保存的CA根证书比对上），说明这个CA是可信任的，可以保证证书不假。然后，再进一步判断服务器证书中的信息与当前正在访问的网站（域名等）一致，那么浏览器就认为服务端是可信的，并从服务器证书中取得服务器公钥，用于后续流程。否则，浏览器将提示用户，根据用户的选择，决定是否继续。 <strong>客户端是否能够信任这个站点的证书，首先取决于客户端程序是否导入了证书颁发者的根证书。</strong>  </p>
+<p>2、协商会话密钥。客户端在认证完服务器，获得服务器的公钥之后，利用该公钥与服务器进行加密通信，协商出两个会话密钥，分别是用于加密客户端往服务端发送数据的客户端会话密钥，用于加密服务端往客户端发送数据的服务端会话密钥。在已有服务器公钥，可以加密通讯的前提下，还要协商两个对称密钥的原因，是因为非对称加密相对复杂度更高，在数据传输过程中，使用对称加密，可以节省计算资源。另外，会话密钥是随机生成，每次协商都会有不一样的结果，所以安全性也比较高。  </p>
+<p>3、加密通讯。此时客户端服务器双方都有了本次通讯的会话密钥，之后传输的所有Http数据，都通过会话密钥加密。这样网路上的其它用户，将很难窃取和篡改客户端和服务端之间传输的数据，从而保证了数据的私密性和完整性。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/02/25/2-25技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1432,322 +1761,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/02/11/2-11技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/02/11/2-11技术笔记/" itemprop="url">内存管理</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-02-11T11:43:04+08:00">
-                2020-02-11
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="分段和分页"><a href="#分段和分页" class="headerlink" title="分段和分页"></a>分段和分页</h1><h2 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h2><p>用户程序的地址空间被划分成若干固定大小的区域，称为“页”，相应地，内存空间分成若干个物理块，页和块的大小相等，称为帧。可将用户程序的任一页放在内存的任一块中，实现了离散分配。</p>
-<p>这样每个页和每个帧存在一个映射关系。即页表。</p>
-<p>每次要取地址，把地址前几位解析出，即页号，后几位即页内偏移。在页表中把页号转换成帧号（找不到即缺页中断），然后加上页内偏移，即物理地址。</p>
-<h2 id="分段"><a href="#分段" class="headerlink" title="分段"></a>分段</h2><p>将用户程序地址空间分成若干个<strong>大小不等</strong>的段，每段可以定义一组相对完整的逻辑信息。存储分配时，以段为单位，段与段在内存中可以不相邻接，也实现了离散分配。</p>
-<p>作业的地址空间被划分为若干个段，每个段定义了一组逻辑信息。例程序段、数据段等。每个段都从0开始编址，并采用一段连续的地址空间。</p>
-<p>段的长度由相应的逻辑信息组的长度决定，因而各段长度不等。整个作业的地址空间是二维的。</p>
-<p>显然也有个段表。要取地址，需要两个信息，第几段和段内偏移，然后段表解析出物理地址。</p>
-<h2 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h2><p>分页是强行物理划分的，分段是逻辑划分。</p>
-<p>页大小固定，段大小按需求。</p>
-<p>分页的作业地址空间是一维的.分段的地址空间是二维的。实际上分页也是二维的，两个维度放在了一个数高位和地位而已。</p>
-<h1 id="物理地址、虚拟地址（线性地址）、逻辑地址"><a href="#物理地址、虚拟地址（线性地址）、逻辑地址" class="headerlink" title="物理地址、虚拟地址（线性地址）、逻辑地址"></a>物理地址、虚拟地址（线性地址）、逻辑地址</h1><p>现代计算机，其实结合了分段和分页，即段内分页。具体内存寻址</p>
-<p>首先，肯定是给一个段号+段内偏移，即<strong>逻辑地址</strong></p>
-<p>然后段表把段号哈希出来，解读到它的<strong>虚拟地址</strong>，即<strong>线性地址</strong></p>
-<p>在接下来，页表，把虚拟地址，解析出<strong>物理地址</strong></p>
-<p>CPU要<strong>利用其段式内存管理单元，先将为个逻辑地址转换成一个线程地址，再利用其页式内存管理单元，转换为最终物理地址</strong>。这样做两次转换，的确是非常麻烦而且没有必要的，因为直接可以把线性地址抽像给进程。之所以这样冗余，Intel完全是为了向前兼容而已。</p>
-<h1 id="大内存分页"><a href="#大内存分页" class="headerlink" title="大内存分页"></a>大内存分页</h1><h2 id="TLB"><a href="#TLB" class="headerlink" title="TLB"></a><strong>TLB</strong></h2><p>页表是储存在内存中的，每次查询都要查内存未免太慢，可以在寄存器中缓存一份最常使用的，即TLB（<strong>页表寄存器缓冲</strong>）。</p>
-<p>TLB是有限的，这点毫无疑问。当超出TLB的存储极限时，就会发生 TLB miss，之后，OS就会命令CPU去访问内存上的页表。如果频繁的出现TLB miss，程序的性能会下降地很快。</p>
-<p>为了让TLB可以存储更多的页地址映射关系，我们的做法是调大内存分页大小。</p>
-<p>如果一个页4M，对比一个页4K，前者可以让TLB多存储1000个页地址映射关系，性能的提升是比较可观的。</p>
-<h1 id="缺页中断和置换算法"><a href="#缺页中断和置换算法" class="headerlink" title="缺页中断和置换算法"></a>缺页中断和置换算法</h1><p>在请求分页系统中，可以通过查询页表中的状态位来确定所要访问的页面是否存在于内存中。每当所要访问的页面不在内存时，会产生一次缺页中断，此时操作系统会根据页表中的外存地址在外存中找到所缺的一页，将其调入内存。 </p>
-<p>缺页本身是一种中断，与一般的中断一样，需要经过4个处理步骤：<br>　　1. 保护CPU现场<br>　　2. 分析中断原因<br>　　3. 转入缺页中断处理程序进行处理<br>　　4. 恢复CPU现场，继续执行<br>但是缺页中断时由于所要访问的页面不存在与内存时，有硬件所产生的一种特殊的中断，因此，与一般的中断存在区别：<br>　　 1. 在指令执行期间产生和处理缺页中断信号<br>　　 2. 一条指令在执行期间，可能产生多次缺页中断<br>　　 3. 缺页中断返回时，执行产生中断的那一条指令，而一般的中断返回时，执行下一条指令</p>
-<p>于是问题来了，页表一直是满的，把哪一页换出？</p>
-<p>理论上来说，置换以后不再被访问，或者在将来最迟才回被访问的页面，缺页中断率最低。这就是最优解，即 最佳置换（Optimal， OPT)，但实际上未来不止，该算法不可实现。</p>
-<p>如果我们洞悉过去，即可预测未来。置换最近一段时间以来最长时间未访问过的页面。根据程序局部性原理，刚被访问的页面，可能马上又要被访问；而较长时间内没有被访问的页面，可能最近不会被访问。   最近最久未使用置换算法（ Least Recently Used， LRU）普偏地适用于各种类型的程序，但是系统要时时刻刻对各页的访问历史情况加以记录和更新，开销太大，因此LRU算法必须要有硬件的支持。</p>
-<p>当然最简单的是先进先出。（First In First Out, FIFO)</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/02/10/2-10技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/02/10/2-10技术笔记/" itemprop="url">free 命令,系统内存的使用情况</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-02-10T17:07:52+08:00">
-                2020-02-10
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>free 命令显示系统内存的使用情况，包括物理内存、交换内存(swap)和内核缓冲区内存。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n227-011-128:~$ free -h</span><br><span class="line">              total        used        free      shared  buff/cache   available</span><br><span class="line">Mem:            15G        1.6G        1.4G        161M         12G         13G</span><br><span class="line">Swap:            0B          0B          0B</span><br><span class="line">yangzhuo@n227-011-128:~$</span><br></pre></td></tr></table></figure>
-<h1 id="buff-cache"><a href="#buff-cache" class="headerlink" title="buff/cache"></a>buff/cache</h1><p>buffer是缓冲，cache是缓存。</p>
-<p><strong>Buffer</strong>（缓冲区）是系统两端处理<strong>速度平衡</strong>（从长时间尺度上看）时使用的。它的引入是为了减小短期内突发I/O的影响，起到<strong>流量整形</strong>的作用。比如生产者——消费者问题，他们产生和消耗资源的速度大体接近，加一个buffer可以抵消掉资源刚产生/消耗时的突然变化。<em>相当于buffer是两端的中间层，解决双端速度不一致问题。</em></p>
-<p><strong>Cache</strong>（缓存）则是系统两端处理<strong>速度不匹配</strong>时的一种<strong>折衷策略</strong>。因为CPU和memory之间的速度差异越来越大，所以人们充分利用数据的局部性（locality）特征，通过使用存储系统分级（memory hierarchy）的策略来减小这种差异带来的影响。<em>cache就是传统意义上的缓存</em></p>
-<p>无论是缓冲区还是页高速缓存，它们的实现方式都是一样的。缓冲区只不过是一种概念上比较特殊的页高速缓存罢了。<br>那么为什么 free 命令不直接称为 cache 而非要写成 buff/cache？ 这是因为缓冲区和页高速缓存的实现并非天生就是统一的。在 linux 内核 2.4 中才将它们统一。更早的内核中有两个独立的磁盘缓存：页高速缓存和缓冲区高速缓存。前者缓存页面，后者缓存缓冲区。</p>
-<h1 id="free-与-available"><a href="#free-与-available" class="headerlink" title="free 与 available"></a>free 与 available</h1><p>free 是真正尚未被使用的物理内存数量。至于 available 就比较有意思了，它是从应用程序的角度看到的可用内存数量。Linux 内核为了提升磁盘操作的性能，会消耗一部分内存去缓存磁盘数据，就是我们介绍的 buffer 和 cache。所以对于内核来说，buffer 和 cache 都属于已经被使用的内存。当应用程序需要内存时，如果没有足够的 free 内存可以用，内核就会从 buffer 和 cache 中回收内存来满足应用程序的请求。所以从应用程序的角度来说，<strong>available = free + buffer + cache</strong>。</p>
-<h1 id="swap"><a href="#swap" class="headerlink" title="swap"></a>swap</h1><p>swap space 是磁盘上的一块区域，可以是一个分区，也可以是一个文件。所以具体的实现可以是 swap 分区也可以是 swap 文件。当系统物理内存吃紧时，Linux 会将内存中不常访问的数据保存到 swap 上，这样系统就有更多的物理内存为各个进程服务，而当系统需要访问 swap 上存储的内容时，再将 swap 上的数据加载到内存中，这就是常说的换出和换入。交换空间可以在一定程度上缓解内存不足的情况，但是它需要读写磁盘数据，所以性能不是很高。</p>
-<p>实际上，现在已经没那么缺内存了，可以不用这个，有个参数/etc/sysctl.conf 文件中设置 swappiness，意思是交换的紧迫程度。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1798,7 +1811,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">252</span>
+                  <span class="site-state-item-count">254</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1820,7 +1833,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">62</span>
+                  <span class="site-state-item-count">63</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

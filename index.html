@@ -251,6 +251,337 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/10/25/10-25技术笔记-2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/10/25/10-25技术笔记-2/" itemprop="url">图数据库基础语法</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-10-25T18:28:27+08:00">
+                2021-10-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="图数据库优势"><a href="#图数据库优势" class="headerlink" title="图数据库优势"></a>图数据库优势</h2><p><a href="https://imgtu.com/i/54fgPS" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/10/25/54fgPS.png" alt="54fgPS.png"></a></p>
+<ul>
+<li><p>关系复杂的模型用图的形式表达容易</p>
+</li>
+<li><p>关系查询性能可控（<strong><em>我的好友所在的公司有多少名员工？</em></strong>）</p>
+</li>
+</ul>
+<h2 id="图数据库基本语法"><a href="#图数据库基本语法" class="headerlink" title="图数据库基本语法"></a>图数据库基本语法</h2><h3 id="基本定义"><a href="#基本定义" class="headerlink" title="基本定义"></a>基本定义</h3><ul>
+<li><p>由点(Vertex)、边(Edge)、属性(Property)构成；</p>
+</li>
+<li><p>点(Vertex)是实体、概念对象</p>
+</li>
+<li><p>&lt;type(uint32_t), ID(uint64_t&gt; 二元组唯一标记一个点</p>
+</li>
+<li><p>type标记了一类点的集合，可以把type理解为table，不同type，是不同table</p>
+</li>
+<li><p>属性：点上可以有多种属性，属性可以是常见基本类型，</p>
+</li>
+<li><p>schema: 同一种type的点，其属性key以及属性类型必须一致</p>
+</li>
+<li><p>边(Edge)是点之间的关系、联系</p>
+</li>
+<li><p>边有起点+终点，边上类型，type（string）；和点一样，同样的type类型的边必须有同样的属性属性：和点上属性一样，支持多种基本类型</p>
+</li>
+</ul>
+<h3 id="germlin语法"><a href="#germlin语法" class="headerlink" title="germlin语法"></a>germlin语法</h3><p>gremlin语言是图遍历（traverse）式语言，简单起见，可以理解为，先在图上定位到一个点，然后从这个点开始做图上的深度/宽度遍历，在图上每一步遍历用step来描述，不同的step有不同的功能，用step的组合来实现图上游走</p>
+<h3 id="创建一个天龙八部人物图"><a href="#创建一个天龙八部人物图" class="headerlink" title="创建一个天龙八部人物图"></a>创建一个天龙八部人物图</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1001).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;段正淳&apos;).property(&apos;power&apos;, 60).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1002).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;段延庆&apos;).property(&apos;power&apos;, 75).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1003).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;王语嫣&apos;).property(&apos;power&apos;, 2).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1004).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;阿朱&apos;).property(&apos;power&apos;, 5).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1005).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;段誉&apos;).property(&apos;power&apos;, 80).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1006).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;叶二娘&apos;).property(&apos;power&apos;, 40).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1007).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;乔峰&apos;).property(&apos;power&apos;, 90).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1008).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;虚竹&apos;).property(&apos;power&apos;, 85).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1001, 5).to(1002, 5).property(&apos;relation&apos;, &apos;兄弟&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1001, 5).to(1003, 5).property(&apos;relation&apos;, &apos;父女&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1001, 5).to(1004, 5).property(&apos;relation&apos;, &apos;父女&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1002, 5).to(1005, 5).property(&apos;relation&apos;, &apos;父子&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1002, 5).to(1006, 5).property(&apos;relation&apos;, &apos;义妹&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1003, 5).to(1005, 5).property(&apos;relation&apos;, &apos;夫妻&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1004, 5).to(1007, 5).property(&apos;relation&apos;, &apos;夫妻&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1005, 5).to(1008, 5).property(&apos;relation&apos;, &apos;结拜兄弟&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1006, 5).to(1008, 5).property(&apos;relation&apos;, &apos;母子&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1007, 5).to(1005, 5).property(&apos;relation&apos;, &apos;结拜兄弟&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1008, 5).to(1007, 5).property(&apos;relation&apos;, &apos;结拜兄弟&apos;).toList()</span><br></pre></td></tr></table></figure>
+<h3 id="查询语法"><a href="#查询语法" class="headerlink" title="查询语法"></a>查询语法</h3><p>查询点类型是5，id是1005的点，以及它的属性（查询属性时，指定属性名性能更好，原因估计是下文的点切割）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">g.V(vertex(1001,5)).toList()</span><br><span class="line">Result: [Vertex&#123;Id:1001, Type:5&#125;]</span><br><span class="line">g.V(vertex(1001,5)).properties()</span><br><span class="line">Result: [Property&#123;Key:name, Value:&quot;段正淳&quot;&#125;, Property&#123;Key:power, Value:60&#125;]</span><br></pre></td></tr></table></figure>
+<h3 id="遍历"><a href="#遍历" class="headerlink" title="遍历"></a>遍历</h3><p>如上文，操作是定位一个点，然后再图上游走</p>
+<p><a href="https://imgtu.com/i/5If0bR" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/10/26/5If0bR.png" alt="5If0bR.png"></a></p>
+<p>定位一个点后，找到它的出边，即段正淳的关系</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">» g.V(vertex(1001,5)).outE(&quot;relatives&quot;)</span><br><span class="line">Result: [Edge&#123;OutV:Vertex&#123;Id:1001, Type:5&#125;, InV:Vertex&#123;Id:1004, Type:5&#125;, Type:relatives&#125;, Edge&#123;OutV:Vertex&#123;Id:1001, Type:5&#125;, InV:Vertex&#123;Id:1003, Type:5&#125;, Type:relatives&#125;, Edge&#123;OutV:Vertex&#123;Id:1001, Type:5&#125;, InV:Vertex&#123;Id:1002, Type:5&#125;, Type:relatives&#125;]</span><br></pre></td></tr></table></figure>
+<p>找到一个点某种类型过滤属性的边，即段正淳的兄弟关系</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">» g.V(vertex(1001,5)).outE(&quot;relatives&quot;).has(&apos;relation&apos;,&apos;兄弟&apos;).toList()</span><br><span class="line">Result: [Edge&#123;OutV:Vertex&#123;Id:1001, Type:5&#125;, InV:Vertex&#123;Id:1002, Type:5&#125;, Type:relatives&#125;]</span><br></pre></td></tr></table></figure>
+<p>进一步，找到段正淳的兄弟</p>
+<p>遍历法，找到兄弟边，再找到兄弟边链接的点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">» g.V(vertex(1001,5)).outE(&quot;relatives&quot;).has(&apos;relation&apos;,&apos;兄弟&apos;).inV().toList()</span><br><span class="line">Result: [Vertex&#123;Id:1002, Type:5&#125;]</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/10/11/10-11技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/10/11/10-11技术笔记-1/" itemprop="url">redis的redlock锁</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-10-11T16:49:43+08:00">
+                2021-10-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <ul>
+<li><h3 id="加锁"><a href="#加锁" class="headerlink" title="加锁"></a>加锁</h3></li>
+</ul>
+<p>官方推荐至少 5 个redis实例，而且都是主库，它们之间没有任何关系，都是一个个孤立的实例，流程如下：</p>
+<ol>
+<li>客户端先获取「当前时间戳T1」。</li>
+<li>客户端依次向这 5 个 Redis 实例发起加锁请求（SET命令），且每个请求会设置超时时间（毫秒级，要远小于锁的有效时间），如果某一个实例加锁失败（包括网络超时、锁被其它人持有等各种异常情况），就立即向下一个 Redis 实例申请加锁。</li>
+<li>如果客户端从 3 个（大多数）以上 Redis 实例加锁成功，则再次获取「当前时间戳T2」，如果 T2 - T1 &lt; 锁的过期时间，此时，认为客户端加锁成功，否则认为加锁失败。</li>
+<li>加锁成功，去操作共享资源（例如修改 MySQL 某一行，或发起一个 API 请求）。</li>
+<li>加锁失败，向全部节点发起释放锁请求。</li>
+</ol>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/10/09/10-9技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -270,7 +601,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2021/10/09/10-9技术笔记-1/" itemprop="url">redis分布式锁缺陷</a></h1>
+                <a class="post-title-link" href="/2021/10/09/10-9技术笔记-1/" itemprop="url">redis分布式锁</a></h1>
         
 
         <div class="post-meta">
@@ -1566,328 +1897,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/14/9-14技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/09/14/9-14技术笔记/" itemprop="url">ES的search after</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-09-14T14:29:27+08:00">
-                2021-09-14
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="search-after"><a href="#search-after" class="headerlink" title="search after"></a>search after</h1><p>es搜索带sort字段时，也会返回，sort对应的值</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?pretty</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span>,</span><br><span class="line">  <span class="attr">"sort"</span>: &#123;</span><br><span class="line">    <span class="attr">"date"</span>: <span class="string">"asc"</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">"hits" : [</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">"_index"</span> : <span class="string">"yz_test"</span>,</span><br><span class="line">    <span class="attr">"_type"</span> : <span class="string">"_doc"</span>,</span><br><span class="line">    <span class="attr">"_id"</span> : <span class="string">"1"</span>,</span><br><span class="line">    <span class="attr">"_score"</span> : <span class="literal">null</span>,</span><br><span class="line">    <span class="attr">"_source"</span> : &#123;</span><br><span class="line">      <span class="attr">"title"</span> : <span class="string">"Some short title"</span>,</span><br><span class="line">      <span class="attr">"date"</span> : <span class="string">"2015-01-01"</span>,</span><br><span class="line">      <span class="attr">"content"</span> : <span class="string">"A very long content field..."</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"sort"</span> : [</span><br><span class="line">      <span class="number">1420070400000</span></span><br><span class="line">    ]</span><br><span class="line">  &#125;,</span><br></pre></td></tr></table></figure>
-<p>这时把sort的值，放到search after里，可以继续往下搜</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?pretty</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span>,</span><br><span class="line">  <span class="attr">"sort"</span>: &#123;</span><br><span class="line">    <span class="attr">"date"</span>: <span class="string">"asc"</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">"search_after"</span>: [</span><br><span class="line">    <span class="number">1420070400000</span></span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">"hits" : [</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">"_index"</span> : <span class="string">"yz_test2"</span>,</span><br><span class="line">    <span class="attr">"_type"</span> : <span class="string">"_doc"</span>,</span><br><span class="line">    <span class="attr">"_id"</span> : <span class="string">"3"</span>,</span><br><span class="line">    <span class="attr">"_score"</span> : <span class="literal">null</span>,</span><br><span class="line">    <span class="attr">"_source"</span> : &#123;</span><br><span class="line">      <span class="attr">"title"</span> : <span class="string">"Some short title2"</span>,</span><br><span class="line">      <span class="attr">"date"</span> : <span class="string">"2016-01-01"</span>,</span><br><span class="line">      <span class="attr">"content"</span> : <span class="string">"A very long content field..."</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"sort"</span> : [</span><br><span class="line">      <span class="number">1451606400000</span></span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
-<p>search after的好处是，不用把前n页的数据全部拿到，但是searchAfter也是全部搜索了一遍，只不过在collect过程中添加了一个上一页最后doc和当前返回的doc对比，这个过程时间复杂度为o(n)，也就是说，相比于search，并不能优化速度，时间复杂度还是o(n)，但是至少不会oom，可以搜出来。</p>
-<p>举个例子。</p>
-<p>一共10个分片，每个分片10条数据。现在需要第91到100条。</p>
-<p>from+size的方式，必须的每个分片都吐出所有数据，然后协调者把这100条排序。</p>
-<p>因为每个分片不知道其他分片数据的情况。</p>
-<p>而search after的数据，只需要每个分片给出大于第90数据的数据即可。但是这个分片依然要扫描所有数据，才知道哪些数据大于90的。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/08/17/8-17技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/08/17/8-17技术笔记/" itemprop="url">ES分布式</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-08-17T14:58:31+08:00">
-                2021-08-17
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="并发控制"><a href="#并发控制" class="headerlink" title="并发控制"></a>并发控制</h2><p>Elasticsearch 是分布式的。当文档创建、更新或删除时， 新版本的文档必须复制到集群中的其他节点。Elasticsearch 也是异步和并发的，这意味着这些复制请求被并行发送，并且到达目的地时也许  <em>顺序是乱的</em>  。 Elasticsearch 需要一种方法确保文档的旧版本不会覆盖新的版本。</p>
-<p>当我们之前讨论  <code>index</code>  ，  <code>GET</code>  和  <code>delete</code>  请求时，我们指出每个文档都有一个  <code>_version</code>  （版本）号，当文档被修改时版本号递增。 Elasticsearch 使用这个  <code>_version</code>  号来确保变更以正确顺序得到执行。如果旧版本的文档在新版本之后到达，它可以被简单的忽略。</p>
-<p>操作数据时，可以指定版本，这样如果我们指定的版本号，小于当前版本号，会返回失败。</p>
-<h2 id="选主"><a href="#选主" class="headerlink" title="选主"></a>选主</h2><p>ES集群中也会选举一个节点成为<strong>主节点</strong>，主节点它的职责是维护全局集群状态，在节点加入或离开集群的时候重新分配分片。</p>
-<ul>
-<li>集群层面的配置</li>
-<li>集群内有哪些节点</li>
-<li>各索引的设置，映射，分析器和别名等</li>
-<li>索引内各分片所在的节点位置</li>
-</ul>
-<p>所有主要的文档级别API（索引，删除，搜索）都不与主节点通信，主节点并不需要涉及到文档级别的变更和搜索等操作，所以当集群只拥有一个主节点的情况下，即使流量的增加它也不会成为瓶颈。 任何节点都可以成为主节点。如果集群中就只有一个节点，那么它同时也就是主节点。</p>
-<h5 id="Bully算法"><a href="#Bully算法" class="headerlink" title="Bully算法"></a>Bully算法</h5><p>每个节点有一个唯一ID，然后对集群中所有的节点ID进行排序，选取其中最小的ID所属的节点作为Master。<br>Bully算法的问题： 假设当前Master因为负载过重而假死，然后ID第二大的被选举为新的Master，这时旧的Master恢复然后又被选举为Master然后又会因为负载过重而假死……</p>
-<h3 id="Zen-Discovery"><a href="#Zen-Discovery" class="headerlink" title="Zen Discovery"></a>Zen Discovery</h3><p>例如，Master负载过重而假死，集群拥有第二大ID的节点被选为新主，这时原来的Master恢复，再次被选为新主，然后又假死<br>ES 通过推迟选举，直到当前的 Master 失效来解决上述问题，只要当前主节点不挂掉，就不重新选主。但是容易产生脑裂（双主），为此，再通过“法定得票人数过半”解决脑裂问题</p>
-<p>只有一个 Leader将当前版本的全局集群状态推送到每个节点。 ZenDiscovery（默认）过程就是这样的:</p>
-<p>每个节点计算最高的已知节点ID，并向该节点发送领导投票<br>如果一个节点收到足够多的票数，并且该节点也为自己投票，那么它将扮演领导者的角色，开始发布集群状态。<br>所有节点都会参数选举,并参与投票,但是,只有有资格成为 master 的节点的投票才有效.<br>————————————————</p>
-<ol>
-<li><p>过滤出具有Master资格的节点（filterPingResponses）</p>
-</li>
-<li><p>选出临时Master。根据PingResponse结果构建两个列表：activeMasters和masterCandidates。</p>
-<p>– 如果activeMasters非空，则从activeMasters中选择最合适的作为Master；</p>
-<p>– 如果activeMasters为空，则从masterCandidates中选举，结果可能选举成功，也可能选举失败。</p>
-</li>
-<li><p>判断临时Master是否是本节点。</p>
-<p>– 如果临时Master是本节点：则等待其他节点选我，默认30秒超时，成功的话就发布新的clusterState。（当选总统候选人，只等选票过半了）</p>
-<p>– 如果临时Master是其他节点：则不再接受其他节点的join请求，并向Master节点发送加入请求。（没资格选举，就只能送人头了）</p>
-</li>
-</ol>
-<h3 id="Raft"><a href="#Raft" class="headerlink" title="Raft"></a>Raft</h3><p>7版本后已改用Raft</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1938,7 +1947,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">252</span>
+                  <span class="site-state-item-count">254</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1960,7 +1969,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">62</span>
+                  <span class="site-state-item-count">63</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

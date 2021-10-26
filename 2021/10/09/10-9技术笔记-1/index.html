@@ -84,15 +84,15 @@
 <meta name="description" content="Redis是AP系统先抛个结论： “redis多机房同步是最终一致的，如有分布式锁的需求，会有锁不上的情况，业务可根据文档考虑使用强一致的存储组件！” from redis 用户文档 因此redis锁只能作为弱校验，而不能作为强依赖，必须要其他强一致的系统保证其一致性。 Redis锁实现原理而redis锁锁不住的原因要从redis锁的实现讲起。redis锁主要基于两个命令，setnx &amp;amp;">
 <meta name="keywords" content="redis,分布式">
 <meta property="og:type" content="article">
-<meta property="og:title" content="redis分布式锁缺陷">
+<meta property="og:title" content="redis分布式锁">
 <meta property="og:url" content="https://arvenseyz.github.io/2021/10/09/10-9技术笔记-1/index.html">
 <meta property="og:site_name" content="Arvense">
 <meta property="og:description" content="Redis是AP系统先抛个结论： “redis多机房同步是最终一致的，如有分布式锁的需求，会有锁不上的情况，业务可根据文档考虑使用强一致的存储组件！” from redis 用户文档 因此redis锁只能作为弱校验，而不能作为强依赖，必须要其他强一致的系统保证其一致性。 Redis锁实现原理而redis锁锁不住的原因要从redis锁的实现讲起。redis锁主要基于两个命令，setnx &amp;amp;">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://z3.ax1x.com/2021/10/09/5FANLj.png">
-<meta property="og:updated_time" content="2021-10-09T10:07:21.220Z">
+<meta property="og:updated_time" content="2021-10-11T08:50:16.995Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="redis分布式锁缺陷">
+<meta name="twitter:title" content="redis分布式锁">
 <meta name="twitter:description" content="Redis是AP系统先抛个结论： “redis多机房同步是最终一致的，如有分布式锁的需求，会有锁不上的情况，业务可根据文档考虑使用强一致的存储组件！” from redis 用户文档 因此redis锁只能作为弱校验，而不能作为强依赖，必须要其他强一致的系统保证其一致性。 Redis锁实现原理而redis锁锁不住的原因要从redis锁的实现讲起。redis锁主要基于两个命令，setnx &amp;amp;">
 <meta name="twitter:image" content="https://z3.ax1x.com/2021/10/09/5FANLj.png">
 
@@ -130,7 +130,7 @@
 
 
 
-  <title>redis分布式锁缺陷 | Arvense</title>
+  <title>redis分布式锁 | Arvense</title>
   
 
 
@@ -274,7 +274,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">redis分布式锁缺陷</h1>
+          <h1 class="post-title" itemprop="name headline">redis分布式锁</h1>
         
 
         <div class="post-meta">
@@ -438,6 +438,10 @@
 
           <div class="post-nav-prev post-nav-item">
             
+              <a href="/2021/10/11/10-11技术笔记-1/" rel="prev" title="redis的redlock锁">
+                redis的redlock锁 <i class="fa fa-chevron-right"></i>
+              </a>
+            
           </div>
         </div>
       
@@ -513,7 +517,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">252</span>
+                  <span class="site-state-item-count">254</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -535,7 +539,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">62</span>
+                  <span class="site-state-item-count">63</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

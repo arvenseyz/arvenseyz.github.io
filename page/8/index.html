@@ -251,6 +251,380 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/09/17/9-17技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/09/17/9-17技术笔记-1/" itemprop="url">shellscript数组与函数</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-17T11:32:57+08:00">
+                2019-09-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h1><p>Bash Shell 只支持一维数组（不支持多维数组），初始化时不需要定义数组大小，并且从0开始。</p>
+<p>Shell 数组用括号来表示，元素用”空格”符号分割开。即</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">array_name=(value1 ... valuen)</span><br></pre></td></tr></table></figure>
+<p>也可以用下标来定义</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">array_name[0]=value0</span><br><span class="line">array_name[1]=value1</span><br><span class="line">array_name[2]=value2</span><br></pre></td></tr></table></figure>
+<p>和其他类似，@和*表示所有，#表示长度</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line">marray[0]=A</span><br><span class="line">marray[1]=B</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"content: <span class="variable">$&#123;marray[@]&#125;</span>"</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"lenth: <span class="variable">$&#123;#marray[*]&#125;</span>"</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ ./array.sh</span><br><span class="line">content: A B</span><br><span class="line">lenth: 2</span><br></pre></td></tr></table></figure>
+<h1 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h1><p>函数严格定义，</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[ <span class="keyword">function</span> ] funname [()]</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    action;</span><br><span class="line"></span><br><span class="line">    [<span class="built_in">return</span> int;]</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>而function关键字可以省略，返回值也可以省略，将以最后一条命令运行结果，作为返回值。而函数不用写形式参数，传入参数后，就像bash，直接用@123取参数，就像bash，#*等的意义</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$#</td>
+<td>参数个数</td>
+</tr>
+<tr>
+<td>$*</td>
+<td>以一个单字符串显示所有向脚本传递的参数</td>
+</tr>
+<tr>
+<td>$$</td>
+<td>脚本运行的当前进程ID号</td>
+</tr>
+<tr>
+<td>$!</td>
+<td>后台运行的最后一个进程的ID号</td>
+</tr>
+<tr>
+<td>$@</td>
+<td>与$*相同，但是使用时加引号，并在引号中返回每个参数。</td>
+</tr>
+<tr>
+<td>$-</td>
+<td>显示Shell使用的当前选项，与set命令功能相同。</td>
+</tr>
+<tr>
+<td>$?</td>
+<td>显示最后命令的退出状态。0表示没有错误，其他任何值表明有错误。</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">func</span></span>()&#123;</span><br><span class="line">        sum=0</span><br><span class="line">        <span class="keyword">for</span> num <span class="keyword">in</span> $*</span><br><span class="line">        <span class="keyword">do</span></span><br><span class="line">                sum=`expr <span class="variable">$sum</span> + <span class="variable">$num</span>`</span><br><span class="line">        <span class="keyword">done</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"sum=<span class="variable">$sum</span>"</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func 1 2 3 4 5</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ ./func.sh</span><br><span class="line">sum=15</span><br></pre></td></tr></table></figure>
+<p>如上，expr是运算符，表数字运算.</p>
+<p>直接用加法就是字符串拼接，结果会是”sum=0+1+2+3+4+5”</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/09/10/9-10技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/09/10/9-10技术笔记/" itemprop="url">shellscript选择与循环</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-10T15:30:22+08:00">
+                2019-09-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="条件命令"><a href="#条件命令" class="headerlink" title="条件命令"></a>条件命令</h2><p>在bash脚本编程中，我们经常做一些条件判断， 我们主要用到了三种，test，单中括号，双中括号。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[ $? –eq 0 ]</span><br><span class="line"></span><br><span class="line">[[ $myvar == “mysql” ]]</span><br><span class="line"></span><br><span class="line">test 1 -eq 0</span><br></pre></td></tr></table></figure>
+<h3 id="test"><a href="#test" class="headerlink" title="test"></a>test</h3><p>test是bash内建命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ <span class="built_in">test</span> 1 -ne 0 &amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
+<p>ne是不等于的意思，即1不等于0，就输出ok.</p>
+<p>man test可以看见所有参数用法，摘录一点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">( EXPRESSION )</span><br><span class="line">       EXPRESSION is true</span><br><span class="line"></span><br><span class="line">! EXPRESSION</span><br><span class="line">       EXPRESSION is false</span><br><span class="line"></span><br><span class="line">EXPRESSION1 -a EXPRESSION2</span><br><span class="line">       both EXPRESSION1 and EXPRESSION2 are true</span><br><span class="line"></span><br><span class="line">EXPRESSION1 -o EXPRESSION2</span><br><span class="line">       either EXPRESSION1 or EXPRESSION2 is true</span><br><span class="line">       </span><br><span class="line">       STRING1 = STRING2</span><br><span class="line">       the strings are equal</span><br><span class="line"></span><br><span class="line">STRING1 != STRING2</span><br><span class="line">       the strings are not equal</span><br><span class="line"></span><br><span class="line">INTEGER1 -eq INTEGER2</span><br><span class="line">       INTEGER1 is equal to INTEGER2</span><br><span class="line"></span><br><span class="line">INTEGER1 -ge INTEGER2</span><br><span class="line">       INTEGER1 is greater than or equal to INTEGER2</span><br><span class="line"></span><br><span class="line">INTEGER1 -gt INTEGER2</span><br><span class="line">       INTEGER1 is greater than INTEGER2</span><br></pre></td></tr></table></figure>
+<h3 id="单中括号"><a href="#单中括号" class="headerlink" title="单中括号"></a>单中括号</h3><p>实际上[ 这个是个内建命令，可以执行which [查看。</p>
+<p>这样就可以理解奇怪的规定。即然是命令，那么命令与后面的参数就得用空格隔开，使用[时后面需要有一个空格的原因。所以[1=2]这样的写法将会报错。单中括号与test命令是等价的。</p>
+<p>这里有一个陷阱，既然 <code>都是以参数的形式传递给</code>test` 命令的， 那么如果参数解析的结果是空或者带空格，那么就会因为缺少参数或者参数数量不丢而崩掉。</p>
+<p>所以最好参数用双引号包起来。</p>
+<h3 id="双中括号"><a href="#双中括号" class="headerlink" title="双中括号"></a>双中括号</h3><p>双中括号不是命令，而是shell关键字。因为不是命令，因此不受制与 Shell 的 <strong>参数展开</strong>，比如 不需要用引号包裹所有变量，也支持类似 <code>&amp;&amp;</code>，<code>||</code> 这样的逻辑操作而不需要用类似 <code>-a</code>，<code>-o</code> 这样的参数。</p>
+<h3 id="双小括号"><a href="#双小括号" class="headerlink" title="双小括号"></a>双小括号</h3><p>算术展开的语法是  <code>$((expression))</code>，这是从其他编程语言来的人最顺手的算术操作方式。与  <code>test</code>  命令相比，</p>
+<ul>
+<li>C 风格的算术操作语法</li>
+<li>Shell 会把  <code>expression</code>  内容的每一项都当做就像被引号包裹了一样。</li>
+<li>会依次进行<strong>参数展开</strong>、<strong>命令替换</strong>，和  <strong>引号移除</strong>。</li>
+</ul>
+<p>因此可以不需要像  <code>test</code>  命令那样用引号包裹所有变量，也不需要注意空格，也可以写 C 风格的操作。</p>
+<p>然后，对于C，1是ture，0是false。bah相反。</p>
+<h3 id="逻辑运算符"><a href="#逻辑运算符" class="headerlink" title="逻辑运算符"></a>逻辑运算符</h3><p>因为test和[]是命令，所以逻辑运算符是以参数的形式体现。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [ 1 -ne 0 ]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br><span class="line">yangzhuo@n224-019-077:~/file$ [ 1 -ne 0 || 1 -gt 0 ]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">-bash: [: missing `]<span class="string">'</span></span><br><span class="line"><span class="string">-bash: 1: command not found</span></span><br></pre></td></tr></table></figure>
+<p>只能这样</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [ 1 -ne 0 ] || [ 1 -gt 0 ]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
+<p>当然[[]]就不受限制</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [[ 1 -ne 0  ||  1 -gt 0 ]]&amp;&amp;echo ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
+<p>甚至</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [[ 1 != 0  ||  1 &gt; 0 ]]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
+<h2 id="选择语句"><a href="#选择语句" class="headerlink" title="选择语句"></a>选择语句</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">read</span> -p <span class="string">"num?"</span> num</span><br><span class="line"><span class="keyword">if</span> [ <span class="variable">$&#123;num&#125;</span> -gt 10 ]; <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"big"</span></span><br><span class="line"><span class="keyword">elif</span> [ <span class="variable">$&#123;num&#125;</span> - eq 10]; <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"equal"</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"small"</span></span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+<h2 id="循环"><a href="#循环" class="headerlink" title="循环"></a>循环</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> [ <span class="string">"<span class="variable">$&#123;yn&#125;</span>"</span> != <span class="string">"yes"</span> -a <span class="string">"<span class="variable">$&#123;yn&#125;</span>"</span> != <span class="string">"YES"</span> ]</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line"><span class="built_in">read</span> -p <span class="string">"Please input yes/YES to stop this program: "</span> yn </span><br><span class="line"><span class="keyword">done</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"OK! you input the correct answer."</span></span><br></pre></td></tr></table></figure>
+<p>while do done结构，也有until do done，直到。。。其实没啥用</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">s=0 <span class="comment"># 这是加总的数值变量</span></span><br><span class="line">i=0 <span class="comment"># 这是累计的数值，亦即是 1, 2, 3....</span></span><br><span class="line"><span class="keyword">while</span> [ <span class="string">"<span class="variable">$&#123;i&#125;</span>"</span> != <span class="string">"100"</span> ]</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line">i=$（（<span class="variable">$i</span>+1）） <span class="comment"># 每次 i 都会增加 1</span></span><br><span class="line">s=$（（<span class="variable">$s</span>+<span class="variable">$i</span>）） <span class="comment"># 每次都会加总一次！</span></span><br><span class="line"><span class="keyword">done</span> <span class="built_in">echo</span> <span class="string">"The result of '1+2+3+...+100' is ==&gt; <span class="variable">$s</span>"</span></span><br></pre></td></tr></table></figure>
+<p>这是while的一般用法。</p>
+<p>for循环支持for in 和三段式</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">read</span> -p <span class="string">"Please input a number, I will count for 1+2+...+your_input: "</span> nu</span><br><span class="line">s=0</span><br><span class="line"><span class="keyword">for</span> （（ i=1; i&lt;=<span class="variable">$&#123;nu&#125;</span>; i=i+1 ））</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line">s=$（（<span class="variable">$&#123;s&#125;</span>+<span class="variable">$&#123;i&#125;</span>））</span><br><span class="line"><span class="keyword">done</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"The result of '1+2+3+...+<span class="variable">$&#123;nu&#125;</span>' is ==&gt; <span class="variable">$&#123;s&#125;</span>"</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> animal <span class="keyword">in</span> dog cat elephant</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"There are <span class="variable">$&#123;animal&#125;</span>s.... "</span> <span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+<p>即in后面接空格隔开的，或者seq联系数字.</p>
+<p>也可以直接使用 bash 的内置机制来处理！可以使用 {1..100} 来取代 $（seq 1 100） 。 大括号内的前面/后面用两个字符，中间以两个小数点来代表连续出现的意思。例如要持续输出 a, b, c…g 的话， 就可以使用“ echo {a..g} ”这样的表 示方式！</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> sitenu <span class="keyword">in</span> $（seq 1 100） <span class="comment"># seq 为 sequence（连续） 的缩写之意</span></span><br><span class="line"><span class="keyword">do</span></span><br><span class="line"><span class="comment"># 下面的程序在取得 ping 的回传值是正确的还是失败的！</span></span><br><span class="line">ping -c 1 -w 1 <span class="variable">$&#123;network&#125;</span>.<span class="variable">$&#123;sitenu&#125;</span> &amp;&gt; /dev/null &amp;&amp; result=0 || result=1</span><br><span class="line"><span class="comment"># 开始显示结果是正确的启动 （UP） 还是错误的没有连通 （DOWN）</span></span><br><span class="line">    <span class="keyword">if</span> [ <span class="string">"<span class="variable">$&#123;result&#125;</span>"</span> == 0 ]; <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"Server <span class="variable">$&#123;network&#125;</span>.<span class="variable">$&#123;sitenu&#125;</span> is UP."</span> </span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"Server <span class="variable">$&#123;network&#125;</span>.<span class="variable">$&#123;sitenu&#125;</span> is DOWN."</span> </span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line"><span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/09/08/9-8技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1602,314 +1976,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/07/29/7-29技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/07/29/7-29技术笔记/" itemprop="url">channel泄漏和关闭</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-29T17:11:53+08:00">
-                2019-07-29
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="channel内存泄漏"><a href="#channel内存泄漏" class="headerlink" title="channel内存泄漏"></a>channel内存泄漏</h1><p>造成channel泄漏的原因很简单，协程持有channel，一直阻塞不释放。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineB</span><span class="params">(b <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	b&lt;<span class="number">-1</span></span><br><span class="line">	b&lt;<span class="number">-2</span></span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br><span class="line">	<span class="keyword">go</span> goroutineB(ch)</span><br><span class="line">	<span class="keyword">for</span> i:=<span class="keyword">range</span> ch&#123;</span><br><span class="line">	fmt.Printf(<span class="string">"%d\n"</span>,i)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>for range 会阻塞，读两次后，没数据了，就阻塞了。然后该channel不会被释放，死锁。或者select操作也是。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineA</span><span class="params">(a &lt;-<span class="keyword">chan</span> <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> i:=&lt;-a: fmt.Printf(<span class="string">"%d\n"</span>,i)</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">	<span class="keyword">case</span> i:=&lt;-a: fmt.Printf(<span class="string">"%d\n"</span>,i)</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	fmt.Printf(<span class="string">"out"</span>)</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineB</span><span class="params">(b <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	b&lt;<span class="number">-1</span></span><br><span class="line">	<span class="comment">//close(b)</span></span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br><span class="line">	<span class="keyword">go</span> goroutineA(ch)</span><br><span class="line">	<span class="keyword">go</span> goroutineB(ch)</span><br><span class="line">	time.Sleep(<span class="number">3</span>*time.Second)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>如图，B只产生了一个数据，A试图select读两次，造成A阻塞，同时chan也得不到释放。</p>
-<h1 id="channel关闭"><a href="#channel关闭" class="headerlink" title="channel关闭"></a>channel关闭</h1><p>解决上面情况很简单，即去掉注释，B产生完数据后关闭通道。</p>
-<p>然而有个问题，go在发送侧无法得知通道是否已经关闭，接受侧也只能尝试读一个，才能知道是否关闭。关闭一个已关闭的通道，向一个已关闭的通道发送数据，都会导致panic。</p>
-<p>即channel没有提供isClosed()方法，不然直接写</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> !ch.isClosed()&#123;</span><br><span class="line">    ch&lt;-data</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> !ch.isClosed()&#123;</span><br><span class="line">    ch.<span class="built_in">close</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>没法实现，只能从设计侧解决。</p>
-<h2 id="接受侧不关闭通道"><a href="#接受侧不关闭通道" class="headerlink" title="接受侧不关闭通道"></a>接受侧不关闭通道</h2><p>很简单，适用于1v1场景，发送侧觉得自己发完了，记得要关闭通道即可，接受侧不做处理。</p>
-<h2 id="如果有多个发送侧，不关闭通道"><a href="#如果有多个发送侧，不关闭通道" class="headerlink" title="如果有多个发送侧，不关闭通道"></a>如果有多个发送侧，不关闭通道</h2><p>不关闭的意思是，不调用close，而让gc回收。而发出关闭指令，让发送侧别发了的，是接受端，怎么搞呢。</p>
-<p>这里要分情况，一个1vn:再来个channel，用于接受侧，发送停止信号。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineA</span><span class="params">(a &lt;-<span class="keyword">chan</span> <span class="keyword">int</span>, stop <span class="keyword">chan</span>&lt;-<span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	c:=<span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> i:=<span class="keyword">range</span> a &#123;</span><br><span class="line">		fmt.Printf(<span class="string">"%d\n"</span>, i)</span><br><span class="line">		c++</span><br><span class="line">		<span class="keyword">if</span> c &gt;= <span class="number">10</span> &#123;</span><br><span class="line">			<span class="built_in">close</span>(stop)</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">"out"</span>)</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineB</span><span class="params">(b <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>,stop &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-stop:</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		<span class="keyword">case</span> b &lt;- <span class="number">1</span>:</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineC</span><span class="params">(b <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>,stop &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-stop:</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		<span class="keyword">case</span> b &lt;- <span class="number">1</span>:</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br><span class="line">	stop := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> goroutineA(ch,stop)</span><br><span class="line">	<span class="keyword">go</span> goroutineB(ch,stop)</span><br><span class="line">	<span class="keyword">go</span> goroutineC(ch,stop)</span><br><span class="line">	time.Sleep(<span class="number">3</span>*time.Second)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>如上，B和C是两个生产者，向chan里生产信息，A是接受者，A不想接受了，就关闭stop通道，BC接收到stop通道关闭信息，就不生产了。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/07/23/7-23技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/07/23/7-23技术笔记/" itemprop="url">goSlcie细节</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-23T21:18:59+08:00">
-                2019-07-23
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="List"><a href="#List" class="headerlink" title="List"></a>List</h1><h2 id="nil切片与空切片"><a href="#nil切片与空切片" class="headerlink" title="nil切片与空切片"></a>nil切片与空切片</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> s1 []<span class="keyword">int</span></span><br><span class="line"><span class="keyword">var</span> s2 = *<span class="built_in">new</span>([]<span class="keyword">int</span>)</span><br><span class="line"><span class="keyword">var</span> s3 = <span class="built_in">make</span>([]<span class="keyword">int</span>, <span class="number">0</span>)</span><br><span class="line"><span class="keyword">var</span> s4 = []<span class="keyword">int</span>&#123;&#125;</span><br></pre></td></tr></table></figure>
-<p>前两者是nil切片，==nil。</p>
-<p>后两者是空切片，!=nil，数据指针都指向同一个地址 <code>0xc42003bda0</code></p>
-<p>四者的len都是0，所以应该用len(list)==0来判断返回值。</p>
-<h2 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h2><p>扩容规则并不是网传的小于1024两倍，大于1024就1.25倍这么简单</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">s := []<span class="keyword">int</span>&#123;<span class="number">1</span>,<span class="number">2</span>&#125;</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">fmt.Printf(<span class="string">"%d %d    \n"</span>,<span class="built_in">len</span>(s),<span class="built_in">cap</span>(s))</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">fmt.Printf(<span class="string">"%d %d"</span>,<span class="built_in">len</span>(s),<span class="built_in">cap</span>(s))</span><br></pre></td></tr></table></figure>
-<p>输出并不是5 8 11 16</p>
-<p>而是5 6 11 12</p>
-<h4 id="基于cap的增长规则"><a href="#基于cap的增长规则" class="headerlink" title="基于cap的增长规则"></a>基于cap的增长规则</h4><p>根本问题在于，可能扩容后依然不够装，为了避免这个问题，当简单规则计算后，仍不够装时，会采用基于cap的增长规则。</p>
-<p>1.计算新cap,以例子为例，翻倍仍不够，新cap是2+3=5；</p>
-<p>2.内存对齐，内存对齐，简单来说需要多少个8（小于1024）/128（大于1024）字节，可以内存对齐，这里是6个。具体来说，一共五个数，每个数的指针大小为8（64位机），先算出空间40，算出实际需要索引4，然后查一个内存对齐表，索引4处值为48，48即6。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1960,7 +2026,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">252</span>
+                  <span class="site-state-item-count">254</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1982,7 +2048,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">62</span>
+                  <span class="site-state-item-count">63</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

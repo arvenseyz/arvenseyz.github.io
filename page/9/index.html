@@ -251,6 +251,314 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/07/29/7-29技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/29/7-29技术笔记/" itemprop="url">channel泄漏和关闭</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-29T17:11:53+08:00">
+                2019-07-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="channel内存泄漏"><a href="#channel内存泄漏" class="headerlink" title="channel内存泄漏"></a>channel内存泄漏</h1><p>造成channel泄漏的原因很简单，协程持有channel，一直阻塞不释放。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineB</span><span class="params">(b <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	b&lt;<span class="number">-1</span></span><br><span class="line">	b&lt;<span class="number">-2</span></span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br><span class="line">	<span class="keyword">go</span> goroutineB(ch)</span><br><span class="line">	<span class="keyword">for</span> i:=<span class="keyword">range</span> ch&#123;</span><br><span class="line">	fmt.Printf(<span class="string">"%d\n"</span>,i)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>for range 会阻塞，读两次后，没数据了，就阻塞了。然后该channel不会被释放，死锁。或者select操作也是。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineA</span><span class="params">(a &lt;-<span class="keyword">chan</span> <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> i:=&lt;-a: fmt.Printf(<span class="string">"%d\n"</span>,i)</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">	<span class="keyword">case</span> i:=&lt;-a: fmt.Printf(<span class="string">"%d\n"</span>,i)</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	fmt.Printf(<span class="string">"out"</span>)</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineB</span><span class="params">(b <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	b&lt;<span class="number">-1</span></span><br><span class="line">	<span class="comment">//close(b)</span></span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br><span class="line">	<span class="keyword">go</span> goroutineA(ch)</span><br><span class="line">	<span class="keyword">go</span> goroutineB(ch)</span><br><span class="line">	time.Sleep(<span class="number">3</span>*time.Second)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如图，B只产生了一个数据，A试图select读两次，造成A阻塞，同时chan也得不到释放。</p>
+<h1 id="channel关闭"><a href="#channel关闭" class="headerlink" title="channel关闭"></a>channel关闭</h1><p>解决上面情况很简单，即去掉注释，B产生完数据后关闭通道。</p>
+<p>然而有个问题，go在发送侧无法得知通道是否已经关闭，接受侧也只能尝试读一个，才能知道是否关闭。关闭一个已关闭的通道，向一个已关闭的通道发送数据，都会导致panic。</p>
+<p>即channel没有提供isClosed()方法，不然直接写</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> !ch.isClosed()&#123;</span><br><span class="line">    ch&lt;-data</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> !ch.isClosed()&#123;</span><br><span class="line">    ch.<span class="built_in">close</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>没法实现，只能从设计侧解决。</p>
+<h2 id="接受侧不关闭通道"><a href="#接受侧不关闭通道" class="headerlink" title="接受侧不关闭通道"></a>接受侧不关闭通道</h2><p>很简单，适用于1v1场景，发送侧觉得自己发完了，记得要关闭通道即可，接受侧不做处理。</p>
+<h2 id="如果有多个发送侧，不关闭通道"><a href="#如果有多个发送侧，不关闭通道" class="headerlink" title="如果有多个发送侧，不关闭通道"></a>如果有多个发送侧，不关闭通道</h2><p>不关闭的意思是，不调用close，而让gc回收。而发出关闭指令，让发送侧别发了的，是接受端，怎么搞呢。</p>
+<p>这里要分情况，一个1vn:再来个channel，用于接受侧，发送停止信号。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineA</span><span class="params">(a &lt;-<span class="keyword">chan</span> <span class="keyword">int</span>, stop <span class="keyword">chan</span>&lt;-<span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	c:=<span class="number">0</span></span><br><span class="line">	<span class="keyword">for</span> i:=<span class="keyword">range</span> a &#123;</span><br><span class="line">		fmt.Printf(<span class="string">"%d\n"</span>, i)</span><br><span class="line">		c++</span><br><span class="line">		<span class="keyword">if</span> c &gt;= <span class="number">10</span> &#123;</span><br><span class="line">			<span class="built_in">close</span>(stop)</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">"out"</span>)</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineB</span><span class="params">(b <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>,stop &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-stop:</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		<span class="keyword">case</span> b &lt;- <span class="number">1</span>:</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">goroutineC</span><span class="params">(b <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>,stop &lt;-<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-stop:</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		<span class="keyword">case</span> b &lt;- <span class="number">1</span>:</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br><span class="line">	stop := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">	<span class="keyword">go</span> goroutineA(ch,stop)</span><br><span class="line">	<span class="keyword">go</span> goroutineB(ch,stop)</span><br><span class="line">	<span class="keyword">go</span> goroutineC(ch,stop)</span><br><span class="line">	time.Sleep(<span class="number">3</span>*time.Second)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如上，B和C是两个生产者，向chan里生产信息，A是接受者，A不想接受了，就关闭stop通道，BC接收到stop通道关闭信息，就不生产了。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/07/23/7-23技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/07/23/7-23技术笔记/" itemprop="url">goSlcie细节</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-07-23T21:18:59+08:00">
+                2019-07-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="List"><a href="#List" class="headerlink" title="List"></a>List</h1><h2 id="nil切片与空切片"><a href="#nil切片与空切片" class="headerlink" title="nil切片与空切片"></a>nil切片与空切片</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> s1 []<span class="keyword">int</span></span><br><span class="line"><span class="keyword">var</span> s2 = *<span class="built_in">new</span>([]<span class="keyword">int</span>)</span><br><span class="line"><span class="keyword">var</span> s3 = <span class="built_in">make</span>([]<span class="keyword">int</span>, <span class="number">0</span>)</span><br><span class="line"><span class="keyword">var</span> s4 = []<span class="keyword">int</span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>前两者是nil切片，==nil。</p>
+<p>后两者是空切片，!=nil，数据指针都指向同一个地址 <code>0xc42003bda0</code></p>
+<p>四者的len都是0，所以应该用len(list)==0来判断返回值。</p>
+<h2 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h2><p>扩容规则并不是网传的小于1024两倍，大于1024就1.25倍这么简单</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">s := []<span class="keyword">int</span>&#123;<span class="number">1</span>,<span class="number">2</span>&#125;</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">fmt.Printf(<span class="string">"%d %d    \n"</span>,<span class="built_in">len</span>(s),<span class="built_in">cap</span>(s))</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">s = <span class="built_in">append</span>(s,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>)</span><br><span class="line">fmt.Printf(<span class="string">"%d %d"</span>,<span class="built_in">len</span>(s),<span class="built_in">cap</span>(s))</span><br></pre></td></tr></table></figure>
+<p>输出并不是5 8 11 16</p>
+<p>而是5 6 11 12</p>
+<h4 id="基于cap的增长规则"><a href="#基于cap的增长规则" class="headerlink" title="基于cap的增长规则"></a>基于cap的增长规则</h4><p>根本问题在于，可能扩容后依然不够装，为了避免这个问题，当简单规则计算后，仍不够装时，会采用基于cap的增长规则。</p>
+<p>1.计算新cap,以例子为例，翻倍仍不够，新cap是2+3=5；</p>
+<p>2.内存对齐，内存对齐，简单来说需要多少个8（小于1024）/128（大于1024）字节，可以内存对齐，这里是6个。具体来说，一共五个数，每个数的指针大小为8（64位机），先算出空间40，算出实际需要索引4，然后查一个内存对齐表，索引4处值为48，48即6。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/07/18/7-18技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1475,329 +1783,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/06/25/6-25技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/06/25/6-25技术笔记/" itemprop="url">go.context</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-25T15:19:28+08:00">
-                2019-06-25
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h1><p>context即上下文，其设计的初心可能是协调多个协程。官方介绍如下</p>
-<p>在 Go http包的Server中，每一个请求在都有一个对应的 goroutine 去处理。请求处理函数通常会启动额外的 goroutine 用来访问后端服务，比如数据库和RPC服务。用来处理一个请求的 goroutine 通常需要访问一些与请求特定的数据，比如终端用户的身份认证信息、验证相关的token、请求的截止时间。 当一个请求被取消或超时时，所有用来处理该请求的 goroutine 都应该迅速退出，然后系统才能释放这些 goroutine 占用的资源。</p>
-<p>即，多个任务的协程需要同步信息和动作。</p>
-<h1 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">coordinateWithContext</span><span class="params">()</span></span> &#123;</span><br><span class="line"> total := <span class="number">12</span></span><br><span class="line"> <span class="keyword">var</span> num <span class="keyword">int32</span></span><br><span class="line"> fmt.Printf(<span class="string">"The number: %d [with context.Context]\n"</span>, num)</span><br><span class="line"> cxt, cancelFunc := context.WithCancel(context.Background())</span><br><span class="line"> <span class="keyword">for</span> i := <span class="number">1</span>; i &lt;= total; i++ &#123;</span><br><span class="line">  <span class="keyword">go</span> addNum(&amp;num, i, <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">   <span class="keyword">if</span> atomic.LoadInt32(&amp;num) == <span class="keyword">int32</span>(total) &#123;</span><br><span class="line">    cancelFunc()</span><br><span class="line">   &#125;</span><br><span class="line">  &#125;)</span><br><span class="line"> &#125;</span><br><span class="line"> &lt;-cxt.Done()</span><br><span class="line"> fmt.Println(<span class="string">"End."</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// addNum 用于原子地增加一次numP所指的变量的值。</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">addNum</span><span class="params">(numP *<span class="keyword">int32</span>, id <span class="keyword">int</span>, deferFunc <span class="keyword">func</span>()</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        deferFunc()</span><br><span class="line">    &#125;()</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; ; i++ &#123;</span><br><span class="line">        currNum := atomic.LoadInt32(numP)</span><br><span class="line">        newNum := currNum + <span class="number">1</span></span><br><span class="line">        time.Sleep(time.Millisecond * <span class="number">200</span>)</span><br><span class="line">        <span class="keyword">if</span> atomic.CompareAndSwapInt32(numP, currNum, newNum) &#123;</span><br><span class="line">            fmt.Printf(<span class="string">"The number: %d [%d-%d]\n"</span>, newNum, id, i)</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">//fmt.Printf("The CAS operation failed. [%d-%d]\n", id, i)</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这是个类mapReduce分组求和的程序，下面的add函数是原子加的过程，接受一个函数做参数。上面的协调函数即使用了context.</p>
-<p>在这个函数体中，先后调用了context.Background()和context.WithCancel函数，获得了一个withCancel的context，并得到了一个可撤销的方法cancelFunc。</p>
-<p>然后起了12个协程来做加法，一旦加到total了，调用cancelFunc()，主协程就会收到&lt;-cxt.Done()的消息</p>
-<h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><p>context是可繁衍的，四个with方法，都会生成新的子context，这些子值可以携带其父值的属性和数据，也可以响应我们通过其父值传达的信号。</p>
-<p>最终所有的context形成了一个树形结构，而根结点则就是context包中的backgroundContext。</p>
-<h2 id="撤销"><a href="#撤销" class="headerlink" title="撤销"></a>撤销</h2><p>除了with value，其他三个with函数都有撤销的用法，只不过撤销的来历不同，通过回调函数触发/根据时间触发。</p>
-<p>什么叫撤销呢，Done()函数返回一个只读的通道，撤销就是通道关闭，那么此时所有针对该通道的接受操作也会结束。</p>
-<h2 id="传值"><a href="#传值" class="headerlink" title="传值"></a>传值</h2><p>withvalue的可以带个k-v，而传递到的也可以用Value()取出该值。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    ctx, cancel := context.WithCancel(context.Background())</span><br><span class="line"></span><br><span class="line">    valueCtx := context.WithValue(ctx, <span class="number">1</span>, <span class="string">"add value"</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">go</span> watch(valueCtx)</span><br><span class="line">    time.Sleep(<span class="number">10</span> * time.Second)</span><br><span class="line">    cancel()</span><br><span class="line"></span><br><span class="line">    time.Sleep(<span class="number">5</span> * time.Second)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">watch</span><span class="params">(ctx context.Context)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> &lt;-ctx.Done():</span><br><span class="line">            <span class="comment">//get value</span></span><br><span class="line">            fmt.Println(ctx.Value(<span class="number">1</span>), <span class="string">"is cancel"</span>)</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="comment">//get value</span></span><br><span class="line">            fmt.Println(ctx.Value(<span class="number">1</span>), <span class="string">"int goroutine"</span>)</span><br><span class="line"></span><br><span class="line">            time.Sleep(<span class="number">2</span> * time.Second)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/06/20/6-20技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/06/20/6-20技术笔记/" itemprop="url">sync包</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-20T16:50:28+08:00">
-                2019-06-20
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>其实sync包和java中的juc包感觉差不多，基本上都可以找到类似的。</p>
-<h1 id="mutex"><a href="#mutex" class="headerlink" title="mutex"></a>mutex</h1><p>其实相当于显式锁，mutex.lock()加锁，mutex.unlock()解锁。</p>
-<p>比如</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">count:=<span class="number">0</span></span><br><span class="line"><span class="keyword">for</span> i:=<span class="number">0</span>;i&lt;<span class="number">10000</span>;i++&#123;</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        count++</span><br><span class="line">    &#125;()</span><br><span class="line">&#125;</span><br><span class="line">time.Sleep(time.Second*<span class="number">10</span>)</span><br><span class="line">fmt.Print(count)</span><br></pre></td></tr></table></figure>
-<p>会输出一个略小于1000的数，原因就是临界区共享变量那一套了。</p>
-<p>当然等10秒略粗暴，这里用Channel来沟通完成情况跟好。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    count:=<span class="number">0</span></span><br><span class="line">    c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">    <span class="keyword">for</span> i:=<span class="number">0</span>;i&lt;<span class="number">10000</span>;i++&#123;</span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">            count++</span><br><span class="line">            c&lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">        &#125;()</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++ &#123;</span><br><span class="line">        &lt;-c</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Print(count)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>但结果不会变得，答案略小于10000。</p>
-<p>然后加锁</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    lock:=sync.Mutex&#123;&#125;</span><br><span class="line">    count:=<span class="number">0</span></span><br><span class="line">    c := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;)</span><br><span class="line">    <span class="keyword">for</span> i:=<span class="number">0</span>;i&lt;<span class="number">10000</span>;i++&#123;</span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">            lock.Lock()</span><br><span class="line">            count++</span><br><span class="line">            c&lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">            lock.Unlock()</span><br><span class="line">        &#125;()</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++ &#123;</span><br><span class="line">        &lt;-c</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Print(count)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>稳定输出10000。</p>
-<h1 id="RWMutex"><a href="#RWMutex" class="headerlink" title="RWMutex"></a>RWMutex</h1><p>即读写锁，可以一起读，不能一起写，写的时候不能读什么，可以想象到。</p>
-<p>写的时候其他被阻塞，感受下</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> m *sync.RWMutex</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    m = <span class="built_in">new</span>(sync.RWMutex)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 写的时候啥也不能干</span></span><br><span class="line">    <span class="keyword">go</span> write(<span class="number">1</span>)</span><br><span class="line">    <span class="keyword">go</span> read(<span class="number">2</span>)</span><br><span class="line">    <span class="keyword">go</span> write(<span class="number">3</span>)</span><br><span class="line"></span><br><span class="line">    time.Sleep(<span class="number">5</span>*time.Second)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">read</span><span class="params">(i <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">    <span class="built_in">println</span>(i,<span class="string">"read start"</span>)</span><br><span class="line"></span><br><span class="line">    m.RLock()</span><br><span class="line">    <span class="built_in">println</span>(i,<span class="string">"reading"</span>)</span><br><span class="line">    time.Sleep(time.Second)</span><br><span class="line">    m.RUnlock()</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println</span>(i,<span class="string">"read over"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">write</span><span class="params">(i <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">    <span class="built_in">println</span>(i,<span class="string">"write start"</span>)</span><br><span class="line"></span><br><span class="line">    m.Lock()</span><br><span class="line">    <span class="built_in">println</span>(i,<span class="string">"writing"</span>)</span><br><span class="line">    time.Sleep(time.Second)</span><br><span class="line">    m.Unlock()</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println</span>(i,<span class="string">"write over"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="cond"><a href="#cond" class="headerlink" title="cond"></a>cond</h1><p>其实就是Java中的signal，await信号量这一套</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    lock:=sync.Mutex&#123;&#125;</span><br><span class="line">    cond:=sync.NewCond(&amp;lock)</span><br><span class="line">    cond.L.Lock()</span><br><span class="line">    <span class="keyword">defer</span> cond.L.Unlock()</span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        time.Sleep(time.Second*<span class="number">6</span>)</span><br><span class="line">        cond.Signal()</span><br><span class="line">    &#125;()</span><br><span class="line">    fmt.Println(<span class="string">"begin"</span>)</span><br><span class="line">    cond.Wait()</span><br><span class="line">    fmt.Println(<span class="string">"end"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>主协程开始后，Wait阻塞，匿名内部协程等待六秒后，发出signal信号，主协程被唤醒，得以输出end。</p>
-<p>注意其使用方法，需要先用mutex加锁。</p>
-<h1 id="Once"><a href="#Once" class="headerlink" title="Once"></a>Once</h1><p>意思是只执行一次</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"> once := sync.Once&#123;&#125;;</span><br><span class="line"> i := <span class="number">0</span></span><br><span class="line"> <span class="keyword">for</span> ; i &lt; <span class="number">3</span>; i++ &#123;</span><br><span class="line">  <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(i <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">   once.Do(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(i)</span><br><span class="line">   &#125;);</span><br><span class="line">  &#125;(i);</span><br><span class="line"> &#125;</span><br><span class="line"> time.Sleep(time.Second)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>只会输出一个，（输出几随机，取决于协程什么时候被调用）</p>
-<h1 id="WaitGroup"><a href="#WaitGroup" class="headerlink" title="WaitGroup"></a>WaitGroup</h1><p>相当于Java中的countdownlatch。</p>
-<p>wg.add()设定初始值，wg.done()减一，wg.wait()阻塞知道wg的值为0。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    wg := sync.WaitGroup&#123;&#125;</span><br><span class="line">    wg.Add(<span class="number">100</span>)</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">100</span>; i++ &#123;</span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(i <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">            fmt.Println(i)</span><br><span class="line">            wg.Done()</span><br><span class="line">        &#125;(i)</span><br><span class="line">    &#125;</span><br><span class="line">    wg.Wait()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="pool"><a href="#pool" class="headerlink" title="pool"></a>pool</h1><p>对象池，但里面的对象并不永久保存，（设计上甚至放入时都会随机丢弃），在gc时，对象池里对象会被全部回收。但Get时如果没有，会调用传入的new函数，重新生成一个。</p>
-<p>我觉得意义在于，对象池里的对象应该是无状态的，这样被回收后新建个，也不影响使用。</p>
-<p>核心在于，对象池不是让你存对象的，而是类似于对象工厂，使用时不是新建对象然后put进去，而是要用直接从中get，用完put回去。</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 一个[]byte的对象池，每个对象为一个[]byte</span></span><br><span class="line"><span class="keyword">var</span> bytePool = sync.Pool&#123;</span><br><span class="line">  New: <span class="function"><span class="keyword">func</span><span class="params">()</span> <span class="title">interface</span></span>&#123;&#125; &#123;</span><br><span class="line">    b := <span class="built_in">make</span>([]<span class="keyword">byte</span>, <span class="number">1024</span>)</span><br><span class="line">    <span class="keyword">return</span> &amp;b</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">  a := time.Now().Unix()</span><br><span class="line">  <span class="comment">// 不使用对象池</span></span><br><span class="line">  <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000000</span>; i++&#123;</span><br><span class="line">    obj := <span class="built_in">make</span>([]<span class="keyword">byte</span>,<span class="number">1024</span>)</span><br><span class="line">    _ = obj</span><br><span class="line">  &#125;</span><br><span class="line">  b := time.Now().Unix()</span><br><span class="line">  <span class="comment">// 使用对象池</span></span><br><span class="line">  <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">1000000000</span>; i++&#123;</span><br><span class="line">    obj := bytePool.Get().(*[]<span class="keyword">byte</span>)</span><br><span class="line">    _ = obj</span><br><span class="line">    bytePool.Put(obj)</span><br><span class="line">  &#125;</span><br><span class="line">  c := time.Now().Unix()</span><br><span class="line">  fmt.Println(<span class="string">"without pool "</span>, b - a, <span class="string">"s"</span>)</span><br><span class="line">  fmt.Println(<span class="string">"with    pool "</span>, c - b, <span class="string">"s"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// without pool  34 s</span></span><br><span class="line"><span class="comment">// with    pool  24 s</span></span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1848,7 +1833,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">252</span>
+                  <span class="site-state-item-count">254</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1870,7 +1855,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">62</span>
+                  <span class="site-state-item-count">63</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

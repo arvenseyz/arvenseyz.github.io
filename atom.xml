@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2021-10-09T10:07:21.220Z</updated>
+  <updated>2021-10-26T07:20:42.291Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -17,11 +17,66 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>redis分布式锁缺陷</title>
+    <title>图数据库基础语法</title>
+    <link href="https://arvenseyz.github.io/2021/10/25/10-25%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-2/"/>
+    <id>https://arvenseyz.github.io/2021/10/25/10-25技术笔记-2/</id>
+    <published>2021-10-25T10:28:27.000Z</published>
+    <updated>2021-10-26T07:20:42.291Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="图数据库优势"><a href="#图数据库优势" class="headerlink" title="图数据库优势"></a>图数据库优势</h2><p><a href="https://imgtu.com/i/54fgPS" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/10/25/54fgPS.png" alt="54fgPS.png"></a></p><ul><li><p>关系复杂的模型用图的形式表达容易</p></li><li><p>关系查询性能可控（<strong><em>我的好友所在的公司有多少名员工？</em></strong>）</p></li></ul><h2 id="图数据库基本语法"><a href="#图数据库基本语法" class="headerlink" title="图数据库基本语法"></a>图数据库基本语法</h2><h3 id="基本定义"><a href="#基本定义" class="headerlink" title="基本定义"></a>基本定义</h3><ul><li><p>由点(Vertex)、边(Edge)、属性(Property)构成；</p></li><li><p>点(Vertex)是实体、概念对象</p></li><li><p>&lt;type(uint32_t), ID(uint64_t&gt; 二元组唯一标记一个点</p></li><li><p>type标记了一类点的集合，可以把type理解为table，不同type，是不同table</p></li><li><p>属性：点上可以有多种属性，属性可以是常见基本类型，</p></li><li><p>schema: 同一种type的点，其属性key以及属性类型必须一致</p></li><li><p>边(Edge)是点之间的关系、联系</p></li><li><p>边有起点+终点，边上类型，type（string）；和点一样，同样的type类型的边必须有同样的属性属性：和点上属性一样，支持多种基本类型</p></li></ul><h3 id="germlin语法"><a href="#germlin语法" class="headerlink" title="germlin语法"></a>germlin语法</h3><p>gremlin语言是图遍历（traverse）式语言，简单起见，可以理解为，先在图上定位到一个点，然后从这个点开始做图上的深度/宽度遍历，在图上每一步遍历用step来描述，不同的step有不同的功能，用step的组合来实现图上游走</p><h3 id="创建一个天龙八部人物图"><a href="#创建一个天龙八部人物图" class="headerlink" title="创建一个天龙八部人物图"></a>创建一个天龙八部人物图</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1001).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;段正淳&apos;).property(&apos;power&apos;, 60).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1002).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;段延庆&apos;).property(&apos;power&apos;, 75).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1003).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;王语嫣&apos;).property(&apos;power&apos;, 2).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1004).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;阿朱&apos;).property(&apos;power&apos;, 5).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1005).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;段誉&apos;).property(&apos;power&apos;, 80).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1006).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;叶二娘&apos;).property(&apos;power&apos;, 40).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1007).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;乔峰&apos;).property(&apos;power&apos;, 90).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1008).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;虚竹&apos;).property(&apos;power&apos;, 85).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1001, 5).to(1002, 5).property(&apos;relation&apos;, &apos;兄弟&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1001, 5).to(1003, 5).property(&apos;relation&apos;, &apos;父女&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1001, 5).to(1004, 5).property(&apos;relation&apos;, &apos;父女&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1002, 5).to(1005, 5).property(&apos;relation&apos;, &apos;父子&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1002, 5).to(1006, 5).property(&apos;relation&apos;, &apos;义妹&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1003, 5).to(1005, 5).property(&apos;relation&apos;, &apos;夫妻&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1004, 5).to(1007, 5).property(&apos;relation&apos;, &apos;夫妻&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1005, 5).to(1008, 5).property(&apos;relation&apos;, &apos;结拜兄弟&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1006, 5).to(1008, 5).property(&apos;relation&apos;, &apos;母子&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1007, 5).to(1005, 5).property(&apos;relation&apos;, &apos;结拜兄弟&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1008, 5).to(1007, 5).property(&apos;relation&apos;, &apos;结拜兄弟&apos;).toList()</span><br></pre></td></tr></table></figure><h3 id="查询语法"><a href="#查询语法" class="headerlink" title="查询语法"></a>查询语法</h3><p>查询点类型是5，id是1005的点，以及它的属性（查询属性时，指定属性名性能更好，原因估计是下文的点切割）</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">g.V(vertex(1001,5)).toList()</span><br><span class="line">Result: [Vertex&#123;Id:1001, Type:5&#125;]</span><br><span class="line">g.V(vertex(1001,5)).properties()</span><br><span class="line">Result: [Property&#123;Key:name, Value:&quot;段正淳&quot;&#125;, Property&#123;Key:power, Value:60&#125;]</span><br></pre></td></tr></table></figure><h3 id="遍历"><a href="#遍历" class="headerlink" title="遍历"></a>遍历</h3><p>如上文，操作是定位一个点，然后再图上游走</p><p><a href="https://imgtu.com/i/5If0bR" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/10/26/5If0bR.png" alt="5If0bR.png"></a></p><p>定位一个点后，找到它的出边，即段正淳的关系</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">» g.V(vertex(1001,5)).outE(&quot;relatives&quot;)</span><br><span class="line">Result: [Edge&#123;OutV:Vertex&#123;Id:1001, Type:5&#125;, InV:Vertex&#123;Id:1004, Type:5&#125;, Type:relatives&#125;, Edge&#123;OutV:Vertex&#123;Id:1001, Type:5&#125;, InV:Vertex&#123;Id:1003, Type:5&#125;, Type:relatives&#125;, Edge&#123;OutV:Vertex&#123;Id:1001, Type:5&#125;, InV:Vertex&#123;Id:1002, Type:5&#125;, Type:relatives&#125;]</span><br></pre></td></tr></table></figure><p>找到一个点某种类型过滤属性的边，即段正淳的兄弟关系</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">» g.V(vertex(1001,5)).outE(&quot;relatives&quot;).has(&apos;relation&apos;,&apos;兄弟&apos;).toList()</span><br><span class="line">Result: [Edge&#123;OutV:Vertex&#123;Id:1001, Type:5&#125;, InV:Vertex&#123;Id:1002, Type:5&#125;, Type:relatives&#125;]</span><br></pre></td></tr></table></figure><p>进一步，找到段正淳的兄弟</p><p>遍历法，找到兄弟边，再找到兄弟边链接的点</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">» g.V(vertex(1001,5)).outE(&quot;relatives&quot;).has(&apos;relation&apos;,&apos;兄弟&apos;).inV().toList()</span><br><span class="line">Result: [Vertex&#123;Id:1002, Type:5&#125;]</span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;图数据库优势&quot;&gt;&lt;a href=&quot;#图数据库优势&quot; class=&quot;headerlink&quot; title=&quot;图数据库优势&quot;&gt;&lt;/a&gt;图数据库优势&lt;/h2&gt;&lt;p&gt;&lt;a href=&quot;https://imgtu.com/i/54fgPS&quot; target=&quot;_blank&quot; r
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="图数据库" scheme="https://arvenseyz.github.io/tags/%E5%9B%BE%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>redis的redlock锁</title>
+    <link href="https://arvenseyz.github.io/2021/10/11/10-11%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>https://arvenseyz.github.io/2021/10/11/10-11技术笔记-1/</id>
+    <published>2021-10-11T08:49:43.000Z</published>
+    <updated>2021-10-25T10:30:15.259Z</updated>
+    
+    <content type="html"><![CDATA[<ul><li><h3 id="加锁"><a href="#加锁" class="headerlink" title="加锁"></a>加锁</h3></li></ul><p>官方推荐至少 5 个redis实例，而且都是主库，它们之间没有任何关系，都是一个个孤立的实例，流程如下：</p><ol><li>客户端先获取「当前时间戳T1」。</li><li>客户端依次向这 5 个 Redis 实例发起加锁请求（SET命令），且每个请求会设置超时时间（毫秒级，要远小于锁的有效时间），如果某一个实例加锁失败（包括网络超时、锁被其它人持有等各种异常情况），就立即向下一个 Redis 实例申请加锁。</li><li>如果客户端从 3 个（大多数）以上 Redis 实例加锁成功，则再次获取「当前时间戳T2」，如果 T2 - T1 &lt; 锁的过期时间，此时，认为客户端加锁成功，否则认为加锁失败。</li><li>加锁成功，去操作共享资源（例如修改 MySQL 某一行，或发起一个 API 请求）。</li><li>加锁失败，向全部节点发起释放锁请求。</li></ol>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;ul&gt;
+&lt;li&gt;&lt;h3 id=&quot;加锁&quot;&gt;&lt;a href=&quot;#加锁&quot; class=&quot;headerlink&quot; title=&quot;加锁&quot;&gt;&lt;/a&gt;加锁&lt;/h3&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;官方推荐至少 5 个redis实例，而且都是主库，它们之间没有任何关系，都是一个个孤立的实例，流程
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="redis" scheme="https://arvenseyz.github.io/tags/redis/"/>
+    
+      <category term="分布式" scheme="https://arvenseyz.github.io/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>redis分布式锁</title>
     <link href="https://arvenseyz.github.io/2021/10/09/10-9%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
     <id>https://arvenseyz.github.io/2021/10/09/10-9技术笔记-1/</id>
     <published>2021-10-09T06:52:04.000Z</published>
-    <updated>2021-10-09T10:07:21.220Z</updated>
+    <updated>2021-10-11T08:50:16.995Z</updated>
     
     <content type="html"><![CDATA[<h2 id="Redis是AP系统"><a href="#Redis是AP系统" class="headerlink" title="Redis是AP系统"></a>Redis是AP系统</h2><p>先抛个结论：</p><p>“redis多机房同步是最终一致的，如有分布式锁的需求，会有锁不上的情况，业务可根据文档考虑使用强一致的存储组件！” from redis 用户文档</p><p>因此redis锁只能作为弱校验，而不能作为强依赖，必须要其他强一致的系统保证其一致性。</p><h2 id="Redis锁实现原理"><a href="#Redis锁实现原理" class="headerlink" title="Redis锁实现原理"></a>Redis锁实现原理</h2><p>而redis锁锁不住的原因要从redis锁的实现讲起。redis锁主要基于两个命令，<strong>setnx &amp;</strong> <strong>cad</strong>，（注意不是redlock，redlock和这两个命令没有关系，下面最后一个部分会提）</p><p><strong>加锁setnx</strong></p><p>setnx命令会被redis client解析为</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SET key value NX PX 30000</span><br></pre></td></tr></table></figure><ul><li>其中key通常为我们想锁住的<code>key</code>，而<code>value</code>应当为一个随机数，原因在解锁的部分讲</li><li><code>NX</code>代表只有key为空时才会set成功</li><li><code>PX 30000</code> 指过期时间30s</li></ul><p><strong>解锁</strong>  <strong>cad</strong> <strong>（已被公司级别支持）</strong></p><p>cad指<code>compare and delete</code>操作，该操作其实内部执行Redis lua脚本保证cad操作的中不会被其他操作穿插</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if redis.call(&quot;get&quot;,KEYS[1]) == ARGV[1] then </span><br><span class="line">  return redis.call(&quot;del&quot;,KEYS[1])</span><br><span class="line">else </span><br><span class="line">  return 0 </span><br><span class="line">end</span><br></pre></td></tr></table></figure><ul><li>为什么锁还需要设置随机<code>value</code>去compare？因为虽然redis数据库单线程，但是客户端却可能为多线程，试想以下逻辑：</li></ul><p><a href="https://imgtu.com/i/5FANLj" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/10/09/5FANLj.png" alt="5FANLj.png"></a></p><p>若发生以上时序，client1由于处理请求时被阻塞，导致client2获取的锁会被client1解锁，进而导致锁失效。特别是我们应用代码中通常设置的时长较短（1s - 5s），更增加以上情况出现的几率。</p><ul><li>i/o timeout如何做？</li></ul><p>有些人会觉得奇怪为什么上面的这段代码没有做错误校验，正确的做法是不是应该是这样？</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">err := redis.SetNX(key, value, duration)</span><br><span class="line">if err != nil &#123;</span><br><span class="line">    return </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>其实不然，试想<code>SetNX</code> 发生timeout，但其实Redis客户端<strong>收到</strong>该请求，只是respond<strong>回复超时</strong>，该锁会一直被持有直到timeout。</p><p>比较正确的逻辑为：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">err := redis.SetNX(key, randomNum, duration)</span><br><span class="line">defer redis.CAD(key, randomNum)</span><br><span class="line">if err != nil &#123;</span><br><span class="line">    return </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>由randomNum来保证key有且仅会被本客户端线程解锁，即使失败，也不会把其他客户端线程的锁unlock（因为randomNum不一致，compare阶段错误）。该逻辑更体现了设置randomNum为value的必要性。这个随机数应当可以保证在一段时间内只被同一client持有，比较偷懒的方法是使用server id + unix microsecond时间戳，在大部分场景下应该足够了。</p><ul><li>Expire time如何定？</li></ul><p>其实这也是个两难问题，若超时时间过短，则锁不住整个流程处理时间，可能被抢锁；若超时时间过长，则解锁操作<code>redis.CAD(key, randomNum)</code>失败时，会导致key被锁住过长时间。因此需根据实际业务场景而定。</p><h2 id="分布式redis情况如何？"><a href="#分布式redis情况如何？" class="headerlink" title="分布式redis情况如何？"></a>分布式redis情况如何？</h2><p>即使我们在实现上都按照完美的路径，以上实现也是基于单机情况，在分布式场景下，由于redis多机房同步是最终一致的，当主节点不可用时，系统自动切换到副节点（即failover的过程），由于主从非同步，在failover的过程中会导致锁被抢。试想以下时序：</p><ol><li>master拿到锁a</li><li>slave1-master同步开启</li><li>master宕机，failover开始</li><li>slave1-master同步未完成</li><li>slave1被选举为master，锁a丢失，可被抢</li></ol><p>虽然很多人觉得failover的情况很少，以上可以忽略，实际上根据我们现在的使用方法，某个历史活动的并发情况而言，已经出现大量的并发锁被抢引起的错误（日均300+，from QPS大概400左右的并发请求）。</p><h2 id="正确姿势如何做？"><a href="#正确姿势如何做？" class="headerlink" title="正确姿势如何做？"></a>正确姿势如何做？</h2><p>redis针对单机redis锁的问题，提出了redlock的解决方案，但是redlock也有些争议，同时其不太适合公司的redis架构，在这里不多做讨论。</p><p>如果要了解正确的锁姿势，首先要分析分布式锁的场景，一般来说，可以分为两种，为了效率加锁，和为了正确性加锁。</p><ul><li>为效率加锁，即为了一些计算的重复；即使失败，也只是把某些操作多做一遍，例如条件多校验一遍</li><li>为了正确性加锁，即不允许分布式锁失败；若失败可能产生不可回滚的脏数据</li></ul><p>若为了效率加锁，使用单机的redis锁已经足够，单重要的是清楚单机redis锁在分布式场景下的限制。</p><p>若为了正确性加锁，一定要使用强一致性保障（bytekv，zookeeper）等，基架推荐尝试bytekv。</p>]]></content>
     
@@ -478,58 +533,6 @@
     
     
       <category term="mongo" scheme="https://arvenseyz.github.io/tags/mongo/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>mongo安装</title>
-    <link href="https://arvenseyz.github.io/2020/12/23/12-23%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://arvenseyz.github.io/2020/12/23/12-23技术笔记/</id>
-    <published>2020-12-23T08:50:57.000Z</published>
-    <updated>2020-12-28T06:51:55.334Z</updated>
-    
-    <content type="html"><![CDATA[<p>mongo有非常好的官方文档，以及还可以的翻译<a href="https://docs.mongoing.com/shu-ju-mo-xing/schema-validation" target="_blank" rel="noopener">https://docs.mongoing.com/shu-ju-mo-xing/schema-validation</a></p><p>安装按照其教程。</p><p>官方出品的客户端mongo compass并不好用，可以直接使用datagrip。</p><p>聚合函数使用 aggregate() 方法</p><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">db.opLog.aggregate(&#123;$match: &#123;</span><br><span class="line">  "timestamp" : &#123;$gte:new Date("2016-12-11T00:00:00.000Z")&#125;</span><br><span class="line">&#125;&#125;, &#123;$group: &#123;</span><br><span class="line">  _id: "$user_name",</span><br><span class="line">  num: &#123;</span><br><span class="line">    $sum: 1</span><br><span class="line">  &#125;</span><br><span class="line">&#125;&#125;, &#123;$sort: &#123;</span><br><span class="line">  "num": -1</span><br><span class="line">&#125;&#125;, &#123;$limit: 20&#125;)</span><br></pre></td></tr></table></figure><p>即</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">num</span> </span><br><span class="line"><span class="keyword">from</span> opLog</span><br><span class="line"><span class="keyword">where</span> <span class="built_in">timestamp</span>&gt;<span class="string">'2016-12-11T00:00:00.000Z'</span></span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> <span class="string">'user_name'</span></span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> <span class="keyword">num</span> <span class="keyword">desc</span></span><br><span class="line"><span class="keyword">limit</span> <span class="number">20</span></span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;mongo有非常好的官方文档，以及还可以的翻译&lt;a href=&quot;https://docs.mongoing.com/shu-ju-mo-xing/schema-validation&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;https://docs.m
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="mongo" scheme="https://arvenseyz.github.io/tags/mongo/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>kafka文件存储</title>
-    <link href="https://arvenseyz.github.io/2020/09/22/9-22%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>https://arvenseyz.github.io/2020/09/22/9-22技术笔记-1/</id>
-    <published>2020-09-22T12:07:38.000Z</published>
-    <updated>2020-09-22T12:44:11.689Z</updated>
-    
-    <content type="html"><![CDATA[<p>partition对应一个文件夹，partition会分割成一个一个的segment，它们大小相等。</p><p><img src="/images/partition.jpg" alt="partition"></p><p>每个segment还有两个索引文件，偏移量索引和时间戳索引。</p><p>segment的命名体现了其offset，比如00000000000000368769.log。</p><p>想要找到offset在哪个索引中，只需要在offset<strong>二分查找</strong>文件列表，就可以找到对应的索引文件。</p><p>segment index file采取稀疏索引存储方式，也就是说，并不是所有的offset都会被索引，从中按照个数/大小间隔选一些来索引即可。它比稠密索引节省了更多的存储空间，但查找起来需要消耗更多的时间。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;partition对应一个文件夹，partition会分割成一个一个的segment，它们大小相等。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;/images/partition.jpg&quot; alt=&quot;partition&quot;&gt;&lt;/p&gt;
-&lt;p&gt;每个segment还有两个索引文件，偏移量索
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="消息队列" scheme="https://arvenseyz.github.io/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
     
   </entry>
   
