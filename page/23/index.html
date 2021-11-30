@@ -251,6 +251,330 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/09/17/9-17技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/09/17/9-17技术笔记/" itemprop="url">springboot+mybaits</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-17T19:28:57+08:00">
+                2018-09-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>用了一天跑通了springboot+mybaits，中间也遇见了不少坑，下次应该记录下来的。<br>大体参考这篇博客，<a href="https://www.cnblogs.com/zslli/p/8779449.html" target="_blank" rel="noopener">https://www.cnblogs.com/zslli/p/8779449.html</a></p>
+<ol>
+<li>直接new spring即可，然后可以先选上需要的依赖</li>
+<li><p>配置里写，关于mabaits这两点应该写对，不然会报mybatis Invalid bound statement (not found)异常</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mybatis.type-aliases-package=com.example.demo.pojo</span><br><span class="line">mybatis.mapper-locations=classpath*:/mapping/*.xml</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>mybatis genetator的配置文件，注意数据库连接账号密码，生成文件路径，然后再run里编辑maven启动项，注意不要多次运行，运行通一次即可，多次的话xml文件会重复生成。账号密码有误等，可能报Access denied for user ‘root‘@’localhost’ (using password: YES)</p>
+</li>
+<li>@RestController，网页呈现return的内容。@Controller，网页呈现返回的字符串对应的文件的网页。</li>
+<li>@GetMapping=@RequestMapping（Method=GET）,当然@PostMapping等注解也是一致</li>
+<li>jackson注解：<br>@JsonFormat(pattern = “yyyy-MM-dd HH:mm:ss”, timezone = “GMT+8”)<br>指定Date类字段序列化时的格式；<br>@JsonInclude()，可以填一个Include枚举中的参数，指定当什么时候；<br>@JsonIgnore序列化时忽略此字段；<br>@JsonIgnoreProperties({“id”, “created”, “steps”})类注解，指定序列化时忽略这些属性，可以用于覆盖超类中默认输出的属性；    </li>
+</ol>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/09/13/9-13技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/09/13/9-13技术笔记/" itemprop="url">springboot+JPA</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-13T18:25:09+08:00">
+                2018-09-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="JPA注解"><a href="#JPA注解" class="headerlink" title="JPA注解"></a>JPA注解</h1><ul>
+<li>@Table(name=”数据库名”)</li>
+<li>@Entity   //实体类的注解</li>
+<li>@GeneratedValue(strategy=GenerationType.AUTO)        //主键生成策略，不填则默认为AUTO，会根据数据库</li>
+<li>@Id      //主键</li>
+<li>@Column(name = “列名”, nullable = true, unique = true, insertable = ture, updatable = ture) //意思很明白，还有length属性表示字段的长度，当字段的类型为varchar时，该属性才有效，默认为255个字符。precision属性和scale属性表示精度，当字段类型为double时，precision表示数值的总长度，scale表示小数点所占的位数。</li>
+<li>@Transient 表示该属性并非一个到数据库表的字段的映射,ORM框架将忽略该属性.  </li>
+</ul>
+<h1 id="JPA-Repository"><a href="#JPA-Repository" class="headerlink" title="JPA Repository"></a>JPA Repository</h1><p>##</p>
+<ul>
+<li>继承Repository&lt;T,E&gt;类，T为实体类，E为主键数据类型</li>
+<li>使用注解RepositoryDefinition(domainClass=实体类.class,idClass=主键数据类型.class)  </li>
+</ul>
+<h2 id="查询"><a href="#查询" class="headerlink" title="查询"></a>查询</h2><ol>
+<li><p>简单自定义方法不需要实现，只需按规范写方法名即可。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">User findByUserNameAndPassWordAndNickName(String userName,String passWord,String nickName);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>特殊的参数： 还可以直接在方法的参数上加入分页或排序的参数，比如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Page&lt;User&gt; findByName(String name, Pageable pageable);</span><br><span class="line">List&lt;User&gt; findByName(String name, Sort sort);</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+   <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">userRepository.findAll(new Sort(new Sort.Order(Sort.Direction.ASC,&quot;id&quot;)));</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li><p>使用Example</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">User user = new User();</span><br><span class="line">user.setUserName(&quot;aaa123456&quot;);</span><br><span class="line">List&lt;User&gt; res=userRepository.findAll(Example.of(user));</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>@Query注解</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@Query(&quot;select a from AccountInfo a where a.accountId = ?1&quot;)</span><br><span class="line">public AccountInfo findByAccountId(Long accountId);</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/09/12/9-12技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1482,298 +1806,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/08/29/8-29技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/08/29/8-29技术笔记/" itemprop="url">流</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-29T14:22:39+08:00">
-                2018-08-29
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="字节流和字符流"><a href="#字节流和字符流" class="headerlink" title="字节流和字符流"></a>字节流和字符流</h2><p><img src="https://www.runoob.com/wp-content/uploads/2013/12/iostream2xx.png" alt="流">  </p>
-<ol>
-<li>字节流在操作的时候本身是不会用到缓冲区（内存）的，是与文件本身直接操作的，而字符流在操作的时候是使用到缓冲区的</li>
-<li>字节流在操作文件时，即使不关闭资源（close方法），文件也能输出，但是如果字符流不使用close方法的话，则不会输出任何内容，说明字符流用的是缓冲区，并且可以使用flush方法强制进行刷新缓冲区，这时才能在不close的情况下输出内容</li>
-<li>Reader类的read()方法返回类型为int ：作为整数读取的字符（占两个字节共16位），范围在 0 到 65535 之间 (0x00-0xffff)，如果已到达流的末尾，则返回 -1<br>inputStream的read()虽然也返回int，但由于此类是面向字节流的，一个字节占8个位，所以返回 0 到 255 范围内的 int 字节值。如果因为已经到达流末尾而没有可用的字节，则返回值 -1。因此对于不能用0-255来表示的值就得用字符流来读取！比如说汉字.</li>
-<li>字节流与字符流主要的区别是他们的的处理方式：字节流处理字节和字节数组或二进制对象；字符流处理字符、字符数组或字符串。<h2 id="两者转换"><a href="#两者转换" class="headerlink" title="两者转换"></a>两者转换</h2></li>
-</ol>
-<p>InputStreamReader用于将一个字节流中的字节解码成字符：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public void Test() throws Exception &#123;</span><br><span class="line">	InputStream in = new FileInputStream(&quot;C:/hello.txt&quot;);// 读取文件的数据,注意文件编码为UTF-8,防止读取乱码</span><br><span class="line">	// 将输入的字节流  ------转换成----&gt;  字符流</span><br><span class="line">	InputStreamReader isr = new InputStreamReader(in);// 读取</span><br><span class="line">	char[] data = new char[1024];</span><br><span class="line">	int len = isr.read(data);//读取字符流中的数据，用char[]数组一次性接收</span><br><span class="line">	System.err.println(new String(data, 0, len));</span><br><span class="line">	isr.close();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>OutputStreamWriter用于将写入的字符编码成字节后写入一个字节流:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">public void Test() throws Exception &#123;		</span><br><span class="line">	OutputStream out = System.err;// 打印到控制台，也可以输出到文件</span><br><span class="line">	OutputStreamWriter osr = new OutputStreamWriter(out);//输出 往out里面准备写内容，内容在下面</span><br><span class="line">	String str = &quot;Hello World!&quot;;</span><br><span class="line">	osr.write(str);//写</span><br><span class="line">	//osr.flush();//如果用于网络传输，记得强制刷新缓冲区，否则输出的数据只停留在缓冲区中，而无法进行网络传输</span><br><span class="line">	osr.close();//关闭资源</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/08/28/8-28技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/08/28/8-28技术笔记/" itemprop="url">websocket</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-28T19:47:53+08:00">
-                2018-08-28
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>ajax轮询的原理很简单，让浏览器间隔几秒就发送一次请求，询问服务器是否有新信息。<br>long poll（长轮询）<br>原理跟 ajax轮询 差不多，都是采用轮询的方式，不过采取的是阻塞模型，也就是说，客户端发起连接后，如果没消息，就一直不返回Response给客户端，直到有消息才返回或超时。返回完之后，客户端再次建立连接，周而复始，基于事件的触发，一个事件接一个事件。<br>WebSocket是HTML5开始提供的一种在单个 TCP 连接上进行全双工通讯的协议。浏览器和服务器只需要做一个握手的动作，然后，浏览器和服务器之间就形成了一条快速通道。两者之间就直接可以数据互相传送。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1824,7 +1856,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">254</span>
+                  <span class="site-state-item-count">256</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

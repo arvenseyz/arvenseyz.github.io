@@ -251,6 +251,355 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/08/13/8-13技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/08/13/8-13技术笔记/" itemprop="url">RocketMQ</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-13T15:14:22+08:00">
+                2018-08-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h1><p><img src="https://upload-images.jianshu.io/upload_images/6332814-7885601f065a3556.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="组织"><br>如图，RocketMQ的结构由四部分组成，第一部分生产者，产生消息；第二部门Broker，储存消息的地方，有多个消息队列，按照Topic和Queue机制储存不同的消息；第三部分NameServer,作用类似于域名服务器，通过Topic信息找到对应的Broker；第四部门消费者，获得接受消息。</p>
+<h1 id="模式"><a href="#模式" class="headerlink" title="模式"></a>模式</h1><ol>
+<li>Push Consumer，应用通常向Consumer对象注册一个Listener接口，一旦收到消息，Consumer对象立刻回调Listener接口方法。所以，所谓Push指的是客户端内部的回调机制，并不是与服务端之间的机制。</li>
+<li>Pull Consumer，应用通常主动调用Consumer从服务端拉消息，consumer 向 broker 发送拉消息请求， PullMessageService 服务通过一个线程将阻塞队列 LinkedBlockingQueue 中的 PullRequest 到 broker 拉取消息，长轮询向broker拉取消息是批量拉取的，默认设置批量的值为pullBatchSize = 32， 可配置。主动权由应用控制，这用的就是短轮询方式了，在不同情况下，与长轮询各有优点。  </li>
+</ol>
+<h1 id="消息发送方式"><a href="#消息发送方式" class="headerlink" title="消息发送方式"></a>消息发送方式</h1><table>
+<thead>
+<tr>
+<th style="text-align:left">发送方式</th>
+<th style="text-align:left">发送TPS</th>
+<th>发送结果响应</th>
+<th>可靠性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">同步发送</td>
+<td style="text-align:left">小</td>
+<td>有</td>
+<td>不丢失</td>
+</tr>
+<tr>
+<td style="text-align:left">异步发送</td>
+<td style="text-align:left">中</td>
+<td>有</td>
+<td>不丢失</td>
+</tr>
+<tr>
+<td style="text-align:left">单向发送</td>
+<td style="text-align:left">大</td>
+<td>没有</td>
+<td>可能丢失</td>
+</tr>
+</tbody>
+</table>
+<h1 id="消息接受方式"><a href="#消息接受方式" class="headerlink" title="消息接受方式"></a>消息接受方式</h1><p>消费同一类消息的多个 consumer 实例组成一个消费者组，也可以称为一个 consumer 集群，这些 consumer 实例使用同一个 group name。需要注意一点，除了使用同一个 group name，订阅的 tag 也必须是一样的，只有符合这两个条件的 consumer 实例才能组成 consumer 集群。</p>
+<ol>
+<li><p>集群消费  </p>
+<p>broker把一个集群看作一个个体，集群中任一消费者接受到消息，则意味着该集群已经接受到消息。</p>
+</li>
+<li><p>广播消费  </p>
+<p>broker眼中没有集群，向集群里每个个体发送全部消息</p>
+</li>
+<li><p>用集群消费的方式模拟广播  </p>
+<p>如果业务上确实需要使用广播消费，那么我们可以通过创建多个 consumer 实例，每个 consumer 实例属于不同的 consumer group，但是它们都订阅同一个 topic。  </p>
+</li>
+</ol>
+<h1 id="消息类型"><a href="#消息类型" class="headerlink" title="消息类型"></a>消息类型</h1><ol>
+<li><p>普通消息  </p>
+<p>不保证消息顺序。发送123，收到231</p>
+</li>
+<li><p>全局有序消息  </p>
+<p>消息接受完全按发送顺讯。发送123，收到123</p>
+</li>
+<li><p>局部有序消息  </p>
+<p>消息分组，每组内有组，组间无序。发送abc123,收到a1b23c。整体无序，但只看字母有序，只看数字也有序。</p>
+<p>生产者</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">public class Producer &#123;</span><br><span class="line"> public static void main(String[] args) throws UnsupportedEncodingException &#123;</span><br><span class="line">     try &#123;</span><br><span class="line">         // 声明并初始化一个producer</span><br><span class="line">         // 需要一个producer group名字作为构造方法的参数，这里为ordered_producer</span><br><span class="line">         DefaultMQProducer orderedProducer = new DefaultMQProducer(&quot;ordered_producer&quot;);</span><br><span class="line"></span><br><span class="line">         // 设置NameServer地址,此处应改为实际NameServer地址，多个地址之间用；分隔</span><br><span class="line">         //NameServer的地址必须有，但是也可以通过环境变量的方式设置，不一定非得写死在代码里</span><br><span class="line">         orderedProducer.setNamesrvAddr(&quot;10.1.54.121:9876;10.1.54.122:9876&quot;);</span><br><span class="line"></span><br><span class="line">         // 调用start()方法启动一个producer实例</span><br><span class="line">         orderedProducer.start();</span><br><span class="line"></span><br><span class="line">         // 自定义一个tag数组</span><br><span class="line">         String[] tags = new String[]&#123;&quot;TagA&quot;, &quot;TagB&quot;, &quot;TagC&quot;, &quot;TagD&quot;, &quot;TagE&quot;&#125;;</span><br><span class="line"></span><br><span class="line">         // 发送10条消息到Topic为TopicTestOrdered，tag为tags数组按顺序取值，</span><br><span class="line">         // key值为“KEY”拼接上i的值，消息内容为“Hello RocketMQ”拼接上i的值</span><br><span class="line">         for (int i = 0; i &lt; 10; i++) &#123;</span><br><span class="line">             int orderId = i % 10;</span><br><span class="line">             Message msg =</span><br><span class="line">                     new Message(&quot;TopicTestOrdered&quot;, tags[i % tags.length], &quot;KEY&quot; + i,</span><br><span class="line">                             (&quot;Hello RocketMQ &quot; + i).getBytes(RemotingHelper.DEFAULT_CHARSET));</span><br><span class="line"></span><br><span class="line">             SendResult sendResult = orderedProducer.send(msg, new MessageQueueSelector() &#123;</span><br><span class="line"></span><br><span class="line">                 // 选择发送消息的队列</span><br><span class="line">                 @Override</span><br><span class="line">                 public MessageQueue select(List&lt;MessageQueue&gt; mqs, Message msg, Object arg) &#123;</span><br><span class="line"></span><br><span class="line">                     // arg的值其实就是orderId</span><br><span class="line">                     Integer id = (Integer) arg;</span><br><span class="line"></span><br><span class="line">                     // mqs是队列集合，也就是topic所对应的所有队列</span><br><span class="line">                     int index = id % mqs.size();</span><br><span class="line"></span><br><span class="line">                     // 这里根据前面的id对队列集合大小求余来返回所对应的队列</span><br><span class="line">                     return mqs.get(index);</span><br><span class="line">                 &#125;</span><br><span class="line">             &#125;, orderId);</span><br><span class="line"></span><br><span class="line">             System.out.println(sendResult);</span><br><span class="line">         &#125;</span><br><span class="line">         orderedProducer.shutdown();</span><br><span class="line">     &#125; catch (MQClientException e) &#123;</span><br><span class="line">         e.printStackTrace();</span><br><span class="line">     &#125; catch (RemotingException e) &#123;</span><br><span class="line">         e.printStackTrace();</span><br><span class="line">     &#125; catch (MQBrokerException e) &#123;</span><br><span class="line">         e.printStackTrace();</span><br><span class="line">     &#125; catch (InterruptedException e) &#123;</span><br><span class="line">         e.printStackTrace();</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>   消费者</p>
+   <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">public class Consumer &#123;</span><br><span class="line"></span><br><span class="line"> public static void main(String[] args) throws MQClientException &#123;</span><br><span class="line"></span><br><span class="line">     //声明并初始化一个consumer</span><br><span class="line">     //需要一个consumer group名字作为构造方法的参数，这里为concurrent_consumer</span><br><span class="line">     DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(&quot;ordered_consumer&quot;);</span><br><span class="line"></span><br><span class="line">     //同样也要设置NameServer地址</span><br><span class="line">     consumer.setNamesrvAddr(&quot;10.1.54.121:9876;10.1.54.122:9876&quot;);</span><br><span class="line"></span><br><span class="line">     //这里设置的是一个consumer的消费策略</span><br><span class="line">     //CONSUME_FROM_LAST_OFFSET 默认策略，从该队列最尾开始消费，即跳过历史消息</span><br><span class="line">     //CONSUME_FROM_FIRST_OFFSET 从队列最开始开始消费，即历史消息（还储存在broker的）全部消费一遍</span><br><span class="line">     //CONSUME_FROM_TIMESTAMP 从某个时间点开始消费，和setConsumeTimestamp()配合使用，默认是半个小时以前</span><br><span class="line">     consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);</span><br><span class="line"></span><br><span class="line">     //设置consumer所订阅的Topic和Tag</span><br><span class="line">     consumer.subscribe(&quot;TopicTestOrdered&quot;, &quot;TagA || TagC || TagD&quot;);</span><br><span class="line"></span><br><span class="line">     //设置一个Listener，主要进行消息的逻辑处理</span><br><span class="line">     //注意这里使用的是MessageListenerOrderly这个接口</span><br><span class="line">     consumer.registerMessageListener(new MessageListenerOrderly() &#123;</span><br><span class="line"></span><br><span class="line">         @Override</span><br><span class="line">         public ConsumeOrderlyStatus consumeMessage(List&lt;MessageExt&gt; msgs, ConsumeOrderlyContext context) &#123;</span><br><span class="line"></span><br><span class="line">             System.out.println(Thread.currentThread().getName() + &quot; Receive New Messages: &quot; + msgs);</span><br><span class="line"></span><br><span class="line">             //返回消费状态</span><br><span class="line">             //SUCCESS 消费成功</span><br><span class="line">             //SUSPEND_CURRENT_QUEUE_A_MOMENT 消费失败，暂停当前队列的消费</span><br><span class="line">             return ConsumeOrderlyStatus.SUCCESS;</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;);</span><br><span class="line"></span><br><span class="line">     //调用start()方法启动consumer</span><br><span class="line">     consumer.start();</span><br><span class="line"></span><br><span class="line">     System.out.println(&quot;Consumer Started.&quot;);</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/08/13/《余香》游戏评测/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/08/13/《余香》游戏评测/" itemprop="url">《余香》游戏评测</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-13T10:16:06+08:00">
+                2018-08-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/杂谈/" itemprop="url" rel="index">
+                    <span itemprop="name">杂谈</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>&emsp;&emsp;想了下，本身就是业余的随便说说，要是评测游戏还是一板一眼的画面音乐剧情，未免过于无聊。《余香》在我看来是一个质量颇佳的游戏，就像我在steam的评测，“银翼杀手，赛博朋克，披着爱情故事皮的硬核科幻！”，不如这里谈谈我为什么这么看，《余香》这款游戏给了我怎么样的感觉。<br>&emsp;&emsp;《余香》本身是一个AVG，或者叫GalGame，这类文字冒险游戏大多以爱情故事为主，而《余香》的展开方式也是爱情故事。如同评价《星际争霸2》，它的故事，在太空歌剧之下，内核是一个”a boy meets a girl”的牛仔爱情故事。而《余香》正是相反，它的内核是“赛博朋克”。<br>&emsp;&emsp;什么是“赛博朋克”呢，这是一个虚构的未来，科技高度发达，大公司/政府控制了一切，最后结果是“高科技低生活”的社会现状，像《余香》所言，“高层制造需求，中层提供服务，底层变成产品”。<br>&emsp;&emsp;有一个动画片，《蓝猫淘气三千问》，其中有一部是太空探险，“寻找完美的星球奥兹马”，花了几百集最后驾驶飞船找到了奥兹马，发现奥兹马的领袖希望它的国民都没有情感，这样才能更好的建设这个星球。从赛博朋克的角度，没有情感才能更好的提供服务或者变成产品，大概是共通之处吧。</p>
+<h1 id="高塔"><a href="#高塔" class="headerlink" title="高塔"></a>高塔</h1><p>&emsp;&emsp;故事的第一章是主角和女朋友，高三暑假时去度假村旅游，然后世界架构通过旅游见闻展开的。度假村是一个类似桃花源的地方，而主角从小生活在未来的现代化的城市，别说天然水果了，主角连鸟和树都没见过，度假村的这一切，给了主角新奇的体验。之后在甜蜜旅行中，引出了旅游的原因：所有的成年人，都应该接受大学教育，进入大学时为了“学习更复杂的知识”，需要“强化大脑机能”，而在这之后会失去绝大部分的记忆，主角和女朋友就是希望通过旅游牢牢记住对方，不把对方忘掉。《仙剑奇侠传》里，赵灵儿唱过一首词，大概就是这个感觉。<br>&emsp;&emsp;<strong>既不回头，何必不忘？ 既然无缘，何须誓言？ 今日种种，似水无痕； 明夕何夕，君已陌路……</strong><br>&emsp;&emsp;主角和女朋友也讨论过这个问题，既然记不得，还要去记吗？彻底的忘掉，和心底里留下一个种子，哪个更好呢？我也不知道，也许就庄子所说。<br>&emsp;&emsp;<strong>相呴以湿，相濡以沫，不如相忘于江湖。</strong><br>&emsp;&emsp;度假村里不少东西都是假的，比如蓝天白云，比如远方的海天交界线，主角尝试向海的远方游去，就会被海浪打回来，这一点可能有来自《楚门的世界》的创意。其实就像缸中的大脑，外界的信息都是接收到的，真的假的又有什么区别呢？<em>我思故我在</em>，但我的思是基于我得记忆，倘若记忆是虚假的呢？<br>&emsp;&emsp;实际上就我来看，所谓的强化大脑机能，基本上是物理洗脑。主角的时代，学校的教育已经没有了人文社科的内容，主角连西施是谁都不知道，可见一斑。当然也可以选择不上大学，拒绝成为社会的一颗螺丝钉，后果是失去了所有权利，也没有任何工作机会。有这样选择的人，自称“垃圾”，生活在城市地下巨大的垃圾站里，靠城市的垃圾苟延残喘。<br>&emsp;&emsp;故事的结尾是，结束了幸福而又印象深刻的假期，两人还是分别了。四十年后，主角从螺丝钉退休下来，又来到度假村，一切都已不记得了，最后依稀记起了女友的点点印象，泪流满面。</p>
+<h1 id="愚者"><a href="#愚者" class="headerlink" title="愚者"></a>愚者</h1><p>&emsp;&emsp;第二章讲了故事的另一个结局，总有一些人不愿意忘记。<br>&emsp;&emsp;<strong>有没有什么记忆，让你纵然失去一切，也不愿忘记的呢？</strong><br>&emsp;&emsp;主角没有去大学，而是去了垃圾场，垃圾场里有各式各样的人，它们有的高呼着自由，有的痛斥着一切，有的还有一点点最后的幻想，他们在垃圾场悲惨的蝇虫般度日，或许还有最后的“自由”。<br>&emsp;&emsp;主角感觉自己将死之人，从排污的管道，花费数日，从污水中爬出的垃圾场，从度假村地下爬出。遇见了生活在这里的一个女孩，女孩问他为什么不愿意读大学，我也忘了回答是因为记忆还是因为爱情。<br>&emsp;&emsp;最后的舞台，主角想让女孩从身后抱自己一下，因为他女友经常这么做，女孩不懂爱情和回忆，当然拒绝了。但后来情和景的渲染下，女孩这样做了。主角回忆起了和女友经历的一切，露出了终了前的微笑，还是值得的？这个结局，可能有点，一丝的，温暖？  </p>
+<h1 id="魔术师"><a href="#魔术师" class="headerlink" title="魔术师"></a>魔术师</h1><p>&emsp;&emsp;第三章是故事的另一个角度，《银翼杀手》中，记忆可能是假的，被植入的。主角经历了以为自己拥有真实的记忆，然后幻灭的经历。而这里也是相似的故事。大概就算是这部作品糖里的刀子吧。</p>
+<p>唉，为何写到最后写不下去了，读后感这东西可能还是写得太少，很难把故事总结和个人感想串联起来，当然最主要是现在水平太低了。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/08/10/8-10技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1566,318 +1915,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/08/02/8-2技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/08/02/8-2技术笔记/" itemprop="url">java类库+lamdba</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-02T11:15:46+08:00">
-                2018-08-02
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="java类"><a href="#java类" class="headerlink" title="java类"></a>java类</h1><h2 id="Preconditions"><a href="#Preconditions" class="headerlink" title="Preconditions"></a>Preconditions</h2><p>Preconditions类似与断言，使用其可以做参数校验</p>
-<ol>
-<li>checkNotNull(T reference)：校验对象是否为空。  </li>
-<li>checkNotNull(T reference, @Nullable Object errorMessage)：对象为空时显示指定的错误信息。</li>
-<li>checkNotNull(T reference, @Nullable String errorMessageTemplate,@Nullable Object… errorMessageArgs)：允许在错误信息中使用占位符。</li>
-</ol>
-<p>一般使用第二个重载方法，比如</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Preconditions.checkNotNull(productInvestQueryReq.getBusType(), &quot;产品类型不能为空&quot;);</span><br></pre></td></tr></table></figure>
-<p>其他方法比如checkArgument来校验有效性</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Preconditions.checkArgument(age&gt;0, &quot;age为%d&quot;,age);</span><br></pre></td></tr></table></figure>
-<h2 id="CollectionUtils"><a href="#CollectionUtils" class="headerlink" title="CollectionUtils"></a>CollectionUtils</h2><p>该工具类除了有个常用的CollectionUtils.isNotEmpty()外，还可以进行集合交并补差运算，以及不可变集合（后面几个运算返回新的集合才是运算结果。</p>
-<h2 id="StringUtils"><a href="#StringUtils" class="headerlink" title="StringUtils"></a>StringUtils</h2><p>使用String.isNotBlank()来校验字符串为空，可包括多种情况（null,””,”  “,”\t \n \f \r”)  </p>
-<h1 id="lamdba"><a href="#lamdba" class="headerlink" title="lamdba"></a>lamdba</h1><h2 id="表达式格式"><a href="#表达式格式" class="headerlink" title="表达式格式"></a>表达式格式</h2><p>lamdba表达格式为<br>(parameters) -&gt; expression<br>或<br>(parameters) -&gt;{ statements; }</p>
-<p>λ表达式本质上是一个匿名方法。<br>原方法</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public int add(int x, int y) &#123;</span><br><span class="line">        return x + y;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<p>转化为lamdba表达式<br>(int x,int y) -&gt; { return x + y; }<br>省略参数类型和return<br>(x,y) -&gt; x+y;<br>如果只有一个参数且可以被Java推断出类型，那么参数列表的括号也可以省略：<br>x -&gt; x+1;  </p>
-<h2 id="匿名内部类"><a href="#匿名内部类" class="headerlink" title="匿名内部类"></a>匿名内部类</h2><p>λ表达式主要用于替换以前广泛使用的内部匿名类，各种回调，比如事件响应器、传入Thread类的Runnable等。比如匿名内部类：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Thread oldSchool = new Thread( new Runnable () &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void run() &#123;</span><br><span class="line">        System.out.println(&quot;This is from an anonymous class.&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure>
-<p>使用lamdba表达式为</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Thread gaoDuanDaQiShangDangCi = new Thread( () -&gt; &#123;</span><br><span class="line">    System.out.println(&quot;This is from an anonymous method (lambda exp).&quot;);</span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure>
-<h2 id="内部迭代"><a href="#内部迭代" class="headerlink" title="内部迭代"></a>内部迭代</h2><p>现在java集合类（包括List）现在都有一个forEach方法，对元素进行迭代（遍历），所以我们不需要再写for循环了。forEach方法接受一个函数接口Consumer做参数，所以可以使用λ表达式。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">for(Object o: list) &#123; // 外部迭代</span><br><span class="line">       System.out.println(o);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">list.forEach(o -&gt; &#123;System.out.println(o);&#125;); //forEach函数实现内部迭代</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/08/02/《三色绘恋》游戏评测/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/08/02/《三色绘恋》游戏评测/" itemprop="url">《三色绘恋》游戏评测</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-02T10:05:56+08:00">
-                2018-08-02
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/杂谈/" itemprop="url" rel="index">
-                    <span itemprop="name">杂谈</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="游戏性"><a href="#游戏性" class="headerlink" title="游戏性"></a>游戏性</h1><h2 id="画面"><a href="#画面" class="headerlink" title="画面"></a>画面</h2><p>&emsp;&emsp;游戏画面还不错，色彩很明亮鲜艳，各种图完成度都很高。不过立绘偏少，来来回回就几个，但在有限的立绘中，表情画的很好，通过表情很好的展现了人物状态。场景图太少了，整个故事就发生在教室走廊画室家里等十来个，真是让人觉得有点乏。</p>
-<h2 id="音乐"><a href="#音乐" class="headerlink" title="音乐"></a>音乐</h2><p>&emsp;&emsp;音乐质量还可以，不少音乐很好听，为此还专门买了OST，但觉得部分音乐出现的频率太高了，尤其是《心底的颜色_Orange》这首，简直听腻了，好像没有通过音乐表现来区分两个女主。全程都有配音，配音质量我觉得很好，在俏皮和日常时很真实，在情感爆发时也不会显得浮夸。</p>
-<h2 id="剧情"><a href="#剧情" class="headerlink" title="剧情"></a>剧情</h2><p>&emsp;&emsp;虽说是galgame，但游戏并没有分支选项，全程都是敲空格，只是在每章结尾有个投票环节，用来最后解锁两个不同的大结局章节。本想看看两个结局分别长什么样，但玩完一个已经要坚持才能看到结尾了，玩不动了。煽情可能比较失败，但有些较有趣的情节，还是给我带来了不少乐趣的。</p>
-<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>&emsp;&emsp;毫无意义的把其中一个女主的胸画的特别大，也许是为了噱头或者吸引玩家，导致本来和色情毫无关系的游戏，在steam被打上了色情游戏的标签，可能有助于销量吧，但我觉得有点low。</p>
-<h1 id="文学性"><a href="#文学性" class="headerlink" title="文学性"></a>文学性</h1><h2 id="总体评价"><a href="#总体评价" class="headerlink" title="总体评价"></a>总体评价</h2><p>&emsp;&emsp;百万字的文本，当然可以讨论文学性。<br>&emsp;&emsp;要是总体评价，给我的感觉就是，“文笔非常好的高中生”。<br>&emsp;&emsp;可能受日本文化影响较多，语言上总有一种日本动漫的风采，什么“执念”啊，“守护”啊，“梦想”啊，喜欢从各种人口中讲大道理，”坚持努力，找到自我“之类，最后用嘴遁说服人拯救世界。而其实和愚公移山一样，最后移走山的也不是愚公，而是感动天帝而已。也许本来galgame和日本动漫相近，所以总给人一种日本动漫的感觉。</p>
-<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><p>&emsp;&emsp;人物的行为和语言基本是脱离环境的，这句话的意思是：设定是2005年武汉高中生，但以其极低的耦合度，导致其实换个背景基本也没有问题。大部分时候人物说话的方式差不多，并且不像高中生，最大的问题是，不像对话。</p>
-<h2 id="描写"><a href="#描写" class="headerlink" title="描写"></a>描写</h2><p>&emsp;&emsp;作者非常喜欢心理描写，经常大段的心理描写，并且总是使用比喻的手法，而正是这些占了大量的文本量。实际上，我觉得这样的方法很缺乏表现力，”悲伤像藤曼一样牢牢得捆住我的内心，吸取着它的养分“，这样的句子，也许作者觉得很好， 但我认为心理感受靠比喻的描写这种方式，基本无法让读者感受到其心理状态。”今已亭亭如盖矣“，作者可能需要学习下这句。</p>
-<h2 id="人物"><a href="#人物" class="headerlink" title="人物"></a>人物</h2><p>&emsp;&emsp;人物塑造，性格的来源必有其背景的原因，这点应该是该作品中人物塑造的优点。几个配角相对好一点，但脸谱化。而主角的塑造就比较失败，玩家操控的角色，失败的原因是，作者试图通过心理描写来体现人物，但如前文所说，这样的心理描写，表现力很差。而两个女主，可能是因为我不懂女生，我根本不知道她们在哭什么，她们在对不起什么。主角是两个女主一切行为的出发点和落脚点，导致人物过于苍白，可能只有最后，日常活动中文芷大小姐吐槽男主的时候，能让我觉得她是真实存在的人。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1928,7 +1965,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">254</span>
+                  <span class="site-state-item-count">256</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
