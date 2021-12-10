@@ -251,6 +251,161 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/06/11/6-11技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/06/11/6-11技术笔记/" itemprop="url">go环境变量，命令，命令行参数</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-11T14:48:36+08:00">
+                2019-06-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="go环境变量"><a href="#go环境变量" class="headerlink" title="go环境变量"></a>go环境变量</h1><p><strong>GOROOT</strong>：Golang的安装路径。</p>
+<p><strong>GOPATH</strong>：可以理解为工作目录或者工作区，也是平时接触最多的一个变量。它可以是一个目录，可以是多个目录路径，每个目录代表一个工作区。这些目录用于放置Go语言的源码文件（src），以及安装（命令go install）后的归档文件（pkg目录）和可执行文件（bin目录）。</p>
+<p><strong>GOBIN</strong>：GOROOT目录下的可执行文件放置目录，一般指bin。</p>
+<h1 id="go命令"><a href="#go命令" class="headerlink" title="go命令"></a>go命令</h1><p>go env 可以打印出go语言的通用环境信息  </p>
+<p>go build 编译代码，  </p>
+<p>go install 编译并安装代码。二进制会存放于GOBIN环境下</p>
+<p>go get，相当于整合了git，从git将包自动下载到本地并对它进行编译</p>
+<h1 id="flag包和init-函数"><a href="#flag包和init-函数" class="headerlink" title="flag包和init()函数"></a>flag包和init()函数</h1><p>flag包可以获取命令行参数，比如</p>
+<p>var name = flag.String(“name”, “everyone”, “The greeting object.”)</p>
+<p>则可以获取将命令行的name参数，(后两个参数分别为默认值和参数说明)，获取到变量name。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"flag"</span></span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> name <span class="keyword">string</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">    flag.StringVar(&amp;name, <span class="string">"name"</span>, <span class="string">"everyone"</span>, <span class="string">"The greeting object."</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    flag.Parse()</span><br><span class="line">    fmt.Printf(<span class="string">"Hello, %s!\n"</span>, name)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>命令go run demo2.go -name=”Robert”，即可输出Hello，Robert</p>
+<p>init()函数会在每个包完成初始化后自动执行，并且执行优先级比main函数高。所以init()一般来做些初始化动作。</p>
+<p>init函数不需要传入参数，也不会返回任何值。与main相比而言，init没有被声明，因此也不能被引用。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/05/31/算法题目总结/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1708,175 +1863,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/05/09/5-9技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/05/09/5-9技术笔记-1/" itemprop="url">CMS与G1</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-09T15:26:02+08:00">
-                2019-05-09
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="CMS"><a href="#CMS" class="headerlink" title="CMS"></a>CMS</h1><ol>
-<li><p>初试标记，需要stop the world(STP)。找到GCroots对象（图中的1），以及年轻代中，引用到的老年代的对象（图中的2和3）<img src="https://i.loli.net/2019/05/09/5cd3dbbd524ac.png" alt="5cd3dbbd524ac"></p>
-</li>
-<li><p>并发标记：从“初始标记”阶段标记的对象开始找出所有存活的对象;</p>
-<p>因为是并发运行的，在运行期间会发生新生代的对象晋升到老年代、或者是直接在老年代分配对象、或者更新老年代对象的引用关系等等，对于这些对象，都是需要进行重新标记的，否则有些对象就会被遗漏，发生漏标的情况。为了提高重新标记的效率，该阶段会把上述对象所在的Card标识为Dirty，后续只需扫描这些Dirty Card的对象，避免扫描整个老年代； 并发标记阶段只负责将引用发生改变的Card标记为Dirty状态，不负责处理；</p>
-<p><img src="https://i.loli.net/2019/05/09/5cd3e00235ca3.png" alt="5cd3e00235ca3"></p>
-<p>如6本来可以回收的，3就是所说的脏节点，3在并发标记阶段发生了变化，指向了6。</p>
-</li>
-<li><p>预清理阶段</p>
-<p>简单来说，就是为第二步后续工作的，把6也标记为可达节点。</p>
-</li>
-<li><p>重新标记：会导致过程中的第二次STP</p>
-<p>扫描整个堆，此时新生代也可作为GCroots节点。为了避免新生代对象过多，可以先进行一次young gc。</p>
-</li>
-<li><p>并发清理，清理阶段，此时由于线程还在工作，所以可能产生浮动垃圾。</p>
-</li>
-<li><p>并发重置</p>
-</li>
-</ol>
-<h1 id="G1"><a href="#G1" class="headerlink" title="G1"></a>G1</h1><p>cms只能回收老年代，年轻代得用ParNew，G1均可回收。</p>
-<p>年轻代回收很简单，复制回收即可。</p>
-<p>G1区别在于，堆不是物理分区的，是逻辑分区的。即物理分块，不同的块属于不同的区，很合理。</p>
-<p>老年代垃圾清理流程和cms类似，区别在于，并不是每次同时回收所有老年代的块，而是垃圾优先，这就是G1的名字（garbage first）。</p>
-<p>有一个问题在于，对象是互相引用依赖的，对象a在region(块)a，他持有引用的对象不一定也在块a，为了标记，岂不是还得扫描全堆。</p>
-<p>解决方法是remember set。</p>
-<p>这是个反向指针集合，反向的意思是，a引用b，反而把a写在b的集合中。</p>
-<p>进行垃圾回收时，如果Region1有根对象A引用了Region2的对象B，显然对象B是活的，如果没有Rset，就需要扫描整个Region1或者其它Region，才能确定对象B是活跃的，有了Rset可以避免对整个堆进行扫描。</p>
-<p>实现大致靠写内存屏障。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1927,7 +1913,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">257</span>
+                  <span class="site-state-item-count">258</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
