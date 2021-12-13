@@ -251,6 +251,159 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/05/11/5-11技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/05/11/5-11技术笔记/" itemprop="url">exist</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-05-11T11:04:16+08:00">
+                2020-05-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h3 id="选了语文没选英语的"><a href="#选了语文没选英语的" class="headerlink" title="选了语文没选英语的"></a>选了语文没选英语的</h3><p>exist语法可以理解为：将主查询的数据，放到子查询中做条件验证，根据验证结果（TRUE 或 FALSE）来决定主查询的数据结果是否得以保留。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">distinct</span> uid <span class="keyword">from</span> qtest <span class="keyword">as</span> T</span><br><span class="line"><span class="keyword">where</span> <span class="keyword">exists</span> (<span class="keyword">select</span> <span class="number">1</span> <span class="keyword">from</span> qtest <span class="keyword">where</span> subject=<span class="string">"数学"</span> <span class="keyword">and</span> T.uid=uid)</span><br><span class="line"><span class="keyword">and</span> <span class="keyword">not</span> <span class="keyword">exists</span> (<span class="keyword">select</span> <span class="number">1</span> <span class="keyword">from</span> qtest <span class="keyword">where</span> subject=<span class="string">"英语"</span> <span class="keyword">and</span> T.uid=uid)</span><br></pre></td></tr></table></figure>
+<h3 id="同时选了两科的"><a href="#同时选了两科的" class="headerlink" title="同时选了两科的"></a>同时选了两科的</h3><p>其实group by 后的having 的字段，不一定得是选的字段</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span>  <span class="keyword">name</span> <span class="keyword">from</span> student <span class="keyword">where</span> uid <span class="keyword">in</span>(</span><br><span class="line"><span class="keyword">select</span> uid <span class="keyword">from</span> score <span class="keyword">group</span> <span class="keyword">by</span> uid </span><br><span class="line"><span class="keyword">having</span> <span class="keyword">count</span>(<span class="keyword">sid</span>)=<span class="number">3</span>)</span><br></pre></td></tr></table></figure>
+<p>考察下里面的自查询</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> uid <span class="keyword">from</span> score <span class="keyword">group</span> <span class="keyword">by</span> <span class="keyword">name</span></span><br><span class="line"> <span class="keyword">having</span> <span class="keyword">count</span>(<span class="keyword">sid</span>)=<span class="number">3</span></span><br></pre></td></tr></table></figure>
+<p>其实和这也是一样的</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> uid,<span class="keyword">count</span>(<span class="keyword">sid</span>)=<span class="number">3</span> <span class="keyword">as</span> <span class="keyword">num</span> <span class="keyword">from</span> score <span class="keyword">group</span> <span class="keyword">by</span> <span class="keyword">name</span></span><br><span class="line"> <span class="keyword">having</span> <span class="keyword">num</span>=<span class="number">3</span></span><br></pre></td></tr></table></figure>
+<p>但是子查询里只能有一列</p>
+<p>其实这里count啥没区别，因为是按uid来group by的。这里uid和sid是联合unique的，所以按uid行数就是该生科目数。</p>
+<p>如果不是联合unique的。比如带上补考的。</p>
+<h3 id="有课补考过"><a href="#有课补考过" class="headerlink" title="有课补考过"></a>有课补考过</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span> <span class="keyword">from</span> student</span><br><span class="line"><span class="keyword">where</span> uid <span class="keyword">in</span>(</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">distinct</span> uid <span class="keyword">from</span> score</span><br><span class="line"><span class="keyword">group</span> <span class="keyword">by</span> uid,<span class="keyword">sid</span></span><br><span class="line"><span class="keyword">having</span> <span class="keyword">count</span>(*)=<span class="number">2</span>)</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/05/06/5-6技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1565,153 +1718,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/02/20/2-20技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/02/20/2-20技术笔记-1/" itemprop="url">TCP粘包/拆包</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-02-20T14:27:37+08:00">
-                2020-02-20
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="伪概念"><a href="#伪概念" class="headerlink" title="伪概念"></a>伪概念</h1><p>TCP是基于流的协议，所谓流，就是没有界限的一串数据。TCP底层并不了解上层业务数据的具体含义，它会根据TCP缓冲区的实际情况进行包的划分，所以在业务上认为，一个完整的包可能会被TCP拆分成多个包进行发送，也有可能把多个小的包封装成一个大的数据包发送，这就是所谓的TCP粘包和拆包问题。<br>即应用层的请求和传输层是不对应的。</p>
-<p>假设客户端分别发送了两个数据包D1和D2给服务端，由于服务端一次读取的字节数是不定的，故可能存在以下四种情况。<br>(1) 服务端分两次读取到了两个独立的数据包，分别是D1和D2，没有粘包和拆包；<br>(2) 服务端一次接收到了两个数据包，D1和D2粘合在一起，被称为TCP粘包；<br>(3) 服务端分两次读取到了两个数据包，第一次读取到了完整的D1包和D2包的部分内容，第二次读取到了D2包的剩余内容，这被称为TCP拆包；<br>(4) 服务端分两次读取到了两个数据包，第一次读取到了D1包的部分内容D1_1，第二次读取到了D1包的剩余内容D1_2和D2包的整包。</p>
-<h1 id="传输层解决是耍流氓"><a href="#传输层解决是耍流氓" class="headerlink" title="传输层解决是耍流氓"></a>传输层解决是耍流氓</h1><p>比如关闭Nagle算法，接受方立刻从缓冲池里拿数据，都是基于传输层的，是没有意义的。</p>
-<p>因为tcp是基于流的，传输层没有包，包是应用层自己规定的，那么自然应该在应用层再解析出包来。</p>
-<h1 id="应用层分割"><a href="#应用层分割" class="headerlink" title="应用层分割"></a>应用层分割</h1><p>以netty为例，有4种粘包处理器，分别是基于回车，基于指定分割符，定长，基于协议。</p>
-<p>其实也就是发送接收双方约定好应用层“包”的接口，接收方在应用层把流解析成包即可。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1762,7 +1768,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">258</span>
+                  <span class="site-state-item-count">259</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

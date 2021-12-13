@@ -251,6 +251,190 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/09/20/9-20技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/09/20/9-20技术笔记/" itemprop="url">springboot+elasticsearch</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-20T17:35:44+08:00">
+                2018-09-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h1><h2 id="时机"><a href="#时机" class="headerlink" title="时机"></a>时机</h2><ol>
+<li>新系统开发尝试使用ES作为存储和检索服务器；</li>
+<li>现有系统升级需要支持全文检索服务，需要使用ES。  </li>
+</ol>
+<h2 id="ES核心概念"><a href="#ES核心概念" class="headerlink" title="ES核心概念"></a>ES核心概念</h2><ol>
+<li><p>Cluster：集群。</p>
+<p>ES可以作为一个独立的单个搜索服务器。不过，为了处理大型数据集，实现容错和高可用性，ES可以运行在许多互相合作的服务器上。这些服务器的集合称为集群。</p>
+</li>
+<li><p>Node：节点。</p>
+<p>形成集群的每个服务器称为节点。</p>
+</li>
+<li><p>Shard：分片。</p>
+<p>当有大量的文档时，由于内存的限制、磁盘处理能力不足、无法足够快的响应客户端的请求等，一个节点可能不够。这种情况下，数据可以分为较小的分片。每个分片放到不同的服务器上。</p>
+<p>当你查询的索引分布在多个分片上时，ES会把查询发送给每个相关的分片，并将结果组合在一起，而应用程序并不知道分片的存在。即：这个过程对用户来说是透明的。</p>
+</li>
+<li><p>Replia：副本。</p>
+<p>为提高查询吞吐量或实现高可用性，可以使用分片副本。</p>
+<p>副本是一个分片的精确复制，每个分片可以有零个或多个副本。ES中可以有许多相同的分片，其中之一被选择更改索引操作，这种特殊的分片称为主分片。</p>
+<p>当主分片丢失时，如：该分片所在的数据不可用时，集群将副本提升为新的主分片。</p>
+</li>
+<li><p>全文检索。</p>
+<p>全文检索就是对一篇文章进行索引，可以根据关键字搜索，类似于mysql里的like语句。</p>
+<p>全文索引就是把内容根据词的意义进行分词，然后分别创建索引，例如”你们的激情是因为什么事情来的” 可能会被分词成：“你们“，”激情“，“什么事情“，”来“ 等token，这样当你搜索“你们” 或者 “激情” 都会把这句搜出来。</p>
+</li>
+</ol>
+<h2 id="ES数据架构的主要概念"><a href="#ES数据架构的主要概念" class="headerlink" title="ES数据架构的主要概念"></a>ES数据架构的主要概念</h2><ol>
+<li>关系型数据库中的数据库（DataBase），等价于ES中的索引（Index）</li>
+<li>一个数据库下面有N张表（Table），等价于1个索引Index下面有N多类型（Type），</li>
+<li>一个数据库表（Table）下的数据由多行（ROW）多列（column，属性）组成，等价于1个Type由多个文档（Document）和多Field组成。</li>
+<li>在一个关系型数据库里面，schema定义了表、每个表的字段，还有表和字段之间的关系。 与之对应的，在ES中：Mapping定义索引下的Type的字段处理规则，即索引如何建立、索引类型、是否保存原始索引JSON文档、是否压缩原始JSON文档、是否需要分词处理、如何进行分词处理等。</li>
+<li>在数据库中的增insert、删delete、改update、查search操作等价于ES中的增PUT/POST、删Delete、改_update、查GET.  </li>
+</ol>
+<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>elasticsearch的配置坑还是有些，主要是因为版本冲突问题吧。<br>elasticsearch有两个主要大版本，2和5，（其实5就是3），然后流传各地版本不同。<br>首先是和redis冲突的问题，因为都依赖于luccene，而依赖的版本不同，导致bug，解决方法是在Application启动之前，系统设置。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">System.setProperty(&quot;es.set.netty.runtime.available.processors&quot;, &quot;false&quot;);</span><br></pre></td></tr></table></figure>
+<p>其次是,elasticsearch不要安装在c盘的，这样在启动时由于权限原因，无法正常启动。</p>
+<h1 id="注解"><a href="#注解" class="headerlink" title="注解"></a>注解</h1><ul>
+<li>@Document(indexName = “springbootdb”, type = “news”)实体类上的注解，指定索引和type名</li>
+<li>@Field(type = FieldType.Date, format = DateFormat.basic_date_time, analyzer = “ik_smart”) 属性注解</li>
+<li>@CreatedDate；@Id 创造时间和Id注解</li>
+</ul>
+<h1 id="QueryBuilder"><a href="#QueryBuilder" class="headerlink" title="QueryBuilder"></a>QueryBuilder</h1><p>transportClient.prepareSearch返回一个SearchRequestBuilder对象（也可以提前自己构建），使用其来构造各种搜索条件，其中QueryBuilders下，有等值搜索、匹配查询、范围搜索等多种搜索类型。用SearchHit查看搜索结果。<br>addSort进行结果排序</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">SearchResponse response = transportClient.prepareSearch(&quot;springbootdb&quot;)</span><br><span class="line">        .setTypes(&quot;news&quot;)</span><br><span class="line">        .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)</span><br><span class="line">        .setQuery(QueryBuilders.rangeQuery(&quot;id&quot;).from(1).to(12))</span><br><span class="line">        .addSort(&quot;id&quot;, SortOrder.ASC)</span><br><span class="line">        .setFrom(0).setSize(60)                //这里就是一个分页功能</span><br><span class="line">        .setExplain(true)</span><br><span class="line">        .get();</span><br><span class="line">SearchHits hits=response.getHits();</span><br><span class="line">System.out.println(hits.getTotalHits());</span><br><span class="line">for (SearchHit hit:hits.getHits()) &#123;</span><br><span class="line">    Map&lt;String, Object&gt; source=hit.getSource();</span><br><span class="line">    System.out.println(source);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="ElasticsearchRepository"><a href="#ElasticsearchRepository" class="headerlink" title="ElasticsearchRepository"></a>ElasticsearchRepository</h1><p>实体类的Dao应该继承 ElasticsearchRepository，其间有大量的基础增删改查功能。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/09/19/9-19技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1671,160 +1855,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/09/05/9-5技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/09/05/9-5技术笔记/" itemprop="url">建造者模式</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-09-05T11:30:46+08:00">
-                2018-09-05
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="建造者模式"><a href="#建造者模式" class="headerlink" title="建造者模式"></a>建造者模式</h1><h2 id="基础"><a href="#基础" class="headerlink" title="基础"></a>基础</h2><ol>
-<li>实体类里参数有必选参数和可选参数。</li>
-<li>实体类中的属性只有get方法没有set方法</li>
-<li>属性通过参数为建造者的构造函数来设值</li>
-<li>建造者是实体类对应的，建造者拥有和实体类相同的属性</li>
-<li>建造者的构造方法只有必选参数</li>
-<li>可选参数的设值方法返回建造者对象this</li>
-<li>建造者biuld()方法返回通过调用实体对象构造方法返回实体对象</li>
-</ol>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">public class User &#123;</span><br><span class="line"></span><br><span class="line">    private  String Name;     // 必传参数</span><br><span class="line">    private  int age;              // 可选参数</span><br><span class="line">    private  String phone;         // 可选参数</span><br><span class="line"></span><br><span class="line">    private User(UserBuilder builder) &#123;</span><br><span class="line">        this.Name = builder.Name;</span><br><span class="line">        this.age = builder.age;</span><br><span class="line">        this.phone = builder.phone;</span><br><span class="line">    &#125;</span><br><span class="line">    public String getName() &#123;</span><br><span class="line">        return Name;</span><br><span class="line">    &#125;</span><br><span class="line">    public int getAge() &#123;</span><br><span class="line">        return age;</span><br><span class="line">    &#125;</span><br><span class="line">    public String getPhone() &#123;</span><br><span class="line">        return phone;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static class UserBuilder &#123;      //建造者</span><br><span class="line">        private String Name;</span><br><span class="line">        private int age;</span><br><span class="line">        private String phone;</span><br><span class="line"></span><br><span class="line">        public UserBuilder(String firstName) &#123;</span><br><span class="line">            this.Name = firstName;</span><br><span class="line">        &#125;</span><br><span class="line">        public UserBuilder age(int age) &#123;</span><br><span class="line">            this.age = age;</span><br><span class="line">            return this;</span><br><span class="line">        &#125;</span><br><span class="line">        public UserBuilder phone(String phone) &#123;</span><br><span class="line">            this.phone = phone;</span><br><span class="line">            return this;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        public User build() &#123;</span><br><span class="line">            return new User(this);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">        User user=new User.UserBuilder(&quot;王&quot;)</span><br><span class="line">                .age(20)</span><br><span class="line">                .phone(&quot;123456789&quot;)</span><br><span class="line">                .build();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="线程安全"><a href="#线程安全" class="headerlink" title="线程安全"></a>线程安全</h2><p>由于Builder是非线程安全的，所以如果要在Builder内部类中检查一个参数的合法性，必需要在对象创建完成之后再检查。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">public User build() &#123;</span><br><span class="line">  User user = new user(this);</span><br><span class="line">  if (user.getAge() &gt; 120) &#123;</span><br><span class="line">    throw new IllegalStateException(“Age out of range”); // 线程安全</span><br><span class="line">  &#125;</span><br><span class="line">  return user;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="经典的Builder模式"><a href="#经典的Builder模式" class="headerlink" title="经典的Builder模式"></a>经典的Builder模式</h2><p><img src="http://upload-images.jianshu.io/upload_images/944365-e4842ec60f89315e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="经典"></p>
-<p>多了个Director，实际上不常用。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1875,7 +1905,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">258</span>
+                  <span class="site-state-item-count">259</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

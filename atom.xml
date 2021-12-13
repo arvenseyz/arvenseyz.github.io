@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2021-12-10T07:53:11.680Z</updated>
+  <updated>2021-12-13T07:42:26.964Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -17,11 +17,36 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>rocketMq推和拉</title>
+    <link href="https://arvenseyz.github.io/2021/12/13/12-13%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>https://arvenseyz.github.io/2021/12/13/12-13技术笔记-1/</id>
+    <published>2021-12-13T06:48:17.000Z</published>
+    <updated>2021-12-13T07:42:26.964Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="什么是推和拉"><a href="#什么是推和拉" class="headerlink" title="什么是推和拉"></a>什么是推和拉</h2><p>说到推拉，其实只针对消费者和broker的行为，生产者只有推（不然生产者岂不是还得把消息持久化等着broker来取数据）。</p><p><strong>推模式</strong>指的是consumer与broker建立好网络长连接，broker有相关数据，直接通过长连接通道推送到consumer。其优点是及时，一旦有数据变更，consumer立马能感知到；另外对consumer来说逻辑简单，不需要关心有无数据这些逻辑处理。缺点是不知道consumer的数据消费能力，可能导致数据积压在consumer，来不及处理。</p><p><strong>拉模式</strong>指的是consumer主动向broker发出请求，拉取相关数据。其优点是此过程由consumer发起请求，故不存在推模式中数据积压的问题。缺点是可能不够及时，对consumer来说需要考虑数据拉取相关逻辑，何时去拉，拉的频率怎么控制等等。</p><h2 id="RocketMq的推拉"><a href="#RocketMq的推拉" class="headerlink" title="RocketMq的推拉"></a>RocketMq的推拉</h2><p>RocketMq其实只有拉。</p><p>推是帮填了些参数的拉。consumer把轮询过程封装了，并注册MessageListener监听器，取到消息后，唤醒MessageListener的consumeMessage()来消费，对用户而言，感觉消息是被推送（push）过来的。主要用的也是这种方式。</p><p>如果是拉的话，客户端代码可能得这么写：</p><ol><li><p>注册消费者实例到nameserver</p></li><li><p>查询对应的topic消息队列以便可以消费其下所有数据</p></li><li><p>获取消息队列，消费消息;</p></li><li><p>自行维护保存消费偏移量，以便为下一次消费提供依据;</p></li><li><p>循环以上操作;</p></li></ol><p>可以看见还是比较麻烦。推的话，只需要注册回调方法即可。</p><h3 id="推是用拉-长轮询实现"><a href="#推是用拉-长轮询实现" class="headerlink" title="推是用拉+长轮询实现"></a>推是用拉+长轮询实现</h3><p>后台会有个 RebalanceService 线程，这个线程会根据 topic 的队列数量和当前消费组的消费者个数做负载均衡，每个队列产生的 pullRequest 放入阻塞队列 pullRequestQueue 中。然后又有个 PullMessageService 线程不断的从阻塞队列 pullRequestQueue 中获取 pullRequest，然后通过网络请求 broker，这样实现的准实时拉取消息。</p><p>上面操作相当于帮做了拉的1、2步</p><p>具体怎么长轮询拉的呢</p><p><img src="https://cdn.jsdelivr.net/gh/arvenseyz/imageCloud/9182641-667ee972d01888f3.webp" alt></p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;什么是推和拉&quot;&gt;&lt;a href=&quot;#什么是推和拉&quot; class=&quot;headerlink&quot; title=&quot;什么是推和拉&quot;&gt;&lt;/a&gt;什么是推和拉&lt;/h2&gt;&lt;p&gt;说到推拉，其实只针对消费者和broker的行为，生产者只有推（不然生产者岂不是还得把消息持久化等着broke
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="消息队列" scheme="https://arvenseyz.github.io/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
+    
+  </entry>
+  
+  <entry>
     <title>RocketMQ Rebalance机制</title>
     <link href="https://arvenseyz.github.io/2021/12/10/12-10%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>https://arvenseyz.github.io/2021/12/10/12-10技术笔记/</id>
     <published>2021-12-10T06:51:50.000Z</published>
-    <updated>2021-12-10T07:53:11.680Z</updated>
+    <updated>2021-12-13T03:30:58.392Z</updated>
     
     <content type="html"><![CDATA[<h1 id="Rebalance是什么"><a href="#Rebalance是什么" class="headerlink" title="Rebalance是什么"></a><strong>Rebalance是什么</strong></h1><p>Rebalance(再均衡)机制指的是：将一个Topic下的<strong>多个队列(或称之为分区)</strong>，在同一个消费者组(consumer group)下的<strong>多个消费者实例</strong>(consumer instance)之间进行重新分配。</p><p><strong>Rebalance机制本意是为了提升消息的并行处理能力。</strong>例如，一个Topic下5个队列，在只有1个消费者的情况下，那么这个消费者将负责处理这5个队列的消息。如果此时我们增加一个消费者，那么可以给其中一个消费者分配2个队列，给另一个分配3个队列，从而提升消息的并行处理能力。</p><p>但是Rebalance机制也存在明显的<strong>限制</strong>与<strong>危害</strong>。</p><p><strong>Rebalance限制：</strong></p><p>由于一个队列最多分配给一个消费者，因此当某个消费者组下的消费者实例数量大于队列的数量时，多余的消费者实例将分配不到任何队列。</p><p><strong>Rebalance危害：</strong></p><p>除了以上限制，更加严重的是，在发生Rebalance时，存在着一些危害，如下所述：</p><ul><li><strong>消费暂停：</strong>考虑在只有Consumer 1的情况下，其负责消费所有5个队列；在新增Consumer 2，触发Rebalance时，需要分配2个队列给其消费。那么Consumer 1就需要停止这2个队列的消费，等到这两个队列分配给Consumer 2后，这两个队列才能继续被消费。</li><li><strong>重复消费：</strong>Consumer 2 在消费分配给自己的2个队列时，必须接着从Consumer 1之前已经消费到的offset继续开始消费。然而默认情况下，offset是异步提交的，如consumer 1当前消费到offset为10，但是异步提交给broker的offset为8；那么如果consumer 2从8的offset开始消费，那么就会有2条消息重复。也就是说，Consumer 2 并不会等待Consumer1提交完offset后，再进行Rebalance，因此提交间隔越长，可能造成的重复消费就越多。</li><li><strong>消费突刺：</strong>由于rebalance可能导致重复消费，如果需要重复消费的消息过多；或者因为rebalance暂停时间过长，导致积压了部分消息。那么都有可能导致在rebalance结束之后瞬间可能需要消费很多消息。</li></ul><h1 id="什么时候Reblance"><a href="#什么时候Reblance" class="headerlink" title="什么时候Reblance"></a>什么时候Reblance</h1><p>从本质上来说，触发Rebalance的根本因素无非是两个：</p><p><strong>1. 订阅Topic的队列数量变化</strong> </p><p><strong>2. 消费者组信息变化。</strong> </p><p><strong>队列信息</strong>和<strong>消费者组信息</strong>称之为Rebalance元数据，Broker负责维护这些元数据，并在二者信息发生变化时，以某种通知机制告诉消费者组下所有实例，需要进行Rebalance。从这个角度来说，Broker在Rebalance过程中，是一个协调者的角色。</p><h1 id="怎么reblance"><a href="#怎么reblance" class="headerlink" title="怎么reblance"></a>怎么reblance</h1><p>Broker是通知每个消费者各自Rebalance，即每个消费者自己给自己重新分配队列，而不是Broker将分配好的结果告知Consumer。从这个角度，RocketMQ与Kafka Rebalance机制类似，二者Rebalance分配都是在客户端进行，不同的是：</p><ul><li><strong>Kafka：</strong>会在消费者组的多个消费者实例中，选出一个作为Group Leader，由这个Group Leader来进行分区分配，分配结果通过Cordinator(特殊角色的broker)同步给其他消费者。相当于Kafka的分区分配只有一个大脑，就是Group Leader。</li><li><strong>RocketMQ：</strong>每个消费者，自己负责给自己分配队列，相当于每个消费者都是一个大脑。</li></ul><p>如果RocketMQ是去中心化的，必然有如下两个问题：</p><ol><li><p>脑裂：因为每个消费者都不知道其他消费者分配的结果，会不会出现一个队列分配给了多个消费者，或者有的队列分配给了多个消费者。</p></li><li><p>如果某个消费者没有收到Rebalance通知怎么办</p></li></ol><p><strong>只要任意一个消费者组需要Rebalance，这台机器上启动的所有其他消费者，也都要进行Rebalance</strong>。</p><h2 id="单个Topic-Rebalance流程"><a href="#单个Topic-Rebalance流程" class="headerlink" title="单个Topic Rebalance流程"></a><strong>单个Topic Rebalance流程</strong></h2><p>单个Topic的Rebalance流程，是在RebalanceImpl类的rebalanceByTopic方法中进行的，整体上可以分为4大步骤：</p><p>1、从namesrv获取messageQueue信息</p><p>2、从broker获取consumer信息</p><p>3、选择Rebalance策略</p><p>4、三者结合实现Rebalance操作</p><p>消费者在Rebalance时需要获得：Topic的队列信息和消费者组实例信息。</p><p><strong>对于队列信息：</strong></p><p>会从之前的缓存的Topic路由信息中获取；Topic路由信息会定时的进行更新。</p><p><strong>对于消费者组实例信息：</strong></p><p>前面我们提到过Broker通过ConsumerManager维护了所有的消费者信息，findConsumerIdList方法内部会会发送<strong>GET_CONSUMER_LIST_BY_GROUP</strong>给请求给任意一个Broker进行获取。</p><p>每个消费者是自己给自己分配，相当于存在多个大脑。那么如何保证分配结果的一致呢？通过以下两个手段来保证：</p><ul><li>对Topic队列，以及消费者各自进行排序</li><li>每个消费者需要使用相同的分配策略。</li></ul><p>尽管每个消费者是各自给自己分配，但是因为使用的相同的分配策略，定位从队列列表中哪个位置开始给自己分配，给自己分配多少个队列，从而保证最终分配结果的一致。</p><h2 id="出发时机"><a href="#出发时机" class="headerlink" title="出发时机"></a>出发时机</h2><p>简单地来说，RocketMQ有三个时机会触发负载均衡：</p><ol><li><p>启动的时候，会立即触发</p></li><li><p>有消费实例数量的变更的时候。broker在接受到消费者的心跳包的时候如果发现这个实例是新的实例的时候，会广播一个消费者数量变更的事件给所有消费者实例；同理，当发现一个消费者实例的连接断了，也会广播这样的一个事件</p></li><li><p>定期触发（默认20秒）。</p></li></ol><p>第一个时机很好理解。启动的时候，消费者需要需要知道自己要分配什么队列，所以要触发Rebalance。</p><p>第二个时机实际也很好理解。因为有实例的数量变更，所以分配的结果肯定也需要调整的，这时候就要广播给各消费者。</p><p>第三点定期触发的原因实际上是一个补偿机制，为了避免第二点广播的时候因为网络异常等原因丢失了重分配的信号，或者还有别的场景实际上也需要重新计算分配结果（例如队列的数量变化、权限变化），所以需要一个定时任务做补偿。</p><p>所以rocketMQ去中心化Reblance的机制，导致，负载均衡的这个实现原理，就会导致RocketMQ消息重复比一般的消息中间件概率要大，而且严重不少（消息是批量重复的）。</p>]]></content>
     
@@ -500,37 +525,6 @@
     
     
       <category term="ES" scheme="https://arvenseyz.github.io/tags/ES/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>缓存的数据一致性问题</title>
-    <link href="https://arvenseyz.github.io/2021/01/14/1-14%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://arvenseyz.github.io/2021/01/14/1-14技术笔记/</id>
-    <published>2021-01-14T07:13:03.000Z</published>
-    <updated>2021-01-14T07:59:24.965Z</updated>
-    
-    <content type="html"><![CDATA[<p> 一般来说，缓存有以下三种模式：</p><ul><li><p>Cache Aside 更新模式</p></li><li><p>Read/Write Through 更新模式</p></li><li><p>Write Behind Caching 更新模式</p></li></ul><p>通俗一点来讲就是，同时更新缓存和数据库（Cache Aside 更新模式）；先更新缓存，缓存负责同步更新数据库（Read/Write Through 更新模式）；先更新缓存，缓存定时异步更新数据库（Write Behind Caching 更新模式）</p><h1 id="Cache-Aside-旁路缓存-策略"><a href="#Cache-Aside-旁路缓存-策略" class="headerlink" title="Cache Aside(旁路缓存)策略"></a>Cache Aside(旁路缓存)策略</h1><h2 id="更新缓存的问题"><a href="#更新缓存的问题" class="headerlink" title="更新缓存的问题"></a>更新缓存的问题</h2><p>首先是缓存更新还是删除，采用删除，原因有两点：</p><ol><li><p>对于对象类型，或者文本类型，修改缓存value的成本较高。</p></li><li><p>有并发问题。</p></li></ol><p>即同时有请求A和请求B进行更新操作，那么会出现<br>（1）线程A更新了数据库<br>（2）线程B更新了数据库<br>（3）线程B更新了缓存<br>（4）线程A更新了缓存<br>这就出现请求A更新缓存应该比请求B更新缓存早才对，但是因为网络等原因，B却比A更早更新了缓存。这就导致了脏数据，因此不考虑。</p><h2 id="先删缓存的问题"><a href="#先删缓存的问题" class="headerlink" title="先删缓存的问题"></a>先删缓存的问题</h2><p>其次是先删缓存还是先改数据库。</p><p>都有问题。</p><p>先删缓存问题如下：</p><h3 id="并发问题"><a href="#并发问题" class="headerlink" title="并发问题"></a>并发问题</h3><p>同时有一个请求A进行更新操作，另一个请求B进行查询操作。那么会出现如下情形:<br>（1）请求A进行写操作，删除缓存<br>（2）请求B查询发现缓存不存在<br>（3）请求B去数据库查询得到旧值<br>（4）请求B将旧值写入缓存<br>（5）请求A将新值写入数据库<br>上述情况就会导致不一致的情形出现。而且，如果不采用给缓存设置过期时间策略，该数据永远都是脏数据。</p><h3 id="主从同步问题"><a href="#主从同步问题" class="headerlink" title="主从同步问题"></a>主从同步问题</h3><p>两个请求，一个请求A进行更新操作，另一个请求B进行查询操作。  </p><p>（1）请求A进行写操作，删除缓存<br>（2）请求A将数据写入数据库了，<br>（3）请求B查询缓存发现，缓存没有值<br>（4）请求B去从库查询，这时，还没有完成主从同步，因此查询到的是旧值<br>（5）请求B将旧值写入缓存<br>（6）数据库完成主从同步，从库变为新值</p><h3 id="异步双删"><a href="#异步双删" class="headerlink" title="异步双删"></a>异步双删</h3><p>等一定时间（主从同步时间）后，再次删除</p><h2 id="先更新数据库的问题"><a href="#先更新数据库的问题" class="headerlink" title="先更新数据库的问题"></a>先更新数据库的问题</h2><h3 id="原子性问题"><a href="#原子性问题" class="headerlink" title="原子性问题"></a>原子性问题</h3><p>更新数据库成功，删除缓存失败，不好处理。</p><h3 id="并发问题-1"><a href="#并发问题-1" class="headerlink" title="并发问题"></a>并发问题</h3><p>假设这会有两个请求，一个请求A做查询操作，一个请求B做更新操作，那么会有如下情形产生<br>（1）缓存刚好失效<br>（2）请求A查询数据库，得一个旧值<br>（3）请求B将新值写入数据库<br>（4）请求B删除缓存<br>（5）请求A将查到的旧值写入缓存<br>ok，如果发生上述情况，确实是会发生脏数据。</p><p>但是这种问题，出现在写操作比读操作慢，一般不会发生。</p><h3 id="异步双删-1"><a href="#异步双删-1" class="headerlink" title="异步双删"></a>异步双删</h3><p>也可以解决这个问题。</p><p>异步第二次删除失败怎么处理，搞个失败队列啥的。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt; 一般来说，缓存有以下三种模式：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;Cache Aside 更新模式&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Read/Write Through 更新模式&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Write Behind Caching 更新模式&lt;/p&gt;
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="redis" scheme="https://arvenseyz.github.io/tags/redis/"/>
     
   </entry>
   
