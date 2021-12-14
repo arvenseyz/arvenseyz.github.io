@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="消息队列,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Arvense" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="先回顾下kafka Kafka 以 Topic 作为文件存储的基本单元，即每个 Topic 有其对应的数据文件和索引文件。消息直接存储在partition中，对单topic为顺序写。 这样预期结果是，磁盘顺序写+顺序读，性能很好。 但问题是，是分topic的，如果topic很多，要不停的切topic，顺序读写就被破坏了，降低了性能。 RocketMQ 消息存储 RocketMQ 既然号称能支持万级">
+<meta name="keywords" content="消息队列">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RocketMQ 消息存储">
+<meta property="og:url" content="https://arvenseyz.github.io/2021/12/14/12-14技术笔记-1/index.html">
+<meta property="og:site_name" content="Arvense">
+<meta property="og:description" content="先回顾下kafka Kafka 以 Topic 作为文件存储的基本单元，即每个 Topic 有其对应的数据文件和索引文件。消息直接存储在partition中，对单topic为顺序写。 这样预期结果是，磁盘顺序写+顺序读，性能很好。 但问题是，是分topic的，如果topic很多，要不停的切topic，顺序读写就被破坏了，降低了性能。 RocketMQ 消息存储 RocketMQ 既然号称能支持万级">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/arvenseyz/imageCloud/2a57c077-1ae2-460d-be0b-168329058e70.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/arvenseyz/imageCloud/d27e7402-138b-4654-9bed-1da9175417a1.png">
+<meta property="og:updated_time" content="2021-12-14T09:55:12.164Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RocketMQ 消息存储">
+<meta name="twitter:description" content="先回顾下kafka Kafka 以 Topic 作为文件存储的基本单元，即每个 Topic 有其对应的数据文件和索引文件。消息直接存储在partition中，对单topic为顺序写。 这样预期结果是，磁盘顺序写+顺序读，性能很好。 但问题是，是分topic的，如果topic很多，要不停的切topic，顺序读写就被破坏了，降低了性能。 RocketMQ 消息存储 RocketMQ 既然号称能支持万级">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/arvenseyz/imageCloud/2a57c077-1ae2-460d-be0b-168329058e70.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://arvenseyz.github.io/2021/12/14/12-14技术笔记-1/">
+
+
+
+
+
+  <title>RocketMQ 消息存储 | Arvense</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Arvense</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/12/14/12-14技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">RocketMQ 消息存储</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-12-14T17:04:05+08:00">
+                2021-12-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="先回顾下kafka"><a href="#先回顾下kafka" class="headerlink" title="先回顾下kafka"></a>先回顾下kafka</h2><p><img src="https://cdn.jsdelivr.net/gh/arvenseyz/imageCloud/2a57c077-1ae2-460d-be0b-168329058e70.png" alt></p>
+<p>Kafka 以 Topic 作为文件存储的基本单元，即每个 Topic 有其对应的数据文件和索引文件。消息直接存储在partition中，对单topic为顺序写。</p>
+<p>这样预期结果是，磁盘顺序写+顺序读，性能很好。</p>
+<p>但问题是，是分topic的，如果topic很多，要不停的切topic，顺序读写就被破坏了，降低了性能。</p>
+<h2 id="RocketMQ-消息存储"><a href="#RocketMQ-消息存储" class="headerlink" title="RocketMQ 消息存储"></a>RocketMQ 消息存储</h2><p><img src="https://cdn.jsdelivr.net/gh/arvenseyz/imageCloud/d27e7402-138b-4654-9bed-1da9175417a1.png" alt></p>
+<p>RocketMQ 既然号称能支持万级别topic，肯定不是kafka这么存的。</p>
+<p>首先是存储上不分topic，所以这些topic的内容写在一块的。即CommitLog。</p>
+<p>那既然不同topic，内容在一块，怎么读呢，答案是加一个索引，同时，由于消息仍需要以 Topic 为维度进行消费，因此 RocketMQ 基于 CommitLog 为每个 Topic 异步构建多个逻辑队列（ConsumeQueue），逻辑队列消息是定长的，因为只有表头，存储了这个Queue在CommiLog中的起始offset，log大小和MessageTag的hashCode。</p>
+<p>既然是定长的，根据offset，就能找到消息在ConsumeQueue中的位置，然后再读到在CommiLog中的起始offset，最后从CommiLog读到消息内容。</p>
+<p>消息存储只是把消息主体存储到了物理文件中，但是并没有把消息处理到consumeQueue文件中，那么到底是哪里存入的？答案是起一个线程，不停的轮询，将当前的consumeQueue中的offSet和commitLog中的offSet进行对比，将多出来的offSet进行解析，然后put到consumeQueue中的MapedFile中。</p>
+<p>另外还有个index文件</p>
+<p>index文件是为搜索场景而生的，如果没有搜索业务需求，则这个实现是意义不大的。一般这种搜索，主要用于后台查询验证类使用，或者有其他同的有妙用，不得而知。总之，一切为搜索。它更多的需要借助于时间限定，以key或者id进行查询。</p>
+<p>　那么，如果要查找一个key, 应当如何查找呢？rocketmq会根据时间段找到一个index索引分版，然后再根据key做hash得到一个值，然后定位到 slotValue . 然后再从slotValue去取出索引数据的地址，找到索引数据，然后再回查 commitlog 文件。从而得到具体的消息数据。也就是，相当于搜索经历了四级查询： 索引分片文件查询 -&gt; slotValue 查询 -&gt; 索引数据查询 -&gt; commitlog 查询 。</p>
+<p>看起来比较复杂，但搜索场景毕竟不多。</p>
+<h2 id="RocketMQ-优缺点"><a href="#RocketMQ-优缺点" class="headerlink" title="RocketMQ 优缺点"></a>RocketMQ 优缺点</h2><p>上面的流程，优点是什么呢？</p>
+<p>除了支持多topic外，因为consumequeue数据量小，绝大部分的访问还是Page Cache的访问，而不是磁盘访问。  </p>
+<p>正式部署也可以将CommitLog和consumerQueue放在不同的物理SSD，避免多类文件进行IO竞争。  </p>
+<p>缺点:</p>
+<p>读取消息时，由于不同的topic消息都写在同一个文件，导致读取顺序不连续，造成随机读，降低了读IO。</p>
+<h2 id="怎么降低缺点影响"><a href="#怎么降低缺点影响" class="headerlink" title="怎么降低缺点影响"></a>怎么降低缺点影响</h2><p>（硬件上的原因，缺点似乎不存在了，现在都是ssd，ssd随机读性能很好）</p>
+<h3 id="Mmap"><a href="#Mmap" class="headerlink" title="Mmap"></a>Mmap</h3><p>Mmap内存映射和普通标准IO操作的本质区别在于它并不需要将文件中的数据先拷贝至OS的内核IO缓冲区，而是可以直接将用户进程私有地址空间中的一块区域与文件对象建立映射关系，这样程序就好像可以直接从内存中完成对文件读/写操作一样。只有当缺页中断发生时，直接将文件从磁盘拷贝至用户态的进程空间内，只进行了一次数据拷贝。对于容量较大的文件来说(文件大小一般需要限制在1.5~2G以下)，采用Mmap的方式其读/写的效率和性能都非常高。<br><em>JDK NIO</em>提供的MappedByteBuffer底层就是调用<em>mmap</em>来实现的</p>
+<h3 id="PageCache机制"><a href="#PageCache机制" class="headerlink" title="PageCache机制"></a>PageCache机制</h3><p>PageCache是OS对文件的缓存，用于加速对文件的读写。一般来说，程序对文件进行顺序读写的速度几乎接近于内存的读写访问，这里的主要原因就是在于OS使用PageCache机制对读写访问操作进行了性能优化，将一部分的内存用作PageCache。(1)对于数据文件的读取，如果一次读取文件时出现未命中PageCache的情况，OS从物理磁盘上访问读取文件的同时，会顺序对其他相邻块的数据文件进行预读取(ps：顺序读入紧随其后的少数几个页面)。这样，只要下次访问的文件已经被加载至PageCache时，读取操作的速度基本等于访问内存。(2)对于数据文件的写入，OS会先写入至Cache内，随后通过异步的方式由pdflush内核线程将Cache内的数据刷盘至物理磁盘上。对于文件的顺序读写操作来说，读和写的区域都在OS的PageCache内，此时读写性能接近于内存。RocketMQ的大致做法是，将数据文件映射到OS的虚拟内存中(通过JDK NIO的MappedByteBuffer)，写消息的时候首先写入PageCache，并通过异步刷盘的方式将消息批量的做持久化(同时也支持同步刷盘)；订阅消费消息时(对CommitLog操作是随机读取)，由于PageCache的局部性热点原理且整体情况下还是从旧到新的有序读，因此大部分情况下消息还是可以直接从Page Cache中读取，不会产生太多的缺页(Page Fault)中断而从磁盘读取。</p>
+<h4 id="预先分配MappedFile"><a href="#预先分配MappedFile" class="headerlink" title="预先分配MappedFile"></a>预先分配MappedFile</h4><p>在消息写入过程中(调用CommitLog的putMessage()方法)，CommitLog会先从MappedFileQueue队列中获取一个 MappedFile，如果没有就新建一个。这里，MappedFile的创建过程是将构建好的一个AllocateRequest请求(具体做法是，将下一个文件的路径、下下个文件的路径、文件大小为参数封装为AllocateRequest对象)添加至队列中，后台运行的AllocateMappedFileService服务线程(在Broker启动时，该线程就会创建并运行)，会不停地run，只要请求队列里存在请求，就会去执行MappedFile映射文件的创建和预分配工作，分配的时候有两种策略，一种是使用Mmap的方式来构建MappedFile实例，另外一种是从TransientStorePool堆外内存池中获取相应的DirectByteBuffer来构建MappedFile(ps：具体采用哪种策略，也与刷盘的方式有关)。并且，在创建分配完下个MappedFile后，还会将下下个MappedFile预先创建并保存至请求队列中等待下次获取时直接返回。RocketMQ中预分配MappedFile的设计非常巧妙，下次获取时候直接返回就可以不用等待MappedFile创建分配所产生的时间延迟。</p>
+<h4 id="文件预热-amp-amp-mlock系统调用"><a href="#文件预热-amp-amp-mlock系统调用" class="headerlink" title="文件预热&amp;&amp;mlock系统调用"></a>文件预热&amp;&amp;mlock系统调用</h4><p>(1)mlock系统调用：其可以将进程使用的部分或者全部的地址空间锁定在物理内存中，防止其被交换到swap空间。对于RocketMQ这种的高吞吐量的分布式消息队列来说，追求的是消息读写低延迟，那么肯定希望尽可能地多使用物理内存，提高数据读写访问的操作效率。</p>
+<p>(2)文件预热：预热的目的主要有两点；第一点，由于仅分配内存并进行mlock系统调用后并不会为程序完全锁定这些内存，因为其中的分页可能是写时复制的。因此，就有必要对每个内存页面中写入一个假的值。其中，RocketMQ是在创建并分配MappedFile的过程中，预先写入一些随机值至Mmap映射出的内存空间里。第二，调用Mmap进行内存映射后，OS只是建立虚拟内存地址至物理地址的映射表，而实际并没有加载任何文件至内存中。程序要访问数据时OS会检查该部分的分页是否已经在内存中，如果不在，则发出一次缺页中断。这里，可以想象下1G的CommitLog需要发生多少次缺页中断，才能使得对应的数据才能完全加载至物理内存中(ps：X86的Linux中一个标准页面大小是4KB)？RocketMQ的做法是，在做Mmap内存映射的同时进行madvise系统调用，目的是使OS做一次内存映射后对应的文件数据尽可能多的预加载至内存中，从而达到内存预热的效果。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/消息队列/" rel="tag"># 消息队列</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/12/13/12-13技术笔记-1/" rel="next" title="rocketMq推和拉">
+                <i class="fa fa-chevron-left"></i> rocketMq推和拉
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Arvense</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">260</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">63</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#先回顾下kafka"><span class="nav-number">1.</span> <span class="nav-text">先回顾下kafka</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RocketMQ-消息存储"><span class="nav-number">2.</span> <span class="nav-text">RocketMQ 消息存储</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RocketMQ-优缺点"><span class="nav-number">3.</span> <span class="nav-text">RocketMQ 优缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#怎么降低缺点影响"><span class="nav-number">4.</span> <span class="nav-text">怎么降低缺点影响</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Mmap"><span class="nav-number">4.1.</span> <span class="nav-text">Mmap</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PageCache机制"><span class="nav-number">4.2.</span> <span class="nav-text">PageCache机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#预先分配MappedFile"><span class="nav-number">4.2.1.</span> <span class="nav-text">预先分配MappedFile</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#文件预热-amp-amp-mlock系统调用"><span class="nav-number">4.2.2.</span> <span class="nav-text">文件预热&amp;&amp;mlock系统调用</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a>Arvense</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">blog   </div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
