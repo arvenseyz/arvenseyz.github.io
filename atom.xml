@@ -42,11 +42,11 @@
   </entry>
   
   <entry>
-    <title>rocketMq推和拉</title>
+    <title>RocketMQ 推和拉</title>
     <link href="https://arvenseyz.github.io/2021/12/13/12-13%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
     <id>https://arvenseyz.github.io/2021/12/13/12-13技术笔记-1/</id>
     <published>2021-12-13T06:48:17.000Z</published>
-    <updated>2021-12-13T07:42:26.964Z</updated>
+    <updated>2021-12-15T06:09:12.389Z</updated>
     
     <content type="html"><![CDATA[<h2 id="什么是推和拉"><a href="#什么是推和拉" class="headerlink" title="什么是推和拉"></a>什么是推和拉</h2><p>说到推拉，其实只针对消费者和broker的行为，生产者只有推（不然生产者岂不是还得把消息持久化等着broker来取数据）。</p><p><strong>推模式</strong>指的是consumer与broker建立好网络长连接，broker有相关数据，直接通过长连接通道推送到consumer。其优点是及时，一旦有数据变更，consumer立马能感知到；另外对consumer来说逻辑简单，不需要关心有无数据这些逻辑处理。缺点是不知道consumer的数据消费能力，可能导致数据积压在consumer，来不及处理。</p><p><strong>拉模式</strong>指的是consumer主动向broker发出请求，拉取相关数据。其优点是此过程由consumer发起请求，故不存在推模式中数据积压的问题。缺点是可能不够及时，对consumer来说需要考虑数据拉取相关逻辑，何时去拉，拉的频率怎么控制等等。</p><h2 id="RocketMq的推拉"><a href="#RocketMq的推拉" class="headerlink" title="RocketMq的推拉"></a>RocketMq的推拉</h2><p>RocketMq其实只有拉。</p><p>推是帮填了些参数的拉。consumer把轮询过程封装了，并注册MessageListener监听器，取到消息后，唤醒MessageListener的consumeMessage()来消费，对用户而言，感觉消息是被推送（push）过来的。主要用的也是这种方式。</p><p>如果是拉的话，客户端代码可能得这么写：</p><ol><li><p>注册消费者实例到nameserver</p></li><li><p>查询对应的topic消息队列以便可以消费其下所有数据</p></li><li><p>获取消息队列，消费消息;</p></li><li><p>自行维护保存消费偏移量，以便为下一次消费提供依据;</p></li><li><p>循环以上操作;</p></li></ol><p>可以看见还是比较麻烦。推的话，只需要注册回调方法即可。</p><h3 id="推是用拉-长轮询实现"><a href="#推是用拉-长轮询实现" class="headerlink" title="推是用拉+长轮询实现"></a>推是用拉+长轮询实现</h3><p>后台会有个 RebalanceService 线程，这个线程会根据 topic 的队列数量和当前消费组的消费者个数做负载均衡，每个队列产生的 pullRequest 放入阻塞队列 pullRequestQueue 中。然后又有个 PullMessageService 线程不断的从阻塞队列 pullRequestQueue 中获取 pullRequest，然后通过网络请求 broker，这样实现的准实时拉取消息。</p><p>上面操作相当于帮做了拉的1、2步</p><p>具体怎么长轮询拉的呢</p><p><img src="https://cdn.jsdelivr.net/gh/arvenseyz/imageCloud/9182641-667ee972d01888f3.webp" alt></p>]]></content>
     
