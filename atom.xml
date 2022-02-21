@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2021-12-14T09:55:12.164Z</updated>
+  <updated>2022-02-21T09:03:44.553Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Redis数据倾斜</title>
+    <link href="https://arvenseyz.github.io/2022/02/21/2-21%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>https://arvenseyz.github.io/2022/02/21/2-21技术笔记-1/</id>
+    <published>2022-02-21T08:46:56.000Z</published>
+    <updated>2022-02-21T09:03:44.553Z</updated>
+    
+    <content type="html"><![CDATA[<p>热点读场景，某个热点帖子内容这样，所有的访问量都打到了redis一个实例。单实例压力过大。（我怀疑这种场景真的存在吗？redis单机读取qps能承受万级别）</p><p>产生原因：redis 根据key进行分片计算，分配到redis实例中的一个，导致大部分流量集中访问到同一个redis实例上，即所谓的“访问量倾斜”，导致redis实例达到性能瓶颈</p><p>解决方案：给hotkey加上后缀，把hotkey数量变成redis实例数N的倍数M，从而由访问一个redis key变成访问N*M个redis key</p><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//redis 实例数</span></span><br><span class="line"><span class="keyword">const</span> M = <span class="number">16</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//redis 实例数倍数（按需设计，2^n倍，n一般为1到4的整数）</span></span><br><span class="line"><span class="keyword">const</span> N = <span class="number">2</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"><span class="comment">//获取 redis 实例 </span></span><br><span class="line">    c, err := redis.Dial(<span class="string">"tcp"</span>, <span class="string">"127.0.0.1:6379"</span>)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Println(<span class="string">"Connect to redis error"</span>, err)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">defer</span> c.Close()</span><br><span class="line"></span><br><span class="line">    hotKey := <span class="string">"hotKey:abc"</span></span><br><span class="line">    <span class="comment">//随机数</span></span><br><span class="line">    randNum := GenerateRangeNum(<span class="number">1</span>, N*M)</span><br><span class="line">    <span class="comment">//得到对 hot key 进行打散的 key</span></span><br><span class="line">    tmpHotKey := hotKey + <span class="string">"_"</span> + strconv.Itoa(randNum)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//hot key 过期时间</span></span><br><span class="line">    expireTime := <span class="number">50</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">//过期时间平缓化的一个时间随机值</span></span><br><span class="line">    randExpireTime := GenerateRangeNum(<span class="number">0</span>, <span class="number">5</span>)</span><br><span class="line"></span><br><span class="line">    data, err := redis.String(c.Do(<span class="string">"GET"</span>, tmpHotKey))</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        data, err = redis.String(c.Do(<span class="string">"GET"</span>, hotKey))</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            data = GetDataFromDb()</span><br><span class="line">            c.Do(<span class="string">"SET"</span>, <span class="string">"hotKey"</span>, data, expireTime)</span><br><span class="line">            c.Do(<span class="string">"SET"</span>, tmpHotKey, data, expireTime + randExpireTime)</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            c.Do(<span class="string">"SET"</span>, tmpHotKey, data, expireTime + randExpireTime)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;热点读场景，某个热点帖子内容这样，所有的访问量都打到了redis一个实例。单实例压力过大。（我怀疑这种场景真的存在吗？redis单机读取qps能承受万级别）&lt;/p&gt;
+&lt;p&gt;产生原因：redis 根据key进行分片计算，分配到redis实例中的一个，导致大部分流量集中访问到同
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="redis" scheme="https://arvenseyz.github.io/tags/redis/"/>
+    
+  </entry>
   
   <entry>
     <title>RocketMQ 消息存储</title>
@@ -490,33 +516,6 @@
       
         &lt;h1 id=&quot;ES别名&quot;&gt;&lt;a href=&quot;#ES别名&quot; class=&quot;headerlink&quot; title=&quot;ES别名&quot;&gt;&lt;/a&gt;ES别名&lt;/h1&gt;&lt;p&gt;索引别名可以指向一个或多个索引，并且可以在任何需要索引名称的API中使用。&lt;/p&gt;
 &lt;h3 id=&quot;创建别名&quot;&gt;&lt;a hre
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="ES" scheme="https://arvenseyz.github.io/tags/ES/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>BDK树</title>
-    <link href="https://arvenseyz.github.io/2021/08/12/8-12%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>https://arvenseyz.github.io/2021/08/12/8-12技术笔记-1/</id>
-    <published>2021-08-12T08:27:52.000Z</published>
-    <updated>2021-08-13T07:42:01.647Z</updated>
-    
-    <content type="html"><![CDATA[<p>说到ES，就想到倒排索引，但是有个问题，我们在数字比大小的场景，倒排索引怎么实现呢？</p><p>即range怎么实现的？</p><p>早期的ES，只能把范围转化成in，最多再多一些小优化，自动产生一些区间的term，构建一个基于数字的字典树，但在大范围时依然没用，并且不太好支持多范围查询。</p><p>现在版本，ES对于数字类型，用的不是倒排索引，而是 Block k-d tree</p><h1 id="Block-k-d-tree"><a href="#Block-k-d-tree" class="headerlink" title="Block k-d tree"></a>Block k-d tree</h1><h2 id="k-d-tree"><a href="#k-d-tree" class="headerlink" title="k-d tree"></a>k-d tree</h2><p>k-d树（k-dimensional树的简称），是一种分割k维数据空间的数据结构。主要应用于多维空间关键数据的搜索（如：范围搜索和最近邻搜索）。</p><p>我们想象下二分搜索树：</p><p><strong>二叉搜索树则是在二叉树的基础上加了一些规则</strong>：</p><ul><li>左子树的值都小于父节点</li><li>右子树的值都大于父节点</li></ul><p>如果把BST中的所有元素看成一维线段上的所有点，从树的根节点开始每个节点都会把线段分成两段。</p><p><img src="https://s3.bmp.ovh/imgs/2021/08/365f9e0e6ca0052c.jpeg" alt></p><p>所以BST本质上就是一维K-D树(或者叫做1-D树)</p><p>现在将树中的元素推广到二维平面上的点，树的每一层按照维度轮流划分。比如，奇数层按x轴划分，偶数层按y轴划分，这样就得到一棵二维K-D树(2-d树)</p><p><img src="https://s3.bmp.ovh/imgs/2021/08/345c1f9a74431519.jpeg" alt></p><p>很明显，K-D树和BST一样不仅可以精确查找，也更适合做范围查询，但K-D树比BST更强，它能对多个维度进行范围查询。</p><p>比如：</p><p>Person1(age:18,hight:176)，Person2(age:19,height:181) … Person10(age:23,height:171)</p><p>想要查找年龄在20岁以上并且身高在170到180之间的所有人，用K-D树就能很好的解决。</p><h2 id="K-D-B树"><a href="#K-D-B树" class="headerlink" title="K-D-B树"></a>K-D-B树</h2><p>既然KD树是高维的二叉搜索树，那么它自然也会继承二叉搜索树的缺点：会退化成链表。</p><p>二叉搜索树解决这个问题的办法是：AVL树，红黑树。那么这个办法能否推广到高维空间呢，答案是不能。</p><p>还有个解决方法是B树。有没有高维B树呢，有的：</p><p><img src="https://s3.bmp.ovh/imgs/2021/08/5871bb9a6111b295.jpeg" alt></p><p>但是B树也有问题：B树如果节点中的子节点树超过规定的阶数，就会发生节点分裂（数据库中经常称之为“页”分裂）。</p><p><img src="https://s3.bmp.ovh/imgs/2021/08/15b47785e81116d8.gif" alt></p><p>高维B树当然也继承了这个问题，并且更加严重页分裂的时候不能以B树“一刀切”的方式解决。</p><p>以二维K-D-B树为例，一个节点数据过多，需要分裂时，就需要拆分区域。拆分区域的过程中大概率会出现拆分该区域的子区域。</p><p>所以写入性能很差</p><h2 id="B-K-D树"><a href="#B-K-D树" class="headerlink" title="B-K-D树"></a>B-K-D树</h2><p>再次优化。</p><p>BKD树是二叉树和B+树的组合。比较特殊的是，内部node必须是一个完全二叉树，而叶子node存储的则和K-D-B树一模一样。</p><p><img src="https://s3.bmp.ovh/imgs/2021/08/f6f737dc48a79824.png" alt></p><p><img src="https://s3.bmp.ovh/imgs/2021/08/fdf434231d85f737.jpeg" alt></p><p>B-K-D树结合了二叉树和B+树的特性。比较特殊的是，内部节点必须形成一个完全二叉树，而叶子节点存储方式和K-D-B树叶子相同。</p><p>和堆类似，B-K-D树的内部节点组成了一个完全二叉树。这样的好处是节点不需要存储指向子节点的指针，根据父节点索引即可算出子节点索引。假如一个节点的位置在i ，那这个节点的左节点在位置2 i，右节点在2 i + 1 。</p><p>内部节点本身不包含数据，所有数据存储在叶子节点。较小的节点也意味着内存中可以缓存更多的节点。这一点和B+树类似。</p><p>另外B-K-D树的内部树永远不会被修改，而是使用一种策略来添加新数据。</p><p>首先，有一个大小为M的Buffer。在那片论文里，它是被保存在内存的。这个Buffer, 可能仅仅是一个数组或者性能更好的一些数据结构，毕竟是有查询需求的。论文并没有指明这个Buffer的最优大小，但是直觉上来说，至少应该和K-D树节点一样大。</p><p><img src="https://s3.bmp.ovh/imgs/2021/08/fdf434231d85f737.jpeg" alt></p><p>这里用了类似LSM树的技术。</p><p>如果BKD树由N个数据，那么它有 log2(N/M)个可修改的K-D树。每一个树都是前一个树的2倍。数据首先被插入到内存里的Buffer里，一旦Buffer满了，先定位到第1个为空的树。这个Buffer的数据，以及空树之前所有节点的数据一起生成一个满的平衡树。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;说到ES，就想到倒排索引，但是有个问题，我们在数字比大小的场景，倒排索引怎么实现呢？&lt;/p&gt;
-&lt;p&gt;即range怎么实现的？&lt;/p&gt;
-&lt;p&gt;早期的ES，只能把范围转化成in，最多再多一些小优化，自动产生一些区间的term，构建一个基于数字的字典树，但在大范围时依然没用，并且
       
     
     </summary>
