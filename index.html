@@ -251,6 +251,157 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/02/23/2-22技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2022/02/23/2-22技术笔记-1/" itemprop="url">feed流设计</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-02-23T15:24:58+08:00">
+                2022-02-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>feed流有两种，一种是我关注的人/我好友的，比如说朋友圈，另一种是推荐的，比如头条。</p>
+<p>这里看第一种。</p>
+<h2 id="推拉模式"><a href="#推拉模式" class="headerlink" title="推拉模式"></a>推拉模式</h2><p>简单想到的实现方式就是，每一个内容发布者都有一个自己的发件箱，第一步加载用户所有好友，第二步加载这些好友的所有内容。即拉模式，读扩散。</p>
+<p>这个模式有两个问题，第一是性能问题，关注的人数非常多时性能有问题。第二是业务问题，翻页时有问题。</p>
+<p>有拉就有推，即每个用户都有个收件箱，当发布者发表一篇帖子的时候，除了往自己发件箱记录一下之外，还会遍历发布者的所有粉丝，往这些粉丝的收件箱也投放一份相同内容。这样阅读者来读Feed流时，直接从自己的收件箱读取即可。</p>
+<p>比较适合朋友圈这种场景。比如微博，有人一亿粉丝，这种模式肯定用不了。</p>
+<p>其实这种模式可以混合，粉丝量很少的人，可以用推模式。粉丝量多的人，只推给活跃粉丝。</p>
+<p>非活跃粉丝刷feed流时，一方面要读自己的收件箱，另一方面也要拉关注的大v的发件箱。</p>
+<h2 id="分页问题"><a href="#分页问题" class="headerlink" title="分页问题"></a>分页问题</h2><p>即加载第二页时，由于按时间排的，有新的内容导致第一页的内容被挤到第二页，这样又看见第一页的内容。</p>
+<p>比较简单的方法是，加一个last_id</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/02/21/2-21技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1766,197 +1917,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/10/09/10-9技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/10/09/10-9技术笔记-1/" itemprop="url">redis分布式锁</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-10-09T14:52:04+08:00">
-                2021-10-09
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="Redis是AP系统"><a href="#Redis是AP系统" class="headerlink" title="Redis是AP系统"></a>Redis是AP系统</h2><p>先抛个结论：</p>
-<p>“redis多机房同步是最终一致的，如有分布式锁的需求，会有锁不上的情况，业务可根据文档考虑使用强一致的存储组件！” from redis 用户文档</p>
-<p>因此redis锁只能作为弱校验，而不能作为强依赖，必须要其他强一致的系统保证其一致性。</p>
-<h2 id="Redis锁实现原理"><a href="#Redis锁实现原理" class="headerlink" title="Redis锁实现原理"></a>Redis锁实现原理</h2><p>而redis锁锁不住的原因要从redis锁的实现讲起。redis锁主要基于两个命令，<strong>setnx &amp;</strong> <strong>cad</strong>，（注意不是redlock，redlock和这两个命令没有关系，下面最后一个部分会提）</p>
-<p><strong>加锁setnx</strong></p>
-<p>setnx命令会被redis client解析为</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SET key value NX PX 30000</span><br></pre></td></tr></table></figure>
-<ul>
-<li>其中key通常为我们想锁住的<code>key</code>，而<code>value</code>应当为一个随机数，原因在解锁的部分讲</li>
-<li><code>NX</code>代表只有key为空时才会set成功</li>
-<li><code>PX 30000</code> 指过期时间30s</li>
-</ul>
-<p><strong>解锁</strong>  <strong>cad</strong> <strong>（已被公司级别支持）</strong></p>
-<p>cad指<code>compare and delete</code>操作，该操作其实内部执行Redis lua脚本保证cad操作的中不会被其他操作穿插</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if redis.call(&quot;get&quot;,KEYS[1]) == ARGV[1] then </span><br><span class="line">  return redis.call(&quot;del&quot;,KEYS[1])</span><br><span class="line">else </span><br><span class="line">  return 0 </span><br><span class="line">end</span><br></pre></td></tr></table></figure>
-<ul>
-<li>为什么锁还需要设置随机<code>value</code>去compare？因为虽然redis数据库单线程，但是客户端却可能为多线程，试想以下逻辑：</li>
-</ul>
-<p><a href="https://imgtu.com/i/5FANLj" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/10/09/5FANLj.png" alt="5FANLj.png"></a></p>
-<p>若发生以上时序，client1由于处理请求时被阻塞，导致client2获取的锁会被client1解锁，进而导致锁失效。特别是我们应用代码中通常设置的时长较短（1s - 5s），更增加以上情况出现的几率。</p>
-<ul>
-<li>i/o timeout如何做？</li>
-</ul>
-<p>有些人会觉得奇怪为什么上面的这段代码没有做错误校验，正确的做法是不是应该是这样？</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">err := redis.SetNX(key, value, duration)</span><br><span class="line">if err != nil &#123;</span><br><span class="line">    return </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>其实不然，试想<code>SetNX</code> 发生timeout，但其实Redis客户端<strong>收到</strong>该请求，只是respond<strong>回复超时</strong>，该锁会一直被持有直到timeout。</p>
-<p>比较正确的逻辑为：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">err := redis.SetNX(key, randomNum, duration)</span><br><span class="line">defer redis.CAD(key, randomNum)</span><br><span class="line">if err != nil &#123;</span><br><span class="line">    return </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>由randomNum来保证key有且仅会被本客户端线程解锁，即使失败，也不会把其他客户端线程的锁unlock（因为randomNum不一致，compare阶段错误）。该逻辑更体现了设置randomNum为value的必要性。这个随机数应当可以保证在一段时间内只被同一client持有，比较偷懒的方法是使用server id + unix microsecond时间戳，在大部分场景下应该足够了。</p>
-<ul>
-<li>Expire time如何定？</li>
-</ul>
-<p>其实这也是个两难问题，若超时时间过短，则锁不住整个流程处理时间，可能被抢锁；若超时时间过长，则解锁操作<code>redis.CAD(key, randomNum)</code>失败时，会导致key被锁住过长时间。因此需根据实际业务场景而定。</p>
-<h2 id="分布式redis情况如何？"><a href="#分布式redis情况如何？" class="headerlink" title="分布式redis情况如何？"></a>分布式redis情况如何？</h2><p>即使我们在实现上都按照完美的路径，以上实现也是基于单机情况，在分布式场景下，由于redis多机房同步是最终一致的，当主节点不可用时，系统自动切换到副节点（即failover的过程），由于主从非同步，在failover的过程中会导致锁被抢。试想以下时序：</p>
-<ol>
-<li>master拿到锁a</li>
-<li>slave1-master同步开启</li>
-<li>master宕机，failover开始</li>
-<li>slave1-master同步未完成</li>
-<li>slave1被选举为master，锁a丢失，可被抢</li>
-</ol>
-<p>虽然很多人觉得failover的情况很少，以上可以忽略，实际上根据我们现在的使用方法，某个历史活动的并发情况而言，已经出现大量的并发锁被抢引起的错误（日均300+，from QPS大概400左右的并发请求）。</p>
-<h2 id="正确姿势如何做？"><a href="#正确姿势如何做？" class="headerlink" title="正确姿势如何做？"></a>正确姿势如何做？</h2><p>redis针对单机redis锁的问题，提出了redlock的解决方案，但是redlock也有些争议，同时其不太适合公司的redis架构，在这里不多做讨论。</p>
-<p>如果要了解正确的锁姿势，首先要分析分布式锁的场景，一般来说，可以分为两种，为了效率加锁，和为了正确性加锁。</p>
-<ul>
-<li>为效率加锁，即为了一些计算的重复；即使失败，也只是把某些操作多做一遍，例如条件多校验一遍</li>
-<li>为了正确性加锁，即不允许分布式锁失败；若失败可能产生不可回滚的脏数据</li>
-</ul>
-<p>若为了效率加锁，使用单机的redis锁已经足够，单重要的是清楚单机redis锁在分布式场景下的限制。</p>
-<p>若为了正确性加锁，一定要使用强一致性保障（bytekv，zookeeper）等，基架推荐尝试bytekv。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2007,7 +1967,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">261</span>
+                  <span class="site-state-item-count">262</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -2029,7 +1989,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">63</span>
+                  <span class="site-state-item-count">64</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

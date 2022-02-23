@@ -251,6 +251,162 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/12/25/leetcode98-235-236/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/12/25/leetcode98-235-236/" itemprop="url">二叉树是不是二叉搜索树，二叉搜索树最低公共父节点，二叉树最低公共父节点</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-25T17:34:23+08:00">
+                2018-12-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/leetcode/" itemprop="url" rel="index">
+                    <span itemprop="name">leetcode</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="98"><a href="#98" class="headerlink" title="98"></a>98</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>验证一颗二叉树是不是二叉搜索树</p>
+<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><p>二叉搜索树要求很严格的，要求左子树上所有结点的值均小于它的根结点的值，右子树反过来。因此光看左右子节点和父节点大小关系是错误的的。</p>
+<p>当然可以递归验证，递归左子树小于父节点。而实际上，中序搜索就是这样的递归过程。</p>
+<p>因而二叉搜索树有这样的性质：中序遍历输出是递增的。</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isValidBST</span><span class="params">(TreeNode root)</span> </span>&#123;</span><br><span class="line">        ArrayList list = <span class="keyword">new</span> ArrayList();</span><br><span class="line">        <span class="keyword">if</span>(root==<span class="keyword">null</span>)<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        find(root, list);</span><br><span class="line">        <span class="keyword">if</span>(list.size() == <span class="number">1</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt; list.size(); i++) &#123;</span><br><span class="line">            <span class="keyword">if</span>((<span class="keyword">int</span>)list.get(i)&lt;=(<span class="keyword">int</span>)list.get(i-<span class="number">1</span>))&#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">find</span><span class="params">(TreeNode root, ArrayList list)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(root.left != <span class="keyword">null</span>) &#123;</span><br><span class="line">            find(root.left, list);</span><br><span class="line">        &#125;</span><br><span class="line">        list.add(root.val);</span><br><span class="line">        <span class="keyword">if</span>(root.right != <span class="keyword">null</span>) &#123;</span><br><span class="line">            find(root.right, list);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="感想"><a href="#感想" class="headerlink" title="感想"></a>感想</h2><p>前序中序后序的“前中后”，指的是根节点的位置。前序就是中左右，中在前。</p>
+<h1 id="235"><a href="#235" class="headerlink" title="235"></a>235</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>给一个二叉搜索树，给定两个节点，求他们的最低共同父节点。</p>
+<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>利用二叉搜索树左&lt;中&lt;右的特点，递归搜索左右子树。</p>
+<p>如果根节点在两个给定值之间，说明答案就是根节点。如果根节点小于两个给定值，说明答案在右子树。</p>
+<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> TreeNode <span class="title">lowestCommonAncestor</span><span class="params">(TreeNode root, TreeNode p, TreeNode q)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">if</span>(root == <span class="keyword">null</span>)</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">                <span class="keyword">if</span>((root.val &gt;= p.val &amp;&amp; root.val &lt;= q.val) || (root.val &gt;= q.val &amp;&amp; root.val &lt;= p.val))</span><br><span class="line">                    <span class="keyword">return</span> root;</span><br><span class="line">                <span class="keyword">if</span>(root.val &lt; p.val &amp;&amp; root.val &lt; q.val)</span><br><span class="line">                    <span class="keyword">return</span> lowestCommonAncestor(root.right,p,q);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span>(root.val &gt; p.val &amp;&amp; root.val &gt; q.val)</span><br><span class="line">                    <span class="keyword">return</span> lowestCommonAncestor(root.left,p,q);</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<h1 id="236"><a href="#236" class="headerlink" title="236"></a>236</h1><h2 id="题目-2"><a href="#题目-2" class="headerlink" title="题目"></a>题目</h2><p>给一个二叉树，给定两个节点，求他们的最低共同父节点。</p>
+<h2 id="解答-2"><a href="#解答-2" class="headerlink" title="解答"></a>解答</h2><p>有这样思路，第一输出两个节点的”路径”，即每一级所经过的节点。然后第一个不同的节点就是答案。怎么找到路径呢？先搜索到节点，比如先序遍历，遍历的同时用哈希表记录下每个节点的父节点，找到节点后，从哈希表循环读父节点直到根节点。</p>
+<p>实际上，参考二叉搜索树，如果根节点的值，就是某个给定值，说明答案就是根节点。如果不是，递归左子树，要是左子树里没有这两个值，说明答案在右子树。</p>
+<h2 id="代码-2"><a href="#代码-2" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> TreeNode <span class="title">lowestCommonAncestor</span><span class="params">(TreeNode root, TreeNode p, TreeNode q)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span>(root == <span class="keyword">null</span> || root.val == p.val || root.val == q.val) &#123;</span><br><span class="line">                <span class="keyword">return</span> root;</span><br><span class="line">            &#125;</span><br><span class="line">            TreeNode leftN = lowestCommonAncestor(root.left, p, q);</span><br><span class="line">            TreeNode rightN = lowestCommonAncestor(root.right, p, q);</span><br><span class="line">            <span class="keyword">if</span>(leftN != <span class="keyword">null</span> &amp;&amp; rightN != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> root;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span>(leftN == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> rightN;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// else if(rightN == null)</span></span><br><span class="line">            <span class="keyword">return</span> leftN;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="感想-1"><a href="#感想-1" class="headerlink" title="感想"></a>感想</h2><p>递归过程还是很难想明白的。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/12/24/leetcode239-242-703/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1716,154 +1872,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/12/07/12-7技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/12/07/12-7技术笔记/" itemprop="url">redis运营细节</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-07T18:02:32+08:00">
-                2018-12-07
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="Stream"><a href="#Stream" class="headerlink" title="Stream"></a>Stream</h2><p>新版本redis退出了stream，这样基本实现了消息中间件功能。借鉴了很多kafka设计，功能似乎很齐全。</p>
-<h2 id="info"><a href="#info" class="headerlink" title="info"></a>info</h2><p>redis运维指令info，告诉各种运行状况</p>
-<h2 id="分布式锁"><a href="#分布式锁" class="headerlink" title="分布式锁"></a>分布式锁</h2><p>集群下使用分布式锁，有一致性问题，比如在 Sentinel 集群中，主节点挂掉时，从节点会取而代之，客户端上却并没有明显感知。原先第一个客户端在主节点中申请成功了一把锁，但是这把锁还没有来得及同步到从节点，主节点突然挂掉了。然后从节点变成了主节点，这个新的节点内部没有这个锁，所以当另一个客户端过来请求加锁时，立即就批准了。这样就会导致系统中同样一把锁被两个客户端同时持有，不安全性由此产生。<br>如果不能容忍的话，redis有redlock算法，牺牲了性能，增加了类库，解决了这个问题。但是我觉得，还是应该从业务出发。redis应该性能优先，保证安全性不应该在redis这一层做。</p>
-<h2 id="过期策略"><a href="#过期策略" class="headerlink" title="过期策略"></a>过期策略</h2><p>为了避免很多同时过期，带来淘汰的压力。应该给expire加上个随机的时间，这样过期会均匀分布。</p>
-<h2 id="内存溢出"><a href="#内存溢出" class="headerlink" title="内存溢出"></a>内存溢出</h2><p>Redis基于内存的，但当内存空间不足时，需要和磁盘交互。此时采用的是随机方法逼近LRU(最近最久未使用)，即每次随机采样，淘汰最旧。但我觉得，不应该让redis内存溢出，而不是靠与磁盘交互来解决问题。</p>
-<h2 id="Jedis"><a href="#Jedis" class="headerlink" title="Jedis"></a>Jedis</h2><p>Java 程序一般都是多线程的应用程序，意味着我们很少直接使用 Jedis，而是要用到 Jedis 的连接池 —— JedisPool。同时因为 Jedis 对象不是线程安全的，当我们要使用 Jedis 对象时，需要从连接池中拿出一个 Jedis 对象独占，使用完毕后再将这个对象还给连接池。为了避免在使用时出现异常，应该用try-with-resource 语句来保护 Jedis 对象。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[] args) &#123;</span><br><span class="line">    JedisPool pool = new JedisPool();</span><br><span class="line">    try (Jedis jedis = pool.getResource()) &#123; // 用完自动 close</span><br><span class="line">      doSomething(jedis);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1914,7 +1922,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">261</span>
+                  <span class="site-state-item-count">262</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1936,7 +1944,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">63</span>
+                  <span class="site-state-item-count">64</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
