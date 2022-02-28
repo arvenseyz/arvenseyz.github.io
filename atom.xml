@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2022-02-25T08:26:08.876Z</updated>
+  <updated>2022-02-28T07:22:05.656Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>短链系统设计</title>
+    <link href="https://arvenseyz.github.io/2022/02/28/2-28%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>https://arvenseyz.github.io/2022/02/28/2-28技术笔记-1/</id>
+    <published>2022-02-28T06:09:59.000Z</published>
+    <updated>2022-02-28T07:22:05.656Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="编码"><a href="#编码" class="headerlink" title="编码"></a>编码</h1><p>首先是短链怎么生成。</p><p>一个想法是id生成器，但是id生成首先需要考虑的是单点故障问题，优秀的id生成器应该是分布式发号器，每个生成器先从中央协调器（例如ZooKeeper）保留一块id序列，这些id生成器可以单独从他们的id序列中分配id，有必要的时候在自己的id序列中做一些清理。</p><p>另一个想法是哈希，比如md5，但是哈希的问题是冲突，当发生哈希冲突了，意味着两个长链接对应的短链是一样的，解决冲突的办法可以是布隆过滤器（一定不存在，可能存在），如果冲突了，需要重新编码，比如说再拼接一段特殊字符再编码，解码时取消掉即可。另外就是没必要使用加密型的哈希算法， 可以使用<strong>MurmurHash</strong>这种非加密的，好处是速度快。</p><h1 id="存储"><a href="#存储" class="headerlink" title="存储"></a>存储</h1><p>短链很多，存储压力较大，一个简便的分布式系存储比如mongo的确可以满足需要，但是考虑到使用场景，可能可以自动清理过期的。</p><h1 id="跳转"><a href="#跳转" class="headerlink" title="跳转"></a>跳转</h1><blockquote><p>301，代表 永久重定向，也就是说第一次请求拿到长链接后，下次浏览器再去请求短链的话，不会向短网址服务器请求了，而是直接从浏览器的缓存里拿，这样在 server 层面就无法获取到短网址的点击数了，如果这个链接刚好是某个活动的链接，也就无法分析此活动的效果。所以我们一般不采用 301。</p><p> 302，代表 临时重定向，也就是说每次去请求短链都会去请求短网址服务器（除非响应中用 Cache-Control 或 Expired 暗示浏览器缓存）,这样就便于 server 统计点击数，所以虽然用 302 会给 server 增加一点压力，但在数据异常重要的今天，这点代码是值得的，所以推荐使用 302！</p></blockquote><p>实际上可以直接跳过服务端，使用openResty等的HTTP服务器插件，前端直接访问数据库</p><h1 id="数据"><a href="#数据" class="headerlink" title="数据"></a>数据</h1><p>由几个不同部分去做这件事情生成访问流数据，收集整理，每过一段时间写到永久数据库中，用一个延迟较低的信息系统去暂时存储访问数据，然后将数据交给收集整理部分，面试者可能会问访问数据多久需要被更新一次。如果每天更新，一个比较合理的方法是存储在HDFS，用map/reduce去计算数据。 如果是要近乎实时的数据，收集整理的部分就要计算出所需的数据</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;编码&quot;&gt;&lt;a href=&quot;#编码&quot; class=&quot;headerlink&quot; title=&quot;编码&quot;&gt;&lt;/a&gt;编码&lt;/h1&gt;&lt;p&gt;首先是短链怎么生成。&lt;/p&gt;
+&lt;p&gt;一个想法是id生成器，但是id生成首先需要考虑的是单点故障问题，优秀的id生成器应该是分布式发号器，每个
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="系统设计" scheme="https://arvenseyz.github.io/tags/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/"/>
+    
+  </entry>
   
   <entry>
     <title>红包技术设计</title>
@@ -492,31 +518,6 @@
       
         &lt;p&gt;如scroll=1m则把查询结果在下一次请求上来时暂存1分钟，response比传统的返回多了一个scroll_id，下次带上这个scroll_id即可找回这个缓存的结果。这里就scroll完成的逻辑。&lt;/p&gt;
 &lt;p&gt;Scroll方式通过一次查询请求后维护一个临时的索引快照
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="ES" scheme="https://arvenseyz.github.io/tags/ES/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>ES的search after</title>
-    <link href="https://arvenseyz.github.io/2021/09/14/9-14%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://arvenseyz.github.io/2021/09/14/9-14技术笔记/</id>
-    <published>2021-09-14T06:29:27.000Z</published>
-    <updated>2021-09-15T08:27:14.906Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="search-after"><a href="#search-after" class="headerlink" title="search after"></a>search after</h1><p>es搜索带sort字段时，也会返回，sort对应的值</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?pretty</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span>,</span><br><span class="line">  <span class="attr">"sort"</span>: &#123;</span><br><span class="line">    <span class="attr">"date"</span>: <span class="string">"asc"</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">"hits" : [</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">"_index"</span> : <span class="string">"yz_test"</span>,</span><br><span class="line">    <span class="attr">"_type"</span> : <span class="string">"_doc"</span>,</span><br><span class="line">    <span class="attr">"_id"</span> : <span class="string">"1"</span>,</span><br><span class="line">    <span class="attr">"_score"</span> : <span class="literal">null</span>,</span><br><span class="line">    <span class="attr">"_source"</span> : &#123;</span><br><span class="line">      <span class="attr">"title"</span> : <span class="string">"Some short title"</span>,</span><br><span class="line">      <span class="attr">"date"</span> : <span class="string">"2015-01-01"</span>,</span><br><span class="line">      <span class="attr">"content"</span> : <span class="string">"A very long content field..."</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"sort"</span> : [</span><br><span class="line">      <span class="number">1420070400000</span></span><br><span class="line">    ]</span><br><span class="line">  &#125;,</span><br></pre></td></tr></table></figure><p>这时把sort的值，放到search after里，可以继续往下搜</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?pretty</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span>,</span><br><span class="line">  <span class="attr">"sort"</span>: &#123;</span><br><span class="line">    <span class="attr">"date"</span>: <span class="string">"asc"</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">"search_after"</span>: [</span><br><span class="line">    <span class="number">1420070400000</span></span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">"hits" : [</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">"_index"</span> : <span class="string">"yz_test2"</span>,</span><br><span class="line">    <span class="attr">"_type"</span> : <span class="string">"_doc"</span>,</span><br><span class="line">    <span class="attr">"_id"</span> : <span class="string">"3"</span>,</span><br><span class="line">    <span class="attr">"_score"</span> : <span class="literal">null</span>,</span><br><span class="line">    <span class="attr">"_source"</span> : &#123;</span><br><span class="line">      <span class="attr">"title"</span> : <span class="string">"Some short title2"</span>,</span><br><span class="line">      <span class="attr">"date"</span> : <span class="string">"2016-01-01"</span>,</span><br><span class="line">      <span class="attr">"content"</span> : <span class="string">"A very long content field..."</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"sort"</span> : [</span><br><span class="line">      <span class="number">1451606400000</span></span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure><p>search after的好处是，不用把前n页的数据全部拿到，但是searchAfter也是全部搜索了一遍，只不过在collect过程中添加了一个上一页最后doc和当前返回的doc对比，这个过程时间复杂度为o(n)，也就是说，相比于search，并不能优化速度，时间复杂度还是o(n)，但是至少不会oom，可以搜出来。</p><p>举个例子。</p><p>一共10个分片，每个分片10条数据。现在需要第91到100条。</p><p>from+size的方式，必须的每个分片都吐出所有数据，然后协调者把这100条排序。</p><p>因为每个分片不知道其他分片数据的情况。</p><p>而search after的数据，只需要每个分片给出大于第90数据的数据即可。但是这个分片依然要扫描所有数据，才知道哪些数据大于90的。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;search-after&quot;&gt;&lt;a href=&quot;#search-after&quot; class=&quot;headerlink&quot; title=&quot;search after&quot;&gt;&lt;/a&gt;search after&lt;/h1&gt;&lt;p&gt;es搜索带sort字段时，也会返回，sort对应的值&lt;/p&gt;
       
     
     </summary>
