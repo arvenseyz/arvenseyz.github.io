@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2022-02-28T07:22:05.656Z</updated>
+  <updated>2022-03-01T09:11:52.004Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -15,6 +15,60 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>redis与Reactor模式</title>
+    <link href="https://arvenseyz.github.io/2022/03/01/3-1%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-2/"/>
+    <id>https://arvenseyz.github.io/2022/03/01/3-1技术笔记-2/</id>
+    <published>2022-03-01T07:18:04.000Z</published>
+    <updated>2022-03-01T09:11:52.004Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="同步和阻塞"><a href="#同步和阻塞" class="headerlink" title="同步和阻塞"></a>同步和阻塞</h1><p>很多时候同步和阻塞是同义词，nio这里会分开说，怎么理解</p><p>首先，所有的io分为两步，第一步等待数据，第二步写入数据到输出。</p><p>比如等待打字是第一步，把键盘输入解析处理屏幕显示是第二步。</p><blockquote><p>阻塞：是否阻塞主要体现在调用的线程是否可以干别的，关注的是程序的等待状态</p><p>同步：是否同步体现在<strong>消息通信机制上</strong> 。</p><p>也就是说同步和异步说的是消息的通知机制，阻塞非阻塞说的是线程的状态 。</p></blockquote><p><strong>是否同步的判断依据是:是否针对的是整个过程，也就是2个阶段，是否有阻塞。</strong></p><p><strong>是否阻塞的判断依据是:按程序（线程）等待消息通知时的状态角度来说的，也就是主要是针对第一阶段来说。</strong></p><h1 id="五种IO模型"><a href="#五种IO模型" class="headerlink" title="五种IO模型"></a>五种IO模型</h1><h3 id="bio"><a href="#bio" class="headerlink" title="bio"></a>bio</h3><p>最传统当然是阻塞式的IO，即blocking，BIO</p><p>在这个IO模型中，用户空间的应用程序执行一个系统调用（recvform），这会导致应用程序阻塞，什么也不干，直到数据准备好，等待kernel准备好从网络上接收到的数据报 + 等待收到的报文被从kernel复制到buf中，recvfrom方法才会返回，最后进程再处理数据。</p><p>这就是阻塞式IO模型。</p><p>即起一个线程等待键盘输入（第一步），输入后，处理输出到屏幕（第二步）</p><h3 id="非阻塞式I-O"><a href="#非阻塞式I-O" class="headerlink" title="非阻塞式I/O"></a>非阻塞式I/O</h3><p>优化第一步为轮询，即为非阻塞io。</p><p>非阻塞的recvform系统调用调用之后，进程并没有被阻塞，内核马上返回给进程，如果数据还没准备好，此时会返回一个error。进程在返回之后，可以干点别的事情，然后再发起recvform系统调用。如此循环的进行recvform系统调用，检查内核数据，直到数据准备好，再拷贝数据到进程。<strong>拷贝数据整个过程，进程仍然是属于阻塞的状态</strong>。</p><h3 id="I-O复用"><a href="#I-O复用" class="headerlink" title="I/O复用"></a>I/O复用</h3><p>第一步优化为回调，这样一个线程可以监听多个回调，即为I/O复用</p><p>IO multiplexing就是我们说的select，poll，epoll 。为何叫多路复用，是因为它I/O多路复用可以同时监听多个fd，如此就减少了为每个需要监听的fd开启线程的开销。</p><p>select调用是内核级别的，可以等待多个socket，能实现同时对多个IO端口进行监听<code>，当其中任何一个socket的数据准好了，</code>就能返回进行可读<code>，</code>然后进程再进行recvform系统调用，将数据由内核拷贝到用户进程，这个过程是阻塞的。</p><p>I/O复用模型会用到select、poll、epoll函数，这几个函数也会使进程阻塞，但是和阻塞I/O所不同的的，这几个函数可以同时阻塞多个I/O操作`。而且可以同时对多个读操作，多个写操作的I/O函数进行检测，直到有数据可读或可写时（不是等到socket数据全部到达再处理, 而是有了一部分数据就会调用用户进程来处理），才真正调用I/O操作函数。</p><p>IO复用有人把其成为同步非阻塞的，也有称为同步阻塞。其实这个是否阻塞还需要看第一个阶段，第一个阶段有的阻塞，有的不阻塞。主要也是阻塞在select阶段，属于用户主动等待阶段，我们且规范为阻塞状态，所以，<code>把IO多路复用归为同步阻塞模式</code></p><h2 id="信号驱动式I-O"><a href="#信号驱动式I-O" class="headerlink" title="信号驱动式I/O"></a>信号驱动式I/O</h2><p>等待回调可以再优化，由一个线程阻塞等待，优化为信号驱动，这样监听回调线程也不阻塞。</p><p>信号驱动式I/O：首先我们允许Socket进行信号驱动IO,并安装一个信号处理函数，进程继续运行并不阻塞。当数据准备好时，进程会收到一个SIGIO信号，可以在信号处理函数中调用I/O操作函数处理数据。</p><h3 id="异步I-O"><a href="#异步I-O" class="headerlink" title="异步I/O"></a>异步I/O</h3><p>异步IO不是顺序执行,用户进程进行aio_read系统调用之后，无论内核数据是否准备好，都会直接返回给用户进程，然后用户态进程可以去做别的事情。等到socket数据准备好了，内核直接复制数据给进程，<code>然后从内核向进程发送通知</code>。<code>IO两个阶段，进程都是非阻塞的</code>。</p><p><a href="https://imgtu.com/i/blpGfH" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/blpGfH.png" alt="blpGfH.png"></a></p><h1 id="Reactor"><a href="#Reactor" class="headerlink" title="Reactor"></a>Reactor</h1><p>Reactor 就是基于NIO中实现多路复用的一种模式</p><h3 id="单线程Reactor模式"><a href="#单线程Reactor模式" class="headerlink" title="单线程Reactor模式"></a>单线程Reactor模式</h3><p><a href="https://imgtu.com/i/bl9d29" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/bl9d29.jpg" alt="bl9d29.jpg"></a></p><p>如图，即和NIO的描述基本一致。</p><p>只有一个<code>select</code>循环接收请求，客户端（client）注册进来由<code>Reactor</code>接收注册事件，然后再由reactor分发（dispatch）出去，由下面的处理器（Handler）去处理。</p><p>等待数据是阻塞式多路复用，处理输出数据是阻塞式在accepter中。</p><p>单线程的问题实际上是很明显的。只要其中一个Handler方法阻塞了，那就会导致所有的client的Handler都被阻塞了，也会导致注册事件也无法处理，无法接收新的请求。所以这种模式用的比较少，因为不能充分利用到多核的资源。</p><p>这种模式仅仅只能处理Handler比较快速完成的场景。</p><p>实际上5.0及其以前的redis就是这个模式，因为redis的handler的确能快速完成。</p><p>IO多路复用程序接收到用户的请求后，全部推送到一个队列里，交给文件分派器。对于后续的操作，和在 reactor 单线程实现方案里看到的一样，整个过程都在一个线程里完成，因此 Redis 被称为是单线程的操作。</p><p><a href="https://imgtu.com/i/blPn6s" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/blPn6s.png" alt="blPn6s.png"></a></p><h3 id="Reactor模式-工作者线程池模式"><a href="#Reactor模式-工作者线程池模式" class="headerlink" title="Reactor模式-工作者线程池模式"></a>Reactor模式-工作者线程池模式</h3><p>我们应该将非I/O的业务逻辑操作从Reactor线程上卸载，以此来加速Reactor线程对I/O请求的响应。与单线程模式不同的是，添加了一个<strong>工作者线程池</strong>，并将非I/O操作从Reactor线程中移出转交给工作者线程池（Thread Pool）来执行。这样能够提高Reactor线程的I/O响应，不至于因为一些耗时的业务逻辑而延迟对后面I/O请求的处理。</p><p><a href="https://imgtu.com/i/blCeqx" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/blCeqx.png" alt="blCeqx.png"></a></p><p>6.0之后的redis即为该模式</p><p>在 Redis 中，单线程的性能瓶颈主要在网络IO操作上。也就是在读写网络 read/write 系统调用执行期间会占用大部分 CPU 时间。如果你要对一些大的键值对进行删除操作的话，在短时间内是删不完的，那么对于单线程来说就会阻塞后边的操作。</p><p>好像其实不是标准的工作者线程池模式</p><p>多线程大部分逻辑和之前的单线程模型是一致的，变动的地方仅仅是把读取客户端请求命令和回写响应数据的逻辑异步化了，交给 I/O 线程去完成，这里需要特别注意的一点是：<strong>I/O 线程仅仅是读取和解析客户端命令而不会真正去执行命令，客户端命令的执行最终还是要在主线程上完成</strong>。</p><p>Redis 把处理逻辑交还给 Master 线程，虽然一定程度上增加了模型复杂度，但也解决了线程并发安全等问题。</p><p><a href="https://imgtu.com/i/blkuXd" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/blkuXd.png" alt="blkuXd.png"></a></p><h3 id="多Reactor多线程模型"><a href="#多Reactor多线程模型" class="headerlink" title="多Reactor多线程模型"></a>多Reactor多线程模型</h3><p>是将Reactor分成两部分，</p><blockquote><ol><li><p>mainReactor负责监听server socket，用来处理新连接的建立，将建立的socketChannel指定注册给subReactor。</p></li><li><p>subReactor维护自己的selector, 基于mainReactor 注册的socketChannel多路分离IO读写事件，读写网 络数据，对业务处理的功能，另其扔给worker线程池来完成。</p></li></ol></blockquote><p>mainReactor 主要是用来处理网络IO 连接建立操作，通常一个线程就可以处理，而subReactor主要做和建立起来的socket做数据交互和事件业务处理操作，它的个数上一般是和CPU个数等同，每个subReactor一个线程来处理。</p><p>nginx和netty应该是使用这种模式</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;同步和阻塞&quot;&gt;&lt;a href=&quot;#同步和阻塞&quot; class=&quot;headerlink&quot; title=&quot;同步和阻塞&quot;&gt;&lt;/a&gt;同步和阻塞&lt;/h1&gt;&lt;p&gt;很多时候同步和阻塞是同义词，nio这里会分开说，怎么理解&lt;/p&gt;
+&lt;p&gt;首先，所有的io分为两步，第一步等待数据，第
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="redis" scheme="https://arvenseyz.github.io/tags/redis/"/>
+    
+      <category term="计算机网络" scheme="https://arvenseyz.github.io/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>12306跨站卖票设计</title>
+    <link href="https://arvenseyz.github.io/2022/03/01/3-1%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>https://arvenseyz.github.io/2022/03/01/3-1技术笔记-1/</id>
+    <published>2022-03-01T03:14:24.000Z</published>
+    <updated>2022-03-01T03:20:58.853Z</updated>
+    
+    <content type="html"><![CDATA[<p>我们以北京到西安这趟高铁为例，比如我的路线就是从北京到西安，车上如果只剩最后一张票了，那么如果有其他人，在北京到西安这条路线之间买任何一站，那么我都是买不了票的，换句话说，对于单个座位来说，必须是起点到目的地之间的所有站，都没有人买的话，那么才能被算是有票状态。</p><p>所以我们可以尝试用bitmap结合上位操作来实现这种场景，以上述北京到西安为例，我们把问题简化</p><ul><li><p>比如一个火车上只有4个座位</p></li><li><p>北京到西安，一共是4站，其实是三个区间的，分别为北京-&gt;石家庄，石家庄-&gt;郑州，郑州-&gt;西安</p></li></ul><h4 id="首先我们给每个区间构建一个空位图-0为有票，1为无票"><a href="#首先我们给每个区间构建一个空位图-0为有票，1为无票" class="headerlink" title="首先我们给每个区间构建一个空位图(0为有票，1为无票)"></a>首先我们给每个区间构建一个空位图(0为有票，1为无票)</h4><table><thead><tr><th>区间</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead><tbody><tr><td>北京-深圳</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>深圳-郑州</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>郑州-西安</td><td>0</td><td>0</td><td>0</td><td>0</td></tr></tbody></table><h4 id="接下来，比如有人买了一张从北京到西安的票"><a href="#接下来，比如有人买了一张从北京到西安的票" class="headerlink" title="接下来，比如有人买了一张从北京到西安的票"></a>接下来，比如有人买了一张从北京到西安的票</h4><p>买票这个动作，比如被分配到的座位是编号为1的座位，那么我们直接把北京到西安的所有站，1号座位全部设置为1</p><table><thead><tr><th>区间</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead><tbody><tr><td>北京-石家庄</td><td>1</td><td>0</td><td>0</td><td>0</td></tr><tr><td>石家庄-郑州</td><td>1</td><td>0</td><td>0</td><td>0</td></tr><tr><td>郑州-西安</td><td>1</td><td>0</td><td>0</td><td>0</td></tr></tbody></table><h4 id="接下来又有人买了一张从石家庄到西安的票"><a href="#接下来又有人买了一张从石家庄到西安的票" class="headerlink" title="接下来又有人买了一张从石家庄到西安的票"></a>接下来又有人买了一张从石家庄到西安的票</h4><p>比如这次分配的是座位2，那么我们把石家庄到西安的所有票全部设置为1就行了，如下图</p><table><thead><tr><th>区间</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead><tbody><tr><td>北京-石家庄</td><td>1</td><td>0</td><td>0</td><td>0</td></tr><tr><td>石家庄-郑州</td><td>1</td><td>1</td><td>0</td><td>0</td></tr><tr><td>郑州-西安</td><td>1</td><td>1</td><td>0</td><td>0</td></tr></tbody></table><h4 id="如何知道还剩几张票？"><a href="#如何知道还剩几张票？" class="headerlink" title="如何知道还剩几张票？"></a>如何知道还剩几张票？</h4><p>其实解决这个问题很简单，我们直接把上述位图做一个或操作就可以了</p><table><thead><tr><th>区间</th><th>1</th><th>2</th><th>3</th><th>4</th></tr></thead><tbody><tr><td>北京-石家庄</td><td>1</td><td>0</td><td>0</td><td>0</td></tr><tr><td>石家庄-郑州</td><td>1</td><td>1</td><td>0</td><td>0</td></tr><tr><td>郑州-西安</td><td>1</td><td>1</td><td>0</td><td>0</td></tr><tr><td>或操作结果</td><td>1</td><td>1</td><td>0</td><td>0</td></tr></tbody></table><p>或操作结果有几个0，则说明还剩几张票。</p><p>其实解决这个问题主要在于位图的构建，因为火车票对于某一个座位来说，只要起点到终点中间某一个区间被占用了(置为1)，那么整个座位都是无效的这个特点，很容易想到用或操作的结果来判断买票结果，我们这里只用了4位是为了方便说明问题，实际中应该是火车上有多少座位，位图的长度就应该是多少</p><p>作者：程序员小饭<br>链接：<a href="https://juejin.cn/post/7012507519595577375" target="_blank" rel="noopener">https://juejin.cn/post/7012507519595577375</a><br>来源：稀土掘金<br>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;我们以北京到西安这趟高铁为例，比如我的路线就是从北京到西安，车上如果只剩最后一张票了，那么如果有其他人，在北京到西安这条路线之间买任何一站，那么我都是买不了票的，换句话说，对于单个座位来说，必须是起点到目的地之间的所有站，都没有人买的话，那么才能被算是有票状态。&lt;/p&gt;
+&lt;
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="系统设计" scheme="https://arvenseyz.github.io/tags/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/"/>
+    
+  </entry>
   
   <entry>
     <title>短链系统设计</title>
@@ -467,57 +521,6 @@
       
       
         &lt;h2 id=&quot;FST（Finite-State-Transducer）&quot;&gt;&lt;a href=&quot;#FST（Finite-State-Transducer）&quot; class=&quot;headerlink&quot; title=&quot;FST（Finite State Transducer）&quot;&gt;&lt;/a&gt;FS
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="ES" scheme="https://arvenseyz.github.io/tags/ES/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>ES的搜索阶段</title>
-    <link href="https://arvenseyz.github.io/2021/09/18/9-16%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://arvenseyz.github.io/2021/09/18/9-16技术笔记/</id>
-    <published>2021-09-18T08:54:44.000Z</published>
-    <updated>2021-09-18T09:48:31.610Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="查询阶段"><a href="#查询阶段" class="headerlink" title="查询阶段"></a>查询阶段</h1><p>在初始 <em>查询阶段</em> 时， 查询会广播到索引中每一个分片拷贝（主分片或者副本分片）。 每个分片在本地执行搜索并构建一个匹配文档的 <em>优先队列</em>。</p><p>查询阶段包含以下三个步骤:</p><ol><li>客户端发送一个  search  请求到   一个节点 ， 该节点 会创建一个大小为  <code>from + size</code>  的空优先队列。</li><li>节点将查询请求转发到索引的每个主分片或副本分片中。每个分片在本地执行查询并添加结果到大小为  <code>from + size</code>  的本地有序优先队列中。</li><li>每个分片返回各自优先队列中所有文档的 ID 和排序值给协调节点  ，它合并这些值到自己的优先队列中来产生一个全局排序后的结果列表。</li></ol><p>当一个搜索请求被发送到某个节点时，这个节点就变成了协调节点。 这个节点的任务是广播查询请求到所有相关分片并将它们的响应整合成全局排序后的结果集合，这个结果集合会返回给客户端。</p><h1 id="取回阶段"><a href="#取回阶段" class="headerlink" title="取回阶段"></a>取回阶段</h1><p>分布式阶段由以下步骤构成：</p><ol><li>协调节点辨别出哪些文档需要被取回并向相关的分片提交多个  <code>GET</code>  请求。</li><li>每个分片加载并  <em>丰富</em>  文档，如果有需要的话，接着返回文档给协调节点。</li><li>一旦所有的文档都被取回了，协调节点返回结果给客户端。</li></ol><p>协调节点首先决定哪些文档  <em>确实</em>  需要被取回。例如，如果我们的查询指定了  <code>{ &quot;from&quot;: 90, &quot;size&quot;: 10 }</code>  ，最初的90个结果会被丢弃，只有从第91个开始的10个结果需要被取回。这些文档可能来自和最初搜索请求有关的一个、多个甚至全部分片。</p><p>协调节点给持有相关文档的每个分片创建一个  <a href="https://www.elastic.co/guide/cn/elasticsearch/guide/2.x/distrib-multi-doc.html" title="多文档模式" target="_blank" rel="noopener">multi-get request</a>  ，并发送请求给同样处理查询阶段的分片副本。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;查询阶段&quot;&gt;&lt;a href=&quot;#查询阶段&quot; class=&quot;headerlink&quot; title=&quot;查询阶段&quot;&gt;&lt;/a&gt;查询阶段&lt;/h1&gt;&lt;p&gt;在初始 &lt;em&gt;查询阶段&lt;/em&gt; 时， 查询会广播到索引中每一个分片拷贝（主分片或者副本分片）。 每个分片在本地执行搜索并
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="ES" scheme="https://arvenseyz.github.io/tags/ES/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>ES的Scroll查询</title>
-    <link href="https://arvenseyz.github.io/2021/09/15/9-15%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>https://arvenseyz.github.io/2021/09/15/9-15技术笔记-1/</id>
-    <published>2021-09-15T08:27:28.000Z</published>
-    <updated>2021-09-18T10:04:43.513Z</updated>
-    
-    <content type="html"><![CDATA[<p>如scroll=1m则把查询结果在下一次请求上来时暂存1分钟，response比传统的返回多了一个scroll_id，下次带上这个scroll_id即可找回这个缓存的结果。这里就scroll完成的逻辑。</p><p>Scroll方式通过一次查询请求后维护一个临时的索引快照的search context，此后的增删查改操作并不会影响这个快照数据信息，后续的查询只需要根据游标去取数据，直到结果集中返回的 hits 字段为空，就表示遍历结束。效率比较高。在5.x之后，还可以通过slice分片来实现并行导出。</p><p>想象下，srcoll没有from，只能从头开始，比如size10，某种sort，分片接到请求后，构建优先队列，拿到top10返回，然后保存该优先队列。第二次请求，协调者可以告诉该分片，这次需要大于多少的10个。节点接着操作该树即可。</p><p>它的缺点就是维护一个search context需要占用很多资源，而且在快照建立之后数据变化如删除和更新操作是不能被感知到的，所以不能够用于实时和高并发的场景。</p><p>scroll先从各个分片根据搜索结果获取文档ID排序后返回到协调节点，协调节点再进行排序，第一次和from+size流程一样，区别在于通过scroll会把这次搜索的文档ID都汇总到协调节点并缓存起来，下次根据分页获取的时候不再重新构造，而是直接从缓存里获取</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?scroll=2m</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"_scroll_id"</span> : <span class="string">"DnF1ZXJ5VGhlbkZldGNoAwAAAAAAsiN1FkpGQ2dUa1BNUVUyeUpVSzY1bUduVEEAAAAAAMAg5RZNaWx1TmFSUVRYUzBmV3dpOGRYUUpnAAAAAADAIOQWTWlsdU5hUlFUWFMwZld3aThkWFFKZw=="</span>,</span><br><span class="line">  <span class="attr">"took"</span> : <span class="number">10</span>,</span><br><span class="line">  ....</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure><p>第二次搜索的时候，只需要用srcollid搜即可</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">GET /_search/scroll</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">"scroll"</span>: <span class="string">"2m"</span>, </span><br><span class="line">    <span class="attr">"scroll_id"</span> : <span class="string">"DnF1ZXJ5VGhlbkZldGNoAwAAAAAAwDyLFk1pbHVOYVJRVFhTMGZXd2k4ZFhRSmcAAAAAALI-KhZKRkNnVGtQTVFVMnlKVUs2NW1HblRBAAAAAACyPisWSkZDZ1RrUE1RVTJ5SlVLNjVtR25UQQ=="</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;如scroll=1m则把查询结果在下一次请求上来时暂存1分钟，response比传统的返回多了一个scroll_id，下次带上这个scroll_id即可找回这个缓存的结果。这里就scroll完成的逻辑。&lt;/p&gt;
-&lt;p&gt;Scroll方式通过一次查询请求后维护一个临时的索引快照
       
     
     </summary>

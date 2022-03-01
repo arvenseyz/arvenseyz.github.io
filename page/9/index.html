@@ -251,6 +251,319 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/09/24/9-24技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/09/24/9-24技术笔记/" itemprop="url">kafka多副本同步机制</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-24T10:36:35+08:00">
+                2019-09-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="主题和分区"><a href="#主题和分区" class="headerlink" title="主题和分区"></a>主题和分区</h1><p>kafka发消息是需要指定主题的，也可以手动指定分区，不指定的话，可以指定或许自制分区选择策略，也可以用默认的，即有key则hash，没有key则随机。</p>
+<p>只要如果分区规则设置的合理，那么所有的消息将会被均匀的分布到不同的分区中，这样就实现了负载均衡和水平扩展。另外，多个订阅者可以从一个或者多个分区中同时消费数据，以支撑海量数据处理能力。</p>
+<h1 id="分区和副本"><a href="#分区和副本" class="headerlink" title="分区和副本"></a>分区和副本</h1><p>为了提高可靠性，分区引入了多副本（Replica）机制，通过增加副本数量可以提升容灾能力。但是副本并不提供读写功能，只有备份能力。副本处于不同的 broker 中，当 leader 副本出现故障时，从 follower 副本中重新选举新的 leader 副本对外提供服务。</p>
+<p><img src="https://i.loli.net/2019/09/24/oAb9LGOnCaVFkec.png" alt="oAb9LGOnCaVFkec"></p>
+<p>如图，一个三个分区，每个分区有三个副本，分布在4个broker中。</p>
+<h1 id="消费容灾"><a href="#消费容灾" class="headerlink" title="消费容灾"></a>消费容灾</h1><p>offset 是消息在分区中的唯一标识，Kafka 通过它来保证消息在分区内的顺序性，不过 offset 并不跨越分区，也就是说，Kafka 保证的是分区有序而不是主题有序。Consumer 使用拉（Pull）模式从服务端拉取消息，并且保存消费的具体位置，当消费者宕机后恢复上线时可以根据之前保存的消费位置重新拉取需要的消息进行消费，这样就不会造成消息丢失。</p>
+<h1 id="ISR与高水位"><a href="#ISR与高水位" class="headerlink" title="ISR与高水位"></a>ISR与高水位</h1><p>分区中的所有副本统称为 AR（Assigned Replicas）。所有与 leader 副本保持一定程度同步的副本（包括 leader 副本在内）组成ISR（In-Sync Replicas），ISR 集合是 AR 集合中的一个子集。消息会先发送到 leader 副本，然后 follower 副本才能从 leader 副本中拉取消息进行同步，同步期间内 follower 副本相对于 leader 副本而言会有一定程度的滞后。</p>
+<p>高水位，HW，即ISR中同步最慢的那个，所同步到的位置。</p>
+<p><img src="https://i.loli.net/2019/09/24/inU1oKQAL6WtNv2.png" alt="inU1oKQAL6WtNv2"></p>
+<p>如图，该分区有两个副本，同步进度不同，都在ISR中，则可读到的消息，是0123，因为4还没完全同步。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/09/22/9-22技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/09/22/9-22技术笔记/" itemprop="url">linux性能分析工具</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-22T19:31:32+08:00">
+                2019-09-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="vmsta"><a href="#vmsta" class="headerlink" title="vmsta"></a>vmsta</h1><p>可对操作系统的虚拟内存、进程、CPU等的整体情况进行监视。</p>
+<p>一般有两个参数，第一个是采样间隔，第二个是采样次数，可省略第二个参数，会一直执行下去直到手动停止。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----</span><br><span class="line"> r  b   swpd   free   buff  cache   si   so    bi    bo   <span class="keyword">in</span>   cs us sy id wa st</span><br><span class="line"> 0  0      0 257172 327980 5486280    0    0     1    13    0    0  1  1 97  1  0</span><br><span class="line"> 0  0      0 278168 327980 5486332    0    0     0    37 1583 3408  1  0 97  2  0</span><br><span class="line"> 0  0      0 266540 327980 5486348    0    0     0    26 1803 3684  1  0 98  0  0</span><br><span class="line"> 0  1      0 266964 327980 5484616    0    0     0    78 1647 4011  1  1 95  3  0</span><br></pre></td></tr></table></figure>
+<p>第一行显示了系统自启动以来的平均值，第二行开始显示现在正在发生的情况，接下来的行会显示每5秒间隔发生了什么，每一列的含义在头部，如下所示：</p>
+<p>▪ procs：r这一列显示了多少进程在等待cpu，b列显示多少进程正在不可中断的休眠（等待IO）。</p>
+<p>▪ memory：swapd列显示了多少块被换出了磁盘（页面交换），剩下的列显示了多少块是空闲的（未被使用），多少块正在被用作缓冲区，以及多少正在被用作操作系统的缓存。</p>
+<p>▪ swap：显示交换活动：每秒有多少块正在被换入（从磁盘）和换出（到磁盘）。</p>
+<p>▪ io：显示了多少块从块设备读取（bi）和写出（bo）,通常反映了硬盘I/O。</p>
+<p>▪ system：显示每秒中断(in)和上下文切换（cs）的数量。</p>
+<p>▪ cpu：显示所有的cpu时间花费在各类操作的百分比，包括执行用户代码（非内核），执行系统代码（内核），空闲以及等待IO。</p>
+<h1 id="ps"><a href="#ps" class="headerlink" title="ps"></a>ps</h1><p> Linux中的ps命令是Process Status的缩写。ps命令用来列出系统中当前运行的那些进程。ps命令列出的是当前那些进程的快照，就是执行ps命令的那个时刻的那些进程，如果想要动态的显示进程信息，就可以使用top命令。</p>
+<p>主要参数-aux 显示所有包含其他使用者的行程</p>
+<h1 id="netstat"><a href="#netstat" class="headerlink" title="netstat"></a>netstat</h1><p>netstat命令用于显示与IP、TCP、UDP和ICMP协议相关的统计数据，一般用于检验本机各端口的网络连接情况。netstat是在内核中访问网络及相关信息的程序，它能提供TCP连接，TCP和UDP监听，进程内存管理的相关报告。</p>
+<p>常用参数：</p>
+<p>-a或–all 显示所有连线中的Socket。</p>
+<p>-n或–numeric 直接使用IP地址，而不通过域名服务器。</p>
+<p>-p或–programs 显示正在使用Socket的程序识别码和程序名称。</p>
+<p>-t或–tcp 显示TCP传输协议的连线状况。</p>
+<p><strong>然而Debian没有预装netstat</strong></p>
+<h1 id="top"><a href="#top" class="headerlink" title="top"></a>top</h1><p>top命令是Linux下常用的性能分析工具，能够实时显示系统中各个进程的资源占用状况，类似于Windows的任务管理器。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">top - 19:57:18 up  2:07,  0 users,  load average: 8.88, 6.55, 6.53</span><br><span class="line">Tasks:   9 total,   1 running,   8 sleeping,   0 stopped,   0 zombie</span><br><span class="line">%Cpu(s):  5.7 us,  0.0 sy,  0.0 ni, 94.3 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st</span><br><span class="line">KiB Mem:   4194304 total,    38392 used,  4155912 free,        0 buffers</span><br><span class="line">KiB Swap:        0 total,        0 used,        0 free.     9920 cached Mem</span><br><span class="line"></span><br><span class="line">    PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND                                                                                                                                      </span><br><span class="line">     57 root      20   0  893576  32220  16872 S   3.0  0.8   3:21.04 toutiao.ev.wall                                                                                                                              </span><br><span class="line">      1 root      20   0   52868   6928   5432 S   0.0  0.2   0:01.61 systemd                                                                                                                                      </span><br><span class="line">     23 daemon    20   0   19028   1736   1568 S   0.0  0.0   0:00.00 atd                                                                                                                                          </span><br><span class="line">     26 root      20   0   29156   2800   2556 S   0.0  0.1   0:00.01 cron                                                                                                                                         </span><br><span class="line">     29 unscd     20   0   14776   1748   1608 S   0.0  0.0   0:00.26 nscd                                                                                                                                         </span><br><span class="line">     33 root      20   0  172092   2888   2472 S   0.0  0.1   0:00.01 rsyslogd                                                                                                                                     </span><br><span class="line">     50 root      20   0   43796   7552   7108 S   0.0  0.2   0:00.02 systemd-journal                                                                                                                              </span><br><span class="line">  13489 root      20   0   15184   3600   3084 S   0.0  0.1   0:00.04 bash                                                                                                                                         </span><br><span class="line">  19242 root      20   0   16808   2580   2228 R   0.0  0.1   0:00.01 top</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/09/17/9-17技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1634,348 +1947,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/08/14/8-14技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/08/14/8-14技术笔记-1/" itemprop="url">linux文件目录与链接</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-14T15:18:55+08:00">
-                2019-08-14
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="文件目录"><a href="#文件目录" class="headerlink" title="文件目录"></a>文件目录</h1><p><code>/ 根目录</code></p>
-<p><code>├── bin 存放用户二进制文件</code></p>
-<p><code>├── boot 存放内核引导配置文件</code></p>
-<p><code>├── dev 存放设备文件</code></p>
-<p><code>├── etc 存放系统配置文件</code></p>
-<p><code>├── home 用户主目录</code></p>
-<p><code>├── lib 动态共享库</code></p>
-<p><code>├── lost+found 文件系统恢复时的恢复文件</code></p>
-<p><code>├── media 可卸载存储介质挂载点</code></p>
-<p><code>├── mnt 文件系统临时挂载点</code></p>
-<p><code>├── opt 附加的应用程序包</code></p>
-<p><code>├── proc 系统内存的映射目录，提供内核与进程信息</code></p>
-<p><code>├── root root 用户主目录</code></p>
-<p><code>├── sbin 存放系统二进制文件</code></p>
-<p><code>├── srv 存放服务相关数据</code></p>
-<p><code>├── sys sys 虚拟文件系统挂载点</code></p>
-<p><code>├── tmp 存放临时文件</code></p>
-<p><code>├── usr 存放用户应用程序</code></p>
-<p><code>└── var 存放邮件、系统日志等变化文件</code></p>
-<p>Linux 与其他类 UNIX 系统一样并不区分文件与目录：目录是记录了其他文件名的文件。使用命令 mkdir 创建目录时，若期望创建的目录的名称与现有的文件名（或目录名）重复，则会创建失败。Linux 将设备当做文件进行处理。</p>
-<h1 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h1><p>我们知道文件都有文件名与数据，这在 Linux 上被分成两个部分：用户数据 (user data) 与元数据 (metadata)。用户数据，即文件数据块 (data block)，数据块是记录文件真实内容的地方；而元数据则是文件的附加属性，如文件大小、创建时间、所有者等信息。在 Linux 中，元数据中的 inode 号（inode 是文件元数据的一部分但其并不包含文件名，inode 号即索引节点号）才是文件的唯一标识而非文件名。文件名仅是为了方便人们的记忆和使用，系统或程序通过 inode 号寻找正确的文件数据块。</p>
-<p>为解决文件的共享使用，Linux 系统引入了两种链接：硬链接 (hard link) 与软链接（又称符号链接，即 soft link 或 symbolic link）。链接为 Linux 系统解决了文件的共享使用，还带来了隐藏文件路径、增加权限安全及节省存储等好处。</p>
-<h2 id="硬链接"><a href="#硬链接" class="headerlink" title="硬链接"></a>硬链接</h2><p>若一个 inode 号对应多个文件名，则称这些文件为硬链接。换言之，硬链接就是同一个文件使用了多个别名。硬链接可由命令 link 或 ln 创建。</p>
-<p>可以说，硬链接就是个文件名。</p>
-<h2 id="软链接"><a href="#软链接" class="headerlink" title="软链接"></a>软链接</h2><p>软链接则是真正的文件，但文件的内容即inode，是另一个文件的的路径名。</p>
-<p>使用 find 命令，其不仅可查找某文件的软链接，还可以用于查找相同 inode 的所有硬链接。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/08/12/8-12技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/08/12/8-12技术笔记/" itemprop="url">linux文件权限和管理</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-08-12T15:36:01+08:00">
-                2019-08-12
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="文件权限"><a href="#文件权限" class="headerlink" title="文件权限"></a>文件权限</h1><p>linux文件系统，权限和用户有关，linux是多用户系统，在用户之上还有一层分组的概念，很容易理解。所以任何一个理解，都有三种不同不同的权限，文件拥有者的权限，群组的权限，其他人的权限。</p>
-<p>进入一个文件目录，输入ls -al，其中一行返回如下。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">-rw-r--r--.  1    root     root     176  Dec 29  2013 .bash_profile</span><br></pre></td></tr></table></figure>
-<p>返回值一共有7个，分别是权限，链接数，拥有者，群组，文件大小，修改日期，文件名。</p>
-<p>其中权限一共十个字符，可以分为4组，即1-3-3-3.</p>
-<p>第一组，一个字符，表示文件类型</p>
-<ul>
-<li>当为[ d ]则是目录；</li>
-<li>当为[ - ]则是文件；</li>
-<li>若是[ l ]则表示为链接文件（link file）；</li>
-<li>若是[ b ]则表示为设备文件里面的可供储存的周边设备（可随机存取设备）；</li>
-<li>若是[ c ]则表示为设备文件里面的序列埠设备，例如键盘、鼠标（一次性读取设备）。</li>
-</ul>
-<p>第二组，三个字符，表示拥有者权限，分别表示可读，可写，可执行。如果有就有相应字符，没有就是减号。</p>
-<p>比如rwx表示可读可写可执行，r-x表示可读不可写可执行。</p>
-<p>其中目录的x权限，是指进入该目录的权限。通常要开放的目录， 至少会具备 rx 这两个权限</p>
-<p>第三组，三个字符，表示群组权限。</p>
-<p>第四组，三个字符，表示其他人权限。</p>
-<p>链接数，有多少文件名链接到此节点（i-node）</p>
-<h2 id="改变文件权限"><a href="#改变文件权限" class="headerlink" title="改变文件权限"></a>改变文件权限</h2><ul>
-<li>chgrp ：改变文件所属群组</li>
-<li>chown ：改变文件拥有者</li>
-<li>chmod ：改变文件的权限,</li>
-</ul>
-<p>chgrp和chown类似，其中有个参数-R，指递归得进行改变，用于目录。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chgrp users initial-setup-ks.cfg</span><br></pre></td></tr></table></figure>
-<p>把initial-setup-ks.cfg的群组改变成了users。</p>
-<p>chmod，可以用数字和符号两种写法，数字就是二进制加，参数-R，指递归得进行改变，用于目录。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod 740 .bashrc</span><br></pre></td></tr></table></figure>
-<p>表示把.bashrc的用户权限变成4+2+1:rwx;群组权限4:r–;其他权限0:—。</p>
-<p>也可以直接写</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod u=rwx,g=rx,o=r filename</span><br></pre></td></tr></table></figure>
-<p>或者写一起；也可以用加减号表示增减</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">chmod  u=rwx,go=rx  .bashrc</span><br><span class="line">chmod  a-x  .bashrc</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2026,7 +1997,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">264</span>
+                  <span class="site-state-item-count">266</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

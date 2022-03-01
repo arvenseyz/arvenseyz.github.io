@@ -251,6 +251,499 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/01/3-1技术笔记-2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2022/03/01/3-1技术笔记-2/" itemprop="url">redis与Reactor模式</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-03-01T15:18:04+08:00">
+                2022-03-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="同步和阻塞"><a href="#同步和阻塞" class="headerlink" title="同步和阻塞"></a>同步和阻塞</h1><p>很多时候同步和阻塞是同义词，nio这里会分开说，怎么理解</p>
+<p>首先，所有的io分为两步，第一步等待数据，第二步写入数据到输出。</p>
+<p>比如等待打字是第一步，把键盘输入解析处理屏幕显示是第二步。</p>
+<blockquote>
+<p>阻塞：是否阻塞主要体现在调用的线程是否可以干别的，关注的是程序的等待状态</p>
+<p>同步：是否同步体现在<strong>消息通信机制上</strong> 。</p>
+<p>也就是说同步和异步说的是消息的通知机制，阻塞非阻塞说的是线程的状态 。</p>
+</blockquote>
+<p><strong>是否同步的判断依据是:是否针对的是整个过程，也就是2个阶段，是否有阻塞。</strong></p>
+<p><strong>是否阻塞的判断依据是:按程序（线程）等待消息通知时的状态角度来说的，也就是主要是针对第一阶段来说。</strong></p>
+<h1 id="五种IO模型"><a href="#五种IO模型" class="headerlink" title="五种IO模型"></a>五种IO模型</h1><h3 id="bio"><a href="#bio" class="headerlink" title="bio"></a>bio</h3><p>最传统当然是阻塞式的IO，即blocking，BIO</p>
+<p>在这个IO模型中，用户空间的应用程序执行一个系统调用（recvform），这会导致应用程序阻塞，什么也不干，直到数据准备好，等待kernel准备好从网络上接收到的数据报 + 等待收到的报文被从kernel复制到buf中，recvfrom方法才会返回，最后进程再处理数据。</p>
+<p>这就是阻塞式IO模型。</p>
+<p>即起一个线程等待键盘输入（第一步），输入后，处理输出到屏幕（第二步）</p>
+<h3 id="非阻塞式I-O"><a href="#非阻塞式I-O" class="headerlink" title="非阻塞式I/O"></a>非阻塞式I/O</h3><p>优化第一步为轮询，即为非阻塞io。</p>
+<p>非阻塞的recvform系统调用调用之后，进程并没有被阻塞，内核马上返回给进程，如果数据还没准备好，此时会返回一个error。进程在返回之后，可以干点别的事情，然后再发起recvform系统调用。如此循环的进行recvform系统调用，检查内核数据，直到数据准备好，再拷贝数据到进程。<strong>拷贝数据整个过程，进程仍然是属于阻塞的状态</strong>。</p>
+<h3 id="I-O复用"><a href="#I-O复用" class="headerlink" title="I/O复用"></a>I/O复用</h3><p>第一步优化为回调，这样一个线程可以监听多个回调，即为I/O复用</p>
+<p>IO multiplexing就是我们说的select，poll，epoll 。为何叫多路复用，是因为它I/O多路复用可以同时监听多个fd，如此就减少了为每个需要监听的fd开启线程的开销。</p>
+<p>select调用是内核级别的，可以等待多个socket，能实现同时对多个IO端口进行监听<code>，当其中任何一个socket的数据准好了，</code>就能返回进行可读<code>，</code>然后进程再进行recvform系统调用，将数据由内核拷贝到用户进程，这个过程是阻塞的。</p>
+<p>I/O复用模型会用到select、poll、epoll函数，这几个函数也会使进程阻塞，但是和阻塞I/O所不同的的，这几个函数可以同时阻塞多个I/O操作`。而且可以同时对多个读操作，多个写操作的I/O函数进行检测，直到有数据可读或可写时（不是等到socket数据全部到达再处理, 而是有了一部分数据就会调用用户进程来处理），才真正调用I/O操作函数。</p>
+<p>IO复用有人把其成为同步非阻塞的，也有称为同步阻塞。其实这个是否阻塞还需要看第一个阶段，第一个阶段有的阻塞，有的不阻塞。主要也是阻塞在select阶段，属于用户主动等待阶段，我们且规范为阻塞状态，所以，<code>把IO多路复用归为同步阻塞模式</code></p>
+<h2 id="信号驱动式I-O"><a href="#信号驱动式I-O" class="headerlink" title="信号驱动式I/O"></a>信号驱动式I/O</h2><p>等待回调可以再优化，由一个线程阻塞等待，优化为信号驱动，这样监听回调线程也不阻塞。</p>
+<p>信号驱动式I/O：首先我们允许Socket进行信号驱动IO,并安装一个信号处理函数，进程继续运行并不阻塞。当数据准备好时，进程会收到一个SIGIO信号，可以在信号处理函数中调用I/O操作函数处理数据。</p>
+<h3 id="异步I-O"><a href="#异步I-O" class="headerlink" title="异步I/O"></a>异步I/O</h3><p>异步IO不是顺序执行,用户进程进行aio_read系统调用之后，无论内核数据是否准备好，都会直接返回给用户进程，然后用户态进程可以去做别的事情。等到socket数据准备好了，内核直接复制数据给进程，<code>然后从内核向进程发送通知</code>。<code>IO两个阶段，进程都是非阻塞的</code>。</p>
+<p><a href="https://imgtu.com/i/blpGfH" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/blpGfH.png" alt="blpGfH.png"></a></p>
+<h1 id="Reactor"><a href="#Reactor" class="headerlink" title="Reactor"></a>Reactor</h1><p>Reactor 就是基于NIO中实现多路复用的一种模式</p>
+<h3 id="单线程Reactor模式"><a href="#单线程Reactor模式" class="headerlink" title="单线程Reactor模式"></a>单线程Reactor模式</h3><p><a href="https://imgtu.com/i/bl9d29" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/bl9d29.jpg" alt="bl9d29.jpg"></a></p>
+<p>如图，即和NIO的描述基本一致。</p>
+<p>只有一个<code>select</code>循环接收请求，客户端（client）注册进来由<code>Reactor</code>接收注册事件，然后再由reactor分发（dispatch）出去，由下面的处理器（Handler）去处理。</p>
+<p>等待数据是阻塞式多路复用，处理输出数据是阻塞式在accepter中。</p>
+<p>单线程的问题实际上是很明显的。只要其中一个Handler方法阻塞了，那就会导致所有的client的Handler都被阻塞了，也会导致注册事件也无法处理，无法接收新的请求。所以这种模式用的比较少，因为不能充分利用到多核的资源。</p>
+<p>这种模式仅仅只能处理Handler比较快速完成的场景。</p>
+<p>实际上5.0及其以前的redis就是这个模式，因为redis的handler的确能快速完成。</p>
+<p>IO多路复用程序接收到用户的请求后，全部推送到一个队列里，交给文件分派器。对于后续的操作，和在 reactor 单线程实现方案里看到的一样，整个过程都在一个线程里完成，因此 Redis 被称为是单线程的操作。</p>
+<p><a href="https://imgtu.com/i/blPn6s" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/blPn6s.png" alt="blPn6s.png"></a></p>
+<h3 id="Reactor模式-工作者线程池模式"><a href="#Reactor模式-工作者线程池模式" class="headerlink" title="Reactor模式-工作者线程池模式"></a>Reactor模式-工作者线程池模式</h3><p>我们应该将非I/O的业务逻辑操作从Reactor线程上卸载，以此来加速Reactor线程对I/O请求的响应。与单线程模式不同的是，添加了一个<strong>工作者线程池</strong>，并将非I/O操作从Reactor线程中移出转交给工作者线程池（Thread Pool）来执行。这样能够提高Reactor线程的I/O响应，不至于因为一些耗时的业务逻辑而延迟对后面I/O请求的处理。</p>
+<p><a href="https://imgtu.com/i/blCeqx" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/blCeqx.png" alt="blCeqx.png"></a></p>
+<p>6.0之后的redis即为该模式</p>
+<p>在 Redis 中，单线程的性能瓶颈主要在网络IO操作上。也就是在读写网络 read/write 系统调用执行期间会占用大部分 CPU 时间。如果你要对一些大的键值对进行删除操作的话，在短时间内是删不完的，那么对于单线程来说就会阻塞后边的操作。</p>
+<p>好像其实不是标准的工作者线程池模式</p>
+<p>多线程大部分逻辑和之前的单线程模型是一致的，变动的地方仅仅是把读取客户端请求命令和回写响应数据的逻辑异步化了，交给 I/O 线程去完成，这里需要特别注意的一点是：<strong>I/O 线程仅仅是读取和解析客户端命令而不会真正去执行命令，客户端命令的执行最终还是要在主线程上完成</strong>。</p>
+<p>Redis 把处理逻辑交还给 Master 线程，虽然一定程度上增加了模型复杂度，但也解决了线程并发安全等问题。</p>
+<p><a href="https://imgtu.com/i/blkuXd" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/blkuXd.png" alt="blkuXd.png"></a></p>
+<h3 id="多Reactor多线程模型"><a href="#多Reactor多线程模型" class="headerlink" title="多Reactor多线程模型"></a>多Reactor多线程模型</h3><p>是将Reactor分成两部分，</p>
+<blockquote>
+<ol>
+<li><p>mainReactor负责监听server socket，用来处理新连接的建立，将建立的socketChannel指定注册给subReactor。</p>
+</li>
+<li><p>subReactor维护自己的selector, 基于mainReactor 注册的socketChannel多路分离IO读写事件，读写网 络数据，对业务处理的功能，另其扔给worker线程池来完成。</p>
+</li>
+</ol>
+</blockquote>
+<p>mainReactor 主要是用来处理网络IO 连接建立操作，通常一个线程就可以处理，而subReactor主要做和建立起来的socket做数据交互和事件业务处理操作，它的个数上一般是和CPU个数等同，每个subReactor一个线程来处理。</p>
+<p>nginx和netty应该是使用这种模式</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/01/3-1技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2022/03/01/3-1技术笔记-1/" itemprop="url">12306跨站卖票设计</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-03-01T11:14:24+08:00">
+                2022-03-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>我们以北京到西安这趟高铁为例，比如我的路线就是从北京到西安，车上如果只剩最后一张票了，那么如果有其他人，在北京到西安这条路线之间买任何一站，那么我都是买不了票的，换句话说，对于单个座位来说，必须是起点到目的地之间的所有站，都没有人买的话，那么才能被算是有票状态。</p>
+<p>所以我们可以尝试用bitmap结合上位操作来实现这种场景，以上述北京到西安为例，我们把问题简化</p>
+<ul>
+<li><p>比如一个火车上只有4个座位</p>
+</li>
+<li><p>北京到西安，一共是4站，其实是三个区间的，分别为北京-&gt;石家庄，石家庄-&gt;郑州，郑州-&gt;西安</p>
+</li>
+</ul>
+<h4 id="首先我们给每个区间构建一个空位图-0为有票，1为无票"><a href="#首先我们给每个区间构建一个空位图-0为有票，1为无票" class="headerlink" title="首先我们给每个区间构建一个空位图(0为有票，1为无票)"></a>首先我们给每个区间构建一个空位图(0为有票，1为无票)</h4><table>
+<thead>
+<tr>
+<th>区间</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>北京-深圳</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>深圳-郑州</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>郑州-西安</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<h4 id="接下来，比如有人买了一张从北京到西安的票"><a href="#接下来，比如有人买了一张从北京到西安的票" class="headerlink" title="接下来，比如有人买了一张从北京到西安的票"></a>接下来，比如有人买了一张从北京到西安的票</h4><p>买票这个动作，比如被分配到的座位是编号为1的座位，那么我们直接把北京到西安的所有站，1号座位全部设置为1</p>
+<table>
+<thead>
+<tr>
+<th>区间</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>北京-石家庄</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>石家庄-郑州</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>郑州-西安</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<h4 id="接下来又有人买了一张从石家庄到西安的票"><a href="#接下来又有人买了一张从石家庄到西安的票" class="headerlink" title="接下来又有人买了一张从石家庄到西安的票"></a>接下来又有人买了一张从石家庄到西安的票</h4><p>比如这次分配的是座位2，那么我们把石家庄到西安的所有票全部设置为1就行了，如下图</p>
+<table>
+<thead>
+<tr>
+<th>区间</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>北京-石家庄</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>石家庄-郑州</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>郑州-西安</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<h4 id="如何知道还剩几张票？"><a href="#如何知道还剩几张票？" class="headerlink" title="如何知道还剩几张票？"></a>如何知道还剩几张票？</h4><p>其实解决这个问题很简单，我们直接把上述位图做一个或操作就可以了</p>
+<table>
+<thead>
+<tr>
+<th>区间</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>北京-石家庄</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>石家庄-郑州</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>郑州-西安</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>或操作结果</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>或操作结果有几个0，则说明还剩几张票。</p>
+<p>其实解决这个问题主要在于位图的构建，因为火车票对于某一个座位来说，只要起点到终点中间某一个区间被占用了(置为1)，那么整个座位都是无效的这个特点，很容易想到用或操作的结果来判断买票结果，我们这里只用了4位是为了方便说明问题，实际中应该是火车上有多少座位，位图的长度就应该是多少</p>
+<p>作者：程序员小饭<br>链接：<a href="https://juejin.cn/post/7012507519595577375" target="_blank" rel="noopener">https://juejin.cn/post/7012507519595577375</a><br>来源：稀土掘金<br>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/02/28/2-28技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1565,326 +2058,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/12/01/12-1技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/12/01/12-1技术笔记/" itemprop="url">ES聚合搜索</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-12-01T15:17:13+08:00">
-                2021-12-01
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="指标和桶"><a href="#指标和桶" class="headerlink" title="指标和桶"></a>指标和桶</h2><p>es的聚合操作是aggs，是aggregations的简写。</p>
-<p>聚合简单分为两部分，指标和桶。</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">COUNT</span>(color) </span><br><span class="line"><span class="keyword">FROM</span> <span class="keyword">table</span> </span><br><span class="line"><span class="keyword">GROUP</span> <span class="keyword">BY</span> color</span><br></pre></td></tr></table></figure>
-<p>group by color相当于桶。</p>
-<p><em>桶</em>  简单来说就是满足特定条件的文档的集合：</p>
-<ul>
-<li>一个雇员属于  <em>男性</em>  桶或者  <em>女性</em>  桶</li>
-<li>奥尔巴尼属于  <em>纽约</em>  桶</li>
-<li>日期2014-10-28属于  <em>十月</em>  桶</li>
-</ul>
-<p>COUNT(color)相当于指标</p>
-<p>大多数 <em>指标</em> 是简单的数学运算（例如最小值、平均值、最大值，还有汇总）</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">GET /cars/transactions/_search</span><br><span class="line">&#123;</span><br><span class="line">   <span class="attr">"size"</span> : <span class="number">0</span>,</span><br><span class="line">   <span class="attr">"aggs"</span>: &#123;</span><br><span class="line">      <span class="attr">"colors"</span>: &#123;</span><br><span class="line">         <span class="attr">"terms"</span>: &#123;</span><br><span class="line">            <span class="attr">"field"</span>: <span class="string">"color"</span></span><br><span class="line">         &#125;,</span><br><span class="line">         <span class="attr">"aggs"</span>: &#123; </span><br><span class="line">            <span class="attr">"avg_price"</span>: &#123; </span><br><span class="line">               <span class="attr">"avg"</span>: &#123;</span><br><span class="line">                  <span class="attr">"field"</span>: <span class="string">"price"</span> </span><br><span class="line">               &#125;</span><br><span class="line">            &#125;</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">...</span><br><span class="line">   "aggregations": &#123;</span><br><span class="line">      "colors": &#123;</span><br><span class="line">         "buckets": [</span><br><span class="line">            &#123;</span><br><span class="line">               <span class="attr">"key"</span>: <span class="string">"red"</span>,</span><br><span class="line">               <span class="attr">"doc_count"</span>: <span class="number">4</span>,</span><br><span class="line">               <span class="attr">"avg_price"</span>: &#123; </span><br><span class="line">                  <span class="attr">"value"</span>: <span class="number">32500</span></span><br><span class="line">               &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            &#123;</span><br><span class="line">               <span class="attr">"key"</span>: <span class="string">"blue"</span>,</span><br><span class="line">               <span class="attr">"doc_count"</span>: <span class="number">2</span>,</span><br><span class="line">               <span class="attr">"avg_price"</span>: &#123;</span><br><span class="line">                  <span class="attr">"value"</span>: <span class="number">20000</span></span><br><span class="line">               &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            &#123;</span><br><span class="line">               <span class="attr">"key"</span>: <span class="string">"green"</span>,</span><br><span class="line">               <span class="attr">"doc_count"</span>: <span class="number">2</span>,</span><br><span class="line">               <span class="attr">"avg_price"</span>: &#123;</span><br><span class="line">                  <span class="attr">"value"</span>: <span class="number">21000</span></span><br><span class="line">               &#125;</span><br><span class="line">            &#125;</span><br><span class="line">         ]</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>第一个aggs里的term，就是指定桶，即按color分桶。</p>
-<p>第二个aggs就是指标了，avg是聚合函数。</p>
-<h2 id="过滤"><a href="#过滤" class="headerlink" title="过滤"></a>过滤</h2><p>过滤有两种，聚合前过滤和聚合后过滤，即对应sql里的where和having</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">GET /cars/transactions/_search</span><br><span class="line">&#123;</span><br><span class="line">   <span class="attr">"size"</span> : <span class="number">0</span>,</span><br><span class="line">   <span class="attr">"query"</span>:&#123;</span><br><span class="line">      <span class="attr">"match"</span>: &#123;</span><br><span class="line">         <span class="attr">"make"</span>: <span class="string">"ford"</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;,</span><br><span class="line">   <span class="attr">"aggs"</span>:&#123;</span><br><span class="line">      <span class="attr">"recent_sales"</span>: &#123;</span><br><span class="line">         <span class="attr">"filter"</span>: &#123; </span><br><span class="line">            <span class="attr">"range"</span>: &#123;</span><br><span class="line">               <span class="attr">"sold"</span>: &#123;</span><br><span class="line">                  <span class="attr">"from"</span>: <span class="string">"now-1M"</span></span><br><span class="line">               &#125;</span><br><span class="line">            &#125;</span><br><span class="line">         &#125;,</span><br><span class="line">         <span class="attr">"aggs"</span>: &#123;</span><br><span class="line">            <span class="attr">"average_price"</span>:&#123;</span><br><span class="line">               <span class="attr">"avg"</span>: &#123;</span><br><span class="line">                  <span class="attr">"field"</span>: <span class="string">"price"</span> </span><br><span class="line">               &#125;</span><br><span class="line">            &#125;</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>即只有时间在现在到一个月前的数据会被聚合。</p>
-<p>实际上过滤器可以直接写在query里，似乎性能更好。</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">GET /cars/transactions/_search</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">"size"</span> : <span class="number">0</span>,</span><br><span class="line">    <span class="attr">"query"</span>: &#123;</span><br><span class="line">        <span class="attr">"match"</span>: &#123;</span><br><span class="line">            <span class="attr">"make"</span>: <span class="string">"ford"</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"post_filter"</span>: &#123;    </span><br><span class="line">        <span class="attr">"term"</span> : &#123;</span><br><span class="line">            <span class="attr">"color"</span> : <span class="string">"green"</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"aggs"</span> : &#123;</span><br><span class="line">        <span class="attr">"all_colors"</span>: &#123;</span><br><span class="line">            <span class="attr">"terms"</span> : &#123; <span class="attr">"field"</span> : <span class="string">"color"</span> &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>即只看green的</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/11/30/11-30技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/11/30/11-30技术笔记-1/" itemprop="url">执行计划的extra</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-11-30T15:57:33+08:00">
-                2021-11-30
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="Using-fileSort"><a href="#Using-fileSort" class="headerlink" title="Using fileSort"></a>Using fileSort</h2><p>使用文件排序，是指拿到这些行后再排序，具体在哪排，内存还是磁盘，取决于大小，所有列还是排序列+id再回表取决于代价</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> t1 <span class="keyword">order</span> <span class="keyword">by</span> create_time</span><br></pre></td></tr></table></figure>
-<h2 id="Using-temporary"><a href="#Using-temporary" class="headerlink" title="Using temporary"></a>Using temporary</h2><p>需要临时表来储存结构，比如对没有索引的列来group by</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> t1 <span class="keyword">group</span> <span class="keyword">by</span> create_time</span><br></pre></td></tr></table></figure>
-<h2 id="Using-index"><a href="#Using-index" class="headerlink" title="Using index"></a>Using index</h2><p>使用覆盖索引，即索引树上即可拿到字段，无需回表</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> a <span class="keyword">from</span> t1 <span class="keyword">where</span> a =<span class="number">11</span></span><br></pre></td></tr></table></figure>
-<h2 id="Using-where"><a href="#Using-where" class="headerlink" title="Using where"></a>Using where</h2><p>意味着全表扫描或者在查找使用索引的情况下，但是还有查询条件不在索引字段当中.</p>
-<p>Using where: 仅仅表示MySQL服务器在收到存储引擎返回的记录后进行“后过滤”。</p>
-<p><strong>1： 查询条件中的相关列，不是索引字段， 全表扫描后，通过Using where过滤获取所需的数据。</strong></p>
-<p>通俗来说，因为字段D没有索引，所以必须全表扫描，然后在服务器层使用WHERE过滤数据。</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> <span class="keyword">TEST</span> <span class="keyword">WHERE</span> D = <span class="string">'2000-01-01'</span>;</span><br></pre></td></tr></table></figure>
-<p>2： <strong>（type=ref)非唯一性索引扫描，但是由于索引未覆盖所有查询条件(字段d并未包含在聚集索引</strong>PRIMARY中**)，在存储引擎返回记录后，仍然需要过滤数据。</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">COUNT</span>(i1) <span class="keyword">FROM</span> <span class="keyword">TEST</span> <span class="keyword">WHERE</span> i1 = <span class="number">3</span> <span class="keyword">AND</span> d &gt; <span class="number">321</span></span><br></pre></td></tr></table></figure>
-<h2 id="Using-index-condition"><a href="#Using-index-condition" class="headerlink" title="Using index condition"></a>Using index condition</h2><p>索引下推。存储引擎在访问索引的时候检查筛选字段在索引中的WHERE条件</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> t1 <span class="keyword">where</span> age&gt;<span class="number">9</span> <span class="keyword">and</span> <span class="keyword">name</span> <span class="keyword">like</span> <span class="string">'%张'</span></span><br></pre></td></tr></table></figure>
-<p>即使建立了age和name的联合索引，该查询也只会走age，但是在走age的时候，它可以把name条件带上，顺便就筛了。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1935,7 +2108,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">264</span>
+                  <span class="site-state-item-count">266</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

@@ -251,6 +251,318 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/08/02/8-2技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/08/02/8-2技术笔记/" itemprop="url">java类库+lamdba</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-02T11:15:46+08:00">
+                2018-08-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="java类"><a href="#java类" class="headerlink" title="java类"></a>java类</h1><h2 id="Preconditions"><a href="#Preconditions" class="headerlink" title="Preconditions"></a>Preconditions</h2><p>Preconditions类似与断言，使用其可以做参数校验</p>
+<ol>
+<li>checkNotNull(T reference)：校验对象是否为空。  </li>
+<li>checkNotNull(T reference, @Nullable Object errorMessage)：对象为空时显示指定的错误信息。</li>
+<li>checkNotNull(T reference, @Nullable String errorMessageTemplate,@Nullable Object… errorMessageArgs)：允许在错误信息中使用占位符。</li>
+</ol>
+<p>一般使用第二个重载方法，比如</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Preconditions.checkNotNull(productInvestQueryReq.getBusType(), &quot;产品类型不能为空&quot;);</span><br></pre></td></tr></table></figure>
+<p>其他方法比如checkArgument来校验有效性</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Preconditions.checkArgument(age&gt;0, &quot;age为%d&quot;,age);</span><br></pre></td></tr></table></figure>
+<h2 id="CollectionUtils"><a href="#CollectionUtils" class="headerlink" title="CollectionUtils"></a>CollectionUtils</h2><p>该工具类除了有个常用的CollectionUtils.isNotEmpty()外，还可以进行集合交并补差运算，以及不可变集合（后面几个运算返回新的集合才是运算结果。</p>
+<h2 id="StringUtils"><a href="#StringUtils" class="headerlink" title="StringUtils"></a>StringUtils</h2><p>使用String.isNotBlank()来校验字符串为空，可包括多种情况（null,””,”  “,”\t \n \f \r”)  </p>
+<h1 id="lamdba"><a href="#lamdba" class="headerlink" title="lamdba"></a>lamdba</h1><h2 id="表达式格式"><a href="#表达式格式" class="headerlink" title="表达式格式"></a>表达式格式</h2><p>lamdba表达格式为<br>(parameters) -&gt; expression<br>或<br>(parameters) -&gt;{ statements; }</p>
+<p>λ表达式本质上是一个匿名方法。<br>原方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public int add(int x, int y) &#123;</span><br><span class="line">        return x + y;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>转化为lamdba表达式<br>(int x,int y) -&gt; { return x + y; }<br>省略参数类型和return<br>(x,y) -&gt; x+y;<br>如果只有一个参数且可以被Java推断出类型，那么参数列表的括号也可以省略：<br>x -&gt; x+1;  </p>
+<h2 id="匿名内部类"><a href="#匿名内部类" class="headerlink" title="匿名内部类"></a>匿名内部类</h2><p>λ表达式主要用于替换以前广泛使用的内部匿名类，各种回调，比如事件响应器、传入Thread类的Runnable等。比如匿名内部类：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Thread oldSchool = new Thread( new Runnable () &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void run() &#123;</span><br><span class="line">        System.out.println(&quot;This is from an anonymous class.&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure>
+<p>使用lamdba表达式为</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Thread gaoDuanDaQiShangDangCi = new Thread( () -&gt; &#123;</span><br><span class="line">    System.out.println(&quot;This is from an anonymous method (lambda exp).&quot;);</span><br><span class="line">&#125; );</span><br></pre></td></tr></table></figure>
+<h2 id="内部迭代"><a href="#内部迭代" class="headerlink" title="内部迭代"></a>内部迭代</h2><p>现在java集合类（包括List）现在都有一个forEach方法，对元素进行迭代（遍历），所以我们不需要再写for循环了。forEach方法接受一个函数接口Consumer做参数，所以可以使用λ表达式。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">for(Object o: list) &#123; // 外部迭代</span><br><span class="line">       System.out.println(o);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">list.forEach(o -&gt; &#123;System.out.println(o);&#125;); //forEach函数实现内部迭代</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/08/02/《三色绘恋》游戏评测/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/08/02/《三色绘恋》游戏评测/" itemprop="url">《三色绘恋》游戏评测</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-02T10:05:56+08:00">
+                2018-08-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/杂谈/" itemprop="url" rel="index">
+                    <span itemprop="name">杂谈</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="游戏性"><a href="#游戏性" class="headerlink" title="游戏性"></a>游戏性</h1><h2 id="画面"><a href="#画面" class="headerlink" title="画面"></a>画面</h2><p>&emsp;&emsp;游戏画面还不错，色彩很明亮鲜艳，各种图完成度都很高。不过立绘偏少，来来回回就几个，但在有限的立绘中，表情画的很好，通过表情很好的展现了人物状态。场景图太少了，整个故事就发生在教室走廊画室家里等十来个，真是让人觉得有点乏。</p>
+<h2 id="音乐"><a href="#音乐" class="headerlink" title="音乐"></a>音乐</h2><p>&emsp;&emsp;音乐质量还可以，不少音乐很好听，为此还专门买了OST，但觉得部分音乐出现的频率太高了，尤其是《心底的颜色_Orange》这首，简直听腻了，好像没有通过音乐表现来区分两个女主。全程都有配音，配音质量我觉得很好，在俏皮和日常时很真实，在情感爆发时也不会显得浮夸。</p>
+<h2 id="剧情"><a href="#剧情" class="headerlink" title="剧情"></a>剧情</h2><p>&emsp;&emsp;虽说是galgame，但游戏并没有分支选项，全程都是敲空格，只是在每章结尾有个投票环节，用来最后解锁两个不同的大结局章节。本想看看两个结局分别长什么样，但玩完一个已经要坚持才能看到结尾了，玩不动了。煽情可能比较失败，但有些较有趣的情节，还是给我带来了不少乐趣的。</p>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>&emsp;&emsp;毫无意义的把其中一个女主的胸画的特别大，也许是为了噱头或者吸引玩家，导致本来和色情毫无关系的游戏，在steam被打上了色情游戏的标签，可能有助于销量吧，但我觉得有点low。</p>
+<h1 id="文学性"><a href="#文学性" class="headerlink" title="文学性"></a>文学性</h1><h2 id="总体评价"><a href="#总体评价" class="headerlink" title="总体评价"></a>总体评价</h2><p>&emsp;&emsp;百万字的文本，当然可以讨论文学性。<br>&emsp;&emsp;要是总体评价，给我的感觉就是，“文笔非常好的高中生”。<br>&emsp;&emsp;可能受日本文化影响较多，语言上总有一种日本动漫的风采，什么“执念”啊，“守护”啊，“梦想”啊，喜欢从各种人口中讲大道理，”坚持努力，找到自我“之类，最后用嘴遁说服人拯救世界。而其实和愚公移山一样，最后移走山的也不是愚公，而是感动天帝而已。也许本来galgame和日本动漫相近，所以总给人一种日本动漫的感觉。</p>
+<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><p>&emsp;&emsp;人物的行为和语言基本是脱离环境的，这句话的意思是：设定是2005年武汉高中生，但以其极低的耦合度，导致其实换个背景基本也没有问题。大部分时候人物说话的方式差不多，并且不像高中生，最大的问题是，不像对话。</p>
+<h2 id="描写"><a href="#描写" class="headerlink" title="描写"></a>描写</h2><p>&emsp;&emsp;作者非常喜欢心理描写，经常大段的心理描写，并且总是使用比喻的手法，而正是这些占了大量的文本量。实际上，我觉得这样的方法很缺乏表现力，”悲伤像藤曼一样牢牢得捆住我的内心，吸取着它的养分“，这样的句子，也许作者觉得很好， 但我认为心理感受靠比喻的描写这种方式，基本无法让读者感受到其心理状态。”今已亭亭如盖矣“，作者可能需要学习下这句。</p>
+<h2 id="人物"><a href="#人物" class="headerlink" title="人物"></a>人物</h2><p>&emsp;&emsp;人物塑造，性格的来源必有其背景的原因，这点应该是该作品中人物塑造的优点。几个配角相对好一点，但脸谱化。而主角的塑造就比较失败，玩家操控的角色，失败的原因是，作者试图通过心理描写来体现人物，但如前文所说，这样的心理描写，表现力很差。而两个女主，可能是因为我不懂女生，我根本不知道她们在哭什么，她们在对不起什么。主角是两个女主一切行为的出发点和落脚点，导致人物过于苍白，可能只有最后，日常活动中文芷大小姐吐槽男主的时候，能让我觉得她是真实存在的人。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/08/01/8-1技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -898,7 +1210,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">264</span>
+                  <span class="site-state-item-count">266</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

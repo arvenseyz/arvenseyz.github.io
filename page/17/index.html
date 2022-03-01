@@ -251,6 +251,412 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/02/13/2-13技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/02/13/2-13技术笔记/" itemprop="url">类加载机制与类加载器</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-13T16:19:00+08:00">
+                2019-02-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="类加载"><a href="#类加载" class="headerlink" title="类加载"></a>类加载</h1><p>虚拟机把描述类的数据从Class文件加载到内存，并对数据进行校验、转换解析和初始化，最终形成可以被虚拟机直接使用的Java类型，这就是虚拟机的类加载机制。</p>
+<p>当程序中使用任何类时，系统都会为之建立一个java.lang.Class对象。具体包括以下三个部分：</p>
+<p>（1）通过<strong>类的全名</strong>产生对应类的二进制数据流。（根据early load原理，如果没找到对应的类文件，只有在类实际使用时才会抛出错误）</p>
+<p>（2）分析并将这些二进制数据流转换为方法区方法区特定的数据结构</p>
+<p>（3）创建对应类的java.lang.Class对象，作为方法区的入口（有了对应的Class对象，并不意味着这个类已经完成了加载链接）</p>
+<p>通过使用不同的类加载器，可以从不同来源加载类的二进制数据，通常有如下几种来源：</p>
+<p>（1）从本地文件系统加载class文件，这是绝大部分程序的加载方式</p>
+<p>（2）从jar包中加载class文件，这种方式也很常见，例如jdbc编程时用到的数据库驱动类就是放在jar包中，jvm可以从jar文件中直接加载该class文件</p>
+<p>（3）通过网络加载class文件</p>
+<p>（4）把一个Java源文件动态编译、并执行加载</p>
+<h2 id="加载"><a href="#加载" class="headerlink" title="加载"></a>加载</h2><p>类加载指的是将类的class文件读入内存，并为之创建一个java.lang.<strong>Class对象</strong>，作为方法区<strong>这个类的数据访问的入口</strong>。</p>
+<h2 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h2><p>链接指的是将Java类的二进制文件合并到jvm的运行状态之中的过程。在链接之前，这个类必须被成功加载。</p>
+<p>类的链接包括<strong>验证、准备、解析</strong>这三步。</p>
+<h3 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h3><p>验证是用来确保Java类的二进制表示在结构上是否完全正确（如文件格式、语法语义等）。如果验证过程出错的话，会抛出java.lang.VertifyError错误。</p>
+<p>主要验证以下内容：</p>
+<ul>
+<li>文件格式验证</li>
+<li>元数据验证：语义验证</li>
+<li>字节码验证</li>
+</ul>
+<h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>准备过程则是创建Java类中的<strong>静态</strong>域（static修饰的内容），并将这些域的值设置为<strong>默认值</strong>，同时在<strong>方法区中分配内存空间</strong>。准备过程并不会执行代码。</p>
+<p>注意这里是做默认初始化，不是做显式初始化。</p>
+<h3 id="解析"><a href="#解析" class="headerlink" title="解析"></a>解析</h3><p>解析的过程就是确保这些被引用的类能被正确的找到（将符号引用替换为直接引用）。解析的过程可能会导致其它的Java类被加载。</p>
+<ul>
+<li>符号引用，就是一组符号来描述目标，可以是任何字面量。</li>
+<li>直接引用，就是直接指向目标的指针、相对偏移量或一个间接定位到目标的句柄。</li>
+</ul>
+<h2 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h2><p>初始化阶段是类加载过程的最后一步。到了初始化阶段，才真正执行类中定义的Java程序代码（或者说是字节码）。</p>
+<h3 id="类的初始化过程"><a href="#类的初始化过程" class="headerlink" title="类的初始化过程"></a>类的初始化过程</h3><p>Student s = new Student();在内存中做了哪些事情?</p>
+<ul>
+<li>加载Student.class文件进内存</li>
+<li>在<strong>栈内存</strong>为s开辟空间</li>
+<li>在<strong>堆内存</strong>为学生对象开辟空间</li>
+<li>对学生对象的成员变量进行<strong>默认初始化</strong></li>
+<li>对学生对象的成员变量进行<strong>显示初始化</strong></li>
+<li>通过<strong>构造方法</strong>对学生对象的<strong>成员变量赋值</strong></li>
+<li>学生对象初始化完毕，把<strong>对象地址赋值给s变量</strong></li>
+</ul>
+<h1 id="类加载器"><a href="#类加载器" class="headerlink" title="类加载器"></a>类加载器</h1><ol>
+<li>启动类加载器（Bootstrap ClassLoader），使用C++实现，是虚拟机自身的一部分。另一种是所有其他的类加载器，使用JAVA实现，独立于JVM，并且全部继承自抽象类java.lang.ClassLoader.</li>
+</ol>
+<p>启动类加载器（Bootstrap ClassLoader），负责将存放在&lt;JAVA+HOME&gt;\lib目录中的，或者被-Xbootclasspath参数所制定的路径中的，并且是JVM识别的（仅按照文件名识别，如rt.jar，如果名字不符合，即使放在lib目录中也不会被加载），加载到虚拟机内存中，启动类加载器无法被JAVA程序直接引用。</p>
+<ol start="2">
+<li><p>扩展类加载器，由sun.misc.Launcher$ExtClassLoader实现，负责加载&lt;JAVA_HOME&gt;\lib\ext目录中的，或者被java.ext.dirs系统变量所指定的路径中的所有类库，开发者可以直接使用扩展类加载器。</p>
+</li>
+<li><p>应用程序类加载器（Application ClassLoader），由sun.misc.Launcher$AppClassLoader来实现。由于这个类加载器是ClassLoader中的getSystemClassLoader()方法的返回值，所以一般称它为系统类加载器。负责加载用户类路径（ClassPath）上所指定的类库，开发者可以直接使用这个类加载器，如果应用程序中没有自定义过自己的类加载器，一般情况下这个就是程序中默认的类加载器。</p>
+</li>
+</ol>
+<h2 id="双亲委派"><a href="#双亲委派" class="headerlink" title="双亲委派"></a>双亲委派</h2><p>这个双亲翻译错了，parents指的不是父母，而是父亲，父亲的父亲，父亲的父亲等等。</p>
+<p>如果一个类加载器收到了类加载的请求，它首先不会自己去尝试加载这个类，而是把这个请求委派给父类加载器去完成，每一个层次的类加载器都是如此，因此所有的加载请求最终都是应该传送到顶层的启动类加载器中，只有当父类加载器反馈自己无法完成这个加载请求（它的搜索范围中没有找到所需的类）时，子加载器才会尝试自己去加载。</p>
+<h3 id="破坏双亲委派"><a href="#破坏双亲委派" class="headerlink" title="破坏双亲委派"></a>破坏双亲委派</h3><h4 id="为什么需要破坏双亲委派？"><a href="#为什么需要破坏双亲委派？" class="headerlink" title="为什么需要破坏双亲委派？"></a>为什么需要破坏双亲委派？</h4><p>因为在某些情况下父类加载器需要委托子类加载器去加载class文件。受到加载范围的限制，父类加载器无法加载到需要的文件，以Driver接口为例，由于Driver接口定义在jdk当中的，而其实现由各个数据库的服务商来提供，比如mysql的就写了<code>MySQL Connector</code>，那么问题就来了，DriverManager（也由jdk提供）要加载各个实现了Driver接口的实现类，然后进行管理，但是DriverManager由启动类加载器加载，只能记载JAVA_HOME的lib下文件，而其实现是由服务商提供的，由系统类加载器加载，这个时候就需要启动类加载器来委托子类来加载Driver实现，从而破坏了双亲委派，这里仅仅是举了破坏双亲委派的其中一个情况。</p>
+<h4 id="怎么破坏双亲委派"><a href="#怎么破坏双亲委派" class="headerlink" title="怎么破坏双亲委派"></a>怎么破坏双亲委派</h4><p>破坏双亲委托模型，需要做的是，<code>#loadClass(String name, boolean resolve)</code>方法中，不调用父<code>parent</code>ClassLoader 方法去加载类，那么就成功了。那么我们要做的仅仅是，错误的覆盖<code>##loadClass(String name, boolean resolve)</code>方法，不去使用父<code>parent</code>ClassLoader 方法去加载类即可。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/02/12/2-12技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/02/12/2-12技术笔记-1/" itemprop="url">JVM内存管理与垃圾收集</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-12T14:30:04+08:00">
+                2019-02-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="内存管理"><a href="#内存管理" class="headerlink" title="内存管理"></a>内存管理</h1><h3 id="程序计数器"><a href="#程序计数器" class="headerlink" title="程序计数器"></a>程序计数器</h3><p>是一块较小的内存空间，用来指定当前线程执行字节码的行数，每个线程计数器都是私有的。</p>
+<p>它存在的意义在于，切换线程时，相当于保存当前指令执行到那一句，切回来时可以继续执行。</p>
+<h3 id="虚拟机栈"><a href="#虚拟机栈" class="headerlink" title="虚拟机栈"></a>虚拟机栈</h3><p>这个也是一个线程私有的，生命周期与线程是同步的，每个方法在执行的同时，都会创建一个栈帧，用于存储局部变量表，操作数栈，动态链接，方法出入口等信息，每个方法的调用到执行完成的过程就是一个栈帧入栈到出栈的过程；</p>
+<p>栈内存就是虚拟机栈，或者说是虚拟机栈中局部变量表的部分</p>
+<p>局部变量表存放了编辑期可知的各种基本数据类型（boolean、byte、char、short、int、float、long、double）、对象引用（refrence）类型和returnAddress类型（指向了一条字节码指令的地址）</p>
+<p>其中64位长度的long和double类型的数据会占用两个局部变量空间，其余的数据类型只占用1个。</p>
+<h3 id="本地方法栈"><a href="#本地方法栈" class="headerlink" title="本地方法栈"></a>本地方法栈</h3><p>和虚拟机栈类似，区别在于，存放的是native方法的相关信息。这里说一下什么是native方法。</p>
+<h4 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h4><p>被native关键字修饰的方法叫做本地方法，本地方法和其它方法不一样，本地方法意味着和平台有关，因此使用了native的程序可移植性都不太高。另外native方法在JVM中运行时数据区也和其它方法不一样，它有专门的本地方法栈。native方法主要用于加载文件和动态链接库，由于Java语言无法访问操作系统底层信息（比如：底层硬件设备等），这时候就需要借助C语言来完成了。被native修饰的方法可以被C语言重写。</p>
+<h4 id="使用步骤"><a href="#使用步骤" class="headerlink" title="使用步骤"></a>使用步骤</h4><ul>
+<li>Java程序中声明native修饰的方法，类似于abstract修饰的方法，只有方法签名，没有方法实现。编译该java文件，会产生一个.class文件。</li>
+<li>使用javah编译上一步产生的class文件，会产生一个.h文件。</li>
+<li>写一个.cpp文件实现上一步中.h文件中的方法。</li>
+<li>将上一步的.cpp文件编译成动态链接库文件.dll。</li>
+<li>最后就可以使用System或是Runtime中的loadLibrary()方法加载上一步的产生的动态连接库文件了。</li>
+</ul>
+<h3 id="Java堆"><a href="#Java堆" class="headerlink" title="Java堆"></a>Java堆</h3><p>堆区是Java虚拟机所管理的内存中最大的一块，Java堆是被所有线程共享的内存区域，主要存储对象的实例。</p>
+<h3 id="方法区"><a href="#方法区" class="headerlink" title="方法区"></a>方法区</h3><p>方法区它用于储存已被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据</p>
+<p>除了Java堆一样不需要连续的内存和可以选择固定大小或者可扩展外，还可以选择不实现垃圾收集。这个区域的内存回收目标主要是针对常量池的回收和对类型的卸载。</p>
+<p>运行时常量池是方法区的一部分。Class文件中除了有关的版本、字段、方法、接口等描述信息外、还有一项信息是常量池，用于存放编辑期生成的各种字面量和符号引用，这部分内容将在类加载后进入方法区的运行时常量池中存放</p>
+<p>Java语言并不要求常量一定只有编辑期才能产生，也就是可能将新的常量放入池中，这种特性被开发人员利用得比较多的便是String类的intern()方法</p>
+<h3 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h3><p>Java对象这里指的是引用类型的对象，这里用Student stu=new Student()为例子访问，Student stu作为引用对象，存在与Java虚拟机栈上，new Student()保存在Java堆中，堆中记录Student类型的信息包括方法，接口，对象类型等地址，这些类型的执行的数据存储在方法区中；</p>
+<h2 id="堆溢出与栈溢出"><a href="#堆溢出与栈溢出" class="headerlink" title="堆溢出与栈溢出"></a>堆溢出与栈溢出</h2><p>栈是线程私有的，他的生命周期与线程相同，每个方法在执行的时候都会创建一个栈帧，用来存储局部变量表，操作数栈，动态链接，方法出口灯信息。局部变量表又包含基本数据类型，对象引用类型（局部变量表编译器完成，运行期间不会变化）</p>
+<p> 所以我们可以理解为栈溢出就是方法执行是创建的栈帧超过了栈的深度。那么最有可能的就是方法递归调用产生这种结果。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">f</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        f();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>会抛出 StackOverflowError 异常</p>
+<p>heap space表示堆空间，堆中主要存储的是对象。如果不断的new对象则会导致堆中的空间溢出。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testd</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    List&lt;String&gt; list = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">    <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">        list.add(<span class="keyword">new</span> String(i + <span class="string">""</span>));</span><br><span class="line">        i++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>会抛OutOfMemoryError异常</p>
+<h1 id="引用类型"><a href="#引用类型" class="headerlink" title="引用类型"></a>引用类型</h1><p>有四种引用类型，强弱软虚。强应用就是普通使用，后几种需要用继承此类引用的基类，或者使用泛型。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SoftReference&lt;Object&gt; softReference = <span class="keyword">new</span> SoftReference&lt;Object&gt;(<span class="keyword">new</span> Object());</span><br></pre></td></tr></table></figure>
+<p>这四种引用在垃圾回收上的差别：</p>
+<h3 id="强引用"><a href="#强引用" class="headerlink" title="强引用"></a>强引用</h3><pre><code>**如果一个对象具有强引用，那垃圾回收器绝不会回收它**。当内存空间不足，Java虚拟机宁愿抛出OutOfMemoryError错误，使程序异常终止，也不会靠随意回收具有强引用的对象来解决内存不足的问题。
+</code></pre><h3 id="弱引用"><a href="#弱引用" class="headerlink" title="弱引用"></a>弱引用</h3><pre><code>弱引用与软引用的区别在于：**只具有弱引用的对象拥有更短暂的生命周期**。
+</code></pre><p><strong>每次执行GC的时候</strong>，一旦发现了只具有弱引用的对象，<strong>不管当前内存空间足够与否，都会回收它的内存</strong>。不过，由于垃圾回收器是一个优先级很低的线程，因此<strong>不一定会很快发现那些只具有弱引用的对象</strong>。</p>
+<h3 id="软引用"><a href="#软引用" class="headerlink" title="软引用"></a>软引用</h3><p>　　如果一个对象只具有软引用，则内存空间足够时，垃圾回收器就不会回收它；如果<strong>内存空间不足了，就会回收这些对象的内存</strong>。（备注：如果内存不足，随时有可能被回收。）</p>
+<p>　　只要垃圾回收器没有回收它，该对象就可以被程序使用。软引用可用来实现内存敏感的高速缓存。</p>
+<h3 id="虚引用"><a href="#虚引用" class="headerlink" title="虚引用"></a>虚引用</h3><p>　　“虚引用”顾名思义，就是形同虚设，与其他几种引用都不同，<strong>虚引用并不会决定对象的生命周期</strong>。如果一个对象仅持有虚引用，那么它就和没有任何引用一样，<strong>在任何时候都可能被垃圾回收器回收</strong>。</p>
+<p>　　虚引用主要用来跟踪对象被垃圾回收器回收的活动。</p>
+<h3 id="引用队列"><a href="#引用队列" class="headerlink" title="引用队列"></a>引用队列</h3><pre><code>ReferenceQueue是用来配合引用工作的，没有ReferenceQueue一样可以运行。创建引用的时候可以指定关联的队列，当GC释放对象内存的时候，会将引用加入到引用队列，这相当于是一种通知机制。当关联的引用队列中有数据的时候，意味着引用指向的堆内存中的对象被回收。通过这种方式，JVM允许我们在对象被销毁后，做一些我们自己想做的事情。JVM提供了一个ReferenceHandler线程，将引用加入到注册的引用队列中。
+</code></pre><h1 id="垃圾回收"><a href="#垃圾回收" class="headerlink" title="垃圾回收"></a>垃圾回收</h1><h2 id="基础算法"><a href="#基础算法" class="headerlink" title="基础算法"></a>基础算法</h2><h3 id="标记-清除算法："><a href="#标记-清除算法：" class="headerlink" title="标记-清除算法："></a>标记-清除算法：</h3><p><strong>概念：</strong></p>
+<p>标记阶段：<strong>先通过根节点，标记所有从根节点开始的可达对象</strong>。因此，未被标记的对象就是未被引用的垃圾对象；</p>
+<p>清除阶段：清除所有未被标记的对象。</p>
+<p><strong>缺点：</strong></p>
+<p>标记和清除的过程<strong>效率不高</strong>（标记和清除都需要从头遍历到尾）</p>
+<p>标记清除后<strong>会产生大量不连续的碎片</strong>。</p>
+<h3 id="复制算法：（新生代的GC）"><a href="#复制算法：（新生代的GC）" class="headerlink" title="复制算法：（新生代的GC）"></a>复制算法：（新生代的GC）</h3><p>概念：</p>
+<p>　　将原有的<strong>内存空间分为两块</strong>，每次只使用其中一块，在垃圾回收时，将正在使用的内存中的<strong>存活对象</strong>复制到未使用的内存块中，然后清除正在使用的内存块中的所有对象。</p>
+<p><strong>优点：</strong></p>
+<p>这样使得每次都是对整个半区进行回收，内存分配时也就<strong>不用考虑内存碎片</strong>等情况</p>
+<p>只要移动堆顶指针，按顺序分配内存即可，实现简单，<strong>运行效率高</strong></p>
+<p><strong>缺点：空间的浪费</strong></p>
+<h3 id="标记-整理算法：（老年代的GC）"><a href="#标记-整理算法：（老年代的GC）" class="headerlink" title="标记-整理算法：（老年代的GC）"></a>标记-整理算法：（老年代的GC）</h3><p>复制算法在对象<strong>存活率高</strong>的时候要进行较多的复制操作，效率将会降低，所以在老年代中一般不能直接选用这种算法。</p>
+<p><strong>概念：</strong></p>
+<blockquote>
+<p>标记阶段：先通过根节点，标记所有从根节点开始的可达对象。因此，未被标记的对象就是未被引用的垃圾对象</p>
+<p>整理阶段：<strong>将**</strong>将所有的存活对象压缩到内存的一端**；之后，清理边界外所有的空间</p>
+</blockquote>
+<p><strong>优点：</strong></p>
+<p>　　不会产生内存碎片。</p>
+<p><strong>缺点：</strong></p>
+<p>　　在标记的基础之上还需要进行对象的移动，成本相对较高，效率也不高。</p>
+<h2 id="工业方法"><a href="#工业方法" class="headerlink" title="工业方法"></a>工业方法</h2><h3 id="分代收集算法："><a href="#分代收集算法：" class="headerlink" title="分代收集算法："></a><strong>分代收集算法：</strong></h3><p>相当于各种方法的结合。</p>
+<p>首先是按照生命周期分代，年轻代和老年代，（老版本还有持久代，存放类定义、字节码和常量等很少会变更的元数据信息，现在这些信息不存放在堆内存，而是元空间的本地内存）。</p>
+<h3 id="年轻代"><a href="#年轻代" class="headerlink" title="年轻代"></a>年轻代</h3><p>年轻代的垃圾收集算法相当于复制算法的改进。</p>
+<p>这样一个前提，年轻代的大部分都不会存活。换而言之，年轻代里大部分对象年龄都是0。意义在于，我们不需要把堆内存分为相等的两部分，用很小的一部分来存放仍存活的对象即可。</p>
+<p>我们把年轻的代分为3部分，80%（数值可设定）为eden区，eden是伊甸园的意思，对象刚开始都在这里。另外两个小的Survivor，用来整理。</p>
+<p>每次使用Eden和其中一块Survivor。当回收时，将Eden和Survivor中还存活着的对象一次性地复制到另外一块Survivor空间上，最后清理掉Eden和刚才用过的Survivor空间。</p>
+<h3 id="老年代"><a href="#老年代" class="headerlink" title="老年代"></a>老年代</h3><p>老年代的对象，包括一是大对象，直接进入老年代；而是年轻代中年龄足够大的对象（默认15岁，同样可设置）。</p>
+<p>老年代的垃圾收集算法，即为标记-清除/整理算法。</p>
+<h2 id="minorGC与fullGC"><a href="#minorGC与fullGC" class="headerlink" title="minorGC与fullGC"></a>minorGC与fullGC</h2><p>其实fullGC就是majorGC。</p>
+<p>minorGC是新生代垃圾回收，fullGC是老年代垃圾回收。</p>
+<p>fullGC问题在于，整理的过程会<em>stop the world</em>，所以会降低性能。应尝试减少fullGC次数。比如合理的堆内存大小，避免system.gc调用，避免连续大对象等</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/02/12/2-12技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1541,373 +1947,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/01/07/1-7技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/07/1-7技术笔记-1/" itemprop="url">RPC中netty的使用</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-07T16:57:47+08:00">
-                2019-01-07
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="消息实体"><a href="#消息实体" class="headerlink" title="消息实体"></a>消息实体</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RpcRequest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String requestId;</span><br><span class="line">    <span class="keyword">private</span> String className;</span><br><span class="line">    <span class="keyword">private</span> String methodName;</span><br><span class="line">    <span class="keyword">private</span> Class[] parameterTypes;</span><br><span class="line">    <span class="keyword">private</span> Object[] parameters;</span><br><span class="line">    <span class="comment">// getter/setter...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RpcResponse</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String requestId;</span><br><span class="line">    <span class="keyword">private</span> Throwable error;</span><br><span class="line">    <span class="keyword">private</span> Object result;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// getter/setter...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="编解码"><a href="#编解码" class="headerlink" title="编解码"></a>编解码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RpcDecoder</span> <span class="keyword">extends</span> <span class="title">ByteToMessageDecoder</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Class&lt;?&gt; genericClass;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">RpcDecoder</span><span class="params">(Class&lt;?&gt; genericClass)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.genericClass = genericClass;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">decode</span><span class="params">(ChannelHandlerContext ctx, ByteBuf in, List&lt;Object&gt; out)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (in.readableBytes() &lt; <span class="number">4</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        in.markReaderIndex();</span><br><span class="line">        <span class="keyword">int</span> dataLength = in.readInt();</span><br><span class="line">        <span class="keyword">if</span> (in.readableBytes() &lt; dataLength) &#123;</span><br><span class="line">            in.resetReaderIndex();</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">byte</span>[] data = <span class="keyword">new</span> <span class="keyword">byte</span>[dataLength];</span><br><span class="line">        in.readBytes(data);</span><br><span class="line">        out.add(SerializationUtil.deserialize(data, genericClass));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RpcEncoder</span> <span class="keyword">extends</span> <span class="title">MessageToByteEncoder</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Class&lt;?&gt; genericClass;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">RpcEncoder</span><span class="params">(Class&lt;?&gt; genericClass)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.genericClass = genericClass;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">encode</span><span class="params">(ChannelHandlerContext ctx, Object in, ByteBuf out)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (genericClass.isInstance(in)) &#123;</span><br><span class="line">            <span class="keyword">byte</span>[] data = SerializationUtil.serialize(in);</span><br><span class="line">            out.writeInt(data.length);</span><br><span class="line">            out.writeBytes(data);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h2><p>使用Protostuff</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SerializationUtil</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Map&lt;Class&lt;?&gt;, Schema&lt;?&gt;&gt; cachedSchema = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Objenesis objenesis = <span class="keyword">new</span> ObjenesisStd(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">SerializationUtil</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 序列化（对象 -&gt; 字节数组）</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="keyword">byte</span>[] serialize(T obj) &#123;</span><br><span class="line">        Class&lt;T&gt; cls = (Class&lt;T&gt;) obj.getClass();</span><br><span class="line">        LinkedBuffer buffer = LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Schema&lt;T&gt; schema = getSchema(cls);</span><br><span class="line">            <span class="keyword">return</span> ProtostuffIOUtil.toByteArray(obj, schema, buffer);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(e.getMessage(), e);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            buffer.clear();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 反序列化（字节数组 -&gt; 对象）</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">T <span class="title">deserialize</span><span class="params">(<span class="keyword">byte</span>[] data, Class&lt;T&gt; cls)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            T message = objenesis.newInstance(cls);</span><br><span class="line">            Schema&lt;T&gt; schema = getSchema(cls);</span><br><span class="line">            ProtostuffIOUtil.mergeFrom(data, message, schema);</span><br><span class="line">            <span class="keyword">return</span> message;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(e.getMessage(), e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">Schema&lt;T&gt; <span class="title">getSchema</span><span class="params">(Class&lt;T&gt; cls)</span> </span>&#123;</span><br><span class="line">        Schema&lt;T&gt; schema = (Schema&lt;T&gt;) cachedSchema.get(cls);</span><br><span class="line">        <span class="keyword">if</span> (schema == <span class="keyword">null</span>) &#123;</span><br><span class="line">            schema = RuntimeSchema.createFrom(cls);</span><br><span class="line">            cachedSchema.put(cls, schema);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> schema;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="客户端启动"><a href="#客户端启动" class="headerlink" title="客户端启动"></a>客户端启动</h2><p>方法在RPCServer中。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (bossGroup == <span class="keyword">null</span> &amp;&amp; workerGroup == <span class="keyword">null</span>) &#123;</span><br><span class="line">            bossGroup = <span class="keyword">new</span> NioEventLoopGroup();</span><br><span class="line">            workerGroup = <span class="keyword">new</span> NioEventLoopGroup();</span><br><span class="line">            ServerBootstrap bootstrap = <span class="keyword">new</span> ServerBootstrap();</span><br><span class="line">            bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)</span><br><span class="line">                    .childHandler(<span class="keyword">new</span> ChannelInitializer&lt;SocketChannel&gt;() &#123;</span><br><span class="line">                        <span class="meta">@Override</span></span><br><span class="line">                        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(SocketChannel channel)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">                            channel.pipeline()</span><br><span class="line">                                    .addLast(<span class="keyword">new</span> LengthFieldBasedFrameDecoder(<span class="number">65536</span>, <span class="number">0</span>, <span class="number">4</span>, <span class="number">0</span>, <span class="number">0</span>))</span><br><span class="line">                                    .addLast(<span class="keyword">new</span> RpcDecoder(RpcRequest.class))</span><br><span class="line">                                    .addLast(<span class="keyword">new</span> RpcEncoder(RpcResponse.class))</span><br><span class="line">                                    .addLast(<span class="keyword">new</span> RpcHandler(handlerMap));</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;)</span><br><span class="line">                    .option(ChannelOption.SO_BACKLOG, <span class="number">128</span>)</span><br><span class="line">                    .childOption(ChannelOption.SO_KEEPALIVE, <span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">            String[] array = serverAddress.split(<span class="string">":"</span>);</span><br><span class="line">            String host = array[<span class="number">0</span>];</span><br><span class="line">            <span class="keyword">int</span> port = Integer.parseInt(array[<span class="number">1</span>]);</span><br><span class="line"></span><br><span class="line">            ChannelFuture future = bootstrap.bind(host, port).sync();</span><br><span class="line">            logger.info(<span class="string">"Server started on port &#123;&#125;"</span>, port);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (serviceRegistry != <span class="keyword">null</span>) &#123;</span><br><span class="line">                serviceRegistry.register(serverAddress);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            future.channel().closeFuture().sync();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<p>以及使用线程池的,RpcServerHandler调用的submit方法。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">submit</span><span class="params">(Runnable task)</span> </span>&#123;</span><br><span class="line">     <span class="keyword">if</span> (threadPoolExecutor == <span class="keyword">null</span>) &#123;</span><br><span class="line">         <span class="keyword">synchronized</span> (RpcServer.class) &#123;</span><br><span class="line">             <span class="keyword">if</span> (threadPoolExecutor == <span class="keyword">null</span>) &#123;</span><br><span class="line">                 threadPoolExecutor = <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">16</span>, <span class="number">16</span>, <span class="number">600L</span>,</span><br><span class="line">                         TimeUnit.SECONDS, <span class="keyword">new</span> ArrayBlockingQueue&lt;Runnable&gt;(<span class="number">65536</span>));</span><br><span class="line">             &#125;</span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line">     threadPoolExecutor.submit(task);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="handler"><a href="#handler" class="headerlink" title="handler"></a>handler</h2><p>这里使用多线程异步。RpcServer.submit()，线程池在RpcServer。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RpcServerHandler</span> <span class="keyword">extends</span> <span class="title">SimpleChannelInboundHandler</span>&lt;<span class="title">RpcRequest</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger LOGGER = LoggerFactory.getLogger(RpcServerHandler.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Object&gt; handlerMap;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">RpcServerHandler</span><span class="params">(Map&lt;String, Object&gt; handlerMap)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.handlerMap = handlerMap;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">channelRead0</span><span class="params">(<span class="keyword">final</span> ChannelHandlerContext ctx,<span class="keyword">final</span> RpcRequest request)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        RpcServer.submit(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                LOGGER.debug(<span class="string">"Receive request "</span> + request.getRequestId());</span><br><span class="line">                RpcResponse response = <span class="keyword">new</span> RpcResponse();</span><br><span class="line">                response.setRequestId(request.getRequestId());</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    Object result = handle(request);</span><br><span class="line">                    response.setResult(result);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">                    response.setError(t.toString());</span><br><span class="line">                    LOGGER.error(<span class="string">"RPC Server handle request error"</span>,t);</span><br><span class="line">                &#125;</span><br><span class="line">                ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE).addListener(<span class="keyword">new</span> ChannelFutureListener() &#123;</span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">operationComplete</span><span class="params">(ChannelFuture channelFuture)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">                        LOGGER.debug(<span class="string">"Send response for request "</span> + request.getRequestId());</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> Object <span class="title">handle</span><span class="params">(RpcRequest request)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">//通过反射调用方法</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">exceptionCaught</span><span class="params">(ChannelHandlerContext ctx, Throwable cause)</span> </span>&#123;</span><br><span class="line">        LOGGER.error(<span class="string">"server caught exception"</span>, cause);</span><br><span class="line">        ctx.close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/01/07/1-7技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/07/1-7技术笔记/" itemprop="url">手写dubbo</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-07T14:52:12+08:00">
-                2019-01-07
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h1><p>最简单的dubbo，也就是它基础功能是什么呢？远程方法调用。即调用远程计算机上的服务，就像调用本地服务一样。怎么实现呢，服务端在zookeeper注册服务地址，消费端获取后，双方用netty通讯，客户端发送序列后所调用方法，然后服务端通过反射执行方法，使用动态代理技术来透明化服务调用。</p>
-<p>涉及以下技术。</p>
-<h1 id="技术"><a href="#技术" class="headerlink" title="技术"></a>技术</h1><ul>
-<li><p>服务发布与订阅：服务端使用Zookeeper注册服务地址，客户端从Zookeeper获取可用的服务地址。</p>
-</li>
-<li><p>通信：使用Netty作为通信框架。</p>
-</li>
-<li><p>Spring：使用Spring配置服务，加载Bean，扫描注解。</p>
-</li>
-<li><p>动态代理：客户端使用代理模式透明化服务调用。</p>
-</li>
-<li><p>消息编解码：使用Protostuff序列化和反序列化消息。</p>
-</li>
-</ul>
-<h1 id="动态代理"><a href="#动态代理" class="headerlink" title="动态代理"></a>动态代理</h1><pre><code>怎么封装通信细节才能让用户像以本地调用方式调用远程服务呢？对java来说就是使用代理！java代理有两种方式：1） jdk 动态代理；2）字节码生成。尽管字节码生成方式实现的代理更为强大和高效，但代码维护不易，大部分公司实现RPC框架时还是选择动态代理方式。
-</code></pre><p>　　我们需要实现RPCProxyClient代理类，代理类的invoke方法中封装了与远端服务通信的细节，消费方首先从RPCProxyClient获得服务提供方的接口，当执行helloWorldService.sayHello(“test”)方法时就会调用invoke方法。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RPCProxyClient</span> <span class="keyword">implements</span> <span class="title">java</span>.<span class="title">lang</span>.<span class="title">reflect</span>.<span class="title">InvocationHandler</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Object obj;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">RPCProxyClient</span><span class="params">(Object obj)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.obj=obj;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 得到被代理对象;</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title">getProxy</span><span class="params">(Object obj)</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> java.lang.reflect.Proxy.newProxyInstance(obj.getClass().getClassLoader(),</span><br><span class="line">                obj.getClass().getInterfaces(), <span class="keyword">new</span> RPCProxyClient(obj));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 调用此方法执行</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span></span></span><br><span class="line"><span class="function">            <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        <span class="comment">//结果参数;</span></span><br><span class="line">        Object result = <span class="keyword">new</span> Object();</span><br><span class="line">        <span class="comment">// ...执行通信相关逻辑</span></span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"> <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>&#123;</span><br><span class="line">     <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">         HelloWorldService helloWorldService = (HelloWorldService)RPCProxyClient.getProxy(HelloWorldService.class);</span><br><span class="line"></span><br><span class="line">         helloWorldService.sayHello(<span class="string">"test"</span>);</span><br><span class="line"></span><br><span class="line">     &#125;</span><br><span class="line"></span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<h1 id="服务端实现"><a href="#服务端实现" class="headerlink" title="服务端实现"></a>服务端实现</h1><p>服务端要做的很简单，在zookeeper上注册自己的服务即可。当然实际上不是所有的服务都要注册， 这里我们可以用一个注解，只注册有@PRC注解的服务。</p>
-<h2 id="注解"><a href="#注解" class="headerlink" title="注解"></a>注解</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Target</span>(&#123;ElementType.TYPE&#125;)</span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)</span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> RpcService &#123;</span><br><span class="line">    Class&lt;?&gt; value();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="服务及其实现"><a href="#服务及其实现" class="headerlink" title="服务及其实现"></a>服务及其实现</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">HelloService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function">String <span class="title">hello</span><span class="params">(String name)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function">String <span class="title">hello</span><span class="params">(Person person)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//实现</span></span><br><span class="line"><span class="meta">@RpcService</span>(HelloService.class)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloServiceImpl</span> <span class="keyword">implements</span> <span class="title">HelloService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">hello</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Hello! "</span> + name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">hello</span><span class="params">(Person person)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Hello! "</span> + person.getFirstName() + <span class="string">" "</span> + person.getLastName();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="服务在启动的时候扫描得到所有的服务接口"><a href="#服务在启动的时候扫描得到所有的服务接口" class="headerlink" title="服务在启动的时候扫描得到所有的服务接口"></a>服务在启动的时候扫描得到所有的服务接口</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setApplicationContext</span><span class="params">(ApplicationContext ctx)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">        Map&lt;String, Object&gt; serviceBeanMap = ctx.getBeansWithAnnotation(RpcService.class);</span><br><span class="line">        <span class="keyword">if</span> (MapUtils.isNotEmpty(serviceBeanMap)) &#123;</span><br><span class="line">            <span class="keyword">for</span> (Object serviceBean : serviceBeanMap.values()) &#123;</span><br><span class="line">                String interfaceName = serviceBean.getClass().getAnnotation(RpcService.class).value().getName();</span><br><span class="line">                handlerMap.put(interfaceName, serviceBean);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="配置服务端"><a href="#配置服务端" class="headerlink" title="配置服务端"></a>配置服务端</h2><p>在spring注册和配置</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&lt;beans ...&gt;</span><br><span class="line"> &lt;context:component-scan base-<span class="keyword">package</span>=<span class="string">"com.xxx.rpc.sample.server"</span>/&gt;</span><br><span class="line"> &lt;context:property-placeholder location=<span class="string">"classpath:config.properties"</span>/&gt;</span><br><span class="line"> &lt;!-- 配置服务注册组件 --&gt;</span><br><span class="line"> &lt;bean id=<span class="string">"serviceRegistry"</span> <span class="class"><span class="keyword">class</span></span>=<span class="string">"com.xxx.rpc.registry.ServiceRegistry"</span>&gt;</span><br><span class="line"> &lt;constructor-arg name=<span class="string">"registryAddress"</span> value=<span class="string">"$&#123;registry.address&#125;"</span>/&gt;</span><br><span class="line"> &lt;/bean&gt;</span><br><span class="line"> &lt;!-- 配置 RPC 服务器 --&gt;</span><br><span class="line"> &lt;bean id=<span class="string">"rpcServer"</span> <span class="class"><span class="keyword">class</span></span>=<span class="string">"com.xxx.rpc.server.RpcServer"</span>&gt;</span><br><span class="line"> &lt;constructor-arg name=<span class="string">"serverAddress"</span> value=<span class="string">"$&#123;server.address&#125;"</span>/&gt;</span><br><span class="line"> &lt;constructor-arg name=<span class="string">"serviceRegistry"</span> ref=<span class="string">"serviceRegistry"</span>/&gt;</span><br><span class="line"> &lt;/bean&gt;</span><br><span class="line"> &lt;/beans&gt;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># ZooKeeper 服务器</span><br><span class="line">registry.address=127.0.0.1:2181</span><br><span class="line"></span><br><span class="line"># RPC 服务器</span><br><span class="line">server.address=127.0.0.1:8000</span><br></pre></td></tr></table></figure>
-<h2 id="启动服务"><a href="#启动服务" class="headerlink" title="启动服务"></a>启动服务</h2><p>一个引导类即可</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RpcBootstrap</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">new</span> ClassPathXmlApplicationContext(<span class="string">"spring.xml"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="在zookeeper中注册服务"><a href="#在zookeeper中注册服务" class="headerlink" title="在zookeeper中注册服务"></a>在zookeeper中注册服务</h2><p>都是zookeeper操作</p>
-<p>第一次时，需要创建一个持久父节点，之后都是创建服务临时节点。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ServiceRegistry</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger LOGGER = LoggerFactory.getLogger(ServiceRegistry.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> CountDownLatch latch = <span class="keyword">new</span> CountDownLatch(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String registryAddress;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ServiceRegistry</span><span class="params">(String registryAddress)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.registryAddress = registryAddress;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">register</span><span class="params">(String data)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (data != <span class="keyword">null</span>) &#123;</span><br><span class="line">            ZooKeeper zk = connectServer();</span><br><span class="line">            <span class="keyword">if</span> (zk != <span class="keyword">null</span>) &#123;</span><br><span class="line">                AddRootNode(zk); <span class="comment">// Add root node if not exist</span></span><br><span class="line">                createNode(zk, data);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> ZooKeeper <span class="title">connectServer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        ZooKeeper zk = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            zk = <span class="keyword">new</span> ZooKeeper(registryAddress, Constant.ZK_SESSION_TIMEOUT, <span class="keyword">new</span> Watcher() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">process</span><span class="params">(WatchedEvent event)</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">if</span> (event.getState() == Event.KeeperState.SyncConnected) &#123;</span><br><span class="line">                        latch.countDown();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            latch.await();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            LOGGER.error(<span class="string">""</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">catch</span> (InterruptedException ex)&#123;</span><br><span class="line">            LOGGER.error(<span class="string">""</span>, ex);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> zk;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">AddRootNode</span><span class="params">(ZooKeeper zk)</span></span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Stat s = zk.exists(Constant.ZK_REGISTRY_PATH, <span class="keyword">false</span>);</span><br><span class="line">            <span class="keyword">if</span> (s == <span class="keyword">null</span>) &#123;</span><br><span class="line">                zk.create(Constant.ZK_REGISTRY_PATH, <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">0</span>], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (KeeperException e) &#123;</span><br><span class="line">            LOGGER.error(e.toString());</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            LOGGER.error(e.toString());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">createNode</span><span class="params">(ZooKeeper zk, String data)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">byte</span>[] bytes = data.getBytes();</span><br><span class="line">            String path = zk.create(Constant.ZK_DATA_PATH, bytes, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);</span><br><span class="line">            LOGGER.debug(<span class="string">"create zookeeper node (&#123;&#125; =&gt; &#123;&#125;)"</span>, path, data);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (KeeperException e) &#123;</span><br><span class="line">            LOGGER.error(<span class="string">""</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">catch</span> (InterruptedException ex)&#123;</span><br><span class="line">            LOGGER.error(<span class="string">""</span>, ex);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>另外，其中，通过constant配置了所有的常量</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Constant</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> ZK_SESSION_TIMEOUT = <span class="number">5000</span>;</span><br><span class="line"></span><br><span class="line">    String ZK_REGISTRY_PATH = <span class="string">"/registry"</span>;</span><br><span class="line">    String ZK_DATA_PATH = ZK_REGISTRY_PATH + <span class="string">"/data"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="netty实现-RPC-服务器"><a href="#netty实现-RPC-服务器" class="headerlink" title="netty实现 RPC 服务器"></a>netty实现 RPC 服务器</h2><p>主要使用netty，neety无非就是编解码还有处理 RPC 请求功能的handler，以及ServerBootstrap启动程序。值得说的是：</p>
-<ol>
-<li><p>实现了ApplicationContextAware接口，以让Bean先获取Spring容器，然后借助于Spring容器实现功能。这里的功能是扫描带有 RpcService 注解的类并初始化 handlerMap 对象。</p>
-</li>
-<li><p>实现了InitializingBean接口，为bean提供了初始化方法的方式，在初始化bean的时候执行。这里执行的就是netty服务啦。</p>
-</li>
-</ol>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RpcServer</span> <span class="keyword">implements</span> <span class="title">ApplicationContextAware</span>, <span class="title">InitializingBean</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger LOGGER = LoggerFactory.getLogger(RpcServer.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String serverAddress;</span><br><span class="line">    <span class="keyword">private</span> ServiceRegistry serviceRegistry;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Map&lt;String, Object&gt; handlerMap = <span class="keyword">new</span> HashMap&lt;&gt;(); <span class="comment">// 存放接口名与服务对象之间的映射关系</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">RpcServer</span><span class="params">(String serverAddress)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.serverAddress = serverAddress;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">RpcServer</span><span class="params">(String serverAddress, ServiceRegistry serviceRegistry)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.serverAddress = serverAddress;</span><br><span class="line">        <span class="keyword">this</span>.serviceRegistry = serviceRegistry;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setApplicationContext</span><span class="params">(ApplicationContext ctx)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">        Map&lt;String, Object&gt; serviceBeanMap = ctx.getBeansWithAnnotation(RpcService.class); <span class="comment">// 获取所有带有 RpcService 注解的 Spring Bean</span></span><br><span class="line">        <span class="keyword">if</span> (MapUtils.isNotEmpty(serviceBeanMap)) &#123;</span><br><span class="line">            <span class="keyword">for</span> (Object serviceBean : serviceBeanMap.values()) &#123;</span><br><span class="line">                String interfaceName = serviceBean.getClass().getAnnotation(RpcService.class).value().getName();</span><br><span class="line">                handlerMap.put(interfaceName, serviceBean);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterPropertiesSet</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">//具体怎么启动，即start()方法实现，是netty相关内容，也在此类中。此处略去。</span></span><br><span class="line"></span><br><span class="line">       start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="requestID"><a href="#requestID" class="headerlink" title="requestID"></a>requestID</h2><p>客户端发送的消息包括的内容，显然应该有接口名，方法名，参数。以确定调用的方法。还应该有requestID。</p>
-<p>因为netty一般会用channel.writeAndFlush()方法来发送消息二进制串，这个方法调用后对于整个远程调用(从发出请求到接收到结果)来说是一个异步的。这里异步意味着两个方面，第一，当前线程不“暂停”。第二，多线程同时调用，返回结果顺序随机。而RPC需要同步，为了解决这个问题。方法就是requestID。</p>
-<p>1）client线程每次通过socket调用一次远程接口前，生成一个唯一的ID，即requestID（requestID必需保证在一个Socket连接里面是唯一的），一般常常使用AtomicLong从0开始累计数字生成唯一ID；</p>
-<p>2）将处理结果的回调对象callback，存放到全局ConcurrentHashMap里面put(requestID, callback)；</p>
-<p>3）当线程调用channel.writeAndFlush()发送消息后，紧接着执行callback的get()方法试图获取远程返回的结果。在get()内部，则使用synchronized获取回调对象callback的锁，再先检测是否已经获取到结果，如果没有，然后调用callback的wait()方法，释放callback上的锁，让当前线程处于等待状态。</p>
-<p>4）服务端接收到请求并处理后，将response结果（此结果中包含了前面的requestID）发送给客户端，客户端socket连接上专门监听消息的线程收到消息，分析结果，取到requestID，再从前面的ConcurrentHashMap里面get(requestID)，从而找到callback对象，再用synchronized获取callback上的锁，将方法调用结果设置到callback对象里，再调用callback.notifyAll()唤醒前面处于等待状态的线程。</p>
-<p>当然还有些附加信息可以传，比如超时时间，校验什么的。</p>
-<p>服务端返回的就是返回的对象，状态码，以及requestID。</p>
-<h2 id="编解码，序列化，handler"><a href="#编解码，序列化，handler" class="headerlink" title="编解码，序列化，handler"></a>编解码，序列化，handler</h2><p>netty内容。</p>
-<h2 id="通过反射调用方法"><a href="#通过反射调用方法" class="headerlink" title="通过反射调用方法"></a>通过反射调用方法</h2><p>netty中的handler主要业务逻辑即是通过反射调用方法。</p>
-<p>通过反射调用方法，为了避免使用 Java 反射带来的性能问题，我们可以使用 CGLib 提供的反射 API，如下面用到的FastClass与FastMethod。</p>
-<p>下文方法在RpcServerHandler中。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">private</span> Object <span class="title">handle</span><span class="params">(RpcRequest request)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">// 获取服务对象</span></span><br><span class="line">        String serviceName = request.getInterfaceName();</span><br><span class="line">        String serviceVersion = request.getServiceVersion();</span><br><span class="line">        <span class="keyword">if</span> (StringUtil.isNotEmpty(serviceVersion)) &#123;</span><br><span class="line">            serviceName += <span class="string">"-"</span> + serviceVersion;</span><br><span class="line">        &#125;</span><br><span class="line">        Object serviceBean = handlerMap.get(serviceName);</span><br><span class="line">        <span class="keyword">if</span> (serviceBean == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(String.format(<span class="string">"can not find service bean by key: %s"</span>, serviceName));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 获取反射调用所需的参数</span></span><br><span class="line">        Class&lt;?&gt; serviceClass = serviceBean.getClass();</span><br><span class="line">        String methodName = request.getMethodName();</span><br><span class="line">        Class&lt;?&gt;[] parameterTypes = request.getParameterTypes();</span><br><span class="line">        Object[] parameters = request.getParameters();</span><br><span class="line">        <span class="comment">// 执行反射调用</span></span><br><span class="line"><span class="comment">//        Method method = serviceClass.getMethod(methodName, parameterTypes);</span></span><br><span class="line"><span class="comment">//        method.setAccessible(true);</span></span><br><span class="line"><span class="comment">//        return method.invoke(serviceBean, parameters);</span></span><br><span class="line">        <span class="comment">// 使用 CGLib 执行反射调用</span></span><br><span class="line">        FastClass serviceFastClass = FastClass.create(serviceClass);</span><br><span class="line">        FastMethod serviceFastMethod = serviceFastClass.getMethod(methodName, parameterTypes);</span><br><span class="line">        <span class="keyword">return</span> serviceFastMethod.invoke(serviceBean, parameters);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<h1 id="客户端实现"><a href="#客户端实现" class="headerlink" title="客户端实现"></a>客户端实现</h1><h2 id="配置客户端"><a href="#配置客户端" class="headerlink" title="配置客户端"></a>配置客户端</h2><p>Spring 配置文件来配置 RPC 客户端</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&lt;beans ...&gt;</span><br><span class="line">    &lt;context:property-placeholder location=<span class="string">"classpath:config.properties"</span>/&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- 配置服务发现组件 --&gt;</span><br><span class="line">    &lt;bean id=<span class="string">"serviceDiscovery"</span> <span class="class"><span class="keyword">class</span></span>=<span class="string">"com.xxx.rpc.registry.ServiceDiscovery"</span>&gt;</span><br><span class="line">        &lt;constructor-arg name=<span class="string">"registryAddress"</span> value=<span class="string">"$&#123;registry.address&#125;"</span>/&gt;</span><br><span class="line">    &lt;/bean&gt;</span><br><span class="line"></span><br><span class="line">    &lt;!-- 配置 RPC 代理 --&gt;</span><br><span class="line">    &lt;bean id=<span class="string">"rpcProxy"</span> <span class="class"><span class="keyword">class</span></span>=<span class="string">"com.xxx.rpc.client.RpcProxy"</span>&gt;</span><br><span class="line">        &lt;constructor-arg name=<span class="string">"serviceDiscovery"</span> ref=<span class="string">"serviceDiscovery"</span>/&gt;</span><br><span class="line">    &lt;/bean&gt;</span><br><span class="line">&lt;/beans&gt;</span><br></pre></td></tr></table></figure>
-<p>以及配置文件</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># ZooKeeper 服务器</span><br><span class="line">registry.address=127.0.0.1:2181</span><br></pre></td></tr></table></figure>
-<h2 id="服务发现"><a href="#服务发现" class="headerlink" title="服务发现"></a>服务发现</h2><p>通过获得zookeeper节点的内容来发现服务。</p>
-<p>其实核心代码就两行</p>
-<ol>
-<li><p>zkClient.getChildren(servicePath);获得节点</p>
-</li>
-<li><p>data = dataList.get(0);获取节点的数据</p>
-</li>
-</ol>
-<p>之后还要监视节点，节点数据变化后需要知道。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ServiceDiscovery</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger LOGGER = LoggerFactory.getLogger(ServiceDiscovery.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> CountDownLatch latch = <span class="keyword">new</span> CountDownLatch(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> List&lt;String&gt; dataList = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String registryAddress;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ServiceDiscovery</span><span class="params">(String registryAddress)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.registryAddress = registryAddress;</span><br><span class="line">        ZooKeeper zk = connectServer();</span><br><span class="line">        <span class="keyword">if</span> (zk != <span class="keyword">null</span>) &#123;</span><br><span class="line">            watchNode(zk);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">discover</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        String data = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">int</span> size = dataList.size();</span><br><span class="line">        <span class="keyword">if</span> (size &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (size == <span class="number">1</span>) &#123;</span><br><span class="line">                data = dataList.get(<span class="number">0</span>);</span><br><span class="line">                LOGGER.debug(<span class="string">"using only data: &#123;&#125;"</span>, data);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                data = dataList.get(ThreadLocalRandom.current().nextInt(size));</span><br><span class="line">                LOGGER.debug(<span class="string">"using random data: &#123;&#125;"</span>, data);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> data;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> ZooKeeper <span class="title">connectServer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        ZooKeeper zk = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            zk = <span class="keyword">new</span> ZooKeeper(registryAddress, Constant.ZK_SESSION_TIMEOUT, <span class="keyword">new</span> Watcher() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">process</span><span class="params">(WatchedEvent event)</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">if</span> (event.getState() == Event.KeeperState.SyncConnected) &#123;</span><br><span class="line">                        latch.countDown();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            latch.await();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException | InterruptedException e) &#123;</span><br><span class="line">            LOGGER.error(<span class="string">""</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> zk;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">watchNode</span><span class="params">(<span class="keyword">final</span> ZooKeeper zk)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            List&lt;String&gt; nodeList = zk.getChildren(Constant.ZK_REGISTRY_PATH, <span class="keyword">new</span> Watcher() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">process</span><span class="params">(WatchedEvent event)</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">if</span> (event.getType() == Event.EventType.NodeChildrenChanged) &#123;</span><br><span class="line">                        watchNode(zk);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            List&lt;String&gt; dataList = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">            <span class="keyword">for</span> (String node : nodeList) &#123;</span><br><span class="line">                <span class="keyword">byte</span>[] bytes = zk.getData(Constant.ZK_REGISTRY_PATH + <span class="string">"/"</span> + node, <span class="keyword">false</span>, <span class="keyword">null</span>);</span><br><span class="line">                dataList.add(<span class="keyword">new</span> String(bytes));</span><br><span class="line">            &#125;</span><br><span class="line">            LOGGER.debug(<span class="string">"node data: &#123;&#125;"</span>, dataList);</span><br><span class="line">            <span class="keyword">this</span>.dataList = dataList;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (KeeperException | InterruptedException e) &#123;</span><br><span class="line">            LOGGER.error(<span class="string">""</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>使用了obj的wait和notifyAll来等待Response返回，会出现“假死等待”的情况：一个Request发送出去后，在obj.wait()调用之前可能Response就返回了，这时候在channelRead0里已经拿到了Response并且obj.notifyAll()已经在obj.wait()之前调用了，这时候send后再obj.wait()就出现了假死等待，客户端就一直等待在这里。使用CountDownLatch可以解决这个问题。</p>
-<h2 id="客户端调用服务"><a href="#客户端调用服务" class="headerlink" title="客户端调用服务"></a>客户端调用服务</h2><p>这里每次使用代理远程调用服务，从Zookeeper上获取可用的服务地址，通过RpcClient send一个Request，等待该Request的Response返回。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RpcProxy</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String serverAddress;</span><br><span class="line">    <span class="keyword">private</span> ServiceDiscovery serviceDiscovery;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">RpcProxy</span><span class="params">(String serverAddress)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.serverAddress = serverAddress;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">RpcProxy</span><span class="params">(ServiceDiscovery serviceDiscovery)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.serviceDiscovery = serviceDiscovery;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">create</span><span class="params">(Class&lt;?&gt; interfaceClass)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (T) Proxy.newProxyInstance(</span><br><span class="line">                interfaceClass.getClassLoader(),</span><br><span class="line">                <span class="keyword">new</span> Class&lt;?&gt;[]&#123;interfaceClass&#125;,</span><br><span class="line">                <span class="keyword">new</span> InvocationHandler() &#123;</span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">                        RpcRequest request = <span class="keyword">new</span> RpcRequest();</span><br><span class="line">                        request.setRequestId(UUID.randomUUID().toString());</span><br><span class="line">                        request.setClassName(method.getDeclaringClass().getName());</span><br><span class="line">                        request.setMethodName(method.getName());</span><br><span class="line">                        request.setParameterTypes(method.getParameterTypes());</span><br><span class="line">                        request.setParameters(args);</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">if</span> (serviceDiscovery != <span class="keyword">null</span>) &#123;</span><br><span class="line">                            serverAddress = serviceDiscovery.discover();</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">if</span>(serverAddress != <span class="keyword">null</span>)&#123;</span><br><span class="line">                            String[] array = serverAddress.split(<span class="string">":"</span>);</span><br><span class="line">                            String host = array[<span class="number">0</span>];</span><br><span class="line">                            <span class="keyword">int</span> port = Integer.parseInt(array[<span class="number">1</span>]);</span><br><span class="line"></span><br><span class="line">                            RpcClient client = <span class="keyword">new</span> RpcClient(host, port);</span><br><span class="line">                            RpcResponse response = client.send(request);</span><br><span class="line"></span><br><span class="line">                            <span class="keyword">if</span> (response.isError()) &#123;</span><br><span class="line">                                <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Response error."</span>,<span class="keyword">new</span> Throwable(response.getError()));</span><br><span class="line">                            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                                <span class="keyword">return</span> response.getResult();</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">else</span>&#123;</span><br><span class="line">                            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"No server address found!"</span>);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="RPC动态代理"><a href="#RPC动态代理" class="headerlink" title="RPC动态代理"></a>RPC动态代理</h2><p>Java 提供的动态代理技术实现 RPC 代理</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RpcProxy</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger LOGGER = LoggerFactory.getLogger(RpcProxy.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String serviceAddress;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> ServiceDiscovery serviceDiscovery;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">RpcProxy</span><span class="params">(String serviceAddress)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.serviceAddress = serviceAddress;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">RpcProxy</span><span class="params">(ServiceDiscovery serviceDiscovery)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.serviceDiscovery = serviceDiscovery;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">create</span><span class="params">(<span class="keyword">final</span> Class&lt;?&gt; interfaceClass)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> create(interfaceClass, <span class="string">""</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line">    <span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">create</span><span class="params">(<span class="keyword">final</span> Class&lt;?&gt; interfaceClass, <span class="keyword">final</span> String serviceVersion)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 创建动态代理对象</span></span><br><span class="line">        <span class="keyword">return</span> (T) Proxy.newProxyInstance(</span><br><span class="line">                interfaceClass.getClassLoader(),</span><br><span class="line">                <span class="keyword">new</span> Class&lt;?&gt;[]&#123;interfaceClass&#125;,</span><br><span class="line">                <span class="keyword">new</span> InvocationHandler() &#123;</span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">                        <span class="comment">// 创建 RPC 请求对象并设置请求属性</span></span><br><span class="line">                        RpcRequest request = <span class="keyword">new</span> RpcRequest();</span><br><span class="line">                        request.setRequestId(UUID.randomUUID().toString());</span><br><span class="line">                        request.setInterfaceName(method.getDeclaringClass().getName());</span><br><span class="line">                        request.setServiceVersion(serviceVersion);</span><br><span class="line">                        request.setMethodName(method.getName());</span><br><span class="line">                        request.setParameterTypes(method.getParameterTypes());</span><br><span class="line">                        request.setParameters(args);</span><br><span class="line">                        <span class="comment">// 获取 RPC 服务地址</span></span><br><span class="line">                        <span class="keyword">if</span> (serviceDiscovery != <span class="keyword">null</span>) &#123;</span><br><span class="line">                            String serviceName = interfaceClass.getName();</span><br><span class="line">                            <span class="keyword">if</span> (StringUtil.isNotEmpty(serviceVersion)) &#123;</span><br><span class="line">                                serviceName += <span class="string">"-"</span> + serviceVersion;</span><br><span class="line">                            &#125;</span><br><span class="line">                            serviceAddress = serviceDiscovery.discover(serviceName);</span><br><span class="line">                            LOGGER.debug(<span class="string">"discover service: &#123;&#125; =&gt; &#123;&#125;"</span>, serviceName, serviceAddress);</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">if</span> (StringUtil.isEmpty(serviceAddress)) &#123;</span><br><span class="line">                            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"server address is empty"</span>);</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="comment">// 从 RPC 服务地址中解析主机名与端口号</span></span><br><span class="line">                        String[] array = StringUtil.split(serviceAddress, <span class="string">":"</span>);</span><br><span class="line">                        String host = array[<span class="number">0</span>];</span><br><span class="line">                        <span class="keyword">int</span> port = Integer.parseInt(array[<span class="number">1</span>]);</span><br><span class="line">                        <span class="comment">// 创建 RPC 客户端对象并发送 RPC 请求</span></span><br><span class="line">                        RpcClient client = <span class="keyword">new</span> RpcClient(host, port);</span><br><span class="line">                        <span class="keyword">long</span> time = System.currentTimeMillis();</span><br><span class="line">                        RpcResponse response = client.send(request);</span><br><span class="line">                        LOGGER.debug(<span class="string">"time: &#123;&#125;ms"</span>, System.currentTimeMillis() - time);</span><br><span class="line">                        <span class="keyword">if</span> (response == <span class="keyword">null</span>) &#123;</span><br><span class="line">                            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"response is null"</span>);</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="comment">// 返回 RPC 响应结果</span></span><br><span class="line">                        <span class="keyword">if</span> (response.hasException()) &#123;</span><br><span class="line">                            <span class="keyword">throw</span> response.getException();</span><br><span class="line">                        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                            <span class="keyword">return</span> response.getResult();</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="netty实现客户端"><a href="#netty实现客户端" class="headerlink" title="netty实现客户端"></a>netty实现客户端</h2><p>只需扩展 Netty 提供的<code>SimpleChannelInboundHandler</code>抽象类即可，这里可以先使用短链接，即每次发送请求建立一个连接。</p>
-<h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><p>客户端测试，调用服务端方法。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RunWith</span>(SpringJUnit4ClassRunner.class)</span><br><span class="line"><span class="meta">@ContextConfiguration</span>(locations = <span class="string">"classpath:spring.xml"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HelloServiceTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> RpcProxy rpcProxy;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">helloTest</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        HelloService helloService = rpcProxy.create(HelloService.class);</span><br><span class="line">        String result = helloService.hello(<span class="string">"World"</span>);</span><br><span class="line">        Assert.assertEquals(<span class="string">"Hello! World"</span>, result);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1958,7 +1997,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">264</span>
+                  <span class="site-state-item-count">266</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
