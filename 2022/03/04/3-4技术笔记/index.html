@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="mongo,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Arvense" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="pageWiredTiger存储引擎里面，磁盘里集合数据和索引都是通过B+ Tree来组织的，但是提供给应用读写的数据都是发生在内存里的，WiredTiger会按需将磁盘的数据以page为单位加载到内存，同时在内存会构造相应的B+ Tree来存储这些数据。应用都是在内存中对Page进行增删改，内存中的Page会利用一些数据结构来记录应用的修改，然后经过reconcile(调和)生成新的Page(基">
+<meta name="keywords" content="mongo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mongo的checkpoint和Journaling">
+<meta property="og:url" content="https://arvenseyz.github.io/2022/03/04/3-4技术笔记/index.html">
+<meta property="og:site_name" content="Arvense">
+<meta property="og:description" content="pageWiredTiger存储引擎里面，磁盘里集合数据和索引都是通过B+ Tree来组织的，但是提供给应用读写的数据都是发生在内存里的，WiredTiger会按需将磁盘的数据以page为单位加载到内存，同时在内存会构造相应的B+ Tree来存储这些数据。应用都是在内存中对Page进行增删改，内存中的Page会利用一些数据结构来记录应用的修改，然后经过reconcile(调和)生成新的Page(基">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2022-03-04T09:07:03.120Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="mongo的checkpoint和Journaling">
+<meta name="twitter:description" content="pageWiredTiger存储引擎里面，磁盘里集合数据和索引都是通过B+ Tree来组织的，但是提供给应用读写的数据都是发生在内存里的，WiredTiger会按需将磁盘的数据以page为单位加载到内存，同时在内存会构造相应的B+ Tree来存储这些数据。应用都是在内存中对Page进行增删改，内存中的Page会利用一些数据结构来记录应用的修改，然后经过reconcile(调和)生成新的Page(基">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://arvenseyz.github.io/2022/03/04/3-4技术笔记/">
+
+
+
+
+
+  <title>mongo的checkpoint和Journaling | Arvense</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Arvense</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/04/3-4技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">mongo的checkpoint和Journaling</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-03-04T15:41:57+08:00">
+                2022-03-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="page"><a href="#page" class="headerlink" title="page"></a>page</h1><p>WiredTiger存储引擎里面，磁盘里集合数据和索引都是通过B+ Tree来组织的，但是提供给应用读写的数据都是发生在内存里的，WiredTiger会按需将磁盘的数据以page为单位加载到内存，同时在内存会构造相应的B+ Tree来存储这些数据。应用都是在内存中对Page进行增删改，内存中的Page会利用一些数据结构来记录应用的修改，然后经过reconcile(调和)生成新的Page(基于原Page修改后的Page)，然后等待evict线程将生成的新的Page写到磁盘，并丢弃旧的Page。</p>
+<p>第一步：pages从磁盘读到内存；</p>
+<p>第二步：pages在内存中被修改；</p>
+<p>第三步：被修改的脏pages在内存被reconcile，完成后将discard这些pages。</p>
+<p>第四步：pages被选中，加入淘汰队列，等待被evict线程淘汰出内存；</p>
+<p>第五步：evict线程会将“干净“的pages直接从内存丢弃（因为相对于磁盘page来说没做任何修改），将经过reconcile处理后的磁盘映像写到磁盘再丢弃“脏的”pages。</p>
+<h1 id="checkPoint"><a href="#checkPoint" class="headerlink" title="checkPoint"></a>checkPoint</h1><p>WiredTiger的写操作会默认写入 Cache ,并持久化到 WAL (Write Ahead Log)，每60s或Log文件达到2G做一次 checkpoint (当然我们也可以通过在写入时传入 j: true 的参数强制 journal 文件的同步 ，writeConcern { w: , j: , wtimeout: }) 产生快照文件。WiredTiger初始化时，恢复至最新的快照状态，然后再根据WAL恢复数据，保证数据的完整性。<br>本质上来说，Checkpoint相当于一个日志，记录了上次Checkpoint后相关数据文件的变化。</p>
+<p>checkpoint 中文名为检查点，顾名思义，是检查某一时刻内存和磁盘中的数据状态，即从上一次检查点到现在哪些Page被删除，哪些Page被新建等，可以说是记录了数据库中内存数据相对于上一次检查点的一个快照。当向Disk写入数据时，WiredTiger将Snapshot中的所有数据以一致性方式写入到数据文件（Disk Files）中。一旦Checkpoint创建成功，WiredTiger保证数据文件和内存数据是一致性的，因此，Checkpoint担当的是还原点（Recovery Point），一旦发生系统故障，可以根据检查点恢复出最新一次检查点的状态，然后通过回放从检查点之后的journal日志恢复出断电前的数据。<br>总的来说，Checkpoint主要有两个目的：</p>
+<p>一是将内存里面发生修改的数据写到数据文件进行持久化保存，确保数据一致性；</p>
+<p>二是实现数据库在某个时刻意外发生故障，再次启动时，缩短数据库的恢复时间。</p>
+<p>Checkpoint技术通过在内存中维护一定的数据结构(B+ Tree)，记录应用对数据的改动，即从上次checkpoint到现在的内存页的改动，和要删除的页等，然后通过定时刷新等触发方式，将内存中的Checkpoint 的B+ Tree刷新到磁盘。一旦checkpoint完成，磁盘中数据就和内存数据同步了，checkpoint可以生成新的live Tress来继续记录应用新的改动。</p>
+<h3 id="journal日志"><a href="#journal日志" class="headerlink" title="journal日志"></a>journal日志</h3><p>checkpoint保证了每个检查点之间，内存数据同步到磁盘。但是两个checkpoint时间间隔内的数据也需要保证持久化，这个就要靠journal日志来实现了。</p>
+<p>journal 是顺序写入的二进制日志文件，用于记录上一个Checkpoint之后发生的数据更新，能够将数据库从系统异常终止事件中还原到一个有效的状态。journal日志文件是预分配的，从图6: MongoDB数据目录文件可以看出，journal目录下的文件都是100MB，是预分配好的，可以提高性能。WiredTiger 为每个客户端发起的写操作创建一个日志记录。日志记录包括由初始写入引起的任何内部写入操作。例如，对集合中文档的更新可能会导致对索引的修改；WiredTiger 创建单个日志记录，其中包括文档更新操作及其关联的索引修改。每条日志记录都有一个唯一的标识符，<br>WiredTiger 的最小日志记录大小为 128 字节。MongoDB 将 WiredTiger 配置为使用内存缓冲来存储日志记录。线程协调分配并复制到它们的缓冲区部分，缓冲最大 128 kB 的所有日志记录。当满足以下条件时，journal会被刷入到磁盘中：</p>
+<ul>
+<li><p>每100ms</p>
+</li>
+<li><p>写操作时加了选项<code>{j:true}</code>  </p>
+</li>
+<li><p>当 WiredTiger 创建一个新的日志文件时。由于 MongoDB 使用 100 MB 的日志文件大小限制，WiredTiger 大约每 100 MB 数据创建一个新日志文件。</p>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/mongo/" rel="tag"># mongo</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2022/03/01/3-1技术笔记-2/" rel="next" title="redis与Reactor模式">
+                <i class="fa fa-chevron-left"></i> redis与Reactor模式
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Arvense</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">267</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">64</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#page"><span class="nav-number">1.</span> <span class="nav-text">page</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#checkPoint"><span class="nav-number">2.</span> <span class="nav-text">checkPoint</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#journal日志"><span class="nav-number">2.0.1.</span> <span class="nav-text">journal日志</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a>Arvense</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">blog   </div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

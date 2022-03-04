@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2022-03-01T09:11:52.004Z</updated>
+  <updated>2022-03-04T09:07:03.120Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -15,6 +15,31 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>mongo的checkpoint和Journaling</title>
+    <link href="https://arvenseyz.github.io/2022/03/04/3-4%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2022/03/04/3-4技术笔记/</id>
+    <published>2022-03-04T07:41:57.000Z</published>
+    <updated>2022-03-04T09:07:03.120Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="page"><a href="#page" class="headerlink" title="page"></a>page</h1><p>WiredTiger存储引擎里面，磁盘里集合数据和索引都是通过B+ Tree来组织的，但是提供给应用读写的数据都是发生在内存里的，WiredTiger会按需将磁盘的数据以page为单位加载到内存，同时在内存会构造相应的B+ Tree来存储这些数据。应用都是在内存中对Page进行增删改，内存中的Page会利用一些数据结构来记录应用的修改，然后经过reconcile(调和)生成新的Page(基于原Page修改后的Page)，然后等待evict线程将生成的新的Page写到磁盘，并丢弃旧的Page。</p><p>第一步：pages从磁盘读到内存；</p><p>第二步：pages在内存中被修改；</p><p>第三步：被修改的脏pages在内存被reconcile，完成后将discard这些pages。</p><p>第四步：pages被选中，加入淘汰队列，等待被evict线程淘汰出内存；</p><p>第五步：evict线程会将“干净“的pages直接从内存丢弃（因为相对于磁盘page来说没做任何修改），将经过reconcile处理后的磁盘映像写到磁盘再丢弃“脏的”pages。</p><h1 id="checkPoint"><a href="#checkPoint" class="headerlink" title="checkPoint"></a>checkPoint</h1><p>WiredTiger的写操作会默认写入 Cache ,并持久化到 WAL (Write Ahead Log)，每60s或Log文件达到2G做一次 checkpoint (当然我们也可以通过在写入时传入 j: true 的参数强制 journal 文件的同步 ，writeConcern { w: , j: , wtimeout: }) 产生快照文件。WiredTiger初始化时，恢复至最新的快照状态，然后再根据WAL恢复数据，保证数据的完整性。<br>本质上来说，Checkpoint相当于一个日志，记录了上次Checkpoint后相关数据文件的变化。</p><p>checkpoint 中文名为检查点，顾名思义，是检查某一时刻内存和磁盘中的数据状态，即从上一次检查点到现在哪些Page被删除，哪些Page被新建等，可以说是记录了数据库中内存数据相对于上一次检查点的一个快照。当向Disk写入数据时，WiredTiger将Snapshot中的所有数据以一致性方式写入到数据文件（Disk Files）中。一旦Checkpoint创建成功，WiredTiger保证数据文件和内存数据是一致性的，因此，Checkpoint担当的是还原点（Recovery Point），一旦发生系统故障，可以根据检查点恢复出最新一次检查点的状态，然后通过回放从检查点之后的journal日志恢复出断电前的数据。<br>总的来说，Checkpoint主要有两个目的：</p><p>一是将内存里面发生修改的数据写到数据文件进行持久化保存，确保数据一致性；</p><p>二是实现数据库在某个时刻意外发生故障，再次启动时，缩短数据库的恢复时间。</p><p>Checkpoint技术通过在内存中维护一定的数据结构(B+ Tree)，记录应用对数据的改动，即从上次checkpoint到现在的内存页的改动，和要删除的页等，然后通过定时刷新等触发方式，将内存中的Checkpoint 的B+ Tree刷新到磁盘。一旦checkpoint完成，磁盘中数据就和内存数据同步了，checkpoint可以生成新的live Tress来继续记录应用新的改动。</p><h3 id="journal日志"><a href="#journal日志" class="headerlink" title="journal日志"></a>journal日志</h3><p>checkpoint保证了每个检查点之间，内存数据同步到磁盘。但是两个checkpoint时间间隔内的数据也需要保证持久化，这个就要靠journal日志来实现了。</p><p>journal 是顺序写入的二进制日志文件，用于记录上一个Checkpoint之后发生的数据更新，能够将数据库从系统异常终止事件中还原到一个有效的状态。journal日志文件是预分配的，从图6: MongoDB数据目录文件可以看出，journal目录下的文件都是100MB，是预分配好的，可以提高性能。WiredTiger 为每个客户端发起的写操作创建一个日志记录。日志记录包括由初始写入引起的任何内部写入操作。例如，对集合中文档的更新可能会导致对索引的修改；WiredTiger 创建单个日志记录，其中包括文档更新操作及其关联的索引修改。每条日志记录都有一个唯一的标识符，<br>WiredTiger 的最小日志记录大小为 128 字节。MongoDB 将 WiredTiger 配置为使用内存缓冲来存储日志记录。线程协调分配并复制到它们的缓冲区部分，缓冲最大 128 kB 的所有日志记录。当满足以下条件时，journal会被刷入到磁盘中：</p><ul><li><p>每100ms</p></li><li><p>写操作时加了选项<code>{j:true}</code>  </p></li><li><p>当 WiredTiger 创建一个新的日志文件时。由于 MongoDB 使用 100 MB 的日志文件大小限制，WiredTiger 大约每 100 MB 数据创建一个新日志文件。</p></li></ul>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;page&quot;&gt;&lt;a href=&quot;#page&quot; class=&quot;headerlink&quot; title=&quot;page&quot;&gt;&lt;/a&gt;page&lt;/h1&gt;&lt;p&gt;WiredTiger存储引擎里面，磁盘里集合数据和索引都是通过B+ Tree来组织的，但是提供给应用读写的数据都是发生在内存
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="mongo" scheme="https://arvenseyz.github.io/tags/mongo/"/>
+    
+  </entry>
   
   <entry>
     <title>redis与Reactor模式</title>
@@ -496,31 +521,6 @@
       
       
         &lt;p&gt;在进行查询的时候经常会进行组合查询，比如查询同时包含&lt;code&gt;choice&lt;/code&gt;和&lt;code&gt;the&lt;/code&gt;的文档，那么就需要分别查出包含这两个单词的文档的id，然后取这两个id列表的&lt;strong&gt;交集&lt;/strong&gt;；如果是查包含&lt;code&gt;choic
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="ES" scheme="https://arvenseyz.github.io/tags/ES/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>FST</title>
-    <link href="https://arvenseyz.github.io/2021/09/22/9-22%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-2/"/>
-    <id>https://arvenseyz.github.io/2021/09/22/9-22技术笔记-2/</id>
-    <published>2021-09-22T03:20:52.000Z</published>
-    <updated>2021-09-22T07:23:18.318Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="FST（Finite-State-Transducer）"><a href="#FST（Finite-State-Transducer）" class="headerlink" title="FST（Finite State Transducer）"></a>FST（Finite State Transducer）</h2><p>FST类似一种TRIE树。</p><p><a href="https://imgtu.com/i/4N3OO0" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/09/22/4N3OO0.png" alt="4N3OO0.png"></a></p><p><a href="https://imgtu.com/i/4N8Em6" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/09/22/4N8Em6.png" alt="4N8Em6.png"></a></p><p>可见FST和字典树类似，区别在于，它不但共享了前缀，还共享了后缀。</p><h2 id="怎么构建"><a href="#怎么构建" class="headerlink" title="怎么构建"></a>怎么构建</h2><p>FST树的构建比较简单，但其依赖于前提<strong><em>输入有序</em></strong></p><p>只需要每次和上一个输入进行最大前缀匹配即可。</p><p><img src="https://s3.bmp.ovh/imgs/2021/09/a813ad0d38865fba.png" alt></p><p>插入“do”与，前一个单词“deep”进行最大前缀匹配，发现是d，则在d边后增加新边o，o边指向终点。</p><h1 id="怎么用"><a href="#怎么用" class="headerlink" title="怎么用"></a>怎么用</h1><p>Lucene在存储倒排索引时，分为2个文件: 词典文件(.tim), 词典索引文件(.tip)。其中.tip中存储的就是多个FST，<br>FST中存储的是&lt;单词前缀，以该前缀开头的所有Term的压缩块在磁盘中的位置&gt;。</p><p>ES的词典，实际上分了两级，Terms Dictionary 通过 .tim 后缀文件存储，其内部采用 NodeBlock 对 Term 进行压缩前缀存储，处理过程会将相同前缀的的 Term 压缩为一个 NodeBlock，NodeBlock 会存储公共前缀，然后将每个 Term 的后缀以及对应 Term 的 Posting 关联信息处理为一个 Entry 保存到 Block。</p><p><img src="https://s3.bmp.ovh/imgs/2021/09/13ba20217a706cd5.png" alt></p><p>在上图中可以看到 Block 中还包含了 Block，这里是为了处理包含相同前缀的 Term 集合内部部分 Term 又包含了相同前缀。</p><p>举个例子，在下图中为公共前缀为 a 的 Term 集合，内部部分 Term 的又包含了相同前缀 ab，这时这部分 Term 就会处理为一个嵌套的 Block。</p><p>Terms Dictionary 是按 NodeBlock 存储在.tim 文件上。当文档数量越来越多的时，Dictionary 中的 Term 也会越来越多，那查询效率必然也会逐渐变低。</p><p>因此需要一个很好的数据结构为 Dictionary 建构一个索引，这就是 Terms Index(.tip文件存储)，Lucene 采用了 FST 这个数据结构来实现这个索引。</p><p>实际上，<strong>FST的结构非常复杂，我们可以简单的将其理解为一个高效的K-V结构，而且空间占用率更高</strong>。这里想简单强调一下：<strong>Lucene到底在FST里存了什么数据？</strong> 如果你已经了解FST在Lucene中充当的角色和作用的话，我想你可能会误认为FST中存了Dictionary中所有的Terms数据，这样可以通过FST是找到具体的Term的位置，或者通过FST可以切实获知一个Term是否存在。</p><p><strong>然而，事实并非如此。</strong> FST即不能知道某个Term在Dictionary(.tim)文件上具体的位置，也不能仅通过FST就能确切的知道Term是否真实存在。它只能告诉你，查询的Term可能在这些Blocks上，到底存不存在FST并不能给出确切的答案，<strong>因为FST是通过Dictionary的每个Block的前缀构成，所以通过FST只可以直接找到这个Block在.tim文件上具体的File Pointer</strong>，并无法直接找到Terms。</p><h3 id="倒排索引的实现"><a href="#倒排索引的实现" class="headerlink" title="倒排索引的实现"></a>倒排索引的实现</h3><ul><li>通过 Term Index 数据（.tip文件）中的 StartFP 获取指定字段的 FST</li><li>通过 FST 找到指定 Term 在 Term Dictionary（.tim 文件）可能存在的 Block</li><li>将对应 Block 加载内存，遍历 Block 中的 Entry，通过后缀（Suffix）判断是否存在指定 Term</li><li>存在则通过 Entry 的 TermStat 数据中各个文件的 FP 获取 Posting 数据</li><li>如果需要获取 Term 对应的所有 DocId 则直接遍历 TermFreqs，如果获取指定 DocId 数据则通过 SkipData快速跳转</li></ul>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h2 id=&quot;FST（Finite-State-Transducer）&quot;&gt;&lt;a href=&quot;#FST（Finite-State-Transducer）&quot; class=&quot;headerlink&quot; title=&quot;FST（Finite State Transducer）&quot;&gt;&lt;/a&gt;FS
       
     
     </summary>

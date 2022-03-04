@@ -251,6 +251,168 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/04/3-4技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2022/03/04/3-4技术笔记/" itemprop="url">mongo的checkpoint和Journaling</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-03-04T15:41:57+08:00">
+                2022-03-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="page"><a href="#page" class="headerlink" title="page"></a>page</h1><p>WiredTiger存储引擎里面，磁盘里集合数据和索引都是通过B+ Tree来组织的，但是提供给应用读写的数据都是发生在内存里的，WiredTiger会按需将磁盘的数据以page为单位加载到内存，同时在内存会构造相应的B+ Tree来存储这些数据。应用都是在内存中对Page进行增删改，内存中的Page会利用一些数据结构来记录应用的修改，然后经过reconcile(调和)生成新的Page(基于原Page修改后的Page)，然后等待evict线程将生成的新的Page写到磁盘，并丢弃旧的Page。</p>
+<p>第一步：pages从磁盘读到内存；</p>
+<p>第二步：pages在内存中被修改；</p>
+<p>第三步：被修改的脏pages在内存被reconcile，完成后将discard这些pages。</p>
+<p>第四步：pages被选中，加入淘汰队列，等待被evict线程淘汰出内存；</p>
+<p>第五步：evict线程会将“干净“的pages直接从内存丢弃（因为相对于磁盘page来说没做任何修改），将经过reconcile处理后的磁盘映像写到磁盘再丢弃“脏的”pages。</p>
+<h1 id="checkPoint"><a href="#checkPoint" class="headerlink" title="checkPoint"></a>checkPoint</h1><p>WiredTiger的写操作会默认写入 Cache ,并持久化到 WAL (Write Ahead Log)，每60s或Log文件达到2G做一次 checkpoint (当然我们也可以通过在写入时传入 j: true 的参数强制 journal 文件的同步 ，writeConcern { w: , j: , wtimeout: }) 产生快照文件。WiredTiger初始化时，恢复至最新的快照状态，然后再根据WAL恢复数据，保证数据的完整性。<br>本质上来说，Checkpoint相当于一个日志，记录了上次Checkpoint后相关数据文件的变化。</p>
+<p>checkpoint 中文名为检查点，顾名思义，是检查某一时刻内存和磁盘中的数据状态，即从上一次检查点到现在哪些Page被删除，哪些Page被新建等，可以说是记录了数据库中内存数据相对于上一次检查点的一个快照。当向Disk写入数据时，WiredTiger将Snapshot中的所有数据以一致性方式写入到数据文件（Disk Files）中。一旦Checkpoint创建成功，WiredTiger保证数据文件和内存数据是一致性的，因此，Checkpoint担当的是还原点（Recovery Point），一旦发生系统故障，可以根据检查点恢复出最新一次检查点的状态，然后通过回放从检查点之后的journal日志恢复出断电前的数据。<br>总的来说，Checkpoint主要有两个目的：</p>
+<p>一是将内存里面发生修改的数据写到数据文件进行持久化保存，确保数据一致性；</p>
+<p>二是实现数据库在某个时刻意外发生故障，再次启动时，缩短数据库的恢复时间。</p>
+<p>Checkpoint技术通过在内存中维护一定的数据结构(B+ Tree)，记录应用对数据的改动，即从上次checkpoint到现在的内存页的改动，和要删除的页等，然后通过定时刷新等触发方式，将内存中的Checkpoint 的B+ Tree刷新到磁盘。一旦checkpoint完成，磁盘中数据就和内存数据同步了，checkpoint可以生成新的live Tress来继续记录应用新的改动。</p>
+<h3 id="journal日志"><a href="#journal日志" class="headerlink" title="journal日志"></a>journal日志</h3><p>checkpoint保证了每个检查点之间，内存数据同步到磁盘。但是两个checkpoint时间间隔内的数据也需要保证持久化，这个就要靠journal日志来实现了。</p>
+<p>journal 是顺序写入的二进制日志文件，用于记录上一个Checkpoint之后发生的数据更新，能够将数据库从系统异常终止事件中还原到一个有效的状态。journal日志文件是预分配的，从图6: MongoDB数据目录文件可以看出，journal目录下的文件都是100MB，是预分配好的，可以提高性能。WiredTiger 为每个客户端发起的写操作创建一个日志记录。日志记录包括由初始写入引起的任何内部写入操作。例如，对集合中文档的更新可能会导致对索引的修改；WiredTiger 创建单个日志记录，其中包括文档更新操作及其关联的索引修改。每条日志记录都有一个唯一的标识符，<br>WiredTiger 的最小日志记录大小为 128 字节。MongoDB 将 WiredTiger 配置为使用内存缓冲来存储日志记录。线程协调分配并复制到它们的缓冲区部分，缓冲最大 128 kB 的所有日志记录。当满足以下条件时，journal会被刷入到磁盘中：</p>
+<ul>
+<li><p>每100ms</p>
+</li>
+<li><p>写操作时加了选项<code>{j:true}</code>  </p>
+</li>
+<li><p>当 WiredTiger 创建一个新的日志文件时。由于 MongoDB 使用 100 MB 的日志文件大小限制，WiredTiger 大约每 100 MB 数据创建一个新日志文件。</p>
+</li>
+</ul>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/01/3-1技术笔记-2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1855,209 +2017,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/12/09/12-9技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/12/09/12-9技术笔记/" itemprop="url">RocketMQ NameServer机制</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-12-09T14:32:21+08:00">
-                2021-12-09
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="NameServer的作用"><a href="#NameServer的作用" class="headerlink" title="NameServer的作用"></a><strong>NameServer的作用</strong></h1><p><img src="https://raw.githubusercontent.com/arvenseyz/imageCloud/main/862aa9a7-9185-43af-933c-707030d471d6.png" alt></p>
-<p>可以看到，Broker集群、Producer集群、Consumer集群都需要与NameServer集群进行通信：</p>
-<p><strong>Broker集群</strong></p>
-<p>Broker用于接收生产者发送消息，或者消费者消费消息的请求。一个Broker集群由多组Master/Slave组成，Master可写可读，Slave只可以读，Master将写入的数据同步给Slave。每个Broker节点，在启动时，都会遍历NameServer列表，与每个NameServer建立长连接，注册自己的信息，之后定时上报。</p>
-<p><strong>Producer集群</strong></p>
-<p>消息的生产者，通过NameServer集群获得Topic的路由信息，包括Topic下面有哪些Queue，这些Queue分布在哪些Broker上等。Producer只会将消息发送到Master节点上，因此只需要与Master节点建立连接。</p>
-<p><strong>Consumer集群</strong></p>
-<p>消息的消费者，通过NameServer集群获得Topic的路由信息，连接到对应的Broker上消费消息。注意，由于Master和Slave都可以读取消息，因此Consumer会与Master和Slave都建立连接。</p>
-<h1 id="为什么要使用NameServer"><a href="#为什么要使用NameServer" class="headerlink" title="为什么要使用NameServer"></a><strong>为什么要使用NameServer</strong></h1><p>那么为什么rocketmq选择自己开发一个NameServer，而不是使用这些开源组件呢？</p>
-<p>特别的，RocketMQ设计之初时参考的另一款消息中间件Kafka就使用了Zookeeper，Zookeeper其提供了Master选举、分布式锁、数据的发布和订阅等诸多功能。</p>
-<p>事实上，在RocketMQ的早期版本，即MetaQ 1.x和MetaQ 2.x阶段，也是依赖Zookeeper的。但MetaQ 3.x（即RocketMQ）却去掉了ZooKeeper依赖，转而采用自己的NameServer。</p>
-<p>而RocketMQ的架构设计决定了只需要一个轻量级的元数据服务器就足够了，只需要保持最终一致，而不需要Zookeeper这样的强一致性解决方案，不需要再依赖另一个中间件，从而减少整体维护成本。敏锐的同学肯定已经意识到了，根据CAP理论，RocketMQ在名称服务这个模块的设计上选择了AP，而不是CP。</p>
-<p><strong>Zookeeper CP</strong></p>
-<ul>
-<li>分布式选主，主备高可用切换等场景下有不可替代的作用，而这些需求往往多集中在大数据、离线任务等相关的业务领域，因为大数据领域，讲究分割数据集，并且大部分时间分任务多进程 / 线程并行处理这些数据集，但是总是有一些点上需要将这些任务和进程统一协调，这时候就是 ZooKeeper 发挥巨大作用的用武之地。</li>
-<li>但是在交易场景交易链路上，在主业务数据存取，大规模服务发现、大规模健康监测等方面有天然的短板，应该竭力避免在这些场景下引入 ZooKeeper，在生产实践中，应用对 ZooKeeper 申请使用的时候要进行严格的场景、容量、SLA 需求的评估。</li>
-</ul>
-<p><strong>NameServer AP</strong></p>
-<p>NameServer作为一个名称服务，需要提供服务注册、服务剔除、服务发现这些基本功能，但是NameServer节点之间并不通信，容忍在某个时刻各个节点数据可能不一致的情况下</p>
-<p><strong>所以可以使用 CP，也可以使用AP</strong>，但是大数据使用CP，在线服务则AP，分布式协调、选主使用CP，服务发现使用AP</p>
-<h1 id="NameServer如何保证数据的最终一致"><a href="#NameServer如何保证数据的最终一致" class="headerlink" title="NameServer如何保证数据的最终一致"></a><strong>NameServer如何保证数据的最终一致</strong></h1><p>既然是AP系统，就需要保证最终一致。</p>
-<h3 id="路由注册"><a href="#路由注册" class="headerlink" title="路由注册"></a><strong>路由注册</strong></h3><p>对于Zookeeper、Etcd这样强一致性组件，数据只要写到主节点，内部会通过状态机将数据复制到其他节点，Zookeeper使用的是Zab协议，etcd使用的是raft协议。</p>
-<p>但是NameServer节点之间是互不通信的，无法进行数据复制。RocketMQ采取的策略是，在Broker节点在启动的时候，轮训NameServer列表，与每个NameServer节点建立长连接，发起注册请求。NameServer内部会维护一个Broker表，用来动态存储Broker的信息。</p>
-<p>同时，Broker节点为了证明自己是存活的，会将最新的信息上报给NameServer，然后每隔30秒向NameServer发送心跳包，心跳包中包含 BrokerId、Broker地址、Broker名称、Broker所属集群名称等等，然后NameServer接收到心跳包后，会更新时间戳，记录这个Broker的最新存活时间。</p>
-<p>NameServer在处理心跳包的时候，存在多个Broker同时操作一张Broker表，为了防止并发修改Broker表导致不安全，路由注册操作引入了ReadWriteLock读写锁，这个设计亮点允许多个消息生产者并发读，保证了消息发送时的高并发，但是同一时刻NameServer只能处理一个Broker心跳包，多个心跳包串行处理。这也是读写锁的经典使用场景，即读多写少。</p>
-<h3 id="路由剔除"><a href="#路由剔除" class="headerlink" title="路由剔除"></a><strong>路由剔除</strong></h3><p>正常情况下，如果Broker关闭，则会与NameServer断开长连接，Netty的通道关闭监听器会监听到连接断开事件，然后会将这个Broker信息剔除掉。</p>
-<p>异常情况下，NameServer中有一个定时任务，每隔10秒扫描一下Broker表，如果某个Broker的心跳包最新时间戳距离当前时间超多120秒，也会判定Broker失效并将其移除。</p>
-<p>特别的，对于一些日常运维工作，例如：Broker升级，RocketMQ提供了一种优雅剔除路由信息的方式。如在升级一个Master节点之前，可以先通过命令行工具禁止这个Broker的写权限，发送消息到这个Broker的请求，都会收到一个NO_PERMISSION响应，客户端会自动重试其他的Broker。</p>
-<p>当观察到这个broker没有流量后，再将这个broker移除。</p>
-<h3 id="路由发现"><a href="#路由发现" class="headerlink" title="路由发现"></a><strong>路由发现</strong></h3><p>路由发现是客户端的行为，这里的客户端主要说的是生产者和消费者。具体来说：</p>
-<ul>
-<li>对于生产者，可以发送消息到多个Topic，因此一般是在发送第一条消息时，才会根据Topic获取从NameServer获取路由信息。</li>
-<li>对于消费者，订阅的Topic一般是固定的，所在在启动时就会拉取。</li>
-</ul>
-<p>那么生产者/消费者在工作的过程中，如果路由信息发生了变化怎么处理呢？如：Broker集群新增了节点，节点宕机或者Queue的数量发生了变化。细心的读者注意到，前面讲解NameServer在路由注册或者路由剔除过程中，并不会主动推送会客户端的，这意味着，需要由客户端拉取主题的最新路由信息。</p>
-<p>事实上，RocketMQ客户端提供了定时拉取Topic最新路由信息的机制。</p>
-<h2 id="一致性问题"><a href="#一致性问题" class="headerlink" title="一致性问题"></a>一致性问题</h2><p>定时拉取，还不能解决所有的问题。因为客户端默认是每隔30秒会定时请求NameServer并获取最新的路由表，意味着客户端获取路由信息总是会有30秒的延时。这就带来一个严重的问题，客户端无法实时感知Broker服务器的宕机。如果生产者和消费者在这30秒内，依然会向这个宕机的broker发送或消费消息呢？</p>
-<h1 id="生产者重试机制"><a href="#生产者重试机制" class="headerlink" title="生产者重试机制"></a><strong>生产者重试机制</strong></h1><h2 id="普通消息的重试"><a href="#普通消息的重试" class="headerlink" title="普通消息的重试"></a><strong>普通消息的重试</strong></h2><p>对于普通消息，消息发送默认采用round-robin机制来选择发送到哪一个队列，如果发送失败，默认重试2次。由于之前发送失败的Queue必然位于某个Broker上，在重试过程中，这个失败的Broker上的Queue都不会选择，这里主要是考虑，既然发送到这个Broker上某个Queue失败了，那么发送到这个Broker上的Queue失败的可能性依然很大，所以选择其他Broker。</p>
-<p>但是一定会这样吗？例如Broker集群只是由一组Master/Slave组成，发送消息只会选择Master，如果这个Master失败了，没有其他Master可选，此时依然会选择这个Master上的其他Queue。</p>
-<p>在实际生产环境中，通常Broker集群至少由2组Master/Slave组成，甚至更多，例如我司就是3主3从。这样就可以很好的利用RocketMQ对于普通消息发送的重试机制，每次重试到不同的Broker上。</p>
-<p>事情到这里并没有结束，这段代码只是单次发送消息失败重试选择队列的逻辑。实际情况可能是，在Broker宕机期间，可能会发送多条消息，那么每次都可能会选择到失败的Broker上的Queue，然后再重试，尽管重试可能会成功，但是每次发送消息的耗时会增加。因此，MQFaultStrategy实际上还提供了以下两个功能(超出本文范畴，将会后续其他文章中讲解)：</p>
-<ul>
-<li>失败隔离：即发送消息到某个broker失败之后，将其进行隔离，优先从其他正常的broker中进行选择</li>
-<li>延迟隔离：优先发送消息到延迟比较小的broker</li>
-</ul>
-<p>对于无序消息，通过这种异常重试机制，就可以保证消息发送的高可用了。同时由于不需要NameServer通知众多不固定的生产者，也降低了NameServer实现的复杂性。</p>
-<p><strong>既然重试机制有这么明显的好处，那么对于普通有序消息，和严格有序消息，rocketmq为什么默认不进行重试呢？</strong></p>
-<p>答案很简单，这些消息只能发送某个特定的Broker上的某个特定的Queue中，如果发送失败，重试失败的可能依然很大，所以默认不进行重试。如果需要重试，需要业务方自己来做。</p>
-<h2 id="普通有序消息失败情况下的短暂无序"><a href="#普通有序消息失败情况下的短暂无序" class="headerlink" title="普通有序消息失败情况下的短暂无序"></a><strong>普通有序消息失败情况下的短暂无序</strong></h2><p>首先说明，对于普通有序消息，RocketMQ是不会进行重试的。如果需要重试，那么业务RD同学需要自己编写重试代码，例如通过一个for循环，最多重试几次。<strong>但是业务自己的重试是有问题的，即会破坏消息的有序性。</strong></p>
-<p>这里主要说明：对于普通有序消息，在异常情况下，如何经历短暂无序之后再恢复有序。</p>
-<p><strong>异常情况下的短暂无序</strong></p>
-<p>在异常情况下，例如一个Broker宕机，路由信息刷新后，这个Broker上队列就会从List集合中移除。此时按照相同的方式选择队列，就会选择到其他队列上，造成了无序。但是这个无序是很短暂的，因为之后同一个用户的信息，都会发送到同一个新的队列上。</p>
-<p>如果宕机的broker恢复了，那么再次经历一下短暂无序，之后又变得有序了。</p>
-<h2 id="严格有序消息的重试"><a href="#严格有序消息的重试" class="headerlink" title="严格有序消息的重试"></a><strong>严格有序消息的重试</strong></h2><p>对于严格有序消息，由于直接指定了一个MessageQueue。如果这个MessageQueue所在的Broker宕机了，那么之后的重试必然都失败，只有无限重试，直到成功。因此，非必要的情况下，是不建议使用严格有序消息的。</p>
-<h1 id="客户端NameServer选择策略"><a href="#客户端NameServer选择策略" class="headerlink" title="客户端NameServer选择策略"></a><strong>客户端NameServer选择策略</strong></h1><p>前面讲解了客户端在获取路由信息时，每次都会尝试先从缓存的路由表中查找Topic路由信息，如果找不到，那么就去NameServer更新尝试。</p>
-<p>具体选择哪个NameServer，也是使用round-robin的策略。需要注意的是，尽管使用round-robin策略，但是在选择了一个NameServer节点之后，后面总是会优先选择这个NameServer，除非与这个NameServer节点通信出现异常的情况下，才会选择其他节点。</p>
-<p>为什么客户端不与所有NameServer节点建立连接呢，而是只选择其中一个？可能是，通常NameServer节点是固定的几个，但是客户端的数量可能是成百上千，为了减少每个NameServer节点的压力，所以每个客户端节点只随机与其中一个NameServer节点建立连接。</p>
-<p>为了尽可能保证NameServer集群每个节点的负载均衡，在round-robin策略选择时，每个客户端的初始随机位置都不同。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">private final AtomicInteger namesrvIndex = new AtomicInteger(initValueIndex());</span><br></pre></td></tr></table></figure>
-<p>其中initValueIndex()就是计算一个随机值，之后每次选择NameServer时，namesrvIndex+1之后，对namesrvAddrList取模，计算在数据下标的位置，尝试创建连接，一旦创建成功，会将当前选择的NameServer地址记录到namesrvAddrChoosed字段中：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">private final AtomicReference&lt;String&gt; namesrvAddrChoosed = new AtomicReference&lt;String&gt;();</span><br></pre></td></tr></table></figure>
-<p>如果某个NameServer节点创建连接失败是，会自动重试其他节点。具体可参见：getAndCreateNameserverChannel 。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2108,7 +2067,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">266</span>
+                  <span class="site-state-item-count">267</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
