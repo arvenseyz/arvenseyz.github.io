@@ -251,6 +251,188 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/05/15/5-15技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/05/15/5-15技术笔记/" itemprop="url">RocketMQ</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-15T11:03:24+08:00">
+                2019-05-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="消费模式"><a href="#消费模式" class="headerlink" title="消费模式"></a>消费模式</h1><p>广播消费指的是：一条消息被多个consumer消费，即使这些consumer属于同一个ConsumerGroup,消息也会被ConsumerGroup中的每个Consumer都消费一次，广播消费中ConsumerGroup概念可以认为在消息划分方面无意义。</p>
+<p>集群消费模式：一个ConsumerGroup中的Consumer实例平均分摊消费消息。例如某个Topic有9条消息，其中一个ConsumerGroup有3个实例（可能是3个进程，或者3台机器），那么每个实例只消费其中部分，消费完的消息不能被其他实例消费。</p>
+<h1 id="顺序消息"><a href="#顺序消息" class="headerlink" title="顺序消息"></a>顺序消息</h1><p>严格的顺序消息的三要素： 消息有序发送、有序存储在一个Queue里面、客户端有序消费<br>可能乱序的情况：</p>
+<ol>
+<li><p>异步发送会导致消息抵达和完成存储在Broker的时间不一致，编号大的消息可能先完成发送</p>
+<p>解决方案：只能采取同步消息的方式按照编号发送消息</p>
+</li>
+<li><p>默认消息的发送是同步的，但是默认是轮询的方式发送到该Topic下的所有Queue里面，顺序发送的消息会存储到不同的Queue里面，会乱序</p>
+<p>解决方案：通过同步消息+ selectMessageQueue实现消息的顺序发送和顺序存储在一个ConsumerQueue里面</p>
+</li>
+<li><p>客户端负载均衡是20s更新一次，ConsumerA 收到一个OrderlyQueue，pull了5条消息后，由于ConsumerA的负载过高，不能及时消费这些消息，消费堆积在内存中。此时重新更新了负载策略，该OrderlyQueue分给了ConsumerB，pull了第6到10条消息，ConsumerB负载低，直接消费编号6到10的消息，而编号1-5的消息还堆积在ConsumerA的内存中</p>
+<p>解决方案：分布式锁+每次OrderlyQueue变更Consumer时必须确保消息全部被消费完了，才可以释放锁。</p>
+</li>
+</ol>
+<h2 id="顺序发送代码"><a href="#顺序发送代码" class="headerlink" title="顺序发送代码"></a>顺序发送代码</h2><p>同步消息 + selectMessageQueue</p>
+<p>使用相同的orderId实现该业务的所有消息发送到一个Queue里面，因为默认RMQ是 同步消息，阻塞的，只有前面的消息发送成功了，后面的消息才可以发送，最终确保，消息按照顺序发送到MQ Server的一个Topic的一个Queue里面，因为参数是0，求余还是0</p>
+<h2 id="顺序消费实现原理"><a href="#顺序消费实现原理" class="headerlink" title="顺序消费实现原理"></a>顺序消费实现原理</h2><p>消费端通过加锁的方式，实现顺序消费：</p>
+<ol>
+<li>当Consumer负载均衡Assign一个OrderlyQueue的时候，首先要给该Queue加分布式锁，加锁成功才会添加到本地的pullRequestQueue里面，否则直接忽略该OrderlyQueue</li>
+<li>当Consumer想要释放该Queue的时候(比如负载均衡重新分配），必须要消费完该Queue所有消息，才可以释放锁，否则20s重试一次</li>
+<li>为了防止Consumer异常宕机未解锁，导致该OrderlyQueue失效，引入了Broker端30s过期，Consumer端20s，定时更新时间戳的方式</li>
+</ol>
+<h1 id="重复消息"><a href="#重复消息" class="headerlink" title="重复消息"></a>重复消息</h1><p>造成消息重复的根本原因是：网络不可达。只要通过网络交换数据，就无法避免这个问题。所以解决这个问题的办法就是绕过这个问题。那么问题就变成了：如果消费端收到两条一样的消息，应该怎样处理？</p>
+<ol>
+<li>消费端处理消息的业务逻辑保持幂等性</li>
+<li>保证每条消息都有唯一编号且保证消息处理成功与去重表的日志同时出现</li>
+</ol>
+<p>第1条很好理解，只要保持幂等性，不管来多少条重复消息，最后处理的结果都一样。第2条原理就是利用一张日志表来记录已经处理成功的消息的ID，如果新到的消息ID已经在日志表中，那么就不再处理这条消息。</p>
+<p>第1条解决方案，很明显应该在消费端实现，不属于消息系统要实现的功能。第2条可以消息系统实现，也可以业务端实现。正常情况下出现重复消息的概率其实很小，如果由消息系统来实现的话，肯定会对消息系统的吞吐量和高可用有影响，所以最好还是由业务端自己处理消息重复的问题，这也是RocketMQ不解决消息重复的问题的原因。</p>
+<p><strong>RocketMQ不保证消息不重复，如果你的业务需要保证严格的不重复消息，需要你自己在业务端去重。</strong></p>
+<h1 id="延时消息"><a href="#延时消息" class="headerlink" title="延时消息"></a>延时消息</h1><p>消息延时是在broker端完成的，broker发现是延时消息，解析其延时级别。</p>
+<p>存储消息时，延迟消息进入 <code>Topic</code> 为 <code>SCHEDULE_TOPIC_XXXX</code> 。</p>
+<p>对 <code>SCHEDULE_TOPIC_XXXX</code> 每条消费队列对应<strong>单独一个</strong>定时任务进行轮询，发送 <strong>到达投递时间【计划消费时间】</strong> 的消息，并且持久化发送进度。</p>
+<h1 id="消费重试"><a href="#消费重试" class="headerlink" title="消费重试"></a>消费重试</h1><p><code>Consumer</code> 将消费失败的消息发回 <code>Broker</code>，进入<strong>延迟消息队列</strong>。即，消费失败的消息，不会立即消费</p>
+<h1 id="事务消息"><a href="#事务消息" class="headerlink" title="事务消息"></a>事务消息</h1><p>通过消息的异步事务，可以保证本地事务和消息发送同时执行成功或失败，从而保证了数据的最终一致性。</p>
+<ul>
+<li>发送prepare消息，该消息对Consumer不可见</li>
+<li>执行本地事务</li>
+<li>若本地事务执行成功，则向MQ提交消息确认发送指令；若本地事务执行失败，则向MQ发送取消指令</li>
+<li>若MQ长时间未收到确认发送或取消发送的指令，则向业务系统询问本地事务状态，并做补偿处理</li>
+</ul>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/05/09/5-9技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1713,211 +1895,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/04/28/4-28技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/04/28/4-28技术笔记/" itemprop="url">数据库隔离级别</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-28T10:52:43+08:00">
-                2019-04-28
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="并发问题"><a href="#并发问题" class="headerlink" title="并发问题"></a>并发问题</h1><h2 id="脏读"><a href="#脏读" class="headerlink" title="脏读"></a>脏读</h2><p>事务A读取了事务B修改但未提交的数据，导致读到了没用的脏数据。</p>
-<p>比如某账户，初始余额1000元，同时进行转出500和转入100操作，然后转出500失败，事务回退，此时正确余额应该是1100。</p>
-<p>而发生脏读余额错误。</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">事务A</th>
-<th style="text-align:center">事务B</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">开始事务</td>
-<td style="text-align:center"></td>
-</tr>
-<tr>
-<td style="text-align:center"></td>
-<td style="text-align:center">开始事务</td>
-</tr>
-<tr>
-<td style="text-align:center"></td>
-<td style="text-align:center">查询账户余额1000</td>
-</tr>
-<tr>
-<td style="text-align:center"></td>
-<td style="text-align:center">更新账户余额为1000-500</td>
-</tr>
-<tr>
-<td style="text-align:center">查询账户余额为500</td>
-</tr>
-</tbody>
-</table>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">事务A</th>
-<th style="text-align:center">事务B</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center"></td>
-<td style="text-align:center">撤销事务，恢复余额为1000</td>
-</tr>
-<tr>
-<td style="text-align:center">更新账户余额为500+100</td>
-<td style="text-align:center"></td>
-</tr>
-<tr>
-<td style="text-align:center">提交事务</td>
-<td style="text-align:center">查询账户余额1000</td>
-</tr>
-</tbody>
-</table>
-<p>事务A读取到的数据即为脏数据。解决方法为一个事务只能看见其他事务提交的数据，这样事务A读取的余额将会是正确的。</p>
-<h2 id="不可重复读"><a href="#不可重复读" class="headerlink" title="不可重复读"></a>不可重复读</h2><p>这样依然会带来问题，即，事务A中多次读取，结果可能会不同，因为事务A第一次读取可能在事务B提交之前，第二次读取在事务B提交之后，结果是读到两个不同的数据。</p>
-<p>解决方法是加读锁，即事务A读取了这条数据后，该数据被加锁，事务B无法更新该数据，直到事务A结束。</p>
-<h2 id="幻读"><a href="#幻读" class="headerlink" title="幻读"></a>幻读</h2><p>幻读和不可重复读类似，区别在于事务B的操作。</p>
-<p>事务A读取用户共10个，事务B插入一条新数据，事务A再读取，用户变成了11个。即不可重复度，事务B操作时修改，幻读，事务B操作时增删。</p>
-<p>为什么要区分这两个，因为不可重复读的解决方案，解决不了幻读，读取用户共10个，对着十条数据加锁，然而阻止不了插入新的数据。</p>
-<h1 id="四个隔离级别"><a href="#四个隔离级别" class="headerlink" title="四个隔离级别"></a>四个隔离级别</h1><h2 id="Read-UnCommitted（读未提交）"><a href="#Read-UnCommitted（读未提交）" class="headerlink" title="Read UnCommitted（读未提交）"></a>Read UnCommitted（读未提交）</h2><p>就是没有隔离，什么问题都解决不了，没有数据库会这么做。</p>
-<h2 id="Read-Committed-读提交"><a href="#Read-Committed-读提交" class="headerlink" title="Read Committed(读提交)"></a>Read Committed(读提交)</h2><p>oracle和sql server的默认隔离级别，只解决了脏读。很好理解，因为多次读取数据不同，说明其他事务提交了数据呗，没什么太大问题。</p>
-<h2 id="Repeatable-Read（重复读）"><a href="#Repeatable-Read（重复读）" class="headerlink" title="Repeatable Read（重复读）"></a>Repeatable Read（重复读）</h2><p>mySql默认级别，解决了脏读和不可重复读，大概是加了读锁吧。</p>
-<h2 id="Serializable（系列化）"><a href="#Serializable（系列化）" class="headerlink" title="Serializable（系列化）"></a>Serializable（系列化）</h2><p>事务无法并行，依次顺序执行。解决所有问题，显然性能很差。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1968,7 +1945,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">268</span>
+                  <span class="site-state-item-count">269</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

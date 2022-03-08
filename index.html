@@ -251,6 +251,185 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/08/3-8技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2022/03/08/3-8技术笔记/" itemprop="url">ES关联关系</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-03-08T14:59:33+08:00">
+                2022-03-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>Mysql中多表关联，我们可以通过left join 或者Join等实现；</p>
+<p>ES5.X版本，借助父子文档实现多表关联，类似数据库中Join的功能；实现的核心是借助于ES5.X支持1个索引(index)下多个类型(type)。</p>
+<p>ES6.X版本，由于每个索引下面只支持单一的类型（type）。</p>
+<p>所以，ES6.X版本如何实现Join成为大家关注的问题。</p>
+<h1 id="定义join"><a href="#定义join" class="headerlink" title="定义join"></a>定义join</h1><p>仍然是一个索引下，借助父子关系，实现类似Mysql中多表关联的操作。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">PUT my_join_index</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"mappings"</span>: &#123;</span><br><span class="line">    <span class="attr">"_doc"</span>: &#123;</span><br><span class="line">      <span class="attr">"properties"</span>: &#123;</span><br><span class="line">        <span class="attr">"my_join_field"</span>: &#123; </span><br><span class="line">          <span class="attr">"type"</span>: <span class="string">"join"</span>,</span><br><span class="line">          <span class="attr">"relations"</span>: &#123;</span><br><span class="line">            <span class="attr">"question"</span>: <span class="string">"answer"</span> </span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>1） “my_join_field”为join的名称。</p>
+</li>
+<li><p>2）“question”: “answer” 指：qustion为answer的父类。</p>
+</li>
+</ul>
+<h1 id="插入文档"><a href="#插入文档" class="headerlink" title="插入文档"></a>插入文档</h1><p>父文档</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">PUT my_join_index/_doc/1?refresh</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"text"</span>: <span class="string">"This is a question"</span>,</span><br><span class="line">  <span class="attr">"my_join_field"</span>: <span class="string">"question"</span> </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">PUT my_join_index/_doc/2?refresh</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"text"</span>: <span class="string">"This is another question"</span>,</span><br><span class="line">  <span class="attr">"my_join_field"</span>: <span class="string">"question"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>子文档</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">PUT my_join_index/_doc/3?routing=1&amp;refresh </span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"text"</span>: <span class="string">"This is an answer"</span>,</span><br><span class="line">  <span class="attr">"my_join_field"</span>: &#123;</span><br><span class="line">    <span class="attr">"name"</span>: <span class="string">"answer"</span>, </span><br><span class="line">    <span class="attr">"parent"</span>: <span class="string">"1"</span> </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">PUT my_join_index/_doc/4?routing=1&amp;refresh</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"text"</span>: <span class="string">"This is another answer"</span>,</span><br><span class="line">  <span class="attr">"my_join_field"</span>: &#123;</span><br><span class="line">    <span class="attr">"name"</span>: <span class="string">"answer"</span>,</span><br><span class="line">    <span class="attr">"parent"</span>: <span class="string">"1"</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>路由值是强制性的，因为父文件和子文件必须在相同的分片上建立索引。</li>
+<li>“answer”是此子文档的加入名称。</li>
+<li>parent指定此子文档的父文档ID：1</li>
+</ul>
+<h1 id="类型约束"><a href="#类型约束" class="headerlink" title="类型约束"></a>类型约束</h1><ol>
+<li><p>每个索引只允许一个Join类型Mapping定义；</p>
+</li>
+<li><p>父文档和子文档必须在同一个分片上编入索引；这意味着，当进行删除、更新、查找子文档时候需要提供相同的路由值。</p>
+</li>
+<li><p>一个文档可以有多个子文档，但只能有一个父文档。</p>
+</li>
+<li><p>可以为已经存在的Join类型添加新的关系。</p>
+</li>
+<li><p>当一个文档已经成为父文档后，可以为该文档添加子文档。</p>
+</li>
+</ol>
+<h1 id="检索"><a href="#检索" class="headerlink" title="检索"></a>检索</h1><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">GET my_join_index/_search</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">"query"</span>: &#123;</span><br><span class="line">        <span class="attr">"has_parent"</span> : &#123;</span><br><span class="line">            <span class="attr">"parent_type"</span> : <span class="string">"question"</span>,</span><br><span class="line">            <span class="attr">"query"</span> : &#123;</span><br><span class="line">                <span class="attr">"match"</span> : &#123;</span><br><span class="line">                    <span class="attr">"text"</span> : <span class="string">"This is"</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">GET my_join_index/_search</span><br><span class="line">&#123;</span><br><span class="line"><span class="attr">"query"</span>: &#123;</span><br><span class="line">        <span class="attr">"has_child"</span> : &#123;</span><br><span class="line">            <span class="attr">"type"</span> : <span class="string">"answer"</span>,</span><br><span class="line">            <span class="attr">"query"</span> : &#123;</span><br><span class="line">                <span class="attr">"match"</span> : &#123;</span><br><span class="line">                    <span class="attr">"text"</span> : <span class="string">"This is question"</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="一对多和祖孙"><a href="#一对多和祖孙" class="headerlink" title="一对多和祖孙"></a>一对多和祖孙</h1><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">PUT join_ext_index</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"mappings"</span>: &#123;</span><br><span class="line">    <span class="attr">"_doc"</span>: &#123;</span><br><span class="line">      <span class="attr">"properties"</span>: &#123;</span><br><span class="line">        <span class="attr">"my_join_field"</span>: &#123;</span><br><span class="line">          <span class="attr">"type"</span>: <span class="string">"join"</span>,</span><br><span class="line">          <span class="attr">"relations"</span>: &#123;</span><br><span class="line">            <span class="attr">"question"</span>: [<span class="string">"answer"</span>, <span class="string">"comment"</span>]  </span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">question</span><br><span class="line">    /    \</span><br><span class="line">   /      \</span><br><span class="line">comment  answer</span><br><span class="line">           |</span><br><span class="line">           |</span><br><span class="line">          vote</span><br></pre></td></tr></table></figure>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">PUT join_multi_index</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"mappings"</span>: &#123;</span><br><span class="line">    <span class="attr">"_doc"</span>: &#123;</span><br><span class="line">      <span class="attr">"properties"</span>: &#123;</span><br><span class="line">        <span class="attr">"my_join_field"</span>: &#123;</span><br><span class="line">          <span class="attr">"type"</span>: <span class="string">"join"</span>,</span><br><span class="line">          <span class="attr">"relations"</span>: &#123;</span><br><span class="line">            <span class="attr">"question"</span>: [<span class="string">"answer"</span>, <span class="string">"comment"</span>],  </span><br><span class="line">            <span class="attr">"answer"</span>: <span class="string">"vote"</span> </span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/07/3-7技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1834,170 +2013,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/12/13/12-13技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/12/13/12-13技术笔记-1/" itemprop="url">RocketMQ 推和拉</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-12-13T14:48:17+08:00">
-                2021-12-13
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="什么是推和拉"><a href="#什么是推和拉" class="headerlink" title="什么是推和拉"></a>什么是推和拉</h2><p>说到推拉，其实只针对消费者和broker的行为，生产者只有推（不然生产者岂不是还得把消息持久化等着broker来取数据）。</p>
-<p><strong>推模式</strong>指的是consumer与broker建立好网络长连接，broker有相关数据，直接通过长连接通道推送到consumer。其优点是及时，一旦有数据变更，consumer立马能感知到；另外对consumer来说逻辑简单，不需要关心有无数据这些逻辑处理。缺点是不知道consumer的数据消费能力，可能导致数据积压在consumer，来不及处理。</p>
-<p><strong>拉模式</strong>指的是consumer主动向broker发出请求，拉取相关数据。其优点是此过程由consumer发起请求，故不存在推模式中数据积压的问题。缺点是可能不够及时，对consumer来说需要考虑数据拉取相关逻辑，何时去拉，拉的频率怎么控制等等。</p>
-<h2 id="RocketMq的推拉"><a href="#RocketMq的推拉" class="headerlink" title="RocketMq的推拉"></a>RocketMq的推拉</h2><p>RocketMq其实只有拉。</p>
-<p>推是帮填了些参数的拉。consumer把轮询过程封装了，并注册MessageListener监听器，取到消息后，唤醒MessageListener的consumeMessage()来消费，对用户而言，感觉消息是被推送（push）过来的。主要用的也是这种方式。</p>
-<p>如果是拉的话，客户端代码可能得这么写：</p>
-<ol>
-<li><p>注册消费者实例到nameserver</p>
-</li>
-<li><p>查询对应的topic消息队列以便可以消费其下所有数据</p>
-</li>
-<li><p>获取消息队列，消费消息;</p>
-</li>
-<li><p>自行维护保存消费偏移量，以便为下一次消费提供依据;</p>
-</li>
-<li><p>循环以上操作;</p>
-</li>
-</ol>
-<p>可以看见还是比较麻烦。推的话，只需要注册回调方法即可。</p>
-<h3 id="推是用拉-长轮询实现"><a href="#推是用拉-长轮询实现" class="headerlink" title="推是用拉+长轮询实现"></a>推是用拉+长轮询实现</h3><p>后台会有个 RebalanceService 线程，这个线程会根据 topic 的队列数量和当前消费组的消费者个数做负载均衡，每个队列产生的 pullRequest 放入阻塞队列 pullRequestQueue 中。然后又有个 PullMessageService 线程不断的从阻塞队列 pullRequestQueue 中获取 pullRequest，然后通过网络请求 broker，这样实现的准实时拉取消息。</p>
-<p>上面操作相当于帮做了拉的1、2步</p>
-<p>具体怎么长轮询拉的呢</p>
-<p><img src="https://cdn.jsdelivr.net/gh/arvenseyz/imageCloud/9182641-667ee972d01888f3.webp" alt></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2048,7 +2063,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">268</span>
+                  <span class="site-state-item-count">269</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

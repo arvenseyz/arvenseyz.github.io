@@ -251,6 +251,163 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/23/9-23技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/09/23/9-23技术笔记/" itemprop="url">Roaring BitMap</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-09-23T14:20:29+08:00">
+                2021-09-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>ES会缓存频率比较高的filter查询，其中的原理也比较简单，即生成<code>(fitler, segment)</code>和id列表的映射，但是和倒排索引不同，我们只把常用的filter缓存下来而倒排索引是保存所有的，并且filter缓存应该足够快，不然直接查询不就可以了。ES直接把缓存的filter放到内存里面，映射的posting list放入磁盘中。</p>
+<p>RBM的主要思路是：将32位无符号整数按照高16位分桶，即最多可能有216=65536个桶，论文内称为container。存储数据时，按照数据的高16位找到container（找不到就会新建一个），再将低16位放入container中。也就是说，一个RBM就是很多container的集合。</p>
+<p>如下所示。</p>
+<p><img src="https://bytedance.feishu.cn/space/api/box/stream/download/asynccode/?code=YmY1YzA1NDRiOTFmZDFiYjZiMWE2NmZiZGI3ZDlmM2VfMW9qbVFITERKZnB4eEFIcU5rSFZpS1RWUktwRW9CUVpfVG9rZW46Ym94Y24zYUswQXJqTEtNUXdYT1FmM2JqVTFlXzE2MzIzNzg2OTQ6MTYzMjM4MjI5NF9WNA" alt></p>
+<p>图中示出了三个container：</p>
+<ul>
+<li><p>高16位为0000H的container，存储有前1000个62的倍数。</p>
+</li>
+<li><p>高16位为0001H的container，存储有[216, 216+100)区间内的100个数。</p>
+</li>
+<li><p>高16位为0002H的container，存储有[2×216, 3×216)区间内的所有偶数，共215个。</p>
+</li>
+</ul>
+<p><strong>ArrayContainer</strong></p>
+<p>当桶内数据的基数不大于4096时，会采用它来存储，其本质上是一个unsigned short类型的有序数组。数组初始长度为4，随着数据的增多会自动扩容（但最大长度就是4096）。另外还维护有一个计数器，用来实时记录基数。</p>
+<p>上图中的前两个container基数都没超过4096，所以均为ArrayContainer。</p>
+<p><strong>BitmapContainer</strong></p>
+<p>当桶内数据的基数大于4096时，会采用它来存储，其本质就是上一节讲过的普通位图，用长度固定为1024的unsigned long型数组表示，亦即位图的大小固定为216位（8KB）。它同样有一个计数器。</p>
+<p>上图中的第三个container基数远远大于4096，所以要用BitmapContainer存储。</p>
+<p><strong>RunContainer</strong></p>
+<p>RunContainer在图中并未示出，初始的RBM实现中也没有它，而是在本节开头的第二篇论文中新加入的。它使用可变长度的unsigned short数组存储用行程长度编码（RLE）压缩后的数据。举个例子，连续的整数序列<code>11, 12, 13, 14, 15, 27, 28, 29</code>会被RLE压缩为两个二元组<code>11, 4, 27, 2</code>，表示11后面紧跟着4个连续递增的值，27后面跟着2个连续递增的值。</p>
+<p>由此可见，RunContainer的压缩效果可好可坏。考虑极端情况：如果所有数据都是连续的，那么最终只需要4字节；如果所有数据都不连续（比如全是奇数或全是偶数），那么不仅不会压缩，还会膨胀成原来的两倍大。所以，RBM引入RunContainer是作为其他两种container的折衷方案。</p>
+<p><strong>shared_container</strong></p>
+<p>这种容器它本身是不存储数据的，只是用它来指向arraycontainer,bitmapcontainer或runcontainer,就好比指针的作用一样，这个指针可以被多个对象拥有，但是指针所指针的实质东西是被这多个对象所共享的。在我们进行roaringbitmap之间的拷贝的时候，有时并不需要将一个container拷贝多份，那么我们就可以使用sharedcontainer来指向实际的container，然后把sharedcontainer赋给多个roaringbitmap对象持有，这个roaringbitmap对象就可以根据sharedcontainer找到真正存储数据的container,这可以省去不必要的空间浪费。</p>
+<p><img src="https://bytedance.feishu.cn/space/api/box/stream/download/asynccode/?code=YTJmYzJlNTUwZTQ3YWY0NDI3YzY0ZTViMmVlOTYxNTRfQm1oMUhOMlJFeGFSSkFxOE9CUG5OV3BybDhKYzk1dnJfVG9rZW46Ym94Y244NWJCNGd2dGpwNWc1ZG9hMk82NlhlXzE2MzIzNzg2OTQ6MTYzMjM4MjI5NF9WNA" alt></p>
+<p>roaringbitmap除了比bitmap占用内存少之外，其并集和交集操作的速度也要比bitmap的快。原因归结为以下几点：</p>
+<ol>
+<li>计算上的优化</li>
+</ol>
+<p>对于roaringbitmap本质上是将大块的bitmap分成各个小块，其中每个小块在需要存储数据的时候才会存在。所以当进行交集或并集运算的时候，roaringbitmap只需要去计算存在的一些块而不需要像bitmap那样对整个大的块进行计算。如果块内非常稀疏，那么只需要对这些小整数列表进行集合的 AND、OR 运算，这样的话计算量还能继续减轻。这里既不是用空间换时间，也没有用时间换空间，而是用逻辑的复杂度同时换取了空间和时间。</p>
+<p>同时在roaringbitmap中32位长的数据，被分割成高 16 位和低 16 位，高 16 位表示块偏移，低16位表示块内位置，单个块可以表达 64k 的位长，也就是 8K 字节。这样可以保证单个块都可以全部放入 L1 Cache，可以显著提升性能。</p>
+<ol start="2">
+<li>程序逻辑上的优化</li>
+</ol>
+<p>（1）roaringbitmap维护了排好序的一级索引，以及有序的arraycontainer当进行交集操作的时候，只需要根据一级索引中对应的值来获取需要合并的容器，而不需要合并的容器则不需要对其进行操作直接过滤掉。</p>
+<p>（2）当进行合并的arraycontainer中数据个数相差过大的时候采用基于二分查找的方法对arraycontainer求交集,避免不必要的线性合并花费的时间开销。</p>
+<p>（3）roaingbitmap在做并集的时候同样根据一级索引只对相同的索引的容器进行合并操作，而索引不同的直接添加到新的roaringbitmap上即可，不需要遍历容器。</p>
+<p>（4）.roaringbitmap在合并容器的时候会先预测结果，生成对应的容器，避免不必要的容器转换操作。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/22/9-21技术笔记-2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1694,177 +1851,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/01/14/1-14技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/01/14/1-14技术笔记/" itemprop="url">缓存的数据一致性问题</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-01-14T15:13:03+08:00">
-                2021-01-14
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p> 一般来说，缓存有以下三种模式：</p>
-<ul>
-<li><p>Cache Aside 更新模式</p>
-</li>
-<li><p>Read/Write Through 更新模式</p>
-</li>
-<li><p>Write Behind Caching 更新模式</p>
-</li>
-</ul>
-<p>通俗一点来讲就是，同时更新缓存和数据库（Cache Aside 更新模式）；先更新缓存，缓存负责同步更新数据库（Read/Write Through 更新模式）；先更新缓存，缓存定时异步更新数据库（Write Behind Caching 更新模式）</p>
-<h1 id="Cache-Aside-旁路缓存-策略"><a href="#Cache-Aside-旁路缓存-策略" class="headerlink" title="Cache Aside(旁路缓存)策略"></a>Cache Aside(旁路缓存)策略</h1><h2 id="更新缓存的问题"><a href="#更新缓存的问题" class="headerlink" title="更新缓存的问题"></a>更新缓存的问题</h2><p>首先是缓存更新还是删除，采用删除，原因有两点：</p>
-<ol>
-<li><p>对于对象类型，或者文本类型，修改缓存value的成本较高。</p>
-</li>
-<li><p>有并发问题。</p>
-</li>
-</ol>
-<p>即同时有请求A和请求B进行更新操作，那么会出现<br>（1）线程A更新了数据库<br>（2）线程B更新了数据库<br>（3）线程B更新了缓存<br>（4）线程A更新了缓存<br>这就出现请求A更新缓存应该比请求B更新缓存早才对，但是因为网络等原因，B却比A更早更新了缓存。这就导致了脏数据，因此不考虑。</p>
-<h2 id="先删缓存的问题"><a href="#先删缓存的问题" class="headerlink" title="先删缓存的问题"></a>先删缓存的问题</h2><p>其次是先删缓存还是先改数据库。</p>
-<p>都有问题。</p>
-<p>先删缓存问题如下：</p>
-<h3 id="并发问题"><a href="#并发问题" class="headerlink" title="并发问题"></a>并发问题</h3><p>同时有一个请求A进行更新操作，另一个请求B进行查询操作。那么会出现如下情形:<br>（1）请求A进行写操作，删除缓存<br>（2）请求B查询发现缓存不存在<br>（3）请求B去数据库查询得到旧值<br>（4）请求B将旧值写入缓存<br>（5）请求A将新值写入数据库<br>上述情况就会导致不一致的情形出现。而且，如果不采用给缓存设置过期时间策略，该数据永远都是脏数据。</p>
-<h3 id="主从同步问题"><a href="#主从同步问题" class="headerlink" title="主从同步问题"></a>主从同步问题</h3><p>两个请求，一个请求A进行更新操作，另一个请求B进行查询操作。  </p>
-<p>（1）请求A进行写操作，删除缓存<br>（2）请求A将数据写入数据库了，<br>（3）请求B查询缓存发现，缓存没有值<br>（4）请求B去从库查询，这时，还没有完成主从同步，因此查询到的是旧值<br>（5）请求B将旧值写入缓存<br>（6）数据库完成主从同步，从库变为新值</p>
-<h3 id="异步双删"><a href="#异步双删" class="headerlink" title="异步双删"></a>异步双删</h3><p>等一定时间（主从同步时间）后，再次删除</p>
-<h2 id="先更新数据库的问题"><a href="#先更新数据库的问题" class="headerlink" title="先更新数据库的问题"></a>先更新数据库的问题</h2><h3 id="原子性问题"><a href="#原子性问题" class="headerlink" title="原子性问题"></a>原子性问题</h3><p>更新数据库成功，删除缓存失败，不好处理。</p>
-<h3 id="并发问题-1"><a href="#并发问题-1" class="headerlink" title="并发问题"></a>并发问题</h3><p>假设这会有两个请求，一个请求A做查询操作，一个请求B做更新操作，那么会有如下情形产生<br>（1）缓存刚好失效<br>（2）请求A查询数据库，得一个旧值<br>（3）请求B将新值写入数据库<br>（4）请求B删除缓存<br>（5）请求A将查到的旧值写入缓存<br>ok，如果发生上述情况，确实是会发生脏数据。</p>
-<p>但是这种问题，出现在写操作比读操作慢，一般不会发生。</p>
-<h3 id="异步双删-1"><a href="#异步双删-1" class="headerlink" title="异步双删"></a>异步双删</h3><p>也可以解决这个问题。</p>
-<p>异步第二次删除失败怎么处理，搞个失败队列啥的。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1915,7 +1901,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">268</span>
+                  <span class="site-state-item-count">269</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
