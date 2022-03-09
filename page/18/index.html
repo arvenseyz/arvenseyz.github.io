@@ -251,6 +251,171 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/01/29/leetcode225-235-49/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/01/29/leetcode225-235-49/" itemprop="url">队列实现栈，栈实现队列，异位词分组</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-29T14:27:30+08:00">
+                2019-01-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/leetcode/" itemprop="url" rel="index">
+                    <span itemprop="name">leetcode</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="225"><a href="#225" class="headerlink" title="225"></a>225</h1><h1 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h1><p>用队列实现栈的操作</p>
+<h1 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h1><p>其实入栈和入队是一样的，区别在于出栈是栈顶，出队列是从队列头。也就是说，用队列来模拟栈的话，出栈需要移除队列尾元素。</p>
+<p>3        </p>
+<p>2 -》 1 2 3</p>
+<p>1</p>
+<p>解决方法是两个队列，把队列a全部出队，按顺序放在队列b中，不放最后一个。然后再挪回来。</p>
+<p>其实还有个办法，就是把队列倒过来，这样出队就是出栈，区别在入队和入栈。优势在于，这里其实可以不用第二个队列，边出边入即可。</p>
+<p>3        </p>
+<p>2 -》 3 2 1</p>
+<p>1</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><p>方法一，需要改写pop</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">pop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (q1.size() &gt; <span class="number">1</span>) &#123;</span><br><span class="line">        top = q1.remove();</span><br><span class="line">        q2.add(top);</span><br><span class="line">    &#125;</span><br><span class="line">    q1.remove();</span><br><span class="line">    Queue&lt;Integer&gt; temp = q1;</span><br><span class="line">    q1 = q2;</span><br><span class="line">    q2 = temp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>方法二，需要改写push</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">push</span><span class="params">(<span class="keyword">int</span> x)</span> </span>&#123;</span><br><span class="line">            q.add(x);</span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">1</span>; i &lt; q.size(); i ++) &#123; <span class="comment">//rotate the queue to make the tail be the head</span></span><br><span class="line">                q.add(q.poll());</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> x;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<h1 id="232"><a href="#232" class="headerlink" title="232"></a>232</h1><h1 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h1><p>用栈实现队列的操作</p>
+<h1 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h1><p>和225差不多。</p>
+<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyQueue</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   Stack&lt;Integer&gt; stack=<span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line">    Stack&lt;Integer&gt; stack2=<span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">push</span><span class="params">(<span class="keyword">int</span> x)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">while</span>(!stack.isEmpty())</span><br><span class="line">        &#123;</span><br><span class="line">            stack2.push(stack.pop());</span><br><span class="line">        &#125;</span><br><span class="line">        stack2.push(x);</span><br><span class="line">        <span class="keyword">while</span>(!stack2.isEmpty())</span><br><span class="line">        &#123;</span><br><span class="line">            stack.push(stack2.pop());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> x;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Removes the element from in front of queue.</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">pop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span>  stack.pop();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Get the front element.</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">peek</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> stack.peek();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Return whether the queue is empty.</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">empty</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> stack.isEmpty();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="49"><a href="#49" class="headerlink" title="49"></a>49</h1><h2 id="题目-2"><a href="#题目-2" class="headerlink" title="题目"></a>题目</h2><p>Anagrams是异位词的意思，Group Anagrams意思是把异位词分组，像abc和cba就是异位词。</p>
+<p><strong>Input:</strong> <code>[&quot;eat&quot;, &quot;tea&quot;, &quot;tan&quot;, &quot;ate&quot;, &quot;nat&quot;, &quot;bat&quot;]</code>,<br><strong>Output:</strong><br>[<br>  [“ate”,”eat”,”tea”],<br>  [“nat”,”tan”],<br>  [“bat”]<br>]</p>
+<h2 id="解答-2"><a href="#解答-2" class="headerlink" title="解答"></a>解答</h2><p>异位词的共同点是什么呢，他们的char数组排序后是一致的。</p>
+<p>只要找到这个共同点，用哈希存下来，key就是排序后的char数组，value就是异位词的List,每多一个异位词，加在这个List中就行。这样就建立多个了一对多的映射。</p>
+<h2 id="代码-2"><a href="#代码-2" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">HashMap&lt;String,List&lt;String&gt;&gt; hashMap = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;strs.length;i++)&#123;</span><br><span class="line">            String tmp=strs[i];</span><br><span class="line">            <span class="keyword">char</span>[] chars = tmp.toCharArray();</span><br><span class="line">            Arrays.sort(chars);</span><br><span class="line">            tmp=<span class="keyword">new</span> String(chars);</span><br><span class="line">            <span class="keyword">if</span>(!hashMap.containsKey(tmp)) &#123;</span><br><span class="line">                List&lt;String&gt; list = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">                list.add(strs[i]);</span><br><span class="line">                hashMap.put(tmp, list);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> &#123;</span><br><span class="line">                hashMap.get(tmp).add(strs[i]);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ArrayList(hashMap.values());</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="感想"><a href="#感想" class="headerlink" title="感想"></a>感想</h2><p>keySet是取出所有key的集合，values就是Value的集合了。而EntrySet是键值对的集合。</p>
+<p>要想建立一对多映射，把value取成集合或者列表就行了。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/01/24/1-24技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1750,167 +1915,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/12/18/leetcode70-141-142/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/12/18/leetcode70-141-142/" itemprop="url">爬楼梯走法数，链表是否有环，找到链表环的起点</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-18T17:34:46+08:00">
-                2018-12-18
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/leetcode/" itemprop="url" rel="index">
-                    <span itemprop="name">leetcode</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="70"><a href="#70" class="headerlink" title="70"></a>70</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>爬楼梯,每次可以走一步或者两步,走n步一共有多少种走法.</p>
-<h1 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h1><p>走n步走法数=走n-1步走法数(再一次走一步)+走n-2步走法数(再一次走两步).递归求解</p>
-<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span><span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">step</span><span class="params">(<span class="keyword">int</span> num)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(num==<span class="number">1</span>) </span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span>(num==<span class="number">2</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">2</span>;</span><br><span class="line">    <span class="keyword">return</span> step(num<span class="number">-1</span>)+step(num<span class="number">-2</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n;</span><br><span class="line">    <span class="keyword">while</span>(<span class="built_in">cin</span>&gt;&gt;n)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cout</span>&lt;&lt;step(n)&lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<p>然而递归会超时.解决方法是动态规划,f(n)=f(n-1)+f(n-2)</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">climbStairs</span><span class="params">(<span class="keyword">int</span> n)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span>[] A=<span class="keyword">new</span> <span class="keyword">int</span>[n]; <span class="comment">//用来记录到每一步有多少种走法</span></span><br><span class="line">    A[<span class="number">0</span>]=<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span>(n==<span class="number">1</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    A[<span class="number">1</span>]=<span class="number">2</span>;</span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">2</span>;i&lt;n;i++)&#123;</span><br><span class="line">        A[i]=A[i-<span class="number">1</span>]+A[i-<span class="number">2</span>];</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> A[n-<span class="number">1</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="感想"><a href="#感想" class="headerlink" title="感想"></a>感想</h2><p>窃以为,如果要向学生介绍递归算法,爬楼梯是最好的例子.而不是很多课本中的汉诺塔.</p>
-<p>同样,这个问题的状态转移方程也很简单.</p>
-<h1 id="141"><a href="#141" class="headerlink" title="141"></a>141</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>判断链表是否有环</p>
-<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>两个指针,一个快一个慢,快的每次两步,慢的每次一步.如果链表有环,Node.next将不会为空,而是在环里兜圈子,而一个快,一个慢,在兜圈过程中,快的终将把慢的套圈.此时两者相遇.</p>
-<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">public boolean hasCycle(ListNode head) &#123;</span><br><span class="line">        if(head==null||head.next==null)&#123;</span><br><span class="line">            return false;</span><br><span class="line">        &#125;</span><br><span class="line">        ListNode f =head.next;</span><br><span class="line">        ListNode s =head;</span><br><span class="line">        while ((f!=s))&#123;</span><br><span class="line">            if(f==null||f.next==null)&#123;</span><br><span class="line">                return false;</span><br><span class="line">            &#125;</span><br><span class="line">            f=f.next.next;</span><br><span class="line">            s=s.next;</span><br><span class="line">        &#125;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<h1 id="142"><a href="#142" class="headerlink" title="142"></a>142</h1><h2 id="题目-2"><a href="#题目-2" class="headerlink" title="题目"></a>题目</h2><p>找到链表环的起点.</p>
-<h2 id="解答-2"><a href="#解答-2" class="headerlink" title="解答"></a>解答</h2><p>这里有个数学公式,</p>
-<p>假设从head到环入口entry步数为x，环路长度为y，快慢指针相遇时离entry的距离为m。</p>
-<p>则fast：x+ay+m，slow：x+by+m  (a &gt; b)</p>
-<p>x+ay+m = 2(x+by+m)</p>
-<p>整理得x+m = (a-2b)y</p>
-<p>以上式子的含义是，相遇时的位置(m)再前进x步，正好是y的整倍数即整圈。</p>
-<p>也就是说,当他们相遇时,把快的再放到开始的位置,然后速度变为和慢的一样,当他们再次相遇,就是环的起点.</p>
-<h2 id="代码-2"><a href="#代码-2" class="headerlink" title="代码"></a>代码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">public ListNode detectCycle(ListNode head) &#123;</span><br><span class="line">        if(head == null || head.next == null)</span><br><span class="line">            return null;</span><br><span class="line">        else if(head.next == head)</span><br><span class="line">            return head;</span><br><span class="line"></span><br><span class="line">        ListNode slow = head;</span><br><span class="line">        ListNode fast = head;</span><br><span class="line"></span><br><span class="line">        while (fast != null) &#123;</span><br><span class="line">            fast = fast.next;</span><br><span class="line">            if(fast != null) &#123;</span><br><span class="line">                fast = fast.next;</span><br><span class="line">                slow = slow.next;</span><br><span class="line">            &#125;</span><br><span class="line">            if(fast == slow) &#123;</span><br><span class="line">                break;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if(fast == null)</span><br><span class="line">            return null;</span><br><span class="line"></span><br><span class="line">        fast = head;</span><br><span class="line">        while (fast != slow) &#123;</span><br><span class="line">            fast = fast.next;</span><br><span class="line">            slow = slow.next;</span><br><span class="line">        &#125;</span><br><span class="line">        return fast;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="感想-1"><a href="#感想-1" class="headerlink" title="感想"></a>感想</h2><p>其实141题挺有意思,142题这数学关系,一般人很难瞬间发现的,</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1961,7 +1965,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">269</span>
+                  <span class="site-state-item-count">270</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

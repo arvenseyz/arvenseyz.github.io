@@ -251,6 +251,198 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/24/9-24技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/09/24/9-24技术笔记-1/" itemprop="url">ES段和段合并</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-09-24T14:56:04+08:00">
+                2021-09-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="segment"><a href="#segment" class="headerlink" title="segment"></a>segment</h1><p>lucene内部的数据是由⼀个个segment组成的，写⼊lucene的数据并不直接落盘，⽽是先写在内存中，经过了refresh间隔，lucene才将该时间段写⼊的全部数据refresh成⼀个segment，segment多了之后会进⾏merge成更⼤的segment。</p>
+<p>lucene查询时会遍历每个segment完成。由于lucene写⼊的数据是在内存中完成，所以写⼊效率⾮常⾼。但是也存在丢失数据的⻛险，所以Elasticsearch基于此现象实现了translog，只有在segment数据落盘后，Elasticsearch才会删除对应的translog。</p>
+<ul>
+<li><p>每个分片都是一个 Lucene 索引实例，您可以将其视作一个独立的搜索引擎，它能够对 Elasticsearch 集群中的数据子集进行索引并处理相关查询；</p>
+</li>
+<li><p>每个分片包含多个segment（段），每一个segment都是一个倒排索引。</p>
+</li>
+</ul>
+<p>在查询的时，会把所有的segment查询结果汇总归并为最终的分片查询结果返回。</p>
+<p>在 lucene 中，为了实现高索引速度，故使用了segment 分段架构存储。</p>
+<p>一批写入数据保存在一个段中，其中每个段是磁盘中的单个文件。</p>
+<p>由于两次写入之间的文件操作非常繁重，因此将一个段设为不可变的，以便所有后续写入都转到New段。</p>
+<p>由于自动刷新流程每秒会创建一个新的段（由动态配置参数：refresh_interval 决定），这样会导致短时间内的段数量暴增。</p>
+<p>而段数目太多会带来较大的麻烦。</p>
+<ul>
+<li><p>消耗资源：每一个段都会消耗文件句柄、内存和cpu运行周期；</p>
+</li>
+<li><p>搜索变慢：每个搜索请求都必须轮流检查每个段；所以段越多，搜索也就越慢。</p>
+</li>
+</ul>
+<p>Elasticsearch 通过在后台进行段合并来解决这个问题。</p>
+<p>小的段被合并到大的段，然后这些大的段再被合并到更大的段。</p>
+<h1 id="段合并"><a href="#段合并" class="headerlink" title="段合并"></a>段合并</h1><p>段合并的时候会将那些旧的已删除文档从文件系统中清除。</p>
+<p>被删除的文档（或被更新文档的旧版本）不会被拷贝到新的大段中。</p>
+<p>启动段合并不需要你做任何事。进行索引和搜索时会自动进行。</p>
+<p>合并大的段需要消耗大量的I/O和CPU资源，如果任其发展会影响搜索性能。Elasticsearch在默认情况下会对合并流程进行资源限制，所以搜索仍然 有足够的资源很好地执行。</p>
+<ul>
+<li><p>当索引的时候，刷新（refresh）操作会创建新的段并将段打开以供搜索使用。</p>
+</li>
+<li><p>合并进程选择一小部分大小相似的段，并且在后台将它们合并到更大的段中。这并不会中断索引和搜索。</p>
+</li>
+</ul>
+<p>代价呢</p>
+<ul>
+<li><p>磁盘IO操作的代价；</p>
+</li>
+<li><p>速度慢的系统中，段合并会显著影响性能。</p>
+</li>
+</ul>
+<h1 id="手动段合并"><a href="#手动段合并" class="headerlink" title="手动段合并"></a>手动段合并</h1><p><code>optimize</code> API大可看做是 <em>强制合并</em> API。它会将一个分片强制合并到 <code>max_num_segments</code> 参数指定大小的段数目。 这样做的意图是减少段的数量（通常减少到一个），来提升搜索性能。</p>
+<p>在特定情况下，使用  <code>optimize</code>  API 颇有益处。例如在日志这种用例下，每天、每周、每月的日志被存储在一个索引中。 老的索引实质上是只读的；它们也并不太可能会发生变化。</p>
+<p>在这种情况下，使用optimize优化老的索引，将每一个分片合并为一个单独的段就很有用了；这样既可以节省资源，也可以使搜索更加快速</p>
+<h1 id="迁移索引"><a href="#迁移索引" class="headerlink" title="迁移索引"></a>迁移索引</h1><p>使用 <code>optimize</code> API 触发段合并的操作不会受到任何资源上的限制。这可能会消耗掉你节点上全部的I/O资源, 使其没有余裕来处理搜索请求，从而有可能使集群失去响应。 如果你想要对索引执行 <code>optimize</code>，你需要先使用分片分配（查看 <a href="https://www.elastic.co/guide/cn/elasticsearch/guide/current/retiring-data.html#migrate-indices" title="迁移旧索引" target="_blank" rel="noopener">迁移旧索引</a>）把索引移到一个安全的节点，再执行。</p>
+<p>随着数据被记录，很有可能存在一个  <em>热点</em>  索引——今日的索引。 所有新文档都会被加到那个索引，几乎所有查询都以它为目标。那个索引应当使用你最好的硬件。</p>
+<p>Elasticsearch 是如何得知哪台是你最好的服务器呢？你可以通过给每台服务器指定任意的标签来告诉它。 例如，你可以像这样启动一个节点：</p>
+<p>./bin/elasticsearch –node.box_type strong</p>
+<p><code>box_type</code>  参数是完全随意的——你可以将它随意命名只要你喜欢——但你可以用这些任意的值来告诉 Elasticsearch 将一个索引分配至何处。</p>
+<p>我们可以通过按以下配置创建今日的索引来确保它被分配到我们最好的服务器上：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PUT /logs_2014-10-01 &#123; &quot;settings&quot;: &#123; &quot;index.routing.allocation.include.box_type&quot; : &quot;strong&quot; &#125; &#125;</span><br></pre></td></tr></table></figure>
+<p>昨日的索引不再需要我们最好的服务器了，我们可以通过更新索引设置将它移动到标记为  <code>medium</code>  的节点上：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">POST /logs_2014-09-30/_settings &#123; &quot;index.routing.allocation.include.box_type&quot; : &quot;medium&quot; &#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/23/9-23技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1681,176 +1873,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/08/10/8-10技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/08/10/8-10技术笔记-1/" itemprop="url">ES的store、source、index属性</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-08-10T14:59:40+08:00">
-                2021-08-10
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="index"><a href="#index" class="headerlink" title="index"></a>index</h1><p>index的含义还比较容易简单，一共3个值，no,analyzied，not_analyzied，分别对应’不对该字段进行索引（无法搜索）’，’分词后索引’，’以单个关键词进行索引’。</p>
-<h1 id="source"><a href="#source" class="headerlink" title="source"></a>source</h1><p>es里除了倒排索引，当然还会把文档原文存储一遍，存储的这一遍就是source。</p>
-<p>官方文档解释如下：</p>
-<blockquote>
-<p>默认地，Elasticsearch 在  <code>_source</code>  字段存储代表文档体的JSON字符串。和所有被存储的字段一样，  <code>_source</code>  字段在被写入磁盘之前先会被压缩。</p>
-<p>这个字段的存储几乎总是我们想要的，因为它意味着下面的这些：</p>
-<ul>
-<li>搜索结果包括了整个可用的文档——不需要额外的从另一个的数据仓库来取文档。</li>
-<li>如果没有  <code>_source</code>  字段，部分  <code>update</code>  请求不会生效。</li>
-<li>当你的映射改变时，你需要重新索引你的数据，有了_source字段你可以直接从Elasticsearch这样做，而不必从另一个（通常是速度更慢的）数据仓库取回你的所有文档。</li>
-<li>当你不需要看到整个文档时，单个字段可以从  <code>_source</code>  字段提取和通过  <code>get</code>  或者  <code>search</code>  请求返回。</li>
-<li>调试查询语句更加简单，因为你可以直接看到每个文档包括什么，而不是从一列id猜测它们的内容。</li>
-</ul>
-<p>然而，存储  <code>_source</code>  字段的确要使用磁盘空间。如果上面的原因对你来说没有一个是重要的，你可以用下面的映射禁用  <code>_source</code>  字段。</p>
-</blockquote>
-<p><a href="https://imgtu.com/i/fY9nJ0" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/08/10/fY9nJ0.png" alt="fY9nJ0.png"></a></p>
-<p>当然可以关闭该属性。</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"mappings"</span>:&#123;</span><br><span class="line">        <span class="attr">"_source"</span>:&#123;</span><br><span class="line">            <span class="attr">"enabled"</span>:<span class="literal">false</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">"properties"</span>: &#123;</span><br><span class="line">            ... </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>或者选择性开启某些字段</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">"mappings"</span>:&#123;</span><br><span class="line">        <span class="attr">"_source"</span>: &#123;</span><br><span class="line">          <span class="attr">"includes"</span>: [</span><br><span class="line">            <span class="string">"*.count"</span>,</span><br><span class="line">            <span class="string">"meta.*"</span></span><br><span class="line">          ],</span><br><span class="line">          <span class="attr">"excludes"</span>: [</span><br><span class="line">            <span class="string">"meta.description"</span>,</span><br><span class="line">            <span class="string">"meta.other.*"</span></span><br><span class="line">          ]</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="string">"properties"</span>: &#123;</span><br><span class="line">            ... </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>于是问题来了，既然搜不出，我干嘛要用。</p>
-<p> 答案是，虽然搜不出来，但是可以搜到，比如我们只用es搜索，用这些字段可以搜出id，然后内容存在某个kv数据库中，再用该id去这个kv数据库搜。</p>
-<h1 id="store"><a href="#store" class="headerlink" title="store"></a>store</h1><p>store和source的include似乎结果上是相同的，即某些字段可以被搜出来。</p>
-<p>官方解释</p>
-<blockquote>
-<p>默认情况下，字段值被<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-index.html" title="index" target="_blank" rel="noopener">index</a>以使其可搜索，但它们不会被<em>存储</em>。这意味着可以查询该字段，但无法检索原始字段值。</p>
-<p>通常这无关紧要。字段值已经是<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-source-field.html" title="_source 字段" target="_blank" rel="noopener"><code>_source</code>字段的</a>一部分， 默认情况下存储。如果您只想检索单个字段或几个字段的值，而不是整个<code>_source</code>，那么这可以通过<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-fields.html#source-filtering" title="_source 选项" target="_blank" rel="noopener">源过滤</a>来实现 。</p>
-<p>在某些情况下，它可能对<code>store</code>某个领域有意义。例如，如果您有一个包含 a <code>title</code>、 a<code>date</code>和一个非常大的<code>content</code> 字段的文档，您可能只想检索 the<code>title</code>和 the<code>date</code>而不必从大<code>_source</code>字段中提取这些字段：</p>
-</blockquote>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1901,7 +1923,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">269</span>
+                  <span class="site-state-item-count">270</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

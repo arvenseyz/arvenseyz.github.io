@@ -251,6 +251,159 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/02/20/2-20技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/02/20/2-20技术笔记/" itemprop="url">一致性哈希</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-02-20T17:08:13+08:00">
+                2019-02-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="为什么需要哈希"><a href="#为什么需要哈希" class="headerlink" title="为什么需要哈希"></a>为什么需要哈希</h2><p>比如过redis集群，多个主机共同存数据，存的时候随机还行，并且靠随机实现了负载均衡。但读取的时候不知道存在哪台服务器中，得遍历一遍。这是哈希的需求。</p>
+<p>哈希算法是固定的，查找时进行一次哈希运算，就知道存在哪台服务器了。</p>
+<p>比如说取模哈希，hash(a) % n ，有几台服务器就模几。</p>
+<h2 id="哈希的缺点"><a href="#哈希的缺点" class="headerlink" title="哈希的缺点"></a>哈希的缺点</h2><p>缺点在于无法应对服务器数量的变化。</p>
+<p>第一是增多，业务发展增加服务器。第二是减少，某服务器故障暂时下线。都会导致之前的余数不对。此时所有缓存的位置都要发生改变！换句话说，当服务器数量发生改变时，所有缓存在一定时间内是失效的。</p>
+<h2 id="一致性哈希"><a href="#一致性哈希" class="headerlink" title="一致性哈希"></a>一致性哈希</h2><p>一致性Hash算法也是使用取模的方法，只是，刚才描述的取模法是对服务器的数量进行取模，而一致性Hash算法是对2^32取模，什么意思呢？简单来说，一致性Hash算法将整个哈希值空间组织成一个虚拟的圆环，如假设某哈希函数H的值空间为0-2^32-1。然后首位相连就形成了一个环。</p>
+<p>将各个服务器使用Hash进行一个哈希，具体可以选择服务器的IP或主机名作为关键字进行哈希，这样每台机器就能确定其在哈希环上的位置。</p>
+<p>接下来使用如下算法定位数据访问到相应服务器：将数据key使用相同的函数Hash计算出哈希值，并确定此数据在环上的位置，从此位置沿环顺时针“行走”，第一台遇到的服务器就是其应该定位到的服务器。</p>
+<h2 id="一致性哈希如何解决哈希的缺点"><a href="#一致性哈希如何解决哈希的缺点" class="headerlink" title="一致性哈希如何解决哈希的缺点"></a>一致性哈希如何解决哈希的缺点</h2><p>现一般的，在一致性Hash算法中，如果一台服务器不可用，则受影响的数据仅仅是此服务器到其环空间中前一台服务器（即沿着逆时针方向行走遇到的第一台服务器）之间数据，其它不会受到影响。如果增加一台服务器，则受影响的数据仅仅是新服务器到其环空间中前一台服务器（即沿着逆时针方向行走遇到的第一台服务器）之间数据，其它数据也不会受到影响。</p>
+<h2 id="一致性哈希的问题与解决"><a href="#一致性哈希的问题与解决" class="headerlink" title="一致性哈希的问题与解决"></a>一致性哈希的问题与解决</h2><p>问题很简单，如果较多服务器，概率上来说，他们会均匀的分布在环上。如果较少，很有可能服务器分布不均匀。</p>
+<p>解决方法是虚拟节点。即对每一个服务节点计算多个哈希，每个计算结果位置都放置一个此服务节点，称为虚拟节点。具体做法可以在服务器IP或主机名的后面增加编号来实现。</p>
+<p>同时数据定位算法不变，只是多了一步虚拟节点到实际节点的映射。这样就解决了服务节点少时数据倾斜的问题。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/02/19/2-19技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1742,171 +1895,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/01/29/leetcode225-235-49/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/01/29/leetcode225-235-49/" itemprop="url">队列实现栈，栈实现队列，异位词分组</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-29T14:27:30+08:00">
-                2019-01-29
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/leetcode/" itemprop="url" rel="index">
-                    <span itemprop="name">leetcode</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="225"><a href="#225" class="headerlink" title="225"></a>225</h1><h1 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h1><p>用队列实现栈的操作</p>
-<h1 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h1><p>其实入栈和入队是一样的，区别在于出栈是栈顶，出队列是从队列头。也就是说，用队列来模拟栈的话，出栈需要移除队列尾元素。</p>
-<p>3        </p>
-<p>2 -》 1 2 3</p>
-<p>1</p>
-<p>解决方法是两个队列，把队列a全部出队，按顺序放在队列b中，不放最后一个。然后再挪回来。</p>
-<p>其实还有个办法，就是把队列倒过来，这样出队就是出栈，区别在入队和入栈。优势在于，这里其实可以不用第二个队列，边出边入即可。</p>
-<p>3        </p>
-<p>2 -》 3 2 1</p>
-<p>1</p>
-<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><p>方法一，需要改写pop</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">pop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (q1.size() &gt; <span class="number">1</span>) &#123;</span><br><span class="line">        top = q1.remove();</span><br><span class="line">        q2.add(top);</span><br><span class="line">    &#125;</span><br><span class="line">    q1.remove();</span><br><span class="line">    Queue&lt;Integer&gt; temp = q1;</span><br><span class="line">    q1 = q2;</span><br><span class="line">    q2 = temp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>方法二，需要改写push</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">push</span><span class="params">(<span class="keyword">int</span> x)</span> </span>&#123;</span><br><span class="line">            q.add(x);</span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">1</span>; i &lt; q.size(); i ++) &#123; <span class="comment">//rotate the queue to make the tail be the head</span></span><br><span class="line">                q.add(q.poll());</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> x;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<h1 id="232"><a href="#232" class="headerlink" title="232"></a>232</h1><h1 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h1><p>用栈实现队列的操作</p>
-<h1 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h1><p>和225差不多。</p>
-<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyQueue</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   Stack&lt;Integer&gt; stack=<span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line">    Stack&lt;Integer&gt; stack2=<span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">push</span><span class="params">(<span class="keyword">int</span> x)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">while</span>(!stack.isEmpty())</span><br><span class="line">        &#123;</span><br><span class="line">            stack2.push(stack.pop());</span><br><span class="line">        &#125;</span><br><span class="line">        stack2.push(x);</span><br><span class="line">        <span class="keyword">while</span>(!stack2.isEmpty())</span><br><span class="line">        &#123;</span><br><span class="line">            stack.push(stack2.pop());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> x;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Removes the element from in front of queue.</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">pop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span>  stack.pop();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Get the front element.</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">peek</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> stack.peek();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Return whether the queue is empty.</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">empty</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> stack.isEmpty();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="49"><a href="#49" class="headerlink" title="49"></a>49</h1><h2 id="题目-2"><a href="#题目-2" class="headerlink" title="题目"></a>题目</h2><p>Anagrams是异位词的意思，Group Anagrams意思是把异位词分组，像abc和cba就是异位词。</p>
-<p><strong>Input:</strong> <code>[&quot;eat&quot;, &quot;tea&quot;, &quot;tan&quot;, &quot;ate&quot;, &quot;nat&quot;, &quot;bat&quot;]</code>,<br><strong>Output:</strong><br>[<br>  [“ate”,”eat”,”tea”],<br>  [“nat”,”tan”],<br>  [“bat”]<br>]</p>
-<h2 id="解答-2"><a href="#解答-2" class="headerlink" title="解答"></a>解答</h2><p>异位词的共同点是什么呢，他们的char数组排序后是一致的。</p>
-<p>只要找到这个共同点，用哈希存下来，key就是排序后的char数组，value就是异位词的List,每多一个异位词，加在这个List中就行。这样就建立多个了一对多的映射。</p>
-<h2 id="代码-2"><a href="#代码-2" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">HashMap&lt;String,List&lt;String&gt;&gt; hashMap = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;strs.length;i++)&#123;</span><br><span class="line">            String tmp=strs[i];</span><br><span class="line">            <span class="keyword">char</span>[] chars = tmp.toCharArray();</span><br><span class="line">            Arrays.sort(chars);</span><br><span class="line">            tmp=<span class="keyword">new</span> String(chars);</span><br><span class="line">            <span class="keyword">if</span>(!hashMap.containsKey(tmp)) &#123;</span><br><span class="line">                List&lt;String&gt; list = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">                list.add(strs[i]);</span><br><span class="line">                hashMap.put(tmp, list);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> &#123;</span><br><span class="line">                hashMap.get(tmp).add(strs[i]);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ArrayList(hashMap.values());</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="感想"><a href="#感想" class="headerlink" title="感想"></a>感想</h2><p>keySet是取出所有key的集合，values就是Value的集合了。而EntrySet是键值对的集合。</p>
-<p>要想建立一对多映射，把value取成集合或者列表就行了。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1957,7 +1945,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">269</span>
+                  <span class="site-state-item-count">270</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

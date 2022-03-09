@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2022-03-08T07:39:38.151Z</updated>
+  <updated>2022-03-09T12:29:11.796Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>热搜系统设计</title>
+    <link href="https://arvenseyz.github.io/2022/03/09/3-9%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2022/03/09/3-9技术笔记/</id>
+    <published>2022-03-09T10:11:59.000Z</published>
+    <updated>2022-03-09T12:29:11.796Z</updated>
+    
+    <content type="html"><![CDATA[<p>寻找数据流中出现最频繁的k个元素(find top k frequent items in a data stream)。这个问题也称为 Heavy Hitters.</p><p>这题也是从实践中提炼而来的，例如搜索引擎的热搜榜，找出访问网站次数最多的前10个IP地址，等等。</p><h1 id="基础思路"><a href="#基础思路" class="headerlink" title="基础思路"></a>基础思路</h1><p>哈希表和小根堆</p><p>即元素和对应次数放在哈希表里，topN放在小根堆里。</p><p>每次先增加哈希表，然后再调整小根堆。</p><h1 id="容量和请求压力问题"><a href="#容量和请求压力问题" class="headerlink" title="容量和请求压力问题"></a>容量和请求压力问题</h1><p>元素过多哈希表装不下怎么办，分片即可，分n个哈希表，放在n个机器上，然后都取最后聚合。</p><h1 id="淘汰旧数据"><a href="#淘汰旧数据" class="headerlink" title="淘汰旧数据"></a>淘汰旧数据</h1><p>比如每分钟更新一次的24小时内热搜，做60*24个哈希表，分别是每分钟的热度，这样小根堆应该是所有哈希表次数之和然后更新。</p><p>一个后台进程删除老桶。</p><h1 id="Lossy-Couting-算法"><a href="#Lossy-Couting-算法" class="headerlink" title="Lossy Couting 算法"></a>Lossy Couting 算法</h1><p>即把数据流分段，分段的精细程度取决于需要的误差。</p><p>开始统计每个元素出现的频率，统计结束后，每个元素的频率减1，然后将出现次数为0的元素从HashMap中删除。</p><p>这样HashMap会一直较小。</p><p>朴素的思想是，出现频率高的元素，不太可能减一后变成0，如果某个元素在某个窗口内降到了0，说明它不太可能是高频元素，可以不再跟踪它的计数器了。随着处理的窗口越来越多，HashMap也会不断增长，同时HashMap里的低频元素会被清理出去，这样内存占用会保持在一个很低的水平。</p><p>但实际上是有bug的，比如一共有100万段，一个元素平均分布在这100万段中，每段1次，实际上这高频元素没统计到。</p><p>这就是为什么该算法不精确，但是根据二八定理，该事情不太可能发生。</p><p>比如说该流：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">班主任提出的四个测试，即武汉中考考察内容 </span><br><span class="line">语文测试、数学测试、英语测试和政治测试。</span><br></pre></td></tr></table></figure><p>每十个元素一段</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">班主任提出的四个测试 | ，即武汉中考考察内容 |</span><br><span class="line">语文测试、数学测试、 | 英语测试和政治测试。 |</span><br></pre></td></tr></table></figure><p>hashMap依次是</p><ol><li><p>空</p></li><li><p>[考,1]</p></li><li><p>[考,],[测,1],[试,1],[、,1]</p></li><li><p>[考,],[测,2],[试,1],[、,1]</p></li></ol><p>则频率最高是测，其次是考，试，、</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;寻找数据流中出现最频繁的k个元素(find top k frequent items in a data stream)。这个问题也称为 Heavy Hitters.&lt;/p&gt;
+&lt;p&gt;这题也是从实践中提炼而来的，例如搜索引擎的热搜榜，找出访问网站次数最多的前10个IP地址，等
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="系统设计" scheme="https://arvenseyz.github.io/tags/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/"/>
+    
+  </entry>
   
   <entry>
     <title>ES关联关系</title>
@@ -499,31 +525,6 @@
       
       
         &lt;h2 id=&quot;计算公式&quot;&gt;&lt;a href=&quot;#计算公式&quot; class=&quot;headerlink&quot; title=&quot;计算公式&quot;&gt;&lt;/a&gt;计算公式&lt;/h2&gt;&lt;p&gt;&lt;code&gt;Lucene&lt;/code&gt;和&lt;code&gt;es&lt;/code&gt;的打分机制是一个公式。将查询作为输入，使用不同的手段来
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="ES" scheme="https://arvenseyz.github.io/tags/ES/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>ES段和段合并</title>
-    <link href="https://arvenseyz.github.io/2021/09/24/9-24%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>https://arvenseyz.github.io/2021/09/24/9-24技术笔记-1/</id>
-    <published>2021-09-24T06:56:04.000Z</published>
-    <updated>2021-09-24T07:11:44.965Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="segment"><a href="#segment" class="headerlink" title="segment"></a>segment</h1><p>lucene内部的数据是由⼀个个segment组成的，写⼊lucene的数据并不直接落盘，⽽是先写在内存中，经过了refresh间隔，lucene才将该时间段写⼊的全部数据refresh成⼀个segment，segment多了之后会进⾏merge成更⼤的segment。</p><p>lucene查询时会遍历每个segment完成。由于lucene写⼊的数据是在内存中完成，所以写⼊效率⾮常⾼。但是也存在丢失数据的⻛险，所以Elasticsearch基于此现象实现了translog，只有在segment数据落盘后，Elasticsearch才会删除对应的translog。</p><ul><li><p>每个分片都是一个 Lucene 索引实例，您可以将其视作一个独立的搜索引擎，它能够对 Elasticsearch 集群中的数据子集进行索引并处理相关查询；</p></li><li><p>每个分片包含多个segment（段），每一个segment都是一个倒排索引。</p></li></ul><p>在查询的时，会把所有的segment查询结果汇总归并为最终的分片查询结果返回。</p><p>在 lucene 中，为了实现高索引速度，故使用了segment 分段架构存储。</p><p>一批写入数据保存在一个段中，其中每个段是磁盘中的单个文件。</p><p>由于两次写入之间的文件操作非常繁重，因此将一个段设为不可变的，以便所有后续写入都转到New段。</p><p>由于自动刷新流程每秒会创建一个新的段（由动态配置参数：refresh_interval 决定），这样会导致短时间内的段数量暴增。</p><p>而段数目太多会带来较大的麻烦。</p><ul><li><p>消耗资源：每一个段都会消耗文件句柄、内存和cpu运行周期；</p></li><li><p>搜索变慢：每个搜索请求都必须轮流检查每个段；所以段越多，搜索也就越慢。</p></li></ul><p>Elasticsearch 通过在后台进行段合并来解决这个问题。</p><p>小的段被合并到大的段，然后这些大的段再被合并到更大的段。</p><h1 id="段合并"><a href="#段合并" class="headerlink" title="段合并"></a>段合并</h1><p>段合并的时候会将那些旧的已删除文档从文件系统中清除。</p><p>被删除的文档（或被更新文档的旧版本）不会被拷贝到新的大段中。</p><p>启动段合并不需要你做任何事。进行索引和搜索时会自动进行。</p><p>合并大的段需要消耗大量的I/O和CPU资源，如果任其发展会影响搜索性能。Elasticsearch在默认情况下会对合并流程进行资源限制，所以搜索仍然 有足够的资源很好地执行。</p><ul><li><p>当索引的时候，刷新（refresh）操作会创建新的段并将段打开以供搜索使用。</p></li><li><p>合并进程选择一小部分大小相似的段，并且在后台将它们合并到更大的段中。这并不会中断索引和搜索。</p></li></ul><p>代价呢</p><ul><li><p>磁盘IO操作的代价；</p></li><li><p>速度慢的系统中，段合并会显著影响性能。</p></li></ul><h1 id="手动段合并"><a href="#手动段合并" class="headerlink" title="手动段合并"></a>手动段合并</h1><p><code>optimize</code> API大可看做是 <em>强制合并</em> API。它会将一个分片强制合并到 <code>max_num_segments</code> 参数指定大小的段数目。 这样做的意图是减少段的数量（通常减少到一个），来提升搜索性能。</p><p>在特定情况下，使用  <code>optimize</code>  API 颇有益处。例如在日志这种用例下，每天、每周、每月的日志被存储在一个索引中。 老的索引实质上是只读的；它们也并不太可能会发生变化。</p><p>在这种情况下，使用optimize优化老的索引，将每一个分片合并为一个单独的段就很有用了；这样既可以节省资源，也可以使搜索更加快速</p><h1 id="迁移索引"><a href="#迁移索引" class="headerlink" title="迁移索引"></a>迁移索引</h1><p>使用 <code>optimize</code> API 触发段合并的操作不会受到任何资源上的限制。这可能会消耗掉你节点上全部的I/O资源, 使其没有余裕来处理搜索请求，从而有可能使集群失去响应。 如果你想要对索引执行 <code>optimize</code>，你需要先使用分片分配（查看 <a href="https://www.elastic.co/guide/cn/elasticsearch/guide/current/retiring-data.html#migrate-indices" title="迁移旧索引" target="_blank" rel="noopener">迁移旧索引</a>）把索引移到一个安全的节点，再执行。</p><p>随着数据被记录，很有可能存在一个  <em>热点</em>  索引——今日的索引。 所有新文档都会被加到那个索引，几乎所有查询都以它为目标。那个索引应当使用你最好的硬件。</p><p>Elasticsearch 是如何得知哪台是你最好的服务器呢？你可以通过给每台服务器指定任意的标签来告诉它。 例如，你可以像这样启动一个节点：</p><p>./bin/elasticsearch –node.box_type strong</p><p><code>box_type</code>  参数是完全随意的——你可以将它随意命名只要你喜欢——但你可以用这些任意的值来告诉 Elasticsearch 将一个索引分配至何处。</p><p>我们可以通过按以下配置创建今日的索引来确保它被分配到我们最好的服务器上：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PUT /logs_2014-10-01 &#123; &quot;settings&quot;: &#123; &quot;index.routing.allocation.include.box_type&quot; : &quot;strong&quot; &#125; &#125;</span><br></pre></td></tr></table></figure><p>昨日的索引不再需要我们最好的服务器了，我们可以通过更新索引设置将它移动到标记为  <code>medium</code>  的节点上：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">POST /logs_2014-09-30/_settings &#123; &quot;index.routing.allocation.include.box_type&quot; : &quot;medium&quot; &#125;</span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;segment&quot;&gt;&lt;a href=&quot;#segment&quot; class=&quot;headerlink&quot; title=&quot;segment&quot;&gt;&lt;/a&gt;segment&lt;/h1&gt;&lt;p&gt;lucene内部的数据是由⼀个个segment组成的，写⼊lucene的数据并不直接落盘，⽽是先写在
       
     
     </summary>

@@ -251,6 +251,165 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/12/04/12-4技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/12/04/12-4技术笔记/" itemprop="url">redis原理</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-04T15:57:17+08:00">
+                2018-12-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="单线程"><a href="#单线程" class="headerlink" title="单线程"></a>单线程</h1><p>redis是单线程的，内存的，但仍然很快，原因是多路复用技术。即事件轮询，select，NIO啊。</p>
+<h1 id="通信协议"><a href="#通信协议" class="headerlink" title="通信协议"></a>通信协议</h1><p>redis用的自己的通信协议，是基于分隔符的，即回车换行符。</p>
+<h1 id="持久化"><a href="#持久化" class="headerlink" title="持久化"></a>持久化</h1><p>持久化有两种方式，存量的RBD，增量的AOF。</p>
+<h2 id="快照"><a href="#快照" class="headerlink" title="快照"></a>快照</h2><p>RDB是快照的形式每隔一段时间，新起一个<strong>进程</strong>，数据集快照写入磁盘。简单来说，fork一个子进程，先将数据集写入临时文件，写入成功后，再替换之前的文件，用二进制压缩存储。</p>
+<h2 id="日志"><a href="#日志" class="headerlink" title="日志"></a>日志</h2><p>AOF是日志的形式，就是记录每一个对数据有改变的操作，存在日志里。以文本的方式记录，可以打开文件看到详细的操作记录。实际上文件在内存里，还需要写回磁盘，写回磁盘有三种策略，每次操作：性能很差；每秒：意味着秒级别的数据丢失；从无：依赖于操作系统，不安全。这么看一般都是用折中的每秒。<br>对于日益增长的AOF文件，还可以瘦身，即AOF重写，开辟一个子进程对内存进行遍历转换成一系列 Redis 的操作指令，序列化到一个新的 AOF 日志文件中。</p>
+<h2 id="对比"><a href="#对比" class="headerlink" title="对比"></a>对比</h2><p>RDB缺点有两个，一是每隔一段时间，要是宕机，隔的时间里没了。比如说，每1分钟快照一次，第2分30秒挂了，那第2分钟到第二分钟30秒这三十秒的数据丢失了。二是新起一个进程，数据集较大时，备份会卡顿<br>AOF缺点在于，备份文件较大，重放耗时较长。<br>现在支持混合持久化，将 rdb 文件的内容和增量的 AOF 日志文件存在一起。这里的 AOF 日志不再是全量的日志，而是自持久化开始到持久化结束的这段时间发生的增量 AOF 日志，通常这部分 AOF 日志很小。</p>
+<h1 id="管道"><a href="#管道" class="headerlink" title="管道"></a>管道</h1><p>管道实际上不是redis的技术，而是来自于客户端的操作。管道简单来说，就是把多次读写请求放一起。<br>没有管道，客户端与服务端交互是：写“读数据1”请求，读“数据1”回应。写“读数据2”请求，读“数据2”回应。写“读数据2”请求，读“数据2”回应。这样来回操作。<br>使用管道，就是把请求放在一起，变成：写“读数据123”请求，读“数据123”回应。这样就节省了时间。<br>就像批处理请求，这样，使用管道的场景应该是，这些交互都是独立的，他们之间没有先后互不依赖，这样才可以放一起。</p>
+<h1 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h1><h2 id="无原子性"><a href="#无原子性" class="headerlink" title="无原子性"></a>无原子性</h2><p>redis的事务和数据库事务并不是同义词，即使使用了事务，也不能保证原子性，仅仅是满足了事务的「隔离性」，隔离性中的串行化——当前执行的事务有着不被其它事务打断的权利。<br>形式上和一般事务差不多，multi 指示事务的开始，exec 指示事务的执行，discard 指示事务的丢弃。但这里没有回滚。</p>
+<h2 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h2><p>为了性能，事务应该和管道一起进行。</p>
+<h2 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h2><p>分布式锁是悲观锁，redis也有乐观锁机制，即watch。乐观锁就是监测变量在事务过程中有没有变化，要是没有，说明没有并发问题，就提交。<br>watch应该在multi之前。操作顺序应该是，watch 变量-&gt;变量操作-&gt;multi-&gt;set提交修改-&gt;exec；<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">    jedis.watch(key); //watch 变量</span><br><span class="line">    int value = Integer.parseInt(jedis.get(key));</span><br><span class="line">    value *= 2; // 变量操作</span><br><span class="line">    Transaction tx = jedis.multi(); //multi</span><br><span class="line">    tx.set(key, String.valueOf(value)); //set提交修改</span><br><span class="line">    List&lt;Object&gt; res = tx.exec(); //exec</span><br><span class="line">    if (res != null) &#123;</span><br><span class="line">      break; // 成功了</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  return Integer.parseInt(jedis.get(key)); // 重新获取余额</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="消息队列"><a href="#消息队列" class="headerlink" title="消息队列"></a>消息队列</h1><p>redis做的消息队列PubSub基本已经凉了，有个新的未发布的Disque。Redis5.0 新增了 Stream 数据结构，这个功能给 Redis 带来了持久化消息队列.</p>
+<h1 id="小对象压缩"><a href="#小对象压缩" class="headerlink" title="小对象压缩"></a>小对象压缩</h1><h2 id="32位编译"><a href="#32位编译" class="headerlink" title="32位编译"></a>32位编译</h2><p>如果占用内存不超过4G，可以采用更快的32位编译，指令更短。</p>
+<h2 id="内存管理"><a href="#内存管理" class="headerlink" title="内存管理"></a>内存管理</h2><p>当数据较少时，使用ziplist，将稀疏二维矩阵一维化，节省空间。<br>采用了类似池化的技术，并不直接回收内存，而是分页的方式留待下次使用。<br>内存分配没有自己做，用的第三方的，有facebook家的jemalloc，谷歌家的tcmalloc，默认的前者性能好。</p>
+<h1 id="主从同步"><a href="#主从同步" class="headerlink" title="主从同步"></a>主从同步</h1><p>根据CAP定理，在网络分区下，一致性和可用性无法同时获得。白话来说，如果主机和从机之间的网络断开了，如果主机继续运行，从机无法备份，那么主从数据将不一致；如果主机暂时停机，等从机再连上，那么服务将暂时不可用。<br>在这种情况下，redis的取舍是牺牲一致性，也就是等连上了，从机再追回数据。</p>
+<h2 id="增量同步"><a href="#增量同步" class="headerlink" title="增量同步"></a>增量同步</h2><p>主机将影响状态的增量操作存在缓存中，等连上了后，传给从机，从机同步数据。然而缓存有限，后面的数据会覆盖前面的，如果数据太多，有特别久的操作将无法同步。</p>
+<h2 id="存量同步"><a href="#存量同步" class="headerlink" title="存量同步"></a>存量同步</h2><p>用快照将内存所有数据存在磁盘，再传给从库，从库复制数据。时间较长。</p>
+<h2 id="同步死循环"><a href="#同步死循环" class="headerlink" title="同步死循环"></a>同步死循环</h2><p>存量同步时间较长，期间又产生了数据，如果此时的数据又太多溢出了，则同步失败。</p>
+<h2 id="同步复制"><a href="#同步复制" class="headerlink" title="同步复制"></a>同步复制</h2><p>redis也支持放弃可用性，得到一致性。以同步阻塞的方式同步，wait指令。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/12/03/12-3技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1681,155 +1840,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/11/20/11-20技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/11/20/11-20技术笔记/" itemprop="url">netty实现单聊</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-20T14:47:23+08:00">
-                2018-11-20
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="单聊"><a href="#单聊" class="headerlink" title="单聊"></a>单聊</h1><p>单聊不可能是一个人是服务端一个人是客户端，而应该是两个人都是客户端，把信息发送给同一个服务端，由服务端进行信息处理和转发。</p>
-<h2 id="Session"><a href="#Session" class="headerlink" title="Session"></a>Session</h2><p>服务端里保存了客户端的session信息，用来找到收信人。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public class Session &#123;</span><br><span class="line">    // 用户唯一性标识</span><br><span class="line">    private String userId;</span><br><span class="line">    private String userName;</span><br><span class="line"></span><br><span class="line">    public Session(String userId, String userName) &#123;</span><br><span class="line">        this.userId = userId;</span><br><span class="line">        this.userName = userName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String toString() &#123;</span><br><span class="line">        return userId + &quot;:&quot; + userName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>对session的管理主要是管理用户和channel的映射，和channel中自设的session属性。前者用来找个用户对应的channel，后者用来验证登陆状况。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">public class SessionUtil &#123;</span><br><span class="line">    private static final Map&lt;String, Channel&gt; userIdChannelMap = new ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    public static void bindSession(Session session, Channel channel) &#123;</span><br><span class="line">        userIdChannelMap.put(session.getUserId(), channel);</span><br><span class="line">        channel.attr(Attributes.SESSION).set(session);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void unBindSession(Channel channel) &#123;</span><br><span class="line">        if (hasLogin(channel)) &#123;</span><br><span class="line">            userIdChannelMap.remove(getSession(channel).getUserId());</span><br><span class="line">            channel.attr(Attributes.SESSION).set(null);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static boolean hasLogin(Channel channel) &#123;</span><br><span class="line"></span><br><span class="line">        return channel.hasAttr(Attributes.SESSION);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static Session getSession(Channel channel) &#123;</span><br><span class="line"></span><br><span class="line">        return channel.attr(Attributes.SESSION).get();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static Channel getChannel(String userId) &#123;</span><br><span class="line"></span><br><span class="line">        return userIdChannelMap.get(userId);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="消息发送"><a href="#消息发送" class="headerlink" title="消息发送"></a>消息发送</h2><p>新起一个控制台线程，如果没有登录，则发送登录数据包；如果登录了，则发送消息包即可。这样一来，客户端发送的消息，不但有消息的内容，还要指定消息发送给谁，即消息数据包里应该多一条目的人的数据。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public class MessageRequestPacket extends Packet &#123;</span><br><span class="line">    private String toUserId;</span><br><span class="line">    private String message;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>具体控制台代码,连接成功后，调用该函数即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">private static void startConsoleThread(Channel channel) &#123;</span><br><span class="line">       Scanner sc = new Scanner(System.in);</span><br><span class="line">       LoginRequestPacket loginRequestPacket = new LoginRequestPacket();</span><br><span class="line"></span><br><span class="line">       new Thread(() -&gt; &#123;</span><br><span class="line">           while (!Thread.interrupted()) &#123;</span><br><span class="line">               if (!SessionUtil.hasLogin(channel)) &#123;</span><br><span class="line">                   System.out.print(&quot;输入用户名登录: &quot;);</span><br><span class="line">                   String username = sc.nextLine();</span><br><span class="line">                   loginRequestPacket.setUserName(username);</span><br><span class="line"></span><br><span class="line">                   // 密码使用默认的</span><br><span class="line">                   loginRequestPacket.setPassword(&quot;pwd&quot;);</span><br><span class="line"></span><br><span class="line">                   // 发送登录数据包</span><br><span class="line">                   channel.writeAndFlush(loginRequestPacket);</span><br><span class="line">                   waitForLoginResponse();</span><br><span class="line">               &#125; else &#123;</span><br><span class="line">                   String toUserId = sc.next();</span><br><span class="line">                   String message = sc.next();</span><br><span class="line">                   channel.writeAndFlush(new MessageRequestPacket(toUserId, message));</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;).start();</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   private static void waitForLoginResponse() &#123;</span><br><span class="line">       try &#123;</span><br><span class="line">           Thread.sleep(1000);</span><br><span class="line">       &#125; catch (InterruptedException ignored) &#123;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="登录"><a href="#登录" class="headerlink" title="登录"></a>登录</h2><p>服务端处理登录，就是接受到登录数据包后，验证账号密码，找到UserID，然后响应登录即可。还有一点，当连接断开，需要取消session的绑定。（重载 channelInactive(ChannelHandlerContext ctx)方法）<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">public class LoginRequestHandler extends SimpleChannelInboundHandler&lt;LoginRequestPacket&gt; &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, LoginRequestPacket loginRequestPacket) &#123;</span><br><span class="line">        LoginResponsePacket loginResponsePacket = new LoginResponsePacket();</span><br><span class="line">        loginResponsePacket.setVersion(loginRequestPacket.getVersion());</span><br><span class="line">        loginResponsePacket.setUserName(loginRequestPacket.getUserName());</span><br><span class="line"></span><br><span class="line">        if (valid(loginRequestPacket)) &#123;</span><br><span class="line">            loginResponsePacket.setSuccess(true);</span><br><span class="line">            String userId = randomUserId();</span><br><span class="line">            loginResponsePacket.setUserId(userId);</span><br><span class="line">            System.out.println(&quot;[&quot; + loginRequestPacket.getUserName() + &quot;]登录成功&quot;);</span><br><span class="line">            SessionUtil.bindSession(new Session(userId, loginRequestPacket.getUserName()), ctx.channel());</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            loginResponsePacket.setReason(&quot;账号密码校验失败&quot;);</span><br><span class="line">            loginResponsePacket.setSuccess(false);</span><br><span class="line">            System.out.println(new Date() + &quot;: 登录失败!&quot;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 登录响应</span><br><span class="line">        ctx.channel().writeAndFlush(loginResponsePacket);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private boolean valid(LoginRequestPacket loginRequestPacket) &#123;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static String randomUserId() &#123;</span><br><span class="line">        return UUID.randomUUID().toString().split(&quot;-&quot;)[0];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void channelInactive(ChannelHandlerContext ctx) &#123;</span><br><span class="line">        SessionUtil.unBindSession(ctx.channel());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="消息转发"><a href="#消息转发" class="headerlink" title="消息转发"></a>消息转发</h2><p>服务端处理消息，找到对应channel，然后转发即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">public class MessageRequestHandler extends SimpleChannelInboundHandler&lt;MessageRequestPacket&gt; &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, MessageRequestPacket messageRequestPacket) &#123;</span><br><span class="line">        // 1.拿到消息发送方的会话信息</span><br><span class="line">        Session session = SessionUtil.getSession(ctx.channel());</span><br><span class="line"></span><br><span class="line">        // 2.通过消息发送方的会话信息构造要发送的消息</span><br><span class="line">        MessageResponsePacket messageResponsePacket = new MessageResponsePacket();</span><br><span class="line">        messageResponsePacket.setFromUserId(session.getUserId());</span><br><span class="line">        messageResponsePacket.setFromUserName(session.getUserName());</span><br><span class="line">        messageResponsePacket.setMessage(messageRequestPacket.getMessage());</span><br><span class="line"></span><br><span class="line">        // 3.拿到消息接收方的 channel</span><br><span class="line">        Channel toUserChannel = SessionUtil.getChannel(messageRequestPacket.getToUserId());</span><br><span class="line"></span><br><span class="line">        // 4.将消息发送给消息接收方</span><br><span class="line">        if (toUserChannel != null &amp;&amp; SessionUtil.hasLogin(toUserChannel)) &#123;</span><br><span class="line">            toUserChannel.writeAndFlush(messageResponsePacket);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            System.err.println(&quot;[&quot; + messageRequestPacket.getToUserId() + &quot;] 不在线，发送失败);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="消息接收"><a href="#消息接收" class="headerlink" title="消息接收"></a>消息接收</h2><p>很简单，接收消息即可。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">public class MessageResponseHandler extends SimpleChannelInboundHandler&lt;MessageResponsePacket&gt; &#123;</span><br><span class="line">    @Override</span><br><span class="line">    protected void channelRead0(ChannelHandlerContext ctx, MessageResponsePacket messageResponsePacket) &#123;</span><br><span class="line">        String fromUserId = messageResponsePacket.getFromUserId();</span><br><span class="line">        String fromUserName = messageResponsePacket.getFromUserName();</span><br><span class="line">        System.out.println(fromUserId + &quot;:&quot; + fromUserName + &quot; -&gt; &quot; + messageResponsePacket</span><br><span class="line">                .getMessage());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1880,7 +1890,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">269</span>
+                  <span class="site-state-item-count">270</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

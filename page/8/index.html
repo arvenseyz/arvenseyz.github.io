@@ -251,6 +251,161 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/02/06/2-6技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/02/06/2-6技术笔记/" itemprop="url">原子操作原理</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-02-06T15:55:58+08:00">
+                2020-02-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>原子操作是什么略过。</p>
+<p>目前实现方式有两种，总线锁和缓存锁。前者其实已被淘汰</p>
+<h2 id="总线锁"><a href="#总线锁" class="headerlink" title="总线锁"></a>总线锁</h2><p>假设多个处理器同时处理一个共享变量，如果没有锁机制，就会出现同一个共享变量同一时刻被多个处理器同时处理的情况，就会造成结果的不一致性，例如i=1，我们要进行2次i++，就会出现i=2和i=3两种结果情况。很明显这不是我们要的结果，所以要想保证读写共享变量的操作是原子性的，就必须保证当处理器1在操作共享变量时，处理器2不能操作缓存了该共享变量内存地址的缓存。</p>
+<p>因此引出了总线锁，<strong>总线锁</strong>就是使用处理器提供的一个LOCK#信号，当一个处理器在总线上输出此信号，其他处理器的请求将被阻塞，那么该处理器就能独占共享内存；</p>
+<p>可以想象为：公司有一个会议室（共享内存），各个部门（处理器）开会都在会议室进行，当有一个部门占用会议室时，就会在会议室门口或者公司群里通知会议室此时被占用，那么其他部门的会议就得先等着（阻塞），等该部门结束会议才能开始下一个会议。</p>
+<p><strong>总线锁的缺点</strong>：总线锁把CPU和内存之间的通信锁住了，在锁期间，其他处理器不能操作其他内存地址的数据，开销比较大。    </p>
+<h2 id="缓存锁"><a href="#缓存锁" class="headerlink" title="缓存锁"></a>缓存锁</h2><h3 id="缓存一致性"><a href="#缓存一致性" class="headerlink" title="缓存一致性"></a>缓存一致性</h3><p>缓存一致性机制就整体来说，是当某块CPU对缓存中的数据进行操作了之后，就通知其他CPU放弃储存在它们内部的缓存，或者从主内存中重新读取。</p>
+<h3 id="MESI协议"><a href="#MESI协议" class="headerlink" title="MESI协议"></a>MESI协议</h3><p>是以缓存行(缓存的基本数据单位，在Intel的CPU上一般是64字节)的几个状态来命名的(全名是Modified、Exclusive、 Share or Invalid)。该协议要求在每个缓存行上维护两个状态位，使得每个数据单位可能处于M、E、S和I这四种状态之一，各种状态含义如下：</p>
+<pre><code>M：被修改的。处于这一状态的数据，只在本CPU中有缓存数据，而其他CPU中没有。同时其状态相对于内存中的值来说，是已经被修改的，且没有更新到内存中。
+ E：独占的。处于这一状态的数据，只有在本CPU中有缓存，且其数据没有修改，即与内存中一致。
+ S：共享的。处于这一状态的数据在多个CPU中都有缓存，且与内存一致。
+ I：无效的。本CPU中的这份缓存已经无效。
+</code></pre><p> 一个处于M状态的缓存行，必须时刻监听所有试图读取该缓存行对应的主存地址的操作，如果监听到，则必须在此操作执行前把其缓存行中的数据写回CPU。<br>        一个处于S状态的缓存行，必须时刻监听使该缓存行无效或者独享该缓存行的请求，如果监听到，则必须把其缓存行状态设置为I。<br>        一个处于E状态的缓存行，必须时刻监听其他试图读取该缓存行对应的主存地址的操作，如果监听到，则必须把其缓存行状态设置为S。</p>
+<pre><code>当CPU需要读取数据时，如果其缓存行的状态是I的，则需要从内存中读取，并把自己状态变成S，如果不是I，则可以直接读取缓存中的值，但在此之前，必须要等待其他CPU的监听结果，如其他CPU也有该数据的缓存且状态是M，则需要等待其把缓存更新到内存之后，再读取。 当CPU需要写数据时，只有在其缓存行是M或者E的时候才能执行，否则需要发出特殊的RFO指令(Read Or Ownership，这是一种总线事务)，通知其他CPU置缓存无效(I)，这种情况下性能开销是相对较大的。在写入完成后，修改其缓存状态为M。 所以如果一个变量在某段时间只被一个线程频繁地修改，则使用其内部缓存就完全可以办到，不涉及到总线事务，如果缓存一会被这个CPU独占、一会被那个CPU 独占，这时才会不断产生RFO指令影响到并发性能。这里说的缓存频繁被独占并不是指线程越多越容易触发，而是这里的CPU协调机制，这有点类似于有时多线程并不一定提高效率，原因是线程挂起、调度的开销比执行任务的开销还要大，这里的多CPU也是一样，如果在CPU间调度不合理，也会形成RFO指令的开销比任务开销还要大。当然，这不是编程者需要考虑的事，操作系统会有相应的内存地址的相关判断
+</code></pre>
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/02/05/2-5技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1663,135 +1818,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/10/25/10-25技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/10/25/10-25技术笔记-1/" itemprop="url">kafka协议设计</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-10-25T10:16:09+08:00">
-                2019-10-25
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>kafka有很多种协议类型，但遵循同一种协议模式，在该协议模式下，不同协议类型的请求，请求体可以不同，但请求头是一致的。</p>
-<p><strong>request的请求头由以下四部分组成。</strong></p>
-<p>api_key：即请求类型，PRODUCE、FETCH标示发消息，拉消息等。</p>
-<p>api_version：API版本号。</p>
-<p>correlation_id：本次请求的id，由客户端指定的一个数字来唯一地标识这次请求的id，服务端在处理完请求后也会把同样的coorelation_id写到Response中，这样客户端就能把某个请求和响应对应起来了。</p>
-<p>client_id：客户端id。</p>
-<p><strong>response的请求头只有correlation_id。</strong></p>
-<p>实际上，每次请求除了数据，还有一些其他属性数据，比如客户端acks，请求超时时间，分区编号，事务id等，这些内容是放在请求体中的，<img src="https://i.loli.net/2019/10/25/VkPvDW6XoOwTM4m.png" alt="VkPvDW6XoOwTM4m"></p>
-<p>常见的协议还有response的，拉取消息的，相对没这么常见的还有几十种，其实大体类似，指定一些参数，以及指定topic\:partition\:offset，就可以指定到具体想要的一条消息</p>
-<p>saQ`    11</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1842,7 +1868,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">269</span>
+                  <span class="site-state-item-count">270</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
