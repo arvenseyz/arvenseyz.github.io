@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="系统设计,">
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Arvense" type="application/atom+xml">
+
+
+
+
+
+
+<meta name="description" content="场景想象下点赞的场景  读写qps都很高  当点赞数较大时，允许数据不太准  没有搜索场景，只有id读  接受写延迟   存储上当然就是id-&amp;gt;点赞数 存储既然是kv数据，那么肯定用nosql，这里看看redis。 第一是热点写问题，redis写性能极强，单机几万qps，对于redis没压力，不行上集群。 第二是高读取qps，redis集群同样能支持百万级别。 实际上，可能有多个数字，转发数">
+<meta name="keywords" content="系统设计">
+<meta property="og:type" content="article">
+<meta property="og:title" content="点赞数系统设计">
+<meta property="og:url" content="https://arvenseyz.github.io/2022/03/11/3-10技术笔记/index.html">
+<meta property="og:site_name" content="Arvense">
+<meta property="og:description" content="场景想象下点赞的场景  读写qps都很高  当点赞数较大时，允许数据不太准  没有搜索场景，只有id读  接受写延迟   存储上当然就是id-&amp;gt;点赞数 存储既然是kv数据，那么肯定用nosql，这里看看redis。 第一是热点写问题，redis写性能极强，单机几万qps，对于redis没压力，不行上集群。 第二是高读取qps，redis集群同样能支持百万级别。 实际上，可能有多个数字，转发数">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2022-03-11T06:20:06.944Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="点赞数系统设计">
+<meta name="twitter:description" content="场景想象下点赞的场景  读写qps都很高  当点赞数较大时，允许数据不太准  没有搜索场景，只有id读  接受写延迟   存储上当然就是id-&amp;gt;点赞数 存储既然是kv数据，那么肯定用nosql，这里看看redis。 第一是热点写问题，redis写性能极强，单机几万qps，对于redis没压力，不行上集群。 第二是高读取qps，redis集群同样能支持百万级别。 实际上，可能有多个数字，转发数">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://arvenseyz.github.io/2022/03/11/3-10技术笔记/">
+
+
+
+
+
+  <title>点赞数系统设计 | Arvense</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Arvense</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/11/3-10技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">点赞数系统设计</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-03-11T11:41:12+08:00">
+                2022-03-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h1><p>想象下点赞的场景</p>
+<ol>
+<li><p>读写qps都很高</p>
+</li>
+<li><p>当点赞数较大时，允许数据不太准</p>
+</li>
+<li><p>没有搜索场景，只有id读</p>
+</li>
+<li><p>接受写延迟</p>
+</li>
+</ol>
+<p>存储上当然就是id-&gt;点赞数</p>
+<h1 id="存储"><a href="#存储" class="headerlink" title="存储"></a>存储</h1><p>既然是kv数据，那么肯定用nosql，这里看看redis。</p>
+<p>第一是热点写问题，redis写性能极强，单机几万qps，对于redis没压力，不行上集群。</p>
+<p>第二是高读取qps，redis集群同样能支持百万级别。</p>
+<p>实际上，可能有多个数字，转发数，评论数等等，读取的时候几乎都是同时读取的，要不要考虑存一起。存一起的问题是没法写，那还不如mget，一起读。</p>
+<h1 id="幂等和分时"><a href="#幂等和分时" class="headerlink" title="幂等和分时"></a>幂等和分时</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">required Domain（基础服务的一级标识，一般为app_id）</span><br><span class="line">required Scene（场景标识，是domain的二级目录）</span><br><span class="line">required KeyType（计数的主体类型，比如是user_id/device_id/...）</span><br><span class="line">required Key（对应计数主体类型的值，比如KeyType选择了user_id，key就是对应user_id的值）</span><br><span class="line">required Category（计数维度，之前的Group字段）</span><br><span class="line">required ReqID（Domain+Scene+Category+KeyType+Key+CountTimestamp+ReqID组成唯一标识，接口幂等字段）</span><br><span class="line">required CountTimestamp（计数秒级时间戳，全球统一）</span><br><span class="line">required TimeZoneName（时区）  // 跨时区的数据注意该字段的一致性</span><br><span class="line">required AddCount（增数）</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">核心流程：</span><br><span class="line">1、入参校验（如果CountTimestamp属于35天前，拒绝请求）</span><br><span class="line">2、幂等检查</span><br><span class="line">   查询 key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:log:&#123;category&#125;:&#123;count_timestamp&#125;:&#123;req_id&#125; 是否已存在，存在返回“成功”</span><br><span class="line">3、主要逻辑</span><br><span class="line">    自动清理hour、day中超时数据、增加count、更新lastTime</span><br><span class="line">4、事务操作（cas）</span><br><span class="line">   insert 幂等记录：key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:log:&#123;category&#125;:&#123;count_timestamp&#125;:&#123;req_id&#125; / value = &#123;AddCount，CountTimestamp，TimeZoneName，RollbackStatus&#125;</span><br><span class="line">   insert hour计数24H数据：key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:hour:&#123;category&#125; / value = &#123;&quot;2021072116&quot;:&#123;Count，Reward，LastTime，LastReqID&#125;... &quot;2021072215&quot;:&#123;Count，LastTime，LastReqID&#125;&#125; </span><br><span class="line">   insert day计数35天数据：key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:day:&#123;category&#125; / value = &#123;&quot;20210623&quot;:&#123;Count，Reward，LastTime，LastReqID&#125;... &quot;20210722&quot;:&#123;Count，LastTime，LastReqID&#125;&#125; </span><br><span class="line">   insert total计数数据：key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:total:&#123;category&#125; / value = &#123;Count +=AddCount，LastTime，LastReqID，ResetTime&#125;</span><br><span class="line">   </span><br><span class="line">出参：</span><br><span class="line">NeedRetry(true/false)</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/系统设计/" rel="tag"># 系统设计</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2022/03/09/3-9技术笔记/" rel="next" title="热搜系统设计">
+                <i class="fa fa-chevron-left"></i> 热搜系统设计
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Arvense</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">271</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">64</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#场景"><span class="nav-number">1.</span> <span class="nav-text">场景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#存储"><span class="nav-number">2.</span> <span class="nav-text">存储</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#幂等和分时"><span class="nav-number">3.</span> <span class="nav-text">幂等和分时</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a>Arvense</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">blog   </div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

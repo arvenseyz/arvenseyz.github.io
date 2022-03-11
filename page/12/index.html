@@ -251,6 +251,164 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/06/18/6-16技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/06/18/6-16技术笔记/" itemprop="url">kite框架简单了解</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-18T19:27:35+08:00">
+                2019-06-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="kite"><a href="#kite" class="headerlink" title="kite"></a>kite</h1><p>Kite是RPC库，作为分布式微服务的框架。</p>
+<p>传输层使用SockJS提供的WebSocket,RPC的消息格式使用的是修改过的dnode协议。</p>
+<h1 id="简单通信"><a href="#简单通信" class="headerlink" title="简单通信"></a>简单通信</h1><p>比如服务器和客户端的代码如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> <span class="string">"github.com/koding/kite"</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"first"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    k.Config.Port = <span class="number">6000</span></span><br><span class="line">    k.Run()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"github.com/koding/kite"</span></span><br><span class="line">)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"second"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    client := k.NewClient(<span class="string">"http://localhost:6000/kite"</span>)</span><br><span class="line">    client.Dial()</span><br><span class="line">    response, _ := client.Tell(<span class="string">"kite.ping"</span>)</span><br><span class="line">    fmt.Println(response.MustString())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，服务端和客户端都通过kite对象交互，New()方法制定了名字和版本，服务端通过属性设置了监听的端口，Run()方法开始了服务。</p>
+<p>客户端制定了连接的URL,而Tell()方法相当于一个方法调用，传入的参数即方法名调用的方法，这里服务端并没有对应的handler，仍能正常交互并返回一个“pong”,是因为这是个默认方法。</p>
+<h1 id="方法调用"><a href="#方法调用" class="headerlink" title="方法调用"></a>方法调用</h1><p>这里再增加一个服务端的handler，完成完整的方法调用。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> <span class="string">"github.com/koding/kite"</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"first"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    k.Config.Port = <span class="number">6000</span></span><br><span class="line">    k.Config.DisableAuthentication = <span class="literal">true</span></span><br><span class="line">    k.HandleFunc(<span class="string">"square"</span>, <span class="function"><span class="keyword">func</span><span class="params">(r *kite.Request)</span> <span class="params">(<span class="keyword">interface</span>&#123;&#125;, error)</span></span> &#123;</span><br><span class="line">        a := r.Args.One().MustFloat64()</span><br><span class="line">        <span class="keyword">return</span> a * a, <span class="literal">nil</span></span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    k.Run()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里kite注册了一个方法，名称是square，实现是后面的匿名方法，其实就是求下平方，注意其参数是个kite.Request的指针。</p>
+<p>服务端进行方法调用</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"github.com/koding/kite"</span></span><br><span class="line">)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"second"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    client := k.NewClient(<span class="string">"http://localhost:6000/kite"</span>)</span><br><span class="line">    client.Dial()</span><br><span class="line">    response, _ := client.Tell(<span class="string">"square"</span>, <span class="number">4</span>)</span><br><span class="line">    fmt.Println(response.MustFloat64())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="服务注册与发现"><a href="#服务注册与发现" class="headerlink" title="服务注册与发现"></a>服务注册与发现</h1><p>用的是Kontrol。他也是一个Kite。</p>
+<p>服务端Register()方法即注册到了Kontrol</p>
+<p>k.Register(&amp;url.URL{Scheme: “http”, Host: “localhost:6000/kite”})</p>
+<p>客户端用GetKites方法连接到Kontrol</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"github.com/koding/kite"</span></span><br><span class="line">    <span class="string">"github.com/koding/kite/protocol"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    k := kite.New(<span class="string">"second"</span>, <span class="string">"1.0.0"</span>)</span><br><span class="line">    <span class="comment">// search a kite that has the same username and environment as us, but the</span></span><br><span class="line">    <span class="comment">// kite name should be "first"</span></span><br><span class="line">    kites, _ := k.GetKites(&amp;protocol.KontrolQuery&#123;</span><br><span class="line">        Username:    k.Config.Username,</span><br><span class="line">        Environment: k.Config.Environment,</span><br><span class="line">        Name:        <span class="string">"first"</span>,</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// there might be several kites that matches our query</span></span><br><span class="line">    client := kites[<span class="number">0</span>]</span><br><span class="line">    client.Dial()</span><br><span class="line">    response, _ := client.Tell(<span class="string">"square"</span>, <span class="number">4</span>)</span><br><span class="line">    fmt.Println(response.MustFloat64())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/06/18/6-18技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1657,177 +1815,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/05/20/5-20技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/05/20/5-20技术笔记/" itemprop="url">redis内部实现</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-20T15:05:39+08:00">
-                2019-05-20
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h1><h3 id="简单可变字符串"><a href="#简单可变字符串" class="headerlink" title="简单可变字符串"></a>简单可变字符串</h3><p>redis内部的字符串其实和ArrayList差不多，用byte[]来存储内容，同时还有长度和容量。</p>
-<h3 id="embstr和raw"><a href="#embstr和raw" class="headerlink" title="embstr和raw"></a>embstr和raw</h3><p>Redis 的字符串有两种存储方式，在长度特别短时，使用 <code>emb</code> 形式存储 (embeded)，当长度超过 44 时，使用 <code>raw</code> 形式存储。</p>
-<p><code>embstr</code> 存储形式是这样一种存储形式，它将 RedisObject 对象头和 SDS 对象连续存在一起，使用 <code>malloc</code> 方法一次分配。而 <code>raw</code> 存储形式不一样，它需要两次 <code>malloc</code>，两个对象头在内存地址上一般是不连续的。</p>
-<p>区分要不要在一起的原因是，内存分配器 jemalloc/tcmalloc 等分配内存大小的单位都是 2、4、8、16、32、64 等等，为了能容纳一个完整的 <code>embstr</code> 对象，<code>jemalloc</code> 最少会分配 32 字节的空间，如果字符串再稍微长一点，那就是 64 字节的空间。如果总体超出了 64 字节，Redis 认为它是一个大字符串，不再使用 <code>emdstr</code> 形式存储，而该用 <code>raw</code> 形式。</p>
-<h1 id="字典"><a href="#字典" class="headerlink" title="字典"></a>字典</h1><p>dict 是 Redis 服务器中出现最为频繁的复合型数据结构，除了 hash 结构的数据会用到字典外，整个 Redis 数据库的所有 key 和 value 也组成了一个全局字典，还有带过期时间的 key 集合也是一个字典。zset 集合中存储 value 和 score 值的映射关系也是通过 dict 结构实现的。</p>
-<h3 id="rehash问题"><a href="#rehash问题" class="headerlink" title="rehash问题"></a>rehash问题</h3><p>redis用链表法存储哈希表，问题在于大字典的扩容是比较耗时间的，需要重新申请新的数组，然后将旧字典所有链表中的元素重新挂接到新的数组下面，这是一个O(n)级别的操作，作为单线程的Redis表示很难承受这样耗时的过程。</p>
-<p>解决方法是同时维护两张哈希表，第二张是大小两倍的空表，渐进式rehash。</p>
-<p>搬迁操作埋伏在当前字典的后续指令中(来自客户端的hset/hdel指令等)，也即是说，每次操作了，就搬这个小桶。同时有定时任务，闲下来也会搬迁。</p>
-<h1 id="压缩列表"><a href="#压缩列表" class="headerlink" title="压缩列表"></a>压缩列表</h1><p>Redis 为了节约内存空间使用，zset 和 hash 容器对象在元素个数较少的时候，采用压缩列表 (ziplist) 进行存储。压缩列表是一块连续的内存空间，元素之间紧挨着存储，没有任何冗余空隙。</p>
-<p>简单地说，就是用数组的空间，来存一个链表。</p>
-<p>然而怎么找到下一个元素了，那就是元素的首部有偏移量字段，通过指针偏移操作。</p>
-<p>实际上ziplist还是个双向链表，因为还有上个元素的偏移量。</p>
-<h3 id="级联更新"><a href="#级联更新" class="headerlink" title="级联更新"></a>级联更新</h3><p>有一个问题，上一个元素长度可长可短，所以用的是类似变长编码的方式，当字符串长度小于 254(0xFE) 时，使用一个字节表示；如果达到或超出 254(0xFE) 那就使用 5 个字节来表示。第一个字节是 0xFE(254)，剩余四个字节表示字符串长度。</p>
-<p>问题在于，如果一个元素长度变了，那么它下个元素储存的上一个元素的长度的长度也会变，那么下个元素的长度也会变，甚至有雪崩的风险。</p>
-<h1 id="快速列表"><a href="#快速列表" class="headerlink" title="快速列表"></a>快速列表</h1><p>考虑到链表的附加空间相对太高，prev 和 next 指针就要占去 16 个字节 (64bit 系统的指针是 8 个字节)，另外每个节点的内存都是单独分配，会加剧内存的碎片化，影响内存管理效率。后续版本对列表数据结构进行了改造，使用 quicklist 代替了 ziplist 和 linkedlist。</p>
-<p>quicklist 是 ziplist 和 linkedlist 的混合体，它将 linkedlist 按段切分，每一段使用 ziplist 来紧凑存储，多个 ziplist 之间使用双向指针串接起来。</p>
-<h1 id="过期键删除策略"><a href="#过期键删除策略" class="headerlink" title="过期键删除策略"></a>过期键删除策略</h1><ol>
-<li><p>定时删除：实际不可用，删除过期键这一行为可能会占用相当一部分CPU 时间，在内存不紧张但是CPU 时间非常紧张的情况下.将CPU 时间用在删除和当前任务无关的过期键上，无疑会对服务器的响应时间和吞吐量造成影响。</p>
-</li>
-<li><p>被动删除，惰性删除策略对CPU 时间来说是最友好的:程序只会在取出键时才对键进行过期检查，这可以保证删除过期键的操作只会在非做不可的情况下进行， 并且删除的目标仅限于当前处理的键，这个策略不会在删除其他无关的过期键上花费任何CPU时间。<br>惰性删除策略的缺点是，它对内存是最不友好的: 如果一个键已经过期，而这个键又仍然保留在数据库中，那么只要这个过期键不被删除，它所占用的内存就不会释放。在使用惰性删除策略时，如果数据库中有非常多的过期键，而这些过期键又恰好没有被访问到的话，那么它们也许永远也不会被删除(除非用户手动执行FLUSHDB),我们甚至可以将这种情况看作是一种内存泄漏一一无用的垃圾数据占用了大量的内存，而服务器却不会自己去释放它们。</p>
-</li>
-<li><p>定期删除，基于概念，每次抽取部分元素，如果过期键少于某个比例，则认为过期键不多，如果多于这个比例，则删除过期的键。</p>
-</li>
-</ol>
-<p>实际上一般是惰性删除和定期删除结合。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/11/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/11/">11</a><span class="page-number current">12</span><a class="page-number" href="/page/13/">13</a><span class="space">&hellip;</span><a class="page-number" href="/page/27/">27</a><a class="extend next" rel="next" href="/page/13/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/11/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/11/">11</a><span class="page-number current">12</span><a class="page-number" href="/page/13/">13</a><span class="space">&hellip;</span><a class="page-number" href="/page/28/">28</a><a class="extend next" rel="next" href="/page/13/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1873,7 +1865,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">270</span>
+                  <span class="site-state-item-count">271</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

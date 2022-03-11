@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2022-03-09T12:29:11.796Z</updated>
+  <updated>2022-03-11T06:20:06.944Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -15,6 +15,35 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>点赞数系统设计</title>
+    <link href="https://arvenseyz.github.io/2022/03/11/3-10%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2022/03/11/3-10技术笔记/</id>
+    <published>2022-03-11T03:41:12.000Z</published>
+    <updated>2022-03-11T06:20:06.944Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h1><p>想象下点赞的场景</p><ol><li><p>读写qps都很高</p></li><li><p>当点赞数较大时，允许数据不太准</p></li><li><p>没有搜索场景，只有id读</p></li><li><p>接受写延迟</p></li></ol><p>存储上当然就是id-&gt;点赞数</p><h1 id="存储"><a href="#存储" class="headerlink" title="存储"></a>存储</h1><p>既然是kv数据，那么肯定用nosql，这里看看redis。</p><p>第一是热点写问题，redis写性能极强，单机几万qps，对于redis没压力，不行上集群。</p><p>第二是高读取qps，redis集群同样能支持百万级别。</p><p>实际上，可能有多个数字，转发数，评论数等等，读取的时候几乎都是同时读取的，要不要考虑存一起。存一起的问题是没法写，那还不如mget，一起读。</p><h1 id="幂等和分时"><a href="#幂等和分时" class="headerlink" title="幂等和分时"></a>幂等和分时</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">required Domain（基础服务的一级标识，一般为app_id）</span><br><span class="line">required Scene（场景标识，是domain的二级目录）</span><br><span class="line">required KeyType（计数的主体类型，比如是user_id/device_id/...）</span><br><span class="line">required Key（对应计数主体类型的值，比如KeyType选择了user_id，key就是对应user_id的值）</span><br><span class="line">required Category（计数维度，之前的Group字段）</span><br><span class="line">required ReqID（Domain+Scene+Category+KeyType+Key+CountTimestamp+ReqID组成唯一标识，接口幂等字段）</span><br><span class="line">required CountTimestamp（计数秒级时间戳，全球统一）</span><br><span class="line">required TimeZoneName（时区）  // 跨时区的数据注意该字段的一致性</span><br><span class="line">required AddCount（增数）</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">核心流程：</span><br><span class="line">1、入参校验（如果CountTimestamp属于35天前，拒绝请求）</span><br><span class="line">2、幂等检查</span><br><span class="line">   查询 key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:log:&#123;category&#125;:&#123;count_timestamp&#125;:&#123;req_id&#125; 是否已存在，存在返回“成功”</span><br><span class="line">3、主要逻辑</span><br><span class="line">    自动清理hour、day中超时数据、增加count、更新lastTime</span><br><span class="line">4、事务操作（cas）</span><br><span class="line">   insert 幂等记录：key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:log:&#123;category&#125;:&#123;count_timestamp&#125;:&#123;req_id&#125; / value = &#123;AddCount，CountTimestamp，TimeZoneName，RollbackStatus&#125;</span><br><span class="line">   insert hour计数24H数据：key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:hour:&#123;category&#125; / value = &#123;&quot;2021072116&quot;:&#123;Count，Reward，LastTime，LastReqID&#125;... &quot;2021072215&quot;:&#123;Count，LastTime，LastReqID&#125;&#125; </span><br><span class="line">   insert day计数35天数据：key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:day:&#123;category&#125; / value = &#123;&quot;20210623&quot;:&#123;Count，Reward，LastTime，LastReqID&#125;... &quot;20210722&quot;:&#123;Count，LastTime，LastReqID&#125;&#125; </span><br><span class="line">   insert total计数数据：key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:total:&#123;category&#125; / value = &#123;Count +=AddCount，LastTime，LastReqID，ResetTime&#125;</span><br><span class="line">   </span><br><span class="line">出参：</span><br><span class="line">NeedRetry(true/false)</span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;场景&quot;&gt;&lt;a href=&quot;#场景&quot; class=&quot;headerlink&quot; title=&quot;场景&quot;&gt;&lt;/a&gt;场景&lt;/h1&gt;&lt;p&gt;想象下点赞的场景&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;读写qps都很高&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;当点赞数较大时，允许数据不太准&lt;/p&gt;
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="系统设计" scheme="https://arvenseyz.github.io/tags/%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/"/>
+    
+  </entry>
   
   <entry>
     <title>热搜系统设计</title>
@@ -508,31 +537,6 @@
       <category term="redis" scheme="https://arvenseyz.github.io/tags/redis/"/>
     
       <category term="分布式" scheme="https://arvenseyz.github.io/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>es打分方式</title>
-    <link href="https://arvenseyz.github.io/2021/09/27/9-27%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-3/"/>
-    <id>https://arvenseyz.github.io/2021/09/27/9-27技术笔记-3/</id>
-    <published>2021-09-27T09:19:34.000Z</published>
-    <updated>2021-09-27T09:28:45.295Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="计算公式"><a href="#计算公式" class="headerlink" title="计算公式"></a>计算公式</h2><p><code>Lucene</code>和<code>es</code>的打分机制是一个公式。将查询作为输入，使用不同的手段来确定每一篇文档的得分，将每一个因素最后通过公式综合起来，返回该文档的最终得分。这个综合考量的过程，就是我们希望相关的文档被优先返回的考量过程。在<code>Lucene</code>和<code>es</code>中这种相关性称为得分。<br>在开始计算得分之前，<code>es</code>使用了被搜索词条的频率和它有多常见来影响得分，从两个方面理解：</p><ul><li>一个词条在某篇文档中出现的次数越多，该文档就越相关。</li><li>一个词条如果在不同的文档中出现的次数越多，它就越不相关！</li></ul><p>我们称之为<code>TF-IDF</code>，<code>TF</code>是词频（term frequency），而<code>IDF</code>是逆文档频率（inverse document frequency）。</p><p>此外还有两个因素</p><ul><li><p><strong>Document Frequency(DF)文档频率</strong>：即单词出现的文档数。</p></li><li><p><strong>Field-length Norm</strong>：文档越短，相关性越高，field长度，field越长，相关度越弱</p></li></ul><p>逆文档词频是一个重要的因素，用来平衡词条的词频。比如我们搜索<code>the 996.ICU</code>。单词<code>the</code>几乎出现在所有的文档中（中文中比如<code>的</code>），如果这个鬼东西要不被均衡一下，那么<code>the</code>的频率将完全淹没<code>996.ICU</code>。所以，逆文档词频就有效的均衡了<code>the</code>这个常见词的相关性影响。以达到实际的相关性得分将会对查询的词条有一个更准确地描述。<br>当词频和逆文档词频计算完成。就可以使用<code>TF-IDF</code>公式来计算文档的得分了</p><p>我们通过<code>explain=true</code>，es会返回如何打分的</p><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">GET py1/doc/_search</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"query"</span>: &#123;</span><br><span class="line">    <span class="attr">"match"</span>: &#123;</span><br><span class="line">      <span class="attr">"title"</span>: <span class="string">"北京"</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">"explain"</span>: <span class="literal">true</span>,</span><br><span class="line">  <span class="attr">"_source"</span>: <span class="string">"title"</span>, </span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>会返回一个复杂的公式。</p><h2 id="手动控制"><a href="#手动控制" class="headerlink" title="手动控制"></a>手动控制</h2><p>通过boosting可以人为控制某个字段的在评分过程中的比重，有两种类型：</p><ul><li><p>索引期间的boosting</p></li><li><p>查询期间的boosting</p></li></ul><p>通过在mapping中设置boost参数，可以在索引期间改变字段的评分权重：</p><p>一旦映射建立完成，那么所有name字段都会自动拥有一个boost值，并且是以降低精度的数值存储在Lucene内部的索引结构中。只有一个字节用于存储浮点型数值（存不下就损失精度了），计算文档的最终得分时可能会损失精度。</p><p>另外，boost是应用与词条的。因此，再被boost的字段中如果匹配上了多个词条，就意味着计算多次的boost，这将会进一步增加字段的权重，可能会影响最终的文档得分。</p><p>查询期间的boosting可以避免上述问题。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h2 id=&quot;计算公式&quot;&gt;&lt;a href=&quot;#计算公式&quot; class=&quot;headerlink&quot; title=&quot;计算公式&quot;&gt;&lt;/a&gt;计算公式&lt;/h2&gt;&lt;p&gt;&lt;code&gt;Lucene&lt;/code&gt;和&lt;code&gt;es&lt;/code&gt;的打分机制是一个公式。将查询作为输入，使用不同的手段来
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="ES" scheme="https://arvenseyz.github.io/tags/ES/"/>
     
   </entry>
   

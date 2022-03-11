@@ -251,6 +251,164 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/11/3-10技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2022/03/11/3-10技术笔记/" itemprop="url">点赞数系统设计</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-03-11T11:41:12+08:00">
+                2022-03-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h1><p>想象下点赞的场景</p>
+<ol>
+<li><p>读写qps都很高</p>
+</li>
+<li><p>当点赞数较大时，允许数据不太准</p>
+</li>
+<li><p>没有搜索场景，只有id读</p>
+</li>
+<li><p>接受写延迟</p>
+</li>
+</ol>
+<p>存储上当然就是id-&gt;点赞数</p>
+<h1 id="存储"><a href="#存储" class="headerlink" title="存储"></a>存储</h1><p>既然是kv数据，那么肯定用nosql，这里看看redis。</p>
+<p>第一是热点写问题，redis写性能极强，单机几万qps，对于redis没压力，不行上集群。</p>
+<p>第二是高读取qps，redis集群同样能支持百万级别。</p>
+<p>实际上，可能有多个数字，转发数，评论数等等，读取的时候几乎都是同时读取的，要不要考虑存一起。存一起的问题是没法写，那还不如mget，一起读。</p>
+<h1 id="幂等和分时"><a href="#幂等和分时" class="headerlink" title="幂等和分时"></a>幂等和分时</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">required Domain（基础服务的一级标识，一般为app_id）</span><br><span class="line">required Scene（场景标识，是domain的二级目录）</span><br><span class="line">required KeyType（计数的主体类型，比如是user_id/device_id/...）</span><br><span class="line">required Key（对应计数主体类型的值，比如KeyType选择了user_id，key就是对应user_id的值）</span><br><span class="line">required Category（计数维度，之前的Group字段）</span><br><span class="line">required ReqID（Domain+Scene+Category+KeyType+Key+CountTimestamp+ReqID组成唯一标识，接口幂等字段）</span><br><span class="line">required CountTimestamp（计数秒级时间戳，全球统一）</span><br><span class="line">required TimeZoneName（时区）  // 跨时区的数据注意该字段的一致性</span><br><span class="line">required AddCount（增数）</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">核心流程：</span><br><span class="line">1、入参校验（如果CountTimestamp属于35天前，拒绝请求）</span><br><span class="line">2、幂等检查</span><br><span class="line">   查询 key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:log:&#123;category&#125;:&#123;count_timestamp&#125;:&#123;req_id&#125; 是否已存在，存在返回“成功”</span><br><span class="line">3、主要逻辑</span><br><span class="line">    自动清理hour、day中超时数据、增加count、更新lastTime</span><br><span class="line">4、事务操作（cas）</span><br><span class="line">   insert 幂等记录：key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:log:&#123;category&#125;:&#123;count_timestamp&#125;:&#123;req_id&#125; / value = &#123;AddCount，CountTimestamp，TimeZoneName，RollbackStatus&#125;</span><br><span class="line">   insert hour计数24H数据：key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:hour:&#123;category&#125; / value = &#123;&quot;2021072116&quot;:&#123;Count，Reward，LastTime，LastReqID&#125;... &quot;2021072215&quot;:&#123;Count，LastTime，LastReqID&#125;&#125; </span><br><span class="line">   insert day计数35天数据：key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:day:&#123;category&#125; / value = &#123;&quot;20210623&quot;:&#123;Count，Reward，LastTime，LastReqID&#125;... &quot;20210722&quot;:&#123;Count，LastTime，LastReqID&#125;&#125; </span><br><span class="line">   insert total计数数据：key = &#123;rev_key&#125;:&#123;key_type&#125;:&#123;domain&#125;:&#123;scene&#125;:total:&#123;category&#125; / value = &#123;Count +=AddCount，LastTime，LastReqID，ResetTime&#125;</span><br><span class="line">   </span><br><span class="line">出参：</span><br><span class="line">NeedRetry(true/false)</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/09/3-9技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1873,156 +2031,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/02/21/2-21技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2022/02/21/2-21技术笔记-1/" itemprop="url">Redis数据倾斜</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-02-21T16:46:56+08:00">
-                2022-02-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>热点读场景，某个热点帖子内容这样，所有的访问量都打到了redis一个实例。单实例压力过大。（我怀疑这种场景真的存在吗？redis单机读取qps能承受万级别）</p>
-<p>产生原因：redis 根据key进行分片计算，分配到redis实例中的一个，导致大部分流量集中访问到同一个redis实例上，即所谓的“访问量倾斜”，导致redis实例达到性能瓶颈</p>
-<p>解决方案：给hotkey加上后缀，把hotkey数量变成redis实例数N的倍数M，从而由访问一个redis key变成访问N*M个redis key</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//redis 实例数</span></span><br><span class="line"><span class="keyword">const</span> M = <span class="number">16</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//redis 实例数倍数（按需设计，2^n倍，n一般为1到4的整数）</span></span><br><span class="line"><span class="keyword">const</span> N = <span class="number">2</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line"><span class="comment">//获取 redis 实例 </span></span><br><span class="line">    c, err := redis.Dial(<span class="string">"tcp"</span>, <span class="string">"127.0.0.1:6379"</span>)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Println(<span class="string">"Connect to redis error"</span>, err)</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">defer</span> c.Close()</span><br><span class="line"></span><br><span class="line">    hotKey := <span class="string">"hotKey:abc"</span></span><br><span class="line">    <span class="comment">//随机数</span></span><br><span class="line">    randNum := GenerateRangeNum(<span class="number">1</span>, N*M)</span><br><span class="line">    <span class="comment">//得到对 hot key 进行打散的 key</span></span><br><span class="line">    tmpHotKey := hotKey + <span class="string">"_"</span> + strconv.Itoa(randNum)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//hot key 过期时间</span></span><br><span class="line">    expireTime := <span class="number">50</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">//过期时间平缓化的一个时间随机值</span></span><br><span class="line">    randExpireTime := GenerateRangeNum(<span class="number">0</span>, <span class="number">5</span>)</span><br><span class="line"></span><br><span class="line">    data, err := redis.String(c.Do(<span class="string">"GET"</span>, tmpHotKey))</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        data, err = redis.String(c.Do(<span class="string">"GET"</span>, hotKey))</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">            data = GetDataFromDb()</span><br><span class="line">            c.Do(<span class="string">"SET"</span>, <span class="string">"hotKey"</span>, data, expireTime)</span><br><span class="line">            c.Do(<span class="string">"SET"</span>, tmpHotKey, data, expireTime + randExpireTime)</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            c.Do(<span class="string">"SET"</span>, tmpHotKey, data, expireTime + randExpireTime)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/27/">27</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/28/">28</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2068,7 +2081,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">270</span>
+                  <span class="site-state-item-count">271</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

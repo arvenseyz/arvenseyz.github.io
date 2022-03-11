@@ -251,6 +251,175 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/27/9-27技术笔记-3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/09/27/9-27技术笔记-3/" itemprop="url">es打分方式</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-09-27T17:19:34+08:00">
+                2021-09-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="计算公式"><a href="#计算公式" class="headerlink" title="计算公式"></a>计算公式</h2><p><code>Lucene</code>和<code>es</code>的打分机制是一个公式。将查询作为输入，使用不同的手段来确定每一篇文档的得分，将每一个因素最后通过公式综合起来，返回该文档的最终得分。这个综合考量的过程，就是我们希望相关的文档被优先返回的考量过程。在<code>Lucene</code>和<code>es</code>中这种相关性称为得分。<br>在开始计算得分之前，<code>es</code>使用了被搜索词条的频率和它有多常见来影响得分，从两个方面理解：</p>
+<ul>
+<li>一个词条在某篇文档中出现的次数越多，该文档就越相关。</li>
+<li>一个词条如果在不同的文档中出现的次数越多，它就越不相关！</li>
+</ul>
+<p>我们称之为<code>TF-IDF</code>，<code>TF</code>是词频（term frequency），而<code>IDF</code>是逆文档频率（inverse document frequency）。</p>
+<p>此外还有两个因素</p>
+<ul>
+<li><p><strong>Document Frequency(DF)文档频率</strong>：即单词出现的文档数。</p>
+</li>
+<li><p><strong>Field-length Norm</strong>：文档越短，相关性越高，field长度，field越长，相关度越弱</p>
+</li>
+</ul>
+<p>逆文档词频是一个重要的因素，用来平衡词条的词频。比如我们搜索<code>the 996.ICU</code>。单词<code>the</code>几乎出现在所有的文档中（中文中比如<code>的</code>），如果这个鬼东西要不被均衡一下，那么<code>the</code>的频率将完全淹没<code>996.ICU</code>。所以，逆文档词频就有效的均衡了<code>the</code>这个常见词的相关性影响。以达到实际的相关性得分将会对查询的词条有一个更准确地描述。<br>当词频和逆文档词频计算完成。就可以使用<code>TF-IDF</code>公式来计算文档的得分了</p>
+<p>我们通过<code>explain=true</code>，es会返回如何打分的</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">GET py1/doc/_search</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"query"</span>: &#123;</span><br><span class="line">    <span class="attr">"match"</span>: &#123;</span><br><span class="line">      <span class="attr">"title"</span>: <span class="string">"北京"</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">"explain"</span>: <span class="literal">true</span>,</span><br><span class="line">  <span class="attr">"_source"</span>: <span class="string">"title"</span>, </span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>会返回一个复杂的公式。</p>
+<h2 id="手动控制"><a href="#手动控制" class="headerlink" title="手动控制"></a>手动控制</h2><p>通过boosting可以人为控制某个字段的在评分过程中的比重，有两种类型：</p>
+<ul>
+<li><p>索引期间的boosting</p>
+</li>
+<li><p>查询期间的boosting</p>
+</li>
+</ul>
+<p>通过在mapping中设置boost参数，可以在索引期间改变字段的评分权重：</p>
+<p>一旦映射建立完成，那么所有name字段都会自动拥有一个boost值，并且是以降低精度的数值存储在Lucene内部的索引结构中。只有一个字节用于存储浮点型数值（存不下就损失精度了），计算文档的最终得分时可能会损失精度。</p>
+<p>另外，boost是应用与词条的。因此，再被boost的字段中如果匹配上了多个词条，就意味着计算多次的boost，这将会进一步增加字段的权重，可能会影响最终的文档得分。</p>
+<p>查询期间的boosting可以避免上述问题。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/24/9-24技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1691,193 +1860,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/08/12/8-12技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/08/12/8-12技术笔记-1/" itemprop="url">BDK树</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-08-12T16:27:52+08:00">
-                2021-08-12
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>说到ES，就想到倒排索引，但是有个问题，我们在数字比大小的场景，倒排索引怎么实现呢？</p>
-<p>即range怎么实现的？</p>
-<p>早期的ES，只能把范围转化成in，最多再多一些小优化，自动产生一些区间的term，构建一个基于数字的字典树，但在大范围时依然没用，并且不太好支持多范围查询。</p>
-<p>现在版本，ES对于数字类型，用的不是倒排索引，而是 Block k-d tree</p>
-<h1 id="Block-k-d-tree"><a href="#Block-k-d-tree" class="headerlink" title="Block k-d tree"></a>Block k-d tree</h1><h2 id="k-d-tree"><a href="#k-d-tree" class="headerlink" title="k-d tree"></a>k-d tree</h2><p>k-d树（k-dimensional树的简称），是一种分割k维数据空间的数据结构。主要应用于多维空间关键数据的搜索（如：范围搜索和最近邻搜索）。</p>
-<p>我们想象下二分搜索树：</p>
-<p><strong>二叉搜索树则是在二叉树的基础上加了一些规则</strong>：</p>
-<ul>
-<li>左子树的值都小于父节点</li>
-<li>右子树的值都大于父节点</li>
-</ul>
-<p>如果把BST中的所有元素看成一维线段上的所有点，从树的根节点开始每个节点都会把线段分成两段。</p>
-<p><img src="https://s3.bmp.ovh/imgs/2021/08/365f9e0e6ca0052c.jpeg" alt></p>
-<p>所以BST本质上就是一维K-D树(或者叫做1-D树)</p>
-<p>现在将树中的元素推广到二维平面上的点，树的每一层按照维度轮流划分。比如，奇数层按x轴划分，偶数层按y轴划分，这样就得到一棵二维K-D树(2-d树)</p>
-<p><img src="https://s3.bmp.ovh/imgs/2021/08/345c1f9a74431519.jpeg" alt></p>
-<p>很明显，K-D树和BST一样不仅可以精确查找，也更适合做范围查询，但K-D树比BST更强，它能对多个维度进行范围查询。</p>
-<p>比如：</p>
-<p>Person1(age:18,hight:176)，Person2(age:19,height:181) … Person10(age:23,height:171)</p>
-<p>想要查找年龄在20岁以上并且身高在170到180之间的所有人，用K-D树就能很好的解决。</p>
-<h2 id="K-D-B树"><a href="#K-D-B树" class="headerlink" title="K-D-B树"></a>K-D-B树</h2><p>既然KD树是高维的二叉搜索树，那么它自然也会继承二叉搜索树的缺点：会退化成链表。</p>
-<p>二叉搜索树解决这个问题的办法是：AVL树，红黑树。那么这个办法能否推广到高维空间呢，答案是不能。</p>
-<p>还有个解决方法是B树。有没有高维B树呢，有的：</p>
-<p><img src="https://s3.bmp.ovh/imgs/2021/08/5871bb9a6111b295.jpeg" alt></p>
-<p>但是B树也有问题：B树如果节点中的子节点树超过规定的阶数，就会发生节点分裂（数据库中经常称之为“页”分裂）。</p>
-<p><img src="https://s3.bmp.ovh/imgs/2021/08/15b47785e81116d8.gif" alt></p>
-<p>高维B树当然也继承了这个问题，并且更加严重页分裂的时候不能以B树“一刀切”的方式解决。</p>
-<p>以二维K-D-B树为例，一个节点数据过多，需要分裂时，就需要拆分区域。拆分区域的过程中大概率会出现拆分该区域的子区域。</p>
-<p>所以写入性能很差</p>
-<h2 id="B-K-D树"><a href="#B-K-D树" class="headerlink" title="B-K-D树"></a>B-K-D树</h2><p>再次优化。</p>
-<p>BKD树是二叉树和B+树的组合。比较特殊的是，内部node必须是一个完全二叉树，而叶子node存储的则和K-D-B树一模一样。</p>
-<p><img src="https://s3.bmp.ovh/imgs/2021/08/f6f737dc48a79824.png" alt></p>
-<p><img src="https://s3.bmp.ovh/imgs/2021/08/fdf434231d85f737.jpeg" alt></p>
-<p>B-K-D树结合了二叉树和B+树的特性。比较特殊的是，内部节点必须形成一个完全二叉树，而叶子节点存储方式和K-D-B树叶子相同。</p>
-<p>和堆类似，B-K-D树的内部节点组成了一个完全二叉树。这样的好处是节点不需要存储指向子节点的指针，根据父节点索引即可算出子节点索引。假如一个节点的位置在i ，那这个节点的左节点在位置2 i，右节点在2 i + 1 。</p>
-<p>内部节点本身不包含数据，所有数据存储在叶子节点。较小的节点也意味着内存中可以缓存更多的节点。这一点和B+树类似。</p>
-<p>另外B-K-D树的内部树永远不会被修改，而是使用一种策略来添加新数据。</p>
-<p>首先，有一个大小为M的Buffer。在那片论文里，它是被保存在内存的。这个Buffer, 可能仅仅是一个数组或者性能更好的一些数据结构，毕竟是有查询需求的。论文并没有指明这个Buffer的最优大小，但是直觉上来说，至少应该和K-D树节点一样大。</p>
-<p><img src="https://s3.bmp.ovh/imgs/2021/08/fdf434231d85f737.jpeg" alt></p>
-<p>这里用了类似LSM树的技术。</p>
-<p>如果BKD树由N个数据，那么它有 log2(N/M)个可修改的K-D树。每一个树都是前一个树的2倍。数据首先被插入到内存里的Buffer里，一旦Buffer满了，先定位到第1个为空的树。这个Buffer的数据，以及空树之前所有节点的数据一起生成一个满的平衡树。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/27/">27</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/page/28/">28</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -1923,7 +1910,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">270</span>
+                  <span class="site-state-item-count">271</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
