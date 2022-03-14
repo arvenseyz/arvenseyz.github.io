@@ -251,6 +251,161 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/10/31/10-30技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/10/31/10-30技术笔记-1/" itemprop="url">kafka可靠性</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-10-31T20:40:28+08:00">
+                2019-10-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>在 Kafka 中动态维护着一个 ISR 集合，处于 ISR 集合内的节点保持与 leader 相同的高水位（HW），只有位列其中的副本（unclean.leader.election.enable 配置为 false）才有资格被选为新的 leader。写入消息时只有等到所有ISR集合中的副本都确认收到之后才能被认为已经提交。位于 ISR 中的任何副本节点都有资格成为 leader，选举过程简单、开销低，这也是 Kafka 选用此模型的重要因素。</p>
+<h2 id="副本数"><a href="#副本数" class="headerlink" title="副本数"></a>副本数</h2><p>显然，副本越多可靠性越高，但性能越差。权衡的结果是，一般都是3副本，极少数高可靠性要求，比如银行，可以采用5副本。</p>
+<h2 id="acks"><a href="#acks" class="headerlink" title="acks"></a>acks</h2><p>acks有三个级别，0，1，-1。-1其实是正无穷的意思。</p>
+<p>即，需要多少成功写入本地日志之后会告知生产者已经成功提交。</p>
+<p>0，就是不需要写入本地日志，生产者只管发。</p>
+<p>1，就是只有leader写入本地日志，就成功提交。可靠性问题就是，leader写入-&gt;告知成功提交-&gt;leader挂了-&gt;follower还没来得及同步-&gt;消息丢了。</p>
+<p>-1，等待 ISR 中的 follower 副本全部同步完成才能够告知生产者已经成功提交，即使此时 leader 副本宕机，消息也不会丢失。如果ISR 中的所有副本同步之前 leader 副本宕机了，那么生产者会收到异常以此告知此次发送失败。</p>
+<h2 id="消息发送模式"><a href="#消息发送模式" class="headerlink" title="消息发送模式"></a>消息发送模式</h2><p>发后即忘的模式，不管消息有没有被成功写入，生产者都不会收到通知，那么即使消息写入失败也无从得知。</p>
+<p>同步和异步在可靠性上没区别，他们的区别在于顺序，同步需要等待消息返回，才会继续。异步是回调，意味着，同步可以保证顺序。</p>
+<h2 id="ISR-集合中最小的副本数"><a href="#ISR-集合中最小的副本数" class="headerlink" title="ISR 集合中最小的副本数"></a>ISR 集合中最小的副本数</h2><p>因为ISR里的副本，一旦跟不上，就会被踢，如果leader 副本的消息流入速度很快，而 follower 副本的同步速度很慢，在某个临界点时所有的 follower 副本都被剔除出了 ISR 集合，那么 ISR 中只有一个 leader 副本，最终 acks = -1 演变为 acks = 1 的情形。</p>
+<p>为了避免这个情况，有min.insync.replicas 参数（默认值为1）来作为辅助配合 acks = -1 来使用，个典型的配置方案为：副本数配置为3，min.insync.replicas 参数值配置为2。</p>
+<p>很显然，这个配置很影响可用性。</p>
+<h2 id="位移提交"><a href="#位移提交" class="headerlink" title="位移提交"></a>位移提交</h2><p>enable.auto.commit 参数的默认值为 true，即开启自动位移提交的功能，如果消费者没能消费成功或者挂了，消息同样也丢失了，所以可以设置手动位移提交。</p>
+<p>但是会带来重复消费的问题，试想，消费者成功消费了，还没来得及手动位移提交，消费者挂了。消费者恢复，此时会重复消费这条消息。所以需要消费者这边做幂等处理。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/10/28/10-28技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1647,156 +1802,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/09/08/9-8技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/09/08/9-8技术笔记/" itemprop="url">shellScript入门</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-08T14:56:26+08:00">
-                2019-09-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="使用者输入变量内容"><a href="#使用者输入变量内容" class="headerlink" title="使用者输入变量内容"></a>使用者输入变量内容</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="built_in">read</span> -p <span class="string">"enter cnt"</span> cnt</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"will go <span class="variable">$cnt</span> num"</span></span><br><span class="line"></span><br><span class="line">yangzhuo@n224-019-077:~/file$ vim test.sh</span><br><span class="line">yangzhuo@n224-019-077:~/file$ sh test.sh</span><br><span class="line">enter cnt7</span><br><span class="line">will go 7 num</span><br></pre></td></tr></table></figure>
-<p>read让用户输入参数</p>
-<h2 id="时间处理"><a href="#时间处理" class="headerlink" title="时间处理"></a>时间处理</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">yesterday=`date -d last-day +%Y-%m-%d`</span><br><span class="line"><span class="built_in">echo</span> <span class="variable">$yesterday</span></span><br><span class="line"></span><br><span class="line">curday=`date +%Y-%m-%d`</span><br><span class="line"><span class="built_in">echo</span> <span class="variable">$curday</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"现在时间：`date '+%Y%m%d %T'`"</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"现在时间：`date '+%Y%m%d %H%M%S'`"</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> `date <span class="string">'+%Y%m%d-%H%M%S'</span>`</span><br><span class="line"></span><br><span class="line">send=`date --date=<span class="string">'3 hours ago'</span> <span class="string">'+%Y-%m-%d %H:%M:%S'</span>`</span><br><span class="line"><span class="built_in">echo</span> <span class="variable">$send</span></span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">2019-09-07</span><br><span class="line">2019-09-08</span><br><span class="line">现在时间：20190908 15:14:56</span><br><span class="line">现在时间：20190908 151456</span><br><span class="line">20190908-151456</span><br><span class="line">2019-09-08 12:14:56</span><br></pre></td></tr></table></figure>
-<h2 id="默认参数"><a href="#默认参数" class="headerlink" title="默认参数"></a>默认参数</h2><p><strong><em>= 变量为null时, 同时改变变量值</em></strong></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[root@linuxidc /]# unset name</span><br><span class="line">[root@linuxidc /]# echo $&#123;name=linuxmi&#125;</span><br><span class="line">linuxmi</span><br><span class="line">[root@linuxidc /]# echo $name</span><br><span class="line">linuxmi</span><br><span class="line">[root@linuxidc /]# name=&quot;&quot;</span><br><span class="line">[root@linuxidc /]# echo $&#123;name=linuxmi&#125;</span><br><span class="line"></span><br><span class="line">[root@linuxidc /]#</span><br></pre></td></tr></table></figure>
-<p><strong><em>-  变量为null时, 取默认值</em></strong></p>
-<p><strong><em>:- 变量为null或空字符时, 取默认值</em></strong></p>
-<p><strong><em>:= 变量为null时, 同时改变变量值</em></strong></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1847,7 +1852,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">271</span>
+                  <span class="site-state-item-count">272</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

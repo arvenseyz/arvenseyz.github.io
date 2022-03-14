@@ -251,6 +251,233 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/14/3-14技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2022/03/14/3-14技术笔记-1/" itemprop="url">GMP模型</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-03-14T14:58:15+08:00">
+                2022-03-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="用户态和内核态"><a href="#用户态和内核态" class="headerlink" title="用户态和内核态"></a>用户态和内核态</h1><p>Kernel 运行在超级权限模式（Supervisor Mode）下，所以拥有很高的权限。按照权限管理的原则，多数应用程序应该运行在最小权限下。因此，很多操作系统，将内存分成了两个区域：</p>
+<ul>
+<li>内核空间（Kernal Space），这个空间只有内核程序可以访问；</li>
+<li>用户空间（User Space），这部分内存专门给应用程序使用。</li>
+</ul>
+<h2 id="用户态和内核态-1"><a href="#用户态和内核态-1" class="headerlink" title="用户态和内核态"></a>用户态和内核态</h2><p>用户空间中的代码被限制了只能使用一个局部的内存空间，我们说这些程序在<strong>用户态（User Mode）</strong>  执行。内核空间中的代码可以访问所有内存，我们称这些程序在<strong>内核态（Kernal Mode）</strong>  执行。</p>
+<h2 id="系统调用过程"><a href="#系统调用过程" class="headerlink" title="系统调用过程"></a>系统调用过程</h2><p>如果用户态程序需要执行系统调用，就需要切换到内核态执行。</p>
+<p>内核程序执行在内核态（Kernal Mode），用户程序执行在用户态（User Mode）。当发生系统调用时，用户态的程序发起系统调用。因为系统调用中牵扯特权指令，用户态程序权限不足，因此会中断执行，也就是 Trap（Trap 是一种中断）。</p>
+<p>发生中断后，当前 CPU 执行的程序会中断，跳转到中断处理程序。内核程序开始执行，也就是开始处理系统调用。内核处理完成后，主动触发 Trap，这样会再次发生中断，切换回用户态工作。</p>
+<h1 id="线程模型"><a href="#线程模型" class="headerlink" title="线程模型"></a>线程模型</h1><h4 id="进程和线程"><a href="#进程和线程" class="headerlink" title="进程和线程"></a>进程和线程</h4><p>一个应用程序启动后会在内存中创建一个执行副本，这就是<strong>进程</strong>。Linux 的内核是一个 Monolithic Kernel（宏内核），因此可以看作一个进程。也就是开机的时候，磁盘的内核镜像被导入内存作为一个执行副本，成为内核进程。</p>
+<p>进程可以分成用户态进程和内核态进程两类。用户态进程通常是应用程序的副本，内核态进程就是内核本身的进程。如果用户态进程需要申请资源，比如内存，可以通过系统调用向内核申请。</p>
+<p><strong>那么用户态进程如果要执行程序，是否也要向内核申请呢</strong>？</p>
+<p>程序在现代操作系统中并不是以进程为单位在执行，而是以一种轻量级进程（Light Weighted Process），也称作线程（Thread）的形式执行。</p>
+<p>一个进程可以拥有多个线程。进程创建的时候，一般会有一个主线程随着进程创建而创建。</p>
+<p>如果进程想要创造更多的线程，就需要思考一件事情，这个线程创建在用户态还是内核态。</p>
+<p>你可能会问，难道不是用户态的进程创建用户态的线程，内核态的进程创建内核态的线程吗？</p>
+<p>其实不是，进程可以通过 API 创建用户态的线程，也可以通过系统调用创建内核态的线程，接下来我们说说用户态的线程和内核态的线程。</p>
+<h4 id="用户态线程"><a href="#用户态线程" class="headerlink" title="用户态线程"></a>用户态线程</h4><p>用户态线程也称作用户级线程（User Level Thread）。操作系统内核并不知道它的存在，它完全是在用户空间中创建。</p>
+<p>用户级线程有很多优势，比如。</p>
+<ul>
+<li><strong>管理开销小</strong>：创建、销毁不需要系统调用。</li>
+<li><strong>切换成本低</strong>：用户空间程序可以自己维护，不需要走操作系统调度。</li>
+</ul>
+<p>但是这种线程也有很多的缺点。</p>
+<ul>
+<li><strong>与内核协作成本高</strong>：比如这种线程完全是用户空间程序在管理，当它进行 I/O 的时候，无法利用到内核的优势，需要频繁进行用户态到内核态的切换。</li>
+<li><strong>线程间协作成本高</strong>：设想两个线程需要通信，通信需要 I/O，I/O 需要系统调用，因此用户态线程需要支付额外的系统调用成本。</li>
+<li><strong>无法利用多核优势</strong>：比如操作系统调度的仍然是这个线程所属的进程，所以无论每次一个进程有多少用户态的线程，都只能并发执行一个线程，因此一个进程的多个线程无法利用多核的优势。</li>
+<li><strong>操作系统无法针对线程调度进行优化</strong>：当一个进程的一个用户态线程阻塞（Block）了，操作系统无法及时发现和处理阻塞问题，它不会更换执行其他线程，从而造成资源浪费。</li>
+</ul>
+<h4 id="内核态线程"><a href="#内核态线程" class="headerlink" title="内核态线程"></a>内核态线程</h4><p>内核态线程也称作内核级线程（Kernel Level Thread）。这种线程执行在内核态，可以通过系统调用创造一个内核级线程。</p>
+<p>内核级线程有很多优势。</p>
+<ul>
+<li><strong>可以利用多核 CPU 优势</strong>：内核拥有较高权限，因此可以在多个 CPU 核心上执行内核线程。</li>
+<li><strong>操作系统级优化</strong>：内核中的线程操作 I/O 不需要进行系统调用；一个内核线程阻塞了，可以立即让另一个执行。</li>
+</ul>
+<p>当然内核线程也有一些缺点。</p>
+<ul>
+<li><strong>创建成本高</strong>：创建的时候需要系统调用，也就是切换到内核态。</li>
+<li><strong>扩展性差</strong>：由一个内核程序管理，不可能数量太多。</li>
+<li><strong>切换成本较高</strong>：切换的时候，也同样存在需要内核操作，需要切换内核态。</li>
+</ul>
+<h4 id="一对一（One-to-One）模型"><a href="#一对一（One-to-One）模型" class="headerlink" title="一对一（One to One）模型"></a>一对一（One to One）模型</h4><p>该模型为每个用户态的线程分配一个单独的内核态线程，在这种情况下，每个用户态都需要通过系统调用创建一个绑定的内核线程，并附加在上面执行。 这种模型允许所有线程并发执行，能够充分利用多核优势，Windows NT 内核采取的就是这种模型。但是因为线程较多，对内核调度的压力会明显增加。</p>
+<h4 id="多对多（Many-To-Many）模型"><a href="#多对多（Many-To-Many）模型" class="headerlink" title="多对多（Many To Many）模型"></a>多对多（Many To Many）模型</h4><p>这种模式下会为 n 个用户态线程分配 m 个内核态线程。m 通常可以小于 n。一种可行的策略是将 m 设置为核数。这种多对多的关系，减少了内核线程，同时也保证了多核心并发。Linux 目前采用的就是该模型。</p>
+<h1 id="GMP"><a href="#GMP" class="headerlink" title="GMP"></a>GMP</h1><p><a href="https://imgtu.com/i/bOgpTJ" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2022/03/14/bOgpTJ.jpg" alt="bOgpTJ.jpg"></a></p>
+<p>G ———– goroutine: 即Go协程，每个go关键字都会创建一个协程。</p>
+<p>M ———- thread内核级线程，所有的G都要放在M上才能运行。</p>
+<p>P ———– processor处理器，调度G到M上，其维护了一个队列，存储了所有需要它来调度的G。</p>
+<p>Goroutine 调度器P和 OS 调度器是通过 M 结合起来的，每个 M 都代表了 1 个内核线程，OS 调度器负责把内核线程分配到 CPU 的核上执行</p>
+<h3 id="有关-P-和-M-的数量问题"><a href="#有关-P-和-M-的数量问题" class="headerlink" title="有关 P 和 M 的数量问题"></a>有关 P 和 M 的数量问题</h3><ol>
+<li><p>P 的数量：  </p>
+<p>由程序启动时环境变量 $GOMAXPROCS 或 runtime方法GOMAXPROCS()决定，  </p>
+<p>这意味着在程序执行的任意时刻都只有 $MAXPROCS个goroutine在执行 ,一般设置为cpu的核心数</p>
+</li>
+<li><p>M 的数量  </p>
+<p>2.1 go 语言本身的限制，go 程序启动时会设置M的最大数量，默认10000，但是内核很难支持这么多的线程，  </p>
+<p>所以可以忽略，  </p>
+<p>2.1 runtime/debug中的SetMaxThreads函数，设置 M 的最大数量  </p>
+<p>2.3 当一个M阻塞了，会创建新的M  </p>
+</li>
+<li>M和P的数量没有绝对关系，一个M阻塞，P就会创建或者切换其它的M，所以即使P的数量是1，也有可能创建出很多个M出来。</li>
+</ol>
+<h3 id="P-和-M-何时会被创建"><a href="#P-和-M-何时会被创建" class="headerlink" title="P 和 M 何时会被创建"></a>P 和 M 何时会被创建</h3><ol>
+<li>P 何时创建：在确定了P的最大数量n后，runtime运行时系统会根据这个数量创建n个P  </li>
+<li><p>M 何时创建：没有足够的M来关联P并运行其中可运行的G；比如此时所有的M都阻塞住了，  </p>
+<p>但是P中还有很多就绪任务，此时就会去创建新的M。从这看M的数量应该是略多于P</p>
+</li>
+</ol>
+<h3 id="复用线程："><a href="#复用线程：" class="headerlink" title="复用线程："></a>复用线程：</h3><p>避免重复的创建、销毁线程，而是对线程的复用</p>
+<p>work stealing机制：当本线程M无可运行的G时，会尝试从其它线程绑定的P中偷取G，而不是销毁线程<br>hand off机制：当本线程M因为G进行系统调用时阻塞，线程M释放绑定的P，交给其它空闲的线程M去执行<br>利用并行：GOMAXPROCS设置P的数量，最多有GOMAXPROCS个线程分布在多个CPU上运行，<br>GOMAXPROCS也限制了并发的程度，当设置 GOMAXPROCS = CPU核数/2 时，则最多利用了一半的CPU核进行并行  </p>
+<h3 id="抢占"><a href="#抢占" class="headerlink" title="抢占"></a>抢占</h3><p> 在coroutine中要等待一个协程让出CPU才执行下一个协程，而在go中，一个goroutine最多占用CPU 10ms,  </p>
+<p>防止其它goroutine被饿死，这就是goroutine不同于其它coroutine的区别  </p>
+<h3 id="全局G队列"><a href="#全局G队列" class="headerlink" title="全局G队列"></a>全局G队列</h3><p>在新的调度器中依然有全局G队列，但是功能被弱化了，当M执行 work stealing 从其它P队列偷不到G时，  </p>
+<p>它可以从全局G队列获取G</p>
+<h2 id="调度过程"><a href="#调度过程" class="headerlink" title="调度过程"></a>调度过程</h2><p><a href="https://imgtu.com/i/bOgMtA" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2022/03/14/bOgMtA.jpg" alt="bOgMtA.jpg"></a></p>
+<p>1、我们通过 go func()来创建一个goroutine；  </p>
+<p>2、有两个存储G的队列，一个是局部调度器P的本地队列、一个是全局G队列。新创建的G会先保存在P的本地队列中，如果P的本地队列已经满了就会保存在全局的队列中；  </p>
+<p>3、G只能运行在M中，一个M必须持有一个P，M与P是1：1的关系。M会从P的本地队列弹出一个可执行状态的G来执行，如果P的本地队列为空，就会想其他的MP组合偷取一个可执行的G来执行；  </p>
+<p>4、一个M调度G执行的过程是一个循环机制；  </p>
+<p>5、当M执行某一个G时候如果发生了syscall或则其余阻塞操作，M会阻塞，如果当前有一些G在执行，runtime会把这个线程M从P中摘除(detach)，然后再创建一个新的操作系统的线程(如果有空闲的线程可用就复用空闲线程)来服务于这个P；  </p>
+<p>6、当M系统调用结束时候，这个G会尝试获取一个空闲的P执行，并放入到这个P的本地队列。如果获取不到P，那么这个线程M变成休眠状态， 加入到空闲线程中，然后这个G会被放入全局队列中。</p>
+<h2 id="调度器的生命周期"><a href="#调度器的生命周期" class="headerlink" title="调度器的生命周期"></a>调度器的生命周期</h2><p><a href="https://imgtu.com/i/bOgN7Q" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2022/03/14/bOgN7Q.jpg" alt="bOgN7Q.jpg"></a></p>
+<h2 id="特殊的M0和G0"><a href="#特殊的M0和G0" class="headerlink" title="特殊的M0和G0"></a>特殊的M0和G0</h2><p><strong>M0</strong></p>
+<p><code>M0</code>是启动程序后的编号为0的主线程，这个M对应的实例会在全局变量runtime.m0中，不需要在heap上分配，M0负责执行初始化操作和启动第一个G， 在之后M0就和其他的M一样了。</p>
+<p><strong>G0</strong></p>
+<p><code>G0</code>是每次启动一个M都会第一个创建的gourtine，G0仅用于负责调度的G，G0不指向任何可执行的函数, 每个M都会有一个自己的G0。在调度或系统调用时会使用G0的栈空间, 全局变量的G0是M0的G0。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/11/3-10技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1880,157 +2107,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/02/23/2-22技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2022/02/23/2-22技术笔记-1/" itemprop="url">feed流设计</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-02-23T15:24:58+08:00">
-                2022-02-23
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>feed流有两种，一种是我关注的人/我好友的，比如说朋友圈，另一种是推荐的，比如头条。</p>
-<p>这里看第一种。</p>
-<h2 id="推拉模式"><a href="#推拉模式" class="headerlink" title="推拉模式"></a>推拉模式</h2><p>简单想到的实现方式就是，每一个内容发布者都有一个自己的发件箱，第一步加载用户所有好友，第二步加载这些好友的所有内容。即拉模式，读扩散。</p>
-<p>这个模式有两个问题，第一是性能问题，关注的人数非常多时性能有问题。第二是业务问题，翻页时有问题。</p>
-<p>有拉就有推，即每个用户都有个收件箱，当发布者发表一篇帖子的时候，除了往自己发件箱记录一下之外，还会遍历发布者的所有粉丝，往这些粉丝的收件箱也投放一份相同内容。这样阅读者来读Feed流时，直接从自己的收件箱读取即可。</p>
-<p>比较适合朋友圈这种场景。比如微博，有人一亿粉丝，这种模式肯定用不了。</p>
-<p>其实这种模式可以混合，粉丝量很少的人，可以用推模式。粉丝量多的人，只推给活跃粉丝。</p>
-<p>非活跃粉丝刷feed流时，一方面要读自己的收件箱，另一方面也要拉关注的大v的发件箱。</p>
-<h2 id="分页问题"><a href="#分页问题" class="headerlink" title="分页问题"></a>分页问题</h2><p>即加载第二页时，由于按时间排的，有新的内容导致第一页的内容被挤到第二页，这样又看见第一页的内容。</p>
-<p>比较简单的方法是，加一个last_id</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2081,7 +2157,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">271</span>
+                  <span class="site-state-item-count">272</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

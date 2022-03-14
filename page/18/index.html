@@ -251,6 +251,159 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/01/30/1-30技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/01/30/1-30技术笔记/" itemprop="url">连续子数组最大和的动态规划</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-01-30T16:22:25+08:00">
+                2019-01-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/leetcode/" itemprop="url" rel="index">
+                    <span itemprop="name">leetcode</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>kadane算法利用了数学归纳法的思想。简单来讲就是，随意给你一个现成的数组，比如说−2, 1, −3, 4, −1, 2, 1, −5, 4，让你求其中的最大子列和，并不是容易的事情。但如果我们能从第一个数开始，随着数组的扩充，始终对其最大子列和保持跟踪，就可以轻易的求出任意一个数组的最大子列和。换言之，长度n的数组我们不会求，长度为一的总能算出来吧？长度为一的算出来了，二也就能算出来，二算出来了，三就能算出来，以此类推，用这种根据i求i+1的思想，我们就能达到最终目的。</p>
+<p>详细的分析一下，往一个长度为i的数组后面插入第i+1个数，这时，数组的最大子列只有两种情况，要么包括第i+1个数，要么不包括第i+1个数。即：</p>
+<p><strong>maxsubarraum = max(以第i+1个数结尾的子列和， 不以第i+1个数结尾的子列和)。*</strong></p>
+<p>先计算前者，以第i+1个数结尾的子列和怎么算呢？很简单，要么它是以第i个数结尾的子列作为前缀，要么它不以之作为前缀。假设第i+1个数为x，那么：</p>
+<p><strong>以第i+1个数结尾的子列和 = max（x，以第i个数结尾的子列和+x）。</strong>(1)</p>
+<p>再计算后者，也就是不以第i+1个数结尾的子列和。这啥意思呢？其实就是插入第i+1个数之前的数组的最大子列和嘛。我们的数学归纳思想也就体现在这里，如果你还看不明白，我们将*式改写：</p>
+<p><strong>数列长度i+1的最大子列和 = max(以第i+1个数结尾的子列和， 数列长度i的最大子列和)。</strong>(2)</p>
+<p> 看到了吧，无论一式还是二式，后一种情况都可以由前一种情况推出，妥妥的数学归纳。我们的算法只要从i=1开始，一步一步按照上面的规则走下去，那么任意一个数列的最大子列和就能求出来了！</p>
+<p>因为长度为i的数列的最大子列和并不一定是以第i的数结尾的，但他们有关系(2)</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">dp</span><span class="params">(<span class="keyword">int</span>[] nums)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span>[] c = <span class="keyword">new</span> <span class="keyword">int</span>[nums.lenth];<span class="comment">//第i+1个数结尾的子列和</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span>[] a = <span class="keyword">new</span> <span class="keyword">int</span>[nums.lenth];<span class="comment">//长度为i的数列的最大子列和</span></span><br><span class="line"></span><br><span class="line">    c[<span class="number">0</span>]=nums[<span class="number">0</span>];</span><br><span class="line">    a[<span class="number">0</span>]=nums[<span class="number">0</span>];</span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">1</span> ;i&lt;nums.length;i++)&#123;</span><br><span class="line">        c[i] = Math.max(nums[i],c[i-<span class="number">1</span>]+nums[i]);<span class="comment">//重现公式(1)</span></span><br><span class="line"></span><br><span class="line">        a[i] = Math.max(c[i],a[i-<span class="number">1</span>]);<span class="comment">//重现公式(2)</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> a[nums.length-<span class="number">1</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以上代码，把所有数学归纳的过程都呈现了出来，实际上。只求结果的话，不需要储存当时的过程，保存个最大值变量即可。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">max_subarray</span><span class="params">(<span class="keyword">int</span>[] A)</span></span>&#123;</span><br><span class="line"> max_ending_here = max_so_far = A[<span class="number">0</span>];</span><br><span class="line"> <span class="keyword">for</span>(<span class="keyword">int</span> n = <span class="number">1</span>; n &lt; A.length; n++)&#123;</span><br><span class="line">  max_ending_here = Math.max(max_ending_here + A[n], A[n]);</span><br><span class="line">  max_so_far = Math.max(max_ending_here, max_so_far);</span><br><span class="line">  &#125;</span><br><span class="line"> <span class="keyword">return</span> max_so_far;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/01/30/leetcode50-53-169/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1733,162 +1886,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/12/25/leetcode98-235-236/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/12/25/leetcode98-235-236/" itemprop="url">二叉树是不是二叉搜索树，二叉搜索树最低公共父节点，二叉树最低公共父节点</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-25T17:34:23+08:00">
-                2018-12-25
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/leetcode/" itemprop="url" rel="index">
-                    <span itemprop="name">leetcode</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="98"><a href="#98" class="headerlink" title="98"></a>98</h1><h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>验证一颗二叉树是不是二叉搜索树</p>
-<h2 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h2><p>二叉搜索树要求很严格的，要求左子树上所有结点的值均小于它的根结点的值，右子树反过来。因此光看左右子节点和父节点大小关系是错误的的。</p>
-<p>当然可以递归验证，递归左子树小于父节点。而实际上，中序搜索就是这样的递归过程。</p>
-<p>因而二叉搜索树有这样的性质：中序遍历输出是递增的。</p>
-<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isValidBST</span><span class="params">(TreeNode root)</span> </span>&#123;</span><br><span class="line">        ArrayList list = <span class="keyword">new</span> ArrayList();</span><br><span class="line">        <span class="keyword">if</span>(root==<span class="keyword">null</span>)<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        find(root, list);</span><br><span class="line">        <span class="keyword">if</span>(list.size() == <span class="number">1</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt; list.size(); i++) &#123;</span><br><span class="line">            <span class="keyword">if</span>((<span class="keyword">int</span>)list.get(i)&lt;=(<span class="keyword">int</span>)list.get(i-<span class="number">1</span>))&#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">find</span><span class="params">(TreeNode root, ArrayList list)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(root.left != <span class="keyword">null</span>) &#123;</span><br><span class="line">            find(root.left, list);</span><br><span class="line">        &#125;</span><br><span class="line">        list.add(root.val);</span><br><span class="line">        <span class="keyword">if</span>(root.right != <span class="keyword">null</span>) &#123;</span><br><span class="line">            find(root.right, list);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="感想"><a href="#感想" class="headerlink" title="感想"></a>感想</h2><p>前序中序后序的“前中后”，指的是根节点的位置。前序就是中左右，中在前。</p>
-<h1 id="235"><a href="#235" class="headerlink" title="235"></a>235</h1><h2 id="题目-1"><a href="#题目-1" class="headerlink" title="题目"></a>题目</h2><p>给一个二叉搜索树，给定两个节点，求他们的最低共同父节点。</p>
-<h2 id="解答-1"><a href="#解答-1" class="headerlink" title="解答"></a>解答</h2><p>利用二叉搜索树左&lt;中&lt;右的特点，递归搜索左右子树。</p>
-<p>如果根节点在两个给定值之间，说明答案就是根节点。如果根节点小于两个给定值，说明答案在右子树。</p>
-<h2 id="代码-1"><a href="#代码-1" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> TreeNode <span class="title">lowestCommonAncestor</span><span class="params">(TreeNode root, TreeNode p, TreeNode q)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">if</span>(root == <span class="keyword">null</span>)</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">                <span class="keyword">if</span>((root.val &gt;= p.val &amp;&amp; root.val &lt;= q.val) || (root.val &gt;= q.val &amp;&amp; root.val &lt;= p.val))</span><br><span class="line">                    <span class="keyword">return</span> root;</span><br><span class="line">                <span class="keyword">if</span>(root.val &lt; p.val &amp;&amp; root.val &lt; q.val)</span><br><span class="line">                    <span class="keyword">return</span> lowestCommonAncestor(root.right,p,q);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span>(root.val &gt; p.val &amp;&amp; root.val &gt; q.val)</span><br><span class="line">                    <span class="keyword">return</span> lowestCommonAncestor(root.left,p,q);</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<h1 id="236"><a href="#236" class="headerlink" title="236"></a>236</h1><h2 id="题目-2"><a href="#题目-2" class="headerlink" title="题目"></a>题目</h2><p>给一个二叉树，给定两个节点，求他们的最低共同父节点。</p>
-<h2 id="解答-2"><a href="#解答-2" class="headerlink" title="解答"></a>解答</h2><p>有这样思路，第一输出两个节点的”路径”，即每一级所经过的节点。然后第一个不同的节点就是答案。怎么找到路径呢？先搜索到节点，比如先序遍历，遍历的同时用哈希表记录下每个节点的父节点，找到节点后，从哈希表循环读父节点直到根节点。</p>
-<p>实际上，参考二叉搜索树，如果根节点的值，就是某个给定值，说明答案就是根节点。如果不是，递归左子树，要是左子树里没有这两个值，说明答案在右子树。</p>
-<h2 id="代码-2"><a href="#代码-2" class="headerlink" title="代码"></a>代码</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> TreeNode <span class="title">lowestCommonAncestor</span><span class="params">(TreeNode root, TreeNode p, TreeNode q)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">if</span>(root == <span class="keyword">null</span> || root.val == p.val || root.val == q.val) &#123;</span><br><span class="line">                <span class="keyword">return</span> root;</span><br><span class="line">            &#125;</span><br><span class="line">            TreeNode leftN = lowestCommonAncestor(root.left, p, q);</span><br><span class="line">            TreeNode rightN = lowestCommonAncestor(root.right, p, q);</span><br><span class="line">            <span class="keyword">if</span>(leftN != <span class="keyword">null</span> &amp;&amp; rightN != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> root;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span>(leftN == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> rightN;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// else if(rightN == null)</span></span><br><span class="line">            <span class="keyword">return</span> leftN;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
-<h2 id="感想-1"><a href="#感想-1" class="headerlink" title="感想"></a>感想</h2><p>递归过程还是很难想明白的。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1939,7 +1936,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">271</span>
+                  <span class="site-state-item-count">272</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

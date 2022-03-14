@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2022-03-11T06:20:06.944Z</updated>
+  <updated>2022-03-14T07:46:30.502Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -15,6 +15,33 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>GMP模型</title>
+    <link href="https://arvenseyz.github.io/2022/03/14/3-14%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
+    <id>https://arvenseyz.github.io/2022/03/14/3-14技术笔记-1/</id>
+    <published>2022-03-14T06:58:15.000Z</published>
+    <updated>2022-03-14T07:46:30.502Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="用户态和内核态"><a href="#用户态和内核态" class="headerlink" title="用户态和内核态"></a>用户态和内核态</h1><p>Kernel 运行在超级权限模式（Supervisor Mode）下，所以拥有很高的权限。按照权限管理的原则，多数应用程序应该运行在最小权限下。因此，很多操作系统，将内存分成了两个区域：</p><ul><li>内核空间（Kernal Space），这个空间只有内核程序可以访问；</li><li>用户空间（User Space），这部分内存专门给应用程序使用。</li></ul><h2 id="用户态和内核态-1"><a href="#用户态和内核态-1" class="headerlink" title="用户态和内核态"></a>用户态和内核态</h2><p>用户空间中的代码被限制了只能使用一个局部的内存空间，我们说这些程序在<strong>用户态（User Mode）</strong>  执行。内核空间中的代码可以访问所有内存，我们称这些程序在<strong>内核态（Kernal Mode）</strong>  执行。</p><h2 id="系统调用过程"><a href="#系统调用过程" class="headerlink" title="系统调用过程"></a>系统调用过程</h2><p>如果用户态程序需要执行系统调用，就需要切换到内核态执行。</p><p>内核程序执行在内核态（Kernal Mode），用户程序执行在用户态（User Mode）。当发生系统调用时，用户态的程序发起系统调用。因为系统调用中牵扯特权指令，用户态程序权限不足，因此会中断执行，也就是 Trap（Trap 是一种中断）。</p><p>发生中断后，当前 CPU 执行的程序会中断，跳转到中断处理程序。内核程序开始执行，也就是开始处理系统调用。内核处理完成后，主动触发 Trap，这样会再次发生中断，切换回用户态工作。</p><h1 id="线程模型"><a href="#线程模型" class="headerlink" title="线程模型"></a>线程模型</h1><h4 id="进程和线程"><a href="#进程和线程" class="headerlink" title="进程和线程"></a>进程和线程</h4><p>一个应用程序启动后会在内存中创建一个执行副本，这就是<strong>进程</strong>。Linux 的内核是一个 Monolithic Kernel（宏内核），因此可以看作一个进程。也就是开机的时候，磁盘的内核镜像被导入内存作为一个执行副本，成为内核进程。</p><p>进程可以分成用户态进程和内核态进程两类。用户态进程通常是应用程序的副本，内核态进程就是内核本身的进程。如果用户态进程需要申请资源，比如内存，可以通过系统调用向内核申请。</p><p><strong>那么用户态进程如果要执行程序，是否也要向内核申请呢</strong>？</p><p>程序在现代操作系统中并不是以进程为单位在执行，而是以一种轻量级进程（Light Weighted Process），也称作线程（Thread）的形式执行。</p><p>一个进程可以拥有多个线程。进程创建的时候，一般会有一个主线程随着进程创建而创建。</p><p>如果进程想要创造更多的线程，就需要思考一件事情，这个线程创建在用户态还是内核态。</p><p>你可能会问，难道不是用户态的进程创建用户态的线程，内核态的进程创建内核态的线程吗？</p><p>其实不是，进程可以通过 API 创建用户态的线程，也可以通过系统调用创建内核态的线程，接下来我们说说用户态的线程和内核态的线程。</p><h4 id="用户态线程"><a href="#用户态线程" class="headerlink" title="用户态线程"></a>用户态线程</h4><p>用户态线程也称作用户级线程（User Level Thread）。操作系统内核并不知道它的存在，它完全是在用户空间中创建。</p><p>用户级线程有很多优势，比如。</p><ul><li><strong>管理开销小</strong>：创建、销毁不需要系统调用。</li><li><strong>切换成本低</strong>：用户空间程序可以自己维护，不需要走操作系统调度。</li></ul><p>但是这种线程也有很多的缺点。</p><ul><li><strong>与内核协作成本高</strong>：比如这种线程完全是用户空间程序在管理，当它进行 I/O 的时候，无法利用到内核的优势，需要频繁进行用户态到内核态的切换。</li><li><strong>线程间协作成本高</strong>：设想两个线程需要通信，通信需要 I/O，I/O 需要系统调用，因此用户态线程需要支付额外的系统调用成本。</li><li><strong>无法利用多核优势</strong>：比如操作系统调度的仍然是这个线程所属的进程，所以无论每次一个进程有多少用户态的线程，都只能并发执行一个线程，因此一个进程的多个线程无法利用多核的优势。</li><li><strong>操作系统无法针对线程调度进行优化</strong>：当一个进程的一个用户态线程阻塞（Block）了，操作系统无法及时发现和处理阻塞问题，它不会更换执行其他线程，从而造成资源浪费。</li></ul><h4 id="内核态线程"><a href="#内核态线程" class="headerlink" title="内核态线程"></a>内核态线程</h4><p>内核态线程也称作内核级线程（Kernel Level Thread）。这种线程执行在内核态，可以通过系统调用创造一个内核级线程。</p><p>内核级线程有很多优势。</p><ul><li><strong>可以利用多核 CPU 优势</strong>：内核拥有较高权限，因此可以在多个 CPU 核心上执行内核线程。</li><li><strong>操作系统级优化</strong>：内核中的线程操作 I/O 不需要进行系统调用；一个内核线程阻塞了，可以立即让另一个执行。</li></ul><p>当然内核线程也有一些缺点。</p><ul><li><strong>创建成本高</strong>：创建的时候需要系统调用，也就是切换到内核态。</li><li><strong>扩展性差</strong>：由一个内核程序管理，不可能数量太多。</li><li><strong>切换成本较高</strong>：切换的时候，也同样存在需要内核操作，需要切换内核态。</li></ul><h4 id="一对一（One-to-One）模型"><a href="#一对一（One-to-One）模型" class="headerlink" title="一对一（One to One）模型"></a>一对一（One to One）模型</h4><p>该模型为每个用户态的线程分配一个单独的内核态线程，在这种情况下，每个用户态都需要通过系统调用创建一个绑定的内核线程，并附加在上面执行。 这种模型允许所有线程并发执行，能够充分利用多核优势，Windows NT 内核采取的就是这种模型。但是因为线程较多，对内核调度的压力会明显增加。</p><h4 id="多对多（Many-To-Many）模型"><a href="#多对多（Many-To-Many）模型" class="headerlink" title="多对多（Many To Many）模型"></a>多对多（Many To Many）模型</h4><p>这种模式下会为 n 个用户态线程分配 m 个内核态线程。m 通常可以小于 n。一种可行的策略是将 m 设置为核数。这种多对多的关系，减少了内核线程，同时也保证了多核心并发。Linux 目前采用的就是该模型。</p><h1 id="GMP"><a href="#GMP" class="headerlink" title="GMP"></a>GMP</h1><p><a href="https://imgtu.com/i/bOgpTJ" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2022/03/14/bOgpTJ.jpg" alt="bOgpTJ.jpg"></a></p><p>G ———– goroutine: 即Go协程，每个go关键字都会创建一个协程。</p><p>M ———- thread内核级线程，所有的G都要放在M上才能运行。</p><p>P ———– processor处理器，调度G到M上，其维护了一个队列，存储了所有需要它来调度的G。</p><p>Goroutine 调度器P和 OS 调度器是通过 M 结合起来的，每个 M 都代表了 1 个内核线程，OS 调度器负责把内核线程分配到 CPU 的核上执行</p><h3 id="有关-P-和-M-的数量问题"><a href="#有关-P-和-M-的数量问题" class="headerlink" title="有关 P 和 M 的数量问题"></a>有关 P 和 M 的数量问题</h3><ol><li><p>P 的数量：  </p><p>由程序启动时环境变量 $GOMAXPROCS 或 runtime方法GOMAXPROCS()决定，  </p><p>这意味着在程序执行的任意时刻都只有 $MAXPROCS个goroutine在执行 ,一般设置为cpu的核心数</p></li><li><p>M 的数量  </p><p>2.1 go 语言本身的限制，go 程序启动时会设置M的最大数量，默认10000，但是内核很难支持这么多的线程，  </p><p>所以可以忽略，  </p><p>2.1 runtime/debug中的SetMaxThreads函数，设置 M 的最大数量  </p><p>2.3 当一个M阻塞了，会创建新的M  </p></li><li>M和P的数量没有绝对关系，一个M阻塞，P就会创建或者切换其它的M，所以即使P的数量是1，也有可能创建出很多个M出来。</li></ol><h3 id="P-和-M-何时会被创建"><a href="#P-和-M-何时会被创建" class="headerlink" title="P 和 M 何时会被创建"></a>P 和 M 何时会被创建</h3><ol><li>P 何时创建：在确定了P的最大数量n后，runtime运行时系统会根据这个数量创建n个P  </li><li><p>M 何时创建：没有足够的M来关联P并运行其中可运行的G；比如此时所有的M都阻塞住了，  </p><p>但是P中还有很多就绪任务，此时就会去创建新的M。从这看M的数量应该是略多于P</p></li></ol><h3 id="复用线程："><a href="#复用线程：" class="headerlink" title="复用线程："></a>复用线程：</h3><p>避免重复的创建、销毁线程，而是对线程的复用</p><p>work stealing机制：当本线程M无可运行的G时，会尝试从其它线程绑定的P中偷取G，而不是销毁线程<br>hand off机制：当本线程M因为G进行系统调用时阻塞，线程M释放绑定的P，交给其它空闲的线程M去执行<br>利用并行：GOMAXPROCS设置P的数量，最多有GOMAXPROCS个线程分布在多个CPU上运行，<br>GOMAXPROCS也限制了并发的程度，当设置 GOMAXPROCS = CPU核数/2 时，则最多利用了一半的CPU核进行并行  </p><h3 id="抢占"><a href="#抢占" class="headerlink" title="抢占"></a>抢占</h3><p> 在coroutine中要等待一个协程让出CPU才执行下一个协程，而在go中，一个goroutine最多占用CPU 10ms,  </p><p>防止其它goroutine被饿死，这就是goroutine不同于其它coroutine的区别  </p><h3 id="全局G队列"><a href="#全局G队列" class="headerlink" title="全局G队列"></a>全局G队列</h3><p>在新的调度器中依然有全局G队列，但是功能被弱化了，当M执行 work stealing 从其它P队列偷不到G时，  </p><p>它可以从全局G队列获取G</p><h2 id="调度过程"><a href="#调度过程" class="headerlink" title="调度过程"></a>调度过程</h2><p><a href="https://imgtu.com/i/bOgMtA" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2022/03/14/bOgMtA.jpg" alt="bOgMtA.jpg"></a></p><p>1、我们通过 go func()来创建一个goroutine；  </p><p>2、有两个存储G的队列，一个是局部调度器P的本地队列、一个是全局G队列。新创建的G会先保存在P的本地队列中，如果P的本地队列已经满了就会保存在全局的队列中；  </p><p>3、G只能运行在M中，一个M必须持有一个P，M与P是1：1的关系。M会从P的本地队列弹出一个可执行状态的G来执行，如果P的本地队列为空，就会想其他的MP组合偷取一个可执行的G来执行；  </p><p>4、一个M调度G执行的过程是一个循环机制；  </p><p>5、当M执行某一个G时候如果发生了syscall或则其余阻塞操作，M会阻塞，如果当前有一些G在执行，runtime会把这个线程M从P中摘除(detach)，然后再创建一个新的操作系统的线程(如果有空闲的线程可用就复用空闲线程)来服务于这个P；  </p><p>6、当M系统调用结束时候，这个G会尝试获取一个空闲的P执行，并放入到这个P的本地队列。如果获取不到P，那么这个线程M变成休眠状态， 加入到空闲线程中，然后这个G会被放入全局队列中。</p><h2 id="调度器的生命周期"><a href="#调度器的生命周期" class="headerlink" title="调度器的生命周期"></a>调度器的生命周期</h2><p><a href="https://imgtu.com/i/bOgN7Q" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2022/03/14/bOgN7Q.jpg" alt="bOgN7Q.jpg"></a></p><h2 id="特殊的M0和G0"><a href="#特殊的M0和G0" class="headerlink" title="特殊的M0和G0"></a>特殊的M0和G0</h2><p><strong>M0</strong></p><p><code>M0</code>是启动程序后的编号为0的主线程，这个M对应的实例会在全局变量runtime.m0中，不需要在heap上分配，M0负责执行初始化操作和启动第一个G， 在之后M0就和其他的M一样了。</p><p><strong>G0</strong></p><p><code>G0</code>是每次启动一个M都会第一个创建的gourtine，G0仅用于负责调度的G，G0不指向任何可执行的函数, 每个M都会有一个自己的G0。在调度或系统调用时会使用G0的栈空间, 全局变量的G0是M0的G0。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;用户态和内核态&quot;&gt;&lt;a href=&quot;#用户态和内核态&quot; class=&quot;headerlink&quot; title=&quot;用户态和内核态&quot;&gt;&lt;/a&gt;用户态和内核态&lt;/h1&gt;&lt;p&gt;Kernel 运行在超级权限模式（Supervisor Mode）下，所以拥有很高的权限。按照权限管
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="操作系统" scheme="https://arvenseyz.github.io/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/"/>
+    
+      <category term="Go" scheme="https://arvenseyz.github.io/tags/Go/"/>
+    
+  </entry>
   
   <entry>
     <title>点赞数系统设计</title>
@@ -499,34 +526,6 @@
 &lt;li&gt;&lt;h3 id=&quot;加锁&quot;&gt;&lt;a href=&quot;#加锁&quot; class=&quot;headerlink&quot; title=&quot;加锁&quot;&gt;&lt;/a&gt;加锁&lt;/h3&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;官方推荐至少 5 个redis实例，而且都是主库，它们之间没有任何关系，都是一个个孤立的实例，流程
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="redis" scheme="https://arvenseyz.github.io/tags/redis/"/>
-    
-      <category term="分布式" scheme="https://arvenseyz.github.io/tags/%E5%88%86%E5%B8%83%E5%BC%8F/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>redis分布式锁</title>
-    <link href="https://arvenseyz.github.io/2021/10/09/10-9%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0-1/"/>
-    <id>https://arvenseyz.github.io/2021/10/09/10-9技术笔记-1/</id>
-    <published>2021-10-09T06:52:04.000Z</published>
-    <updated>2021-10-11T08:50:16.995Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="Redis是AP系统"><a href="#Redis是AP系统" class="headerlink" title="Redis是AP系统"></a>Redis是AP系统</h2><p>先抛个结论：</p><p>“redis多机房同步是最终一致的，如有分布式锁的需求，会有锁不上的情况，业务可根据文档考虑使用强一致的存储组件！” from redis 用户文档</p><p>因此redis锁只能作为弱校验，而不能作为强依赖，必须要其他强一致的系统保证其一致性。</p><h2 id="Redis锁实现原理"><a href="#Redis锁实现原理" class="headerlink" title="Redis锁实现原理"></a>Redis锁实现原理</h2><p>而redis锁锁不住的原因要从redis锁的实现讲起。redis锁主要基于两个命令，<strong>setnx &amp;</strong> <strong>cad</strong>，（注意不是redlock，redlock和这两个命令没有关系，下面最后一个部分会提）</p><p><strong>加锁setnx</strong></p><p>setnx命令会被redis client解析为</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SET key value NX PX 30000</span><br></pre></td></tr></table></figure><ul><li>其中key通常为我们想锁住的<code>key</code>，而<code>value</code>应当为一个随机数，原因在解锁的部分讲</li><li><code>NX</code>代表只有key为空时才会set成功</li><li><code>PX 30000</code> 指过期时间30s</li></ul><p><strong>解锁</strong>  <strong>cad</strong> <strong>（已被公司级别支持）</strong></p><p>cad指<code>compare and delete</code>操作，该操作其实内部执行Redis lua脚本保证cad操作的中不会被其他操作穿插</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if redis.call(&quot;get&quot;,KEYS[1]) == ARGV[1] then </span><br><span class="line">  return redis.call(&quot;del&quot;,KEYS[1])</span><br><span class="line">else </span><br><span class="line">  return 0 </span><br><span class="line">end</span><br></pre></td></tr></table></figure><ul><li>为什么锁还需要设置随机<code>value</code>去compare？因为虽然redis数据库单线程，但是客户端却可能为多线程，试想以下逻辑：</li></ul><p><a href="https://imgtu.com/i/5FANLj" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/10/09/5FANLj.png" alt="5FANLj.png"></a></p><p>若发生以上时序，client1由于处理请求时被阻塞，导致client2获取的锁会被client1解锁，进而导致锁失效。特别是我们应用代码中通常设置的时长较短（1s - 5s），更增加以上情况出现的几率。</p><ul><li>i/o timeout如何做？</li></ul><p>有些人会觉得奇怪为什么上面的这段代码没有做错误校验，正确的做法是不是应该是这样？</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">err := redis.SetNX(key, value, duration)</span><br><span class="line">if err != nil &#123;</span><br><span class="line">    return </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>其实不然，试想<code>SetNX</code> 发生timeout，但其实Redis客户端<strong>收到</strong>该请求，只是respond<strong>回复超时</strong>，该锁会一直被持有直到timeout。</p><p>比较正确的逻辑为：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">err := redis.SetNX(key, randomNum, duration)</span><br><span class="line">defer redis.CAD(key, randomNum)</span><br><span class="line">if err != nil &#123;</span><br><span class="line">    return </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>由randomNum来保证key有且仅会被本客户端线程解锁，即使失败，也不会把其他客户端线程的锁unlock（因为randomNum不一致，compare阶段错误）。该逻辑更体现了设置randomNum为value的必要性。这个随机数应当可以保证在一段时间内只被同一client持有，比较偷懒的方法是使用server id + unix microsecond时间戳，在大部分场景下应该足够了。</p><ul><li>Expire time如何定？</li></ul><p>其实这也是个两难问题，若超时时间过短，则锁不住整个流程处理时间，可能被抢锁；若超时时间过长，则解锁操作<code>redis.CAD(key, randomNum)</code>失败时，会导致key被锁住过长时间。因此需根据实际业务场景而定。</p><h2 id="分布式redis情况如何？"><a href="#分布式redis情况如何？" class="headerlink" title="分布式redis情况如何？"></a>分布式redis情况如何？</h2><p>即使我们在实现上都按照完美的路径，以上实现也是基于单机情况，在分布式场景下，由于redis多机房同步是最终一致的，当主节点不可用时，系统自动切换到副节点（即failover的过程），由于主从非同步，在failover的过程中会导致锁被抢。试想以下时序：</p><ol><li>master拿到锁a</li><li>slave1-master同步开启</li><li>master宕机，failover开始</li><li>slave1-master同步未完成</li><li>slave1被选举为master，锁a丢失，可被抢</li></ol><p>虽然很多人觉得failover的情况很少，以上可以忽略，实际上根据我们现在的使用方法，某个历史活动的并发情况而言，已经出现大量的并发锁被抢引起的错误（日均300+，from QPS大概400左右的并发请求）。</p><h2 id="正确姿势如何做？"><a href="#正确姿势如何做？" class="headerlink" title="正确姿势如何做？"></a>正确姿势如何做？</h2><p>redis针对单机redis锁的问题，提出了redlock的解决方案，但是redlock也有些争议，同时其不太适合公司的redis架构，在这里不多做讨论。</p><p>如果要了解正确的锁姿势，首先要分析分布式锁的场景，一般来说，可以分为两种，为了效率加锁，和为了正确性加锁。</p><ul><li>为效率加锁，即为了一些计算的重复；即使失败，也只是把某些操作多做一遍，例如条件多校验一遍</li><li>为了正确性加锁，即不允许分布式锁失败；若失败可能产生不可回滚的脏数据</li></ul><p>若为了效率加锁，使用单机的redis锁已经足够，单重要的是清楚单机redis锁在分布式场景下的限制。</p><p>若为了正确性加锁，一定要使用强一致性保障（bytekv，zookeeper）等，基架推荐尝试bytekv。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h2 id=&quot;Redis是AP系统&quot;&gt;&lt;a href=&quot;#Redis是AP系统&quot; class=&quot;headerlink&quot; title=&quot;Redis是AP系统&quot;&gt;&lt;/a&gt;Redis是AP系统&lt;/h2&gt;&lt;p&gt;先抛个结论：&lt;/p&gt;
-&lt;p&gt;“redis多机房同步是最终一致的，如有分布式锁
       
     
     </summary>
