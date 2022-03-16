@@ -251,6 +251,157 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/11/23/11-23技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/11/23/11-23技术笔记/" itemprop="url">netty心跳检测</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-23T15:28:24+08:00">
+                2018-11-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="连接假死"><a href="#连接假死" class="headerlink" title="连接假死"></a>连接假死</h2><p>连接假死的现象是：在某一端（服务端或者客户端）看来，底层的 TCP 连接已经断开了，但是应用程序并没有捕获到，因此会认为这条连接仍然是存在的，从 TCP 层面来说，只有收到四次握手数据包或者一个 RST 数据包，连接的状态才表示已断开。</p>
+<h2 id="服务端心跳检测"><a href="#服务端心跳检测" class="headerlink" title="服务端心跳检测"></a>服务端心跳检测</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public class IMIdleStateHandler extends IdleStateHandler &#123;</span><br><span class="line"></span><br><span class="line">    private static final int READER_IDLE_TIME = 15;</span><br><span class="line"></span><br><span class="line">    public IMIdleStateHandler() &#123;</span><br><span class="line">        super(READER_IDLE_TIME, 0, 0, TimeUnit.SECONDS);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected void channelIdle(ChannelHandlerContext ctx, IdleStateEvent evt) &#123;</span><br><span class="line">        System.out.println(READER_IDLE_TIME + &quot;秒内未读到数据，关闭连接&quot;);</span><br><span class="line">        ctx.channel().close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>IMIdleStateHandler 的构造函数，他调用父类 IdleStateHandler 的构造函数，有四个参数，其中第一个表示读空闲时间，指的是在这段时间内如果没有数据读到，就表示连接假死；第二个是写空闲时间，指的是 在这段时间如果没有写数据，就表示连接假死；第三个参数是读写空闲时间，表示在这段时间内如果没有产生数据读或者写，就表示连接假死。写空闲和读写空闲为0，表示我们不关心者两类条件；最后一个参数表示时间单位。在我们的例子中，表示的是：如果 15 秒内没有读到数据，就表示连接假死。</li>
+<li>连接假死之后会回调 channelIdle() 方法，我们这个方法里面打印消息，并手动关闭连接。</li>
+<li>该handler需要插入在pipeline的最前面，是因为如果插入到最后面的话，如果这条连接读到了数据，但是在 inBound 传播的过程中出错了或者数据处理完完毕就不往后传递了（我们的应用程序属于这类），那么最终 IMIdleStateHandler 就不会读到数据，最终导致误判。<h2 id="客户端发送心跳"><a href="#客户端发送心跳" class="headerlink" title="客户端发送心跳"></a>客户端发送心跳</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">public class HeartBeatTimerHandler extends ChannelInboundHandlerAdapter &#123;</span><br><span class="line"></span><br><span class="line">    private static final int HEARTBEAT_INTERVAL = 5;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void channelActive(ChannelHandlerContext ctx) throws Exception &#123;</span><br><span class="line">        scheduleSendHeartBeat(ctx);</span><br><span class="line"></span><br><span class="line">        super.channelActive(ctx);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void scheduleSendHeartBeat(ChannelHandlerContext ctx) &#123;</span><br><span class="line">        ctx.executor().schedule(() -&gt; &#123;</span><br><span class="line"></span><br><span class="line">            if (ctx.channel().isActive()) &#123;</span><br><span class="line">                ctx.writeAndFlush(new HeartBeatRequestPacket());</span><br><span class="line">                scheduleSendHeartBeat(ctx);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;, HEARTBEAT_INTERVAL, TimeUnit.SECONDS);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>ctx.executor() 返回的是当前的 channel 绑定的 NIO 线程，然后，NIO 线程有一个方法，schedule()，类似 jdk 的延时任务机制，可以隔一段时间之后执行一个任务，而我们这边是实现了每隔 5 秒，向服务端发送一个心跳数据包，这个时间段通常要比服务端的空闲检测时间的一半要短一些，我们这里直接定义为空闲检测时间的三分之一，主要是为了排除公网偶发的秒级抖动。</p>
+<h2 id="服务端响应心跳"><a href="#服务端响应心跳" class="headerlink" title="服务端响应心跳"></a>服务端响应心跳</h2><p>服务端无需主动发送心跳，只需向客户端发送，我已经接收到了心跳的消息即可。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/11/21/失望的游戏《倩女幽魂》/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1701,156 +1852,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2018/11/05/11-5技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/11/05/11-5技术笔记/" itemprop="url">数据库建表见闻</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-05T20:02:41+08:00">
-                2018-11-05
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="UNIQUE-KEY"><a href="#UNIQUE-KEY" class="headerlink" title="UNIQUE KEY"></a>UNIQUE KEY</h2><p>UNIQUE KEY不但是字段不重复标识，还建立了索引，key和index是同义词。命名方式uk_字段名。</p>
-<h2 id="VARCHAR"><a href="#VARCHAR" class="headerlink" title="VARCHAR"></a>VARCHAR</h2><p>varchar是变长的，再用两个字节来储存长度，所以varchar并不会怎么浪费空间。</p>
-<h2 id="null"><a href="#null" class="headerlink" title="null"></a>null</h2><p>不要想用null做标识（比如说null就是没激活，有值就是激活了）。因为不能=null。</p>
-<h2 id="enum"><a href="#enum" class="headerlink" title="enum"></a>enum</h2><p>不要把enum的value定义为数字（0,1,2），不如直接用tinyint。<br>由以下原因：</p>
-<ol>
-<li><strong>无效值</strong> 如果将一个无效值插入一个 ENUM (即，一个不在允许值列表中的字符串)，空字符串将作为一个特殊的错误值被插入。事实上，这个字符串有别于一个”普通的”空字符串，因为这个字符串有个数字索引值为 0。如果一个 ENUM 被声明为 NULL，NULL 也是该列的一个合法值，并且该列的缺省值也将为 NULL 。如果一个 ENUM 被声明为 NOT NULL，该列的缺省值将是该列表所允许值的第一个成员。</li>
-<li><strong>序号</strong> 在列说明中列表值所允许的成员值被从 1 开始编号。<strong>意味着你容易和数字搞混</strong> ，空字符串错误值的索引值为 0。这就意味着，你可以使用下面所示的 SELECT 语句找出被赋于无效 ENUM值的记录行。NULL 值的索引值为 NULL。<br>mysql&gt; SELECT * FROM tbl_name WHERE enum_col=0;   </li>
-</ol>
-<h2 id="哈希索引"><a href="#哈希索引" class="headerlink" title="哈希索引"></a>哈希索引</h2><p>InnoDB经常访问的二级索引数据会自动被生成到hash索引里面去，这个功能可以开关。<br>可以想象，哈希索引等值查找更快，无法范围查找，大量数据有哈希冲突问题。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1901,7 +1902,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">272</span>
+                  <span class="site-state-item-count">273</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

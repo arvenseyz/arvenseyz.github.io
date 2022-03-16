@@ -251,6 +251,140 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/11/03/11-3技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/11/03/11-3技术笔记/" itemprop="url">kafka-admin</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-11-03T18:11:45+08:00">
+                2019-11-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>常见的有kafka manager和 eagle</p>
+<p>大致是kafka从0.11.0.0版本开始， 提供了一个工具类 org.apache.kafka.clients.admin.KafkaAdminClient，不仅可以用来管理 broker、配置和 ACL（Access Control List），还可以用来管理主题，KafkaAdminClient 继承了 org.apache.kafka.clients.admin.AdminClient 抽象类，并提供了多种方法。诸如，</p>
+<ul>
+<li>创建主题：CreateTopicsResult createTopics(Collection newTopics)。</li>
+<li>删除主题：DeleteTopicsResult deleteTopics(Collection topics)。</li>
+<li>列出所有可用的主题：ListTopicsResult listTopics()。</li>
+<li>查看主题的信息：DescribeTopicsResult describeTopics(Collection topicNames)。</li>
+<li>查询配置信息：DescribeConfigsResult describeConfigs(Collection resources)。</li>
+<li>修改配置信息：AlterConfigsResult alterConfigs(Map&lt;ConfigResource, Config&gt; configs)。</li>
+<li>增加分区：CreatePartitionsResult createPartitions(Map&lt;String, NewPartitions&gt; newPartitions)。</li>
+</ul>
+<p>把这个做成一个可视化的，即admin的基础。</p>
+<p>edge功能如下</p>
+<p><img src="https://i.loli.net/2019/11/03/mT6oKS9ZWdiUELJ.png" alt="mT6oKS9ZWdiUELJ"></p>
+<p>甚至还可以看消息发送和消费情况</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/10/31/10-30技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1622,186 +1756,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/09/10/9-10技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/09/10/9-10技术笔记/" itemprop="url">shellscript选择与循环</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-10T15:30:22+08:00">
-                2019-09-10
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="条件命令"><a href="#条件命令" class="headerlink" title="条件命令"></a>条件命令</h2><p>在bash脚本编程中，我们经常做一些条件判断， 我们主要用到了三种，test，单中括号，双中括号。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[ $? –eq 0 ]</span><br><span class="line"></span><br><span class="line">[[ $myvar == “mysql” ]]</span><br><span class="line"></span><br><span class="line">test 1 -eq 0</span><br></pre></td></tr></table></figure>
-<h3 id="test"><a href="#test" class="headerlink" title="test"></a>test</h3><p>test是bash内建命令</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ <span class="built_in">test</span> 1 -ne 0 &amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
-<p>ne是不等于的意思，即1不等于0，就输出ok.</p>
-<p>man test可以看见所有参数用法，摘录一点</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">( EXPRESSION )</span><br><span class="line">       EXPRESSION is true</span><br><span class="line"></span><br><span class="line">! EXPRESSION</span><br><span class="line">       EXPRESSION is false</span><br><span class="line"></span><br><span class="line">EXPRESSION1 -a EXPRESSION2</span><br><span class="line">       both EXPRESSION1 and EXPRESSION2 are true</span><br><span class="line"></span><br><span class="line">EXPRESSION1 -o EXPRESSION2</span><br><span class="line">       either EXPRESSION1 or EXPRESSION2 is true</span><br><span class="line">       </span><br><span class="line">       STRING1 = STRING2</span><br><span class="line">       the strings are equal</span><br><span class="line"></span><br><span class="line">STRING1 != STRING2</span><br><span class="line">       the strings are not equal</span><br><span class="line"></span><br><span class="line">INTEGER1 -eq INTEGER2</span><br><span class="line">       INTEGER1 is equal to INTEGER2</span><br><span class="line"></span><br><span class="line">INTEGER1 -ge INTEGER2</span><br><span class="line">       INTEGER1 is greater than or equal to INTEGER2</span><br><span class="line"></span><br><span class="line">INTEGER1 -gt INTEGER2</span><br><span class="line">       INTEGER1 is greater than INTEGER2</span><br></pre></td></tr></table></figure>
-<h3 id="单中括号"><a href="#单中括号" class="headerlink" title="单中括号"></a>单中括号</h3><p>实际上[ 这个是个内建命令，可以执行which [查看。</p>
-<p>这样就可以理解奇怪的规定。即然是命令，那么命令与后面的参数就得用空格隔开，使用[时后面需要有一个空格的原因。所以[1=2]这样的写法将会报错。单中括号与test命令是等价的。</p>
-<p>这里有一个陷阱，既然 <code>都是以参数的形式传递给</code>test` 命令的， 那么如果参数解析的结果是空或者带空格，那么就会因为缺少参数或者参数数量不丢而崩掉。</p>
-<p>所以最好参数用双引号包起来。</p>
-<h3 id="双中括号"><a href="#双中括号" class="headerlink" title="双中括号"></a>双中括号</h3><p>双中括号不是命令，而是shell关键字。因为不是命令，因此不受制与 Shell 的 <strong>参数展开</strong>，比如 不需要用引号包裹所有变量，也支持类似 <code>&amp;&amp;</code>，<code>||</code> 这样的逻辑操作而不需要用类似 <code>-a</code>，<code>-o</code> 这样的参数。</p>
-<h3 id="双小括号"><a href="#双小括号" class="headerlink" title="双小括号"></a>双小括号</h3><p>算术展开的语法是  <code>$((expression))</code>，这是从其他编程语言来的人最顺手的算术操作方式。与  <code>test</code>  命令相比，</p>
-<ul>
-<li>C 风格的算术操作语法</li>
-<li>Shell 会把  <code>expression</code>  内容的每一项都当做就像被引号包裹了一样。</li>
-<li>会依次进行<strong>参数展开</strong>、<strong>命令替换</strong>，和  <strong>引号移除</strong>。</li>
-</ul>
-<p>因此可以不需要像  <code>test</code>  命令那样用引号包裹所有变量，也不需要注意空格，也可以写 C 风格的操作。</p>
-<p>然后，对于C，1是ture，0是false。bah相反。</p>
-<h3 id="逻辑运算符"><a href="#逻辑运算符" class="headerlink" title="逻辑运算符"></a>逻辑运算符</h3><p>因为test和[]是命令，所以逻辑运算符是以参数的形式体现。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [ 1 -ne 0 ]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br><span class="line">yangzhuo@n224-019-077:~/file$ [ 1 -ne 0 || 1 -gt 0 ]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">-bash: [: missing `]<span class="string">'</span></span><br><span class="line"><span class="string">-bash: 1: command not found</span></span><br></pre></td></tr></table></figure>
-<p>只能这样</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [ 1 -ne 0 ] || [ 1 -gt 0 ]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
-<p>当然[[]]就不受限制</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [[ 1 -ne 0  ||  1 -gt 0 ]]&amp;&amp;echo ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
-<p>甚至</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yangzhuo@n224-019-077:~/file$ [[ 1 != 0  ||  1 &gt; 0 ]]&amp;&amp;<span class="built_in">echo</span> ok</span><br><span class="line">ok</span><br></pre></td></tr></table></figure>
-<h2 id="选择语句"><a href="#选择语句" class="headerlink" title="选择语句"></a>选择语句</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">read</span> -p <span class="string">"num?"</span> num</span><br><span class="line"><span class="keyword">if</span> [ <span class="variable">$&#123;num&#125;</span> -gt 10 ]; <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"big"</span></span><br><span class="line"><span class="keyword">elif</span> [ <span class="variable">$&#123;num&#125;</span> - eq 10]; <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"equal"</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"small"</span></span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
-<h2 id="循环"><a href="#循环" class="headerlink" title="循环"></a>循环</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> [ <span class="string">"<span class="variable">$&#123;yn&#125;</span>"</span> != <span class="string">"yes"</span> -a <span class="string">"<span class="variable">$&#123;yn&#125;</span>"</span> != <span class="string">"YES"</span> ]</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line"><span class="built_in">read</span> -p <span class="string">"Please input yes/YES to stop this program: "</span> yn </span><br><span class="line"><span class="keyword">done</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"OK! you input the correct answer."</span></span><br></pre></td></tr></table></figure>
-<p>while do done结构，也有until do done，直到。。。其实没啥用</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">s=0 <span class="comment"># 这是加总的数值变量</span></span><br><span class="line">i=0 <span class="comment"># 这是累计的数值，亦即是 1, 2, 3....</span></span><br><span class="line"><span class="keyword">while</span> [ <span class="string">"<span class="variable">$&#123;i&#125;</span>"</span> != <span class="string">"100"</span> ]</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line">i=$（（<span class="variable">$i</span>+1）） <span class="comment"># 每次 i 都会增加 1</span></span><br><span class="line">s=$（（<span class="variable">$s</span>+<span class="variable">$i</span>）） <span class="comment"># 每次都会加总一次！</span></span><br><span class="line"><span class="keyword">done</span> <span class="built_in">echo</span> <span class="string">"The result of '1+2+3+...+100' is ==&gt; <span class="variable">$s</span>"</span></span><br></pre></td></tr></table></figure>
-<p>这是while的一般用法。</p>
-<p>for循环支持for in 和三段式</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">read</span> -p <span class="string">"Please input a number, I will count for 1+2+...+your_input: "</span> nu</span><br><span class="line">s=0</span><br><span class="line"><span class="keyword">for</span> （（ i=1; i&lt;=<span class="variable">$&#123;nu&#125;</span>; i=i+1 ））</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line">s=$（（<span class="variable">$&#123;s&#125;</span>+<span class="variable">$&#123;i&#125;</span>））</span><br><span class="line"><span class="keyword">done</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"The result of '1+2+3+...+<span class="variable">$&#123;nu&#125;</span>' is ==&gt; <span class="variable">$&#123;s&#125;</span>"</span></span><br></pre></td></tr></table></figure>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> animal <span class="keyword">in</span> dog cat elephant</span><br><span class="line"><span class="keyword">do</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"There are <span class="variable">$&#123;animal&#125;</span>s.... "</span> <span class="keyword">done</span></span><br></pre></td></tr></table></figure>
-<p>即in后面接空格隔开的，或者seq联系数字.</p>
-<p>也可以直接使用 bash 的内置机制来处理！可以使用 {1..100} 来取代 $（seq 1 100） 。 大括号内的前面/后面用两个字符，中间以两个小数点来代表连续出现的意思。例如要持续输出 a, b, c…g 的话， 就可以使用“ echo {a..g} ”这样的表 示方式！</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> sitenu <span class="keyword">in</span> $（seq 1 100） <span class="comment"># seq 为 sequence（连续） 的缩写之意</span></span><br><span class="line"><span class="keyword">do</span></span><br><span class="line"><span class="comment"># 下面的程序在取得 ping 的回传值是正确的还是失败的！</span></span><br><span class="line">ping -c 1 -w 1 <span class="variable">$&#123;network&#125;</span>.<span class="variable">$&#123;sitenu&#125;</span> &amp;&gt; /dev/null &amp;&amp; result=0 || result=1</span><br><span class="line"><span class="comment"># 开始显示结果是正确的启动 （UP） 还是错误的没有连通 （DOWN）</span></span><br><span class="line">    <span class="keyword">if</span> [ <span class="string">"<span class="variable">$&#123;result&#125;</span>"</span> == 0 ]; <span class="keyword">then</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"Server <span class="variable">$&#123;network&#125;</span>.<span class="variable">$&#123;sitenu&#125;</span> is UP."</span> </span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">"Server <span class="variable">$&#123;network&#125;</span>.<span class="variable">$&#123;sitenu&#125;</span> is DOWN."</span> </span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line"><span class="keyword">done</span></span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1852,7 +1806,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">272</span>
+                  <span class="site-state-item-count">273</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
