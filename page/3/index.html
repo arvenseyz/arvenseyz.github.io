@@ -251,6 +251,185 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/10/25/10-25技术笔记-2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/10/25/10-25技术笔记-2/" itemprop="url">图数据库基础语法</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-10-25T18:28:27+08:00">
+                2021-10-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="图数据库优势"><a href="#图数据库优势" class="headerlink" title="图数据库优势"></a>图数据库优势</h2><p><a href="https://imgtu.com/i/54fgPS" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/10/25/54fgPS.png" alt="54fgPS.png"></a></p>
+<ul>
+<li><p>关系复杂的模型用图的形式表达容易</p>
+</li>
+<li><p>关系查询性能可控（<strong><em>我的好友所在的公司有多少名员工？</em></strong>）</p>
+</li>
+</ul>
+<h2 id="图数据库基本语法"><a href="#图数据库基本语法" class="headerlink" title="图数据库基本语法"></a>图数据库基本语法</h2><h3 id="基本定义"><a href="#基本定义" class="headerlink" title="基本定义"></a>基本定义</h3><ul>
+<li><p>由点(Vertex)、边(Edge)、属性(Property)构成；</p>
+</li>
+<li><p>点(Vertex)是实体、概念对象</p>
+</li>
+<li><p>&lt;type(uint32_t), ID(uint64_t&gt; 二元组唯一标记一个点</p>
+</li>
+<li><p>type标记了一类点的集合，可以把type理解为table，不同type，是不同table</p>
+</li>
+<li><p>属性：点上可以有多种属性，属性可以是常见基本类型，</p>
+</li>
+<li><p>schema: 同一种type的点，其属性key以及属性类型必须一致</p>
+</li>
+<li><p>边(Edge)是点之间的关系、联系</p>
+</li>
+<li><p>边有起点+终点，边上类型，type（string）；和点一样，同样的type类型的边必须有同样的属性属性：和点上属性一样，支持多种基本类型</p>
+</li>
+</ul>
+<h3 id="germlin语法"><a href="#germlin语法" class="headerlink" title="germlin语法"></a>germlin语法</h3><p>gremlin语言是图遍历（traverse）式语言，简单起见，可以理解为，先在图上定位到一个点，然后从这个点开始做图上的深度/宽度遍历，在图上每一步遍历用step来描述，不同的step有不同的功能，用step的组合来实现图上游走</p>
+<h3 id="创建一个天龙八部人物图"><a href="#创建一个天龙八部人物图" class="headerlink" title="创建一个天龙八部人物图"></a>创建一个天龙八部人物图</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1001).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;段正淳&apos;).property(&apos;power&apos;, 60).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1002).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;段延庆&apos;).property(&apos;power&apos;, 75).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1003).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;王语嫣&apos;).property(&apos;power&apos;, 2).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1004).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;阿朱&apos;).property(&apos;power&apos;, 5).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1005).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;段誉&apos;).property(&apos;power&apos;, 80).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1006).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;叶二娘&apos;).property(&apos;power&apos;, 40).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1007).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;乔峰&apos;).property(&apos;power&apos;, 90).toList()</span><br><span class="line">Gremlin: g.addV().property(&apos;id&apos;, 1008).property(&apos;type&apos;, 5).property(&apos;name&apos;, &apos;虚竹&apos;).property(&apos;power&apos;, 85).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1001, 5).to(1002, 5).property(&apos;relation&apos;, &apos;兄弟&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1001, 5).to(1003, 5).property(&apos;relation&apos;, &apos;父女&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1001, 5).to(1004, 5).property(&apos;relation&apos;, &apos;父女&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1002, 5).to(1005, 5).property(&apos;relation&apos;, &apos;父子&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1002, 5).to(1006, 5).property(&apos;relation&apos;, &apos;义妹&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1003, 5).to(1005, 5).property(&apos;relation&apos;, &apos;夫妻&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1004, 5).to(1007, 5).property(&apos;relation&apos;, &apos;夫妻&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1005, 5).to(1008, 5).property(&apos;relation&apos;, &apos;结拜兄弟&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1006, 5).to(1008, 5).property(&apos;relation&apos;, &apos;母子&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1007, 5).to(1005, 5).property(&apos;relation&apos;, &apos;结拜兄弟&apos;).toList()</span><br><span class="line">Gremlin: g.addE(&apos;relatives&apos;).from(1008, 5).to(1007, 5).property(&apos;relation&apos;, &apos;结拜兄弟&apos;).toList()</span><br></pre></td></tr></table></figure>
+<h3 id="查询语法"><a href="#查询语法" class="headerlink" title="查询语法"></a>查询语法</h3><p>查询点类型是5，id是1005的点，以及它的属性（查询属性时，指定属性名性能更好，原因估计是下文的点切割）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">g.V(vertex(1001,5)).toList()</span><br><span class="line">Result: [Vertex&#123;Id:1001, Type:5&#125;]</span><br><span class="line">g.V(vertex(1001,5)).properties()</span><br><span class="line">Result: [Property&#123;Key:name, Value:&quot;段正淳&quot;&#125;, Property&#123;Key:power, Value:60&#125;]</span><br></pre></td></tr></table></figure>
+<h3 id="遍历"><a href="#遍历" class="headerlink" title="遍历"></a>遍历</h3><p>如上文，操作是定位一个点，然后再图上游走</p>
+<p><a href="https://imgtu.com/i/5If0bR" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/10/26/5If0bR.png" alt="5If0bR.png"></a></p>
+<p>定位一个点后，找到它的出边，即段正淳的关系</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">» g.V(vertex(1001,5)).outE(&quot;relatives&quot;)</span><br><span class="line">Result: [Edge&#123;OutV:Vertex&#123;Id:1001, Type:5&#125;, InV:Vertex&#123;Id:1004, Type:5&#125;, Type:relatives&#125;, Edge&#123;OutV:Vertex&#123;Id:1001, Type:5&#125;, InV:Vertex&#123;Id:1003, Type:5&#125;, Type:relatives&#125;, Edge&#123;OutV:Vertex&#123;Id:1001, Type:5&#125;, InV:Vertex&#123;Id:1002, Type:5&#125;, Type:relatives&#125;]</span><br></pre></td></tr></table></figure>
+<p>找到一个点某种类型过滤属性的边，即段正淳的兄弟关系</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">» g.V(vertex(1001,5)).outE(&quot;relatives&quot;).has(&apos;relation&apos;,&apos;兄弟&apos;).toList()</span><br><span class="line">Result: [Edge&#123;OutV:Vertex&#123;Id:1001, Type:5&#125;, InV:Vertex&#123;Id:1002, Type:5&#125;, Type:relatives&#125;]</span><br></pre></td></tr></table></figure>
+<p>进一步，找到段正淳的兄弟</p>
+<p>遍历法，找到兄弟边，再找到兄弟边链接的点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">» g.V(vertex(1001,5)).outE(&quot;relatives&quot;).has(&apos;relation&apos;,&apos;兄弟&apos;).inV().toList()</span><br><span class="line">Result: [Vertex&#123;Id:1002, Type:5&#125;]</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/10/11/10-11技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1718,159 +1897,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/14/9-14技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/09/14/9-14技术笔记/" itemprop="url">ES的search after</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-09-14T14:29:27+08:00">
-                2021-09-14
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="search-after"><a href="#search-after" class="headerlink" title="search after"></a>search after</h1><p>es搜索带sort字段时，也会返回，sort对应的值</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?pretty</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span>,</span><br><span class="line">  <span class="attr">"sort"</span>: &#123;</span><br><span class="line">    <span class="attr">"date"</span>: <span class="string">"asc"</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">"hits" : [</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">"_index"</span> : <span class="string">"yz_test"</span>,</span><br><span class="line">    <span class="attr">"_type"</span> : <span class="string">"_doc"</span>,</span><br><span class="line">    <span class="attr">"_id"</span> : <span class="string">"1"</span>,</span><br><span class="line">    <span class="attr">"_score"</span> : <span class="literal">null</span>,</span><br><span class="line">    <span class="attr">"_source"</span> : &#123;</span><br><span class="line">      <span class="attr">"title"</span> : <span class="string">"Some short title"</span>,</span><br><span class="line">      <span class="attr">"date"</span> : <span class="string">"2015-01-01"</span>,</span><br><span class="line">      <span class="attr">"content"</span> : <span class="string">"A very long content field..."</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"sort"</span> : [</span><br><span class="line">      <span class="number">1420070400000</span></span><br><span class="line">    ]</span><br><span class="line">  &#125;,</span><br></pre></td></tr></table></figure>
-<p>这时把sort的值，放到search after里，可以继续往下搜</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">GET yz_alias/_search?pretty</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"size"</span>: <span class="number">10</span>,</span><br><span class="line">  <span class="attr">"sort"</span>: &#123;</span><br><span class="line">    <span class="attr">"date"</span>: <span class="string">"asc"</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="attr">"search_after"</span>: [</span><br><span class="line">    <span class="number">1420070400000</span></span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">"hits" : [</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">"_index"</span> : <span class="string">"yz_test2"</span>,</span><br><span class="line">    <span class="attr">"_type"</span> : <span class="string">"_doc"</span>,</span><br><span class="line">    <span class="attr">"_id"</span> : <span class="string">"3"</span>,</span><br><span class="line">    <span class="attr">"_score"</span> : <span class="literal">null</span>,</span><br><span class="line">    <span class="attr">"_source"</span> : &#123;</span><br><span class="line">      <span class="attr">"title"</span> : <span class="string">"Some short title2"</span>,</span><br><span class="line">      <span class="attr">"date"</span> : <span class="string">"2016-01-01"</span>,</span><br><span class="line">      <span class="attr">"content"</span> : <span class="string">"A very long content field..."</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"sort"</span> : [</span><br><span class="line">      <span class="number">1451606400000</span></span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
-<p>search after的好处是，不用把前n页的数据全部拿到，但是searchAfter也是全部搜索了一遍，只不过在collect过程中添加了一个上一页最后doc和当前返回的doc对比，这个过程时间复杂度为o(n)，也就是说，相比于search，并不能优化速度，时间复杂度还是o(n)，但是至少不会oom，可以搜出来。</p>
-<p>举个例子。</p>
-<p>一共10个分片，每个分片10条数据。现在需要第91到100条。</p>
-<p>from+size的方式，必须的每个分片都吐出所有数据，然后协调者把这100条排序。</p>
-<p>因为每个分片不知道其他分片数据的情况。</p>
-<p>而search after的数据，只需要每个分片给出大于第90数据的数据即可。但是这个分片依然要扫描所有数据，才知道哪些数据大于90的。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1921,7 +1947,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">273</span>
+                  <span class="site-state-item-count">274</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
