@@ -251,6 +251,157 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/05/07/5-7技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/05/07/5-7技术笔记/" itemprop="url">threadLocal原理和内存泄漏</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-05-07T14:47:23+08:00">
+                2019-05-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="threadLocal原理"><a href="#threadLocal原理" class="headerlink" title="threadLocal原理"></a>threadLocal原理</h1><ol>
+<li><p>Thread类中有一个ThreadLocalMap，就是ThreadLocal的Map。这个Map是自己实现的，其实就是Entry的数组，而Entry是弱引用，键是ThreadLocal，值就是其中存的值。初始容量16，数量到达2/3扩容。</p>
+<p>可以想像到，每个线程对应很多ThreadLocal，把它们都放在这个ThreadLocalMap中，是Thread的成员变量。</p>
+</li>
+<li><p>get()方法先拿到当前线程，然后拿到当前线程的成员变量ThreadLocalMap，再从Map中，通过哈希运算，找到对应的key。</p>
+</li>
+<li><p>set()方法，没有map，先建立map，有map，就放入map中，位置是哈希法，哈希冲突怎么办，找数组中的下一个位置。</p>
+</li>
+</ol>
+<h1 id="threadLocal内存泄漏"><a href="#threadLocal内存泄漏" class="headerlink" title="threadLocal内存泄漏"></a>threadLocal内存泄漏</h1><pre><code>ThreadLocal 本身并不存储值，它只是作为一个 key保存到ThreadLocalMap中，但是这里要注意的是它作为一个key用的是弱引用。 因为没有强引用链，弱引用在GC的时候可能会被回收。这样就会在ThreadLocalMap中存在一些key为null的键值对（Entry）。 因为key变成null了，我们是没法访问这些Entry的，但是这些Entry本身是不会被清除的，为什么呢？因为存在一条强引用链。即线程本身-&gt;ThreadLocalMap-&gt;Entry 也就是说，恰恰我们在使用线程池的时候，线程使用完了是会放回到线程池循环使用的。由于ThreadLocalMap的生命周期和线程一样长，如果没有手动删除对应key就会导致这块内存即不会回收也无法访问，也就是内存泄漏。 其实，ThreadLocalMap的设计中已经考虑到这种情况，也加上了一些防护措施：在ThreadLocal的get(),set(),remove()的时候都会清除线程ThreadLocalMap里所有key为null的value。但是这些举动不能保证内存就一定会回收,因为可能这条线程被放回到线程池里后再也没有使用，或者使用的时候没有调用其get(),set(),remove()方法。
+</code></pre>
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/05/06/5-6技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1772,163 +1923,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2019/04/11/4-11技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/04/11/4-11技术笔记/" itemprop="url">锁原理</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-04-11T14:48:47+08:00">
-                2019-04-11
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>Java对象头里有个Mark Word，记录了锁的状态。</p>
-<p>锁是以升级的原因进行的，</p>
-<h2 id="偏向锁"><a href="#偏向锁" class="headerlink" title="偏向锁"></a>偏向锁</h2><p>偏向锁的意思是，自己锁了，自己再进来，没有锁。</p>
-<p>当第一个线程尝试进入同步块时，发现Mark Word中线程ID为0，则会使用CAS将自己的线程ID设置到Mark Word中，并且，在当前线程栈中由高到低顺序找到可用的Lock Record，将线程ID记录下。完成这些，此线程就获取了锁对象的偏向锁。</p>
-<p>[即：锁的对象头和线程栈中的Lock Record记录加锁的线程ID。]</p>
-<p>当该偏向线程再次进入同步块时，发现锁对象偏向的就是当前线程，会往当前线程的栈中添加一条Displaced Mark Word为空的Lock Record中，用来统计重入的次数，然后继续执行同步块代码，因为线程栈是私有的，不需要CAS指令进行操作，所以在偏向锁模式下，同一个线程，只会执行一个CAS，之后获取释放锁只需要对Lock Record做操作，性能损耗基本可以忽略。</p>
-<h2 id="无锁不可偏向状态—-gt-轻量级锁状态"><a href="#无锁不可偏向状态—-gt-轻量级锁状态" class="headerlink" title="无锁不可偏向状态—&gt;轻量级锁状态"></a>无锁不可偏向状态—&gt;轻量级锁状态</h2><p>当另外一个线程试图进入同步块时，发现Mark Word中线程ID与自己不相符，这个时候就会引发偏向锁的撤销，变成无锁不可偏向状态或轻量级锁状态.</p>
-<p>偏向锁就是只有一个线程进行操作，给它开个捷径。那么有多个线程进行竞争时：</p>
-<p>当锁对象变成无锁不可偏向状态时，多个线程运行到同步块以后，会检查锁对象状态值标志是否加锁，如果没有锁，就把锁对象的Mark Word信息拷贝存储到当前线程栈桢中Lock Record里，然后通过CAS尝试把对象的Mark Word的值改变成一个指向自己线程的指针。如果成功，则当前线程获得锁对象的轻量级锁，其他线程的CAS就会失败，因为锁对象的Mark Word已经变成一个新的指针了，必须等待线程释放锁，此时其他线程则通过自旋来竞争锁。当获取锁的线程执行完毕释放锁的时候，会将Lock Record里面之前拷贝的值还原到锁对象的Mark Word中。</p>
-<p>[即：多个线程先通过CAS来竞争锁，某一个竞争到后，进入轻量级锁，其他线程自旋等待。]</p>
-<h2 id="轻量级锁状态—-gt-重量级锁状态"><a href="#轻量级锁状态—-gt-重量级锁状态" class="headerlink" title="轻量级锁状态—&gt;重量级锁状态"></a>轻量级锁状态—&gt;重量级锁状态</h2><p>当自旋次数超过JVM预期上限，会影响性能，所以竞争的线程就会把锁对象的Mark Word指向重锁，所谓的重锁，实际上就是一个堆上的monitor对象，即，重量级锁的状态下，对象的Mark Word为指向一个堆中monitor对象的指针。<br>然后所有的竞争线程放弃自旋，逐个插入到monitor对象里的一个队列尾部，进入阻塞状态。<br>当成功获取轻量级锁的线程执行完毕，尝试通过CAS释放锁时，因为Mark Word已经指向重锁，导致轻量级锁释放失败，这时线程就会知道锁已经升级为重量级锁， 它不仅要释放当前锁，还要唤醒其他阻塞的线程来重新竞争锁。</p>
-<h2 id="重量级锁底层"><a href="#重量级锁底层" class="headerlink" title="重量级锁底层"></a>重量级锁底层</h2><h3 id="monitor"><a href="#monitor" class="headerlink" title="monitor"></a>monitor</h3><p>每一个JAVA对象都会与一个监视器monitor关联，我们可以把它理解成为一把锁，当一个线程想要执行一段被synchronized圈起来的同步方法或者代码块时，该线程得先获取到synchronized修饰的对象对应的monitor。</p>
-<p>我们的java代码里不会显示地去创造这么一个monitor对象，我们也无需创建，事实上可以这么理解：我们是通过synchronized修饰符告诉JVM需要为我们的某个对象创建关联的monitor对象。</p>
-<p>在hotSpot虚拟机中，monitor是由ObjectMonitor实现的。其源码是用c++来实现的，位于hotSpot虚拟机源码ObjectMonitor.hpp文件中。ObjectMonitor主要数据结构如下：</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">ObjectMonitor() &#123;</span><br><span class="line">    _header       = <span class="literal">NULL</span>;</span><br><span class="line">    _count        = <span class="number">0</span>; <span class="comment">//monitor进入数</span></span><br><span class="line">    _waiters      = <span class="number">0</span>,</span><br><span class="line">    _recursions   = <span class="number">0</span>;  <span class="comment">//线程的重入次数</span></span><br><span class="line">    _object       = <span class="literal">NULL</span>;</span><br><span class="line">    _owner        = <span class="literal">NULL</span>; <span class="comment">//标识拥有该monitor的线程</span></span><br><span class="line">    _WaitSet      = <span class="literal">NULL</span>; <span class="comment">//等待线程组成的双向循环链表，_WaitSet是第一个节点</span></span><br><span class="line">    _WaitSetLock  = <span class="number">0</span> ;</span><br><span class="line">    _Responsible  = <span class="literal">NULL</span> ;</span><br><span class="line">    _succ         = <span class="literal">NULL</span> ;</span><br><span class="line">    _cxq          = <span class="literal">NULL</span> ; <span class="comment">//多线程竞争锁进入时的单项链表</span></span><br><span class="line">    FreeNext      = <span class="literal">NULL</span> ;</span><br><span class="line">    _EntryList    = <span class="literal">NULL</span> ; <span class="comment">//处于等待锁block状态的线程，会被加入到该列表</span></span><br><span class="line">    _SpinFreq     = <span class="number">0</span> ;</span><br><span class="line">    _SpinClock    = <span class="number">0</span> ;</span><br><span class="line">    OwnerIsThread = <span class="number">0</span> ;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-<p>① owner：初始时为NULL。当有线程占有该monitor时，owner标记为该线程的唯一标识。当线程释放monitor时，owner又恢复为NULL。owner是一个临界资源，JVM是通过CAS操作来保证其线程安全的。<br>② _cxq：竞争队列，所有请求锁的线程首先会被放在这个队列中（单向链接）。_cxq是一个临界资源，JVM通过CAS原子指令来修改_cxq队列。修改前_cxq的旧值填入了node的next字段，_cxq指向新值（新线程）。因此_cxq是一个后进先出的stack（栈）。<br>③ _EntryList：_cxq队列中有资格成为候选资源的线程会被移动到该队列中<br>④ _WaitSet：因为调用wait方法而被阻塞的线程会被放在该队列中</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1979,7 +1973,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">274</span>
+                  <span class="site-state-item-count">275</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

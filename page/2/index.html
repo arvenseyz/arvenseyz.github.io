@@ -251,6 +251,304 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/01/3-1技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2022/03/01/3-1技术笔记-1/" itemprop="url">12306跨站卖票设计</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-03-01T11:14:24+08:00">
+                2022-03-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>我们以北京到西安这趟高铁为例，比如我的路线就是从北京到西安，车上如果只剩最后一张票了，那么如果有其他人，在北京到西安这条路线之间买任何一站，那么我都是买不了票的，换句话说，对于单个座位来说，必须是起点到目的地之间的所有站，都没有人买的话，那么才能被算是有票状态。</p>
+<p>所以我们可以尝试用bitmap结合上位操作来实现这种场景，以上述北京到西安为例，我们把问题简化</p>
+<ul>
+<li><p>比如一个火车上只有4个座位</p>
+</li>
+<li><p>北京到西安，一共是4站，其实是三个区间的，分别为北京-&gt;石家庄，石家庄-&gt;郑州，郑州-&gt;西安</p>
+</li>
+</ul>
+<h4 id="首先我们给每个区间构建一个空位图-0为有票，1为无票"><a href="#首先我们给每个区间构建一个空位图-0为有票，1为无票" class="headerlink" title="首先我们给每个区间构建一个空位图(0为有票，1为无票)"></a>首先我们给每个区间构建一个空位图(0为有票，1为无票)</h4><table>
+<thead>
+<tr>
+<th>区间</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>北京-深圳</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>深圳-郑州</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>郑州-西安</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<h4 id="接下来，比如有人买了一张从北京到西安的票"><a href="#接下来，比如有人买了一张从北京到西安的票" class="headerlink" title="接下来，比如有人买了一张从北京到西安的票"></a>接下来，比如有人买了一张从北京到西安的票</h4><p>买票这个动作，比如被分配到的座位是编号为1的座位，那么我们直接把北京到西安的所有站，1号座位全部设置为1</p>
+<table>
+<thead>
+<tr>
+<th>区间</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>北京-石家庄</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>石家庄-郑州</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>郑州-西安</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<h4 id="接下来又有人买了一张从石家庄到西安的票"><a href="#接下来又有人买了一张从石家庄到西安的票" class="headerlink" title="接下来又有人买了一张从石家庄到西安的票"></a>接下来又有人买了一张从石家庄到西安的票</h4><p>比如这次分配的是座位2，那么我们把石家庄到西安的所有票全部设置为1就行了，如下图</p>
+<table>
+<thead>
+<tr>
+<th>区间</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>北京-石家庄</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>石家庄-郑州</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>郑州-西安</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<h4 id="如何知道还剩几张票？"><a href="#如何知道还剩几张票？" class="headerlink" title="如何知道还剩几张票？"></a>如何知道还剩几张票？</h4><p>其实解决这个问题很简单，我们直接把上述位图做一个或操作就可以了</p>
+<table>
+<thead>
+<tr>
+<th>区间</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>北京-石家庄</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>石家庄-郑州</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>郑州-西安</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>或操作结果</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>或操作结果有几个0，则说明还剩几张票。</p>
+<p>其实解决这个问题主要在于位图的构建，因为火车票对于某一个座位来说，只要起点到终点中间某一个区间被占用了(置为1)，那么整个座位都是无效的这个特点，很容易想到用或操作的结果来判断买票结果，我们这里只用了4位是为了方便说明问题，实际中应该是火车上有多少座位，位图的长度就应该是多少</p>
+<p>作者：程序员小饭<br>链接：<a href="https://juejin.cn/post/7012507519595577375" target="_blank" rel="noopener">https://juejin.cn/post/7012507519595577375</a><br>来源：稀土掘金<br>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/02/28/2-28技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1728,163 +2026,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/11/30/11-30技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/11/30/11-30技术笔记-1/" itemprop="url">执行计划的extra</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-11-30T15:57:33+08:00">
-                2021-11-30
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="Using-fileSort"><a href="#Using-fileSort" class="headerlink" title="Using fileSort"></a>Using fileSort</h2><p>使用文件排序，是指拿到这些行后再排序，具体在哪排，内存还是磁盘，取决于大小，所有列还是排序列+id再回表取决于代价</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> t1 <span class="keyword">order</span> <span class="keyword">by</span> create_time</span><br></pre></td></tr></table></figure>
-<h2 id="Using-temporary"><a href="#Using-temporary" class="headerlink" title="Using temporary"></a>Using temporary</h2><p>需要临时表来储存结构，比如对没有索引的列来group by</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> t1 <span class="keyword">group</span> <span class="keyword">by</span> create_time</span><br></pre></td></tr></table></figure>
-<h2 id="Using-index"><a href="#Using-index" class="headerlink" title="Using index"></a>Using index</h2><p>使用覆盖索引，即索引树上即可拿到字段，无需回表</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> a <span class="keyword">from</span> t1 <span class="keyword">where</span> a =<span class="number">11</span></span><br></pre></td></tr></table></figure>
-<h2 id="Using-where"><a href="#Using-where" class="headerlink" title="Using where"></a>Using where</h2><p>意味着全表扫描或者在查找使用索引的情况下，但是还有查询条件不在索引字段当中.</p>
-<p>Using where: 仅仅表示MySQL服务器在收到存储引擎返回的记录后进行“后过滤”。</p>
-<p><strong>1： 查询条件中的相关列，不是索引字段， 全表扫描后，通过Using where过滤获取所需的数据。</strong></p>
-<p>通俗来说，因为字段D没有索引，所以必须全表扫描，然后在服务器层使用WHERE过滤数据。</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">COUNT</span>(*) <span class="keyword">FROM</span> <span class="keyword">TEST</span> <span class="keyword">WHERE</span> D = <span class="string">'2000-01-01'</span>;</span><br></pre></td></tr></table></figure>
-<p>2： <strong>（type=ref)非唯一性索引扫描，但是由于索引未覆盖所有查询条件(字段d并未包含在聚集索引</strong>PRIMARY中**)，在存储引擎返回记录后，仍然需要过滤数据。</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">COUNT</span>(i1) <span class="keyword">FROM</span> <span class="keyword">TEST</span> <span class="keyword">WHERE</span> i1 = <span class="number">3</span> <span class="keyword">AND</span> d &gt; <span class="number">321</span></span><br></pre></td></tr></table></figure>
-<h2 id="Using-index-condition"><a href="#Using-index-condition" class="headerlink" title="Using index condition"></a>Using index condition</h2><p>索引下推。存储引擎在访问索引的时候检查筛选字段在索引中的WHERE条件</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> t1 <span class="keyword">where</span> age&gt;<span class="number">9</span> <span class="keyword">and</span> <span class="keyword">name</span> <span class="keyword">like</span> <span class="string">'%张'</span></span><br></pre></td></tr></table></figure>
-<p>即使建立了age和name的联合索引，该查询也只会走age，但是在走age的时候，它可以把name条件带上，顺便就筛了。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1935,7 +2076,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">274</span>
+                  <span class="site-state-item-count">275</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
