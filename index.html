@@ -251,6 +251,175 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/04/06/4-6技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2022/04/06/4-6技术笔记/" itemprop="url">rocketMq和kafka比较</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-04-06T14:37:57+08:00">
+                2022-04-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>rocketMq定位是在线，kafka是离线，这个怎么理解。</p>
+<p>这里的理解是Kafka吞吐高，rocketMq可用性高。</p>
+<h2 id="存储区别"><a href="#存储区别" class="headerlink" title="存储区别"></a>存储区别</h2><p>Kafka 以 Topic 作为文件存储的基本单元，即每个 Topic 有其对应的数据文件和索引文件。消息直接存储在partition中，对单topic为顺序写。</p>
+<p>这样预期结果是，磁盘顺序写+顺序读，性能很好。</p>
+<p>但问题是，是分topic的，如果topic很多，要不停的切topic，顺序读写就被破坏了，降低了性能。</p>
+<p>存储上不分topic，所以这些topic的内容写在一块的。即CommitLog。这样写是顺序写，但是读，由于各topic的内容在一块，只能索引读，即随即读。</p>
+<h2 id="同步刷盘"><a href="#同步刷盘" class="headerlink" title="同步刷盘"></a>同步刷盘</h2><p>指的是数据从pageCache到磁盘的时机</p>
+<p>rocketMq支持同步刷盘，同步刷盘其实并不是每一次请求都刷盘，想象下，qps很大时，这样问题很大，</p>
+<p>刷盘服务有两个队列，requestsWrite : 写队列，主要用于向该线程添加刷盘任务 requestsRead : 读队列，主要用于执行特定的刷盘任务，这是是GroupCommitService 设计的一个亮点，把读写分离，每处理完requestsRead中的任务，就交换这两个队列。</p>
+<p>进行同步刷盘的服务为 GroupCommitService，当请求被提交给GroupCommitService后，GroupCommitService并不是立即处理，而是先放到内部的一个请求队列中，并利用waitPoint通知新请求到来。</p>
+<p>当 GroupCommitService 被唤醒后，便会将 requestsWrite 中的请求交换到 requestsRead中，避免产生锁竞争。</p>
+<p>GroupCommitService 在启动后会在死循环中调用doCommit（）方法，而doCommit（）则不断遍历requestsRead中的请求，进行处理。</p>
+<p>可见这里最终调用了CommitLog.this.mappedFileQueue.flush(0) 来进行刷盘。</p>
+<p>同步刷盘的任务虽然也是在异步线程中执行，但是消息存储的主流程中会同步等待刷盘结果，所以本质上还是同步操作。</p>
+<p>Kafka不支持配置同步刷盘，但是可以配置log.flush.interval.messages  //多少条消息，刷盘1次 默认值 LONG.MAX_VALUE。</p>
+<p>如果配成1，那就是同步刷盘，但是这也就是真的每个请求都刷盘，可以想像性能很差。</p>
+<h2 id="零拷贝"><a href="#零拷贝" class="headerlink" title="零拷贝"></a>零拷贝</h2><p>mmap是用户态和内核态，共享了文件的内存映射，实现这样的映射关系后，进程就可以采用指针的方式读写操作这一段内存，而系统会自动回写脏页面到对应的文件磁盘上，即完成了对文件的操作而不必再调用 read，write 等系统调用函数。相反，内核空间对这段区域的修改也直接反映用户空间，从而可以实现不同进程间的文件共享。</p>
+<p><strong>简单的说，使用mmap之后，数据无需拷贝到用户空间中，应用程序可以直接操作Page Cache中的数据。</strong></p>
+<p>sendfile相当于把文件里的数据，直接到pageCache-&gt;网卡等硬件的缓冲区，跳过了用户空间，整个流程，减少了一次CPU Copy，减少了两次的上下文切换，相比于传统IO确实提升了性能。</p>
+<p>RocketMQ和Kafka都使用到了零拷贝的技术。</p>
+<p>RocketMQ底层对CommitLog、ConsumeQueue之类的磁盘文件的读写操作，基本上都会采用mmap技术来实现。</p>
+<p>kafka的日志文件并没有用到 mmap，而索引文件用了 mmap。</p>
+<p>对于MQ而言，无非就是生产者发送数据到MQ然后持久化到磁盘，之后消费者从MQ读取数据。</p>
+<p>对于RocketMQ来说这两个步骤使用的是<code>mmap+write</code>，而Kafka则是使用<code>mmap+write</code>持久化数据，发送数据使用<code>sendfile</code>。</p>
+<p>看起来sendfile的性能比mmap好，那为什么rocketMq不用sendfile呢，因为<code>sendfile</code>方法IO数据对用户空间完全不可见，所以只能适用于完全不需要用户空间处理的情况，而RocketMQ将所有队列的数据都写入了CommitLog，消费者批量消费时需要读出来进行应用层过滤，所以不能用sendfile。</p>
+<h2 id="rebalance"><a href="#rebalance" class="headerlink" title="rebalance"></a>rebalance</h2><p>rocketMq的rebalance是去中心化的，各个消费者各自rebalance，这样保证了高可用，缺点是，由于各个消费者不知道其他的情况，有序消息在rebalance时，失败重试会乱序。</p>
+<p>kafka的rebalance是中心化的，每个消费组都会有一个coordinator，Coordinator负责处理管理组内的消费者和位移管理，Coordinator发生Rebalance的时候，Coordinator并不会主动通知组内的所有Consumer重新加入组，而是当Consumer向Coordinator发送心跳的时候，Coordinator将Rebalance的状况通过心跳响应告知Consumer。Rebalance机制整体可以分为两个步骤，一个是Joining the Group，另外一个是分配Synchronizing Group State。</p>
+<p>缺点是rebalance时会夯住。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/21/3-21技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -406,6 +575,7 @@
 <li>补偿服务即正向服务的“反向”，易于理解，易于实现；</li>
 </ul>
 <p>缺点：Saga 模式由于一阶段已经提交本地数据库事务，且没有进行“预留”动作，所以不能保证隔离性。相当于是未提交读。</p>
+<p>分布式事务内先给用户A充值, 然后给用户B扣减余额, 如果在给A用户充值成功, 在事务提交以前, A用户把余额消费掉了, 如果事务发生回滚, 这时则没有办法进行补偿了。</p>
 <p>与TCC实践经验相同的是，Saga 模式中，每个事务参与者的冲正、逆向操作，需要支持：</p>
 <ul>
 <li>空补偿：逆向操作早于正向操作时；</li>
@@ -1861,201 +2031,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/01/3-1技术笔记-2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2022/03/01/3-1技术笔记-2/" itemprop="url">redis与Reactor模式</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-03-01T15:18:04+08:00">
-                2022-03-01
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="同步和阻塞"><a href="#同步和阻塞" class="headerlink" title="同步和阻塞"></a>同步和阻塞</h1><p>很多时候同步和阻塞是同义词，nio这里会分开说，怎么理解</p>
-<p>首先，所有的io分为两步，第一步等待数据，第二步写入数据到输出。</p>
-<p>比如等待打字是第一步，把键盘输入解析处理屏幕显示是第二步。</p>
-<blockquote>
-<p>阻塞：是否阻塞主要体现在调用的线程是否可以干别的，关注的是程序的等待状态</p>
-<p>同步：是否同步体现在<strong>消息通信机制上</strong> 。</p>
-<p>也就是说同步和异步说的是消息的通知机制，阻塞非阻塞说的是线程的状态 。</p>
-</blockquote>
-<p><strong>是否同步的判断依据是:是否针对的是整个过程，也就是2个阶段，是否有阻塞。</strong></p>
-<p><strong>是否阻塞的判断依据是:按程序（线程）等待消息通知时的状态角度来说的，也就是主要是针对第一阶段来说。</strong></p>
-<h1 id="五种IO模型"><a href="#五种IO模型" class="headerlink" title="五种IO模型"></a>五种IO模型</h1><h3 id="bio"><a href="#bio" class="headerlink" title="bio"></a>bio</h3><p>最传统当然是阻塞式的IO，即blocking，BIO</p>
-<p>在这个IO模型中，用户空间的应用程序执行一个系统调用（recvform），这会导致应用程序阻塞，什么也不干，直到数据准备好，等待kernel准备好从网络上接收到的数据报 + 等待收到的报文被从kernel复制到buf中，recvfrom方法才会返回，最后进程再处理数据。</p>
-<p>这就是阻塞式IO模型。</p>
-<p>即起一个线程等待键盘输入（第一步），输入后，处理输出到屏幕（第二步）</p>
-<h3 id="非阻塞式I-O"><a href="#非阻塞式I-O" class="headerlink" title="非阻塞式I/O"></a>非阻塞式I/O</h3><p>优化第一步为轮询，即为非阻塞io。</p>
-<p>非阻塞的recvform系统调用调用之后，进程并没有被阻塞，内核马上返回给进程，如果数据还没准备好，此时会返回一个error。进程在返回之后，可以干点别的事情，然后再发起recvform系统调用。如此循环的进行recvform系统调用，检查内核数据，直到数据准备好，再拷贝数据到进程。<strong>拷贝数据整个过程，进程仍然是属于阻塞的状态</strong>。</p>
-<h3 id="I-O复用"><a href="#I-O复用" class="headerlink" title="I/O复用"></a>I/O复用</h3><p>第一步优化为回调，这样一个线程可以监听多个回调，即为I/O复用</p>
-<p>IO multiplexing就是我们说的select，poll，epoll 。为何叫多路复用，是因为它I/O多路复用可以同时监听多个fd，如此就减少了为每个需要监听的fd开启线程的开销。</p>
-<p>select调用是内核级别的，可以等待多个socket，能实现同时对多个IO端口进行监听<code>，当其中任何一个socket的数据准好了，</code>就能返回进行可读<code>，</code>然后进程再进行recvform系统调用，将数据由内核拷贝到用户进程，这个过程是阻塞的。</p>
-<p>I/O复用模型会用到select、poll、epoll函数，这几个函数也会使进程阻塞，但是和阻塞I/O所不同的的，这几个函数可以同时阻塞多个I/O操作`。而且可以同时对多个读操作，多个写操作的I/O函数进行检测，直到有数据可读或可写时（不是等到socket数据全部到达再处理, 而是有了一部分数据就会调用用户进程来处理），才真正调用I/O操作函数。</p>
-<p>IO复用有人把其成为同步非阻塞的，也有称为同步阻塞。其实这个是否阻塞还需要看第一个阶段，第一个阶段有的阻塞，有的不阻塞。主要也是阻塞在select阶段，属于用户主动等待阶段，我们且规范为阻塞状态，所以，<code>把IO多路复用归为同步阻塞模式</code></p>
-<h2 id="信号驱动式I-O"><a href="#信号驱动式I-O" class="headerlink" title="信号驱动式I/O"></a>信号驱动式I/O</h2><p>等待回调可以再优化，由一个线程阻塞等待，优化为信号驱动，这样监听回调线程也不阻塞。</p>
-<p>信号驱动式I/O：首先我们允许Socket进行信号驱动IO,并安装一个信号处理函数，进程继续运行并不阻塞。当数据准备好时，进程会收到一个SIGIO信号，可以在信号处理函数中调用I/O操作函数处理数据。</p>
-<h3 id="异步I-O"><a href="#异步I-O" class="headerlink" title="异步I/O"></a>异步I/O</h3><p>异步IO不是顺序执行,用户进程进行aio_read系统调用之后，无论内核数据是否准备好，都会直接返回给用户进程，然后用户态进程可以去做别的事情。等到socket数据准备好了，内核直接复制数据给进程，<code>然后从内核向进程发送通知</code>。<code>IO两个阶段，进程都是非阻塞的</code>。</p>
-<p><a href="https://imgtu.com/i/blpGfH" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/blpGfH.png" alt="blpGfH.png"></a></p>
-<h1 id="Reactor"><a href="#Reactor" class="headerlink" title="Reactor"></a>Reactor</h1><p>Reactor 就是基于NIO中实现多路复用的一种模式</p>
-<h3 id="单线程Reactor模式"><a href="#单线程Reactor模式" class="headerlink" title="单线程Reactor模式"></a>单线程Reactor模式</h3><p><a href="https://imgtu.com/i/bl9d29" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/bl9d29.jpg" alt="bl9d29.jpg"></a></p>
-<p>如图，即和NIO的描述基本一致。</p>
-<p>只有一个<code>select</code>循环接收请求，客户端（client）注册进来由<code>Reactor</code>接收注册事件，然后再由reactor分发（dispatch）出去，由下面的处理器（Handler）去处理。</p>
-<p>等待数据是阻塞式多路复用，处理输出数据是阻塞式在accepter中。</p>
-<p>单线程的问题实际上是很明显的。只要其中一个Handler方法阻塞了，那就会导致所有的client的Handler都被阻塞了，也会导致注册事件也无法处理，无法接收新的请求。所以这种模式用的比较少，因为不能充分利用到多核的资源。</p>
-<p>这种模式仅仅只能处理Handler比较快速完成的场景。</p>
-<p>实际上5.0及其以前的redis就是这个模式，因为redis的handler的确能快速完成。</p>
-<p>IO多路复用程序接收到用户的请求后，全部推送到一个队列里，交给文件分派器。对于后续的操作，和在 reactor 单线程实现方案里看到的一样，整个过程都在一个线程里完成，因此 Redis 被称为是单线程的操作。</p>
-<p><a href="https://imgtu.com/i/blPn6s" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/blPn6s.png" alt="blPn6s.png"></a></p>
-<h3 id="Reactor模式-工作者线程池模式"><a href="#Reactor模式-工作者线程池模式" class="headerlink" title="Reactor模式-工作者线程池模式"></a>Reactor模式-工作者线程池模式</h3><p>我们应该将非I/O的业务逻辑操作从Reactor线程上卸载，以此来加速Reactor线程对I/O请求的响应。与单线程模式不同的是，添加了一个<strong>工作者线程池</strong>，并将非I/O操作从Reactor线程中移出转交给工作者线程池（Thread Pool）来执行。这样能够提高Reactor线程的I/O响应，不至于因为一些耗时的业务逻辑而延迟对后面I/O请求的处理。</p>
-<p><a href="https://imgtu.com/i/blCeqx" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/blCeqx.png" alt="blCeqx.png"></a></p>
-<p>6.0之后的redis即为该模式</p>
-<p>在 Redis 中，单线程的性能瓶颈主要在网络IO操作上。也就是在读写网络 read/write 系统调用执行期间会占用大部分 CPU 时间。如果你要对一些大的键值对进行删除操作的话，在短时间内是删不完的，那么对于单线程来说就会阻塞后边的操作。</p>
-<p>好像其实不是标准的工作者线程池模式</p>
-<p>多线程大部分逻辑和之前的单线程模型是一致的，变动的地方仅仅是把读取客户端请求命令和回写响应数据的逻辑异步化了，交给 I/O 线程去完成，这里需要特别注意的一点是：<strong>I/O 线程仅仅是读取和解析客户端命令而不会真正去执行命令，客户端命令的执行最终还是要在主线程上完成</strong>。</p>
-<p>Redis 把处理逻辑交还给 Master 线程，虽然一定程度上增加了模型复杂度，但也解决了线程并发安全等问题。</p>
-<p><a href="https://imgtu.com/i/blkuXd" target="_blank" rel="noopener"><img src="https://s4.ax1x.com/2022/03/01/blkuXd.png" alt="blkuXd.png"></a></p>
-<h3 id="多Reactor多线程模型"><a href="#多Reactor多线程模型" class="headerlink" title="多Reactor多线程模型"></a>多Reactor多线程模型</h3><p>是将Reactor分成两部分，</p>
-<blockquote>
-<ol>
-<li><p>mainReactor负责监听server socket，用来处理新连接的建立，将建立的socketChannel指定注册给subReactor。</p>
-</li>
-<li><p>subReactor维护自己的selector, 基于mainReactor 注册的socketChannel多路分离IO读写事件，读写网 络数据，对业务处理的功能，另其扔给worker线程池来完成。</p>
-</li>
-</ol>
-</blockquote>
-<p>mainReactor 主要是用来处理网络IO 连接建立操作，通常一个线程就可以处理，而subReactor主要做和建立起来的socket做数据交互和事件业务处理操作，它的个数上一般是和CPU个数等同，每个subReactor一个线程来处理。</p>
-<p>nginx和netty应该是使用这种模式</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2106,7 +2081,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">275</span>
+                  <span class="site-state-item-count">276</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

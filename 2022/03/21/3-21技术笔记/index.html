@@ -89,7 +89,7 @@
 <meta property="og:site_name" content="Arvense">
 <meta property="og:description" content="AT模式AT 模式是无侵入的分布式事务解决方案，适用于不希望对业务进行改造的场景，几乎0学习成本。 与其他模式的区别便是代理数据源，通过被DataSourceProxy代理后，你所执行的sql，会被提取，解析，保存前镜像后，再执行业务sql，再保存后镜像，以便与后续出现异常，进行二阶段的回滚操作。 AT 模式下，把每个数据库被当做是一个 Resource，Seata 里称为 DataSource">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2022-03-21T11:59:22.560Z">
+<meta property="og:updated_time" content="2022-03-31T09:26:27.934Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="分布式事务方案">
 <meta name="twitter:description" content="AT模式AT 模式是无侵入的分布式事务解决方案，适用于不希望对业务进行改造的场景，几乎0学习成本。 与其他模式的区别便是代理数据源，通过被DataSourceProxy代理后，你所执行的sql，会被提取，解析，保存前镜像后，再执行业务sql，再保存后镜像，以便与后续出现异常，进行二阶段的回滚操作。 AT 模式下，把每个数据库被当做是一个 Resource，Seata 里称为 DataSource">
@@ -406,6 +406,7 @@
 <li>补偿服务即正向服务的“反向”，易于理解，易于实现；</li>
 </ul>
 <p>缺点：Saga 模式由于一阶段已经提交本地数据库事务，且没有进行“预留”动作，所以不能保证隔离性。相当于是未提交读。</p>
+<p>分布式事务内先给用户A充值, 然后给用户B扣减余额, 如果在给A用户充值成功, 在事务提交以前, A用户把余额消费掉了, 如果事务发生回滚, 这时则没有办法进行补偿了。</p>
 <p>与TCC实践经验相同的是，Saga 模式中，每个事务参与者的冲正、逆向操作，需要支持：</p>
 <ul>
 <li>空补偿：逆向操作早于正向操作时；</li>
@@ -451,6 +452,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2022/04/06/4-6技术笔记/" rel="prev" title="rocketMq和kafka比较">
+                rocketMq和kafka比较 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -527,7 +532,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">275</span>
+                  <span class="site-state-item-count">276</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

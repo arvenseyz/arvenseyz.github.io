@@ -251,6 +251,169 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/12/01/12-1技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/12/01/12-1技术笔记/" itemprop="url">ES聚合搜索</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-12-01T15:17:13+08:00">
+                2021-12-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="指标和桶"><a href="#指标和桶" class="headerlink" title="指标和桶"></a>指标和桶</h2><p>es的聚合操作是aggs，是aggregations的简写。</p>
+<p>聚合简单分为两部分，指标和桶。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">COUNT</span>(color) </span><br><span class="line"><span class="keyword">FROM</span> <span class="keyword">table</span> </span><br><span class="line"><span class="keyword">GROUP</span> <span class="keyword">BY</span> color</span><br></pre></td></tr></table></figure>
+<p>group by color相当于桶。</p>
+<p><em>桶</em>  简单来说就是满足特定条件的文档的集合：</p>
+<ul>
+<li>一个雇员属于  <em>男性</em>  桶或者  <em>女性</em>  桶</li>
+<li>奥尔巴尼属于  <em>纽约</em>  桶</li>
+<li>日期2014-10-28属于  <em>十月</em>  桶</li>
+</ul>
+<p>COUNT(color)相当于指标</p>
+<p>大多数 <em>指标</em> 是简单的数学运算（例如最小值、平均值、最大值，还有汇总）</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">GET /cars/transactions/_search</span><br><span class="line">&#123;</span><br><span class="line">   <span class="attr">"size"</span> : <span class="number">0</span>,</span><br><span class="line">   <span class="attr">"aggs"</span>: &#123;</span><br><span class="line">      <span class="attr">"colors"</span>: &#123;</span><br><span class="line">         <span class="attr">"terms"</span>: &#123;</span><br><span class="line">            <span class="attr">"field"</span>: <span class="string">"color"</span></span><br><span class="line">         &#125;,</span><br><span class="line">         <span class="attr">"aggs"</span>: &#123; </span><br><span class="line">            <span class="attr">"avg_price"</span>: &#123; </span><br><span class="line">               <span class="attr">"avg"</span>: &#123;</span><br><span class="line">                  <span class="attr">"field"</span>: <span class="string">"price"</span> </span><br><span class="line">               &#125;</span><br><span class="line">            &#125;</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">...</span><br><span class="line">   "aggregations": &#123;</span><br><span class="line">      "colors": &#123;</span><br><span class="line">         "buckets": [</span><br><span class="line">            &#123;</span><br><span class="line">               <span class="attr">"key"</span>: <span class="string">"red"</span>,</span><br><span class="line">               <span class="attr">"doc_count"</span>: <span class="number">4</span>,</span><br><span class="line">               <span class="attr">"avg_price"</span>: &#123; </span><br><span class="line">                  <span class="attr">"value"</span>: <span class="number">32500</span></span><br><span class="line">               &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            &#123;</span><br><span class="line">               <span class="attr">"key"</span>: <span class="string">"blue"</span>,</span><br><span class="line">               <span class="attr">"doc_count"</span>: <span class="number">2</span>,</span><br><span class="line">               <span class="attr">"avg_price"</span>: &#123;</span><br><span class="line">                  <span class="attr">"value"</span>: <span class="number">20000</span></span><br><span class="line">               &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            &#123;</span><br><span class="line">               <span class="attr">"key"</span>: <span class="string">"green"</span>,</span><br><span class="line">               <span class="attr">"doc_count"</span>: <span class="number">2</span>,</span><br><span class="line">               <span class="attr">"avg_price"</span>: &#123;</span><br><span class="line">                  <span class="attr">"value"</span>: <span class="number">21000</span></span><br><span class="line">               &#125;</span><br><span class="line">            &#125;</span><br><span class="line">         ]</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第一个aggs里的term，就是指定桶，即按color分桶。</p>
+<p>第二个aggs就是指标了，avg是聚合函数。</p>
+<h2 id="过滤"><a href="#过滤" class="headerlink" title="过滤"></a>过滤</h2><p>过滤有两种，聚合前过滤和聚合后过滤，即对应sql里的where和having</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">GET /cars/transactions/_search</span><br><span class="line">&#123;</span><br><span class="line">   <span class="attr">"size"</span> : <span class="number">0</span>,</span><br><span class="line">   <span class="attr">"query"</span>:&#123;</span><br><span class="line">      <span class="attr">"match"</span>: &#123;</span><br><span class="line">         <span class="attr">"make"</span>: <span class="string">"ford"</span></span><br><span class="line">      &#125;</span><br><span class="line">   &#125;,</span><br><span class="line">   <span class="attr">"aggs"</span>:&#123;</span><br><span class="line">      <span class="attr">"recent_sales"</span>: &#123;</span><br><span class="line">         <span class="attr">"filter"</span>: &#123; </span><br><span class="line">            <span class="attr">"range"</span>: &#123;</span><br><span class="line">               <span class="attr">"sold"</span>: &#123;</span><br><span class="line">                  <span class="attr">"from"</span>: <span class="string">"now-1M"</span></span><br><span class="line">               &#125;</span><br><span class="line">            &#125;</span><br><span class="line">         &#125;,</span><br><span class="line">         <span class="attr">"aggs"</span>: &#123;</span><br><span class="line">            <span class="attr">"average_price"</span>:&#123;</span><br><span class="line">               <span class="attr">"avg"</span>: &#123;</span><br><span class="line">                  <span class="attr">"field"</span>: <span class="string">"price"</span> </span><br><span class="line">               &#125;</span><br><span class="line">            &#125;</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>即只有时间在现在到一个月前的数据会被聚合。</p>
+<p>实际上过滤器可以直接写在query里，似乎性能更好。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">GET /cars/transactions/_search</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">"size"</span> : <span class="number">0</span>,</span><br><span class="line">    <span class="attr">"query"</span>: &#123;</span><br><span class="line">        <span class="attr">"match"</span>: &#123;</span><br><span class="line">            <span class="attr">"make"</span>: <span class="string">"ford"</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"post_filter"</span>: &#123;    </span><br><span class="line">        <span class="attr">"term"</span> : &#123;</span><br><span class="line">            <span class="attr">"color"</span> : <span class="string">"green"</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"aggs"</span> : &#123;</span><br><span class="line">        <span class="attr">"all_colors"</span>: &#123;</span><br><span class="line">            <span class="attr">"terms"</span> : &#123; <span class="attr">"field"</span> : <span class="string">"color"</span> &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>即只看green的</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/11/30/11-30技术笔记-1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1747,163 +1910,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/18/9-16技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/09/18/9-16技术笔记/" itemprop="url">ES的搜索阶段</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-09-18T16:54:44+08:00">
-                2021-09-18
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="查询阶段"><a href="#查询阶段" class="headerlink" title="查询阶段"></a>查询阶段</h1><p>在初始 <em>查询阶段</em> 时， 查询会广播到索引中每一个分片拷贝（主分片或者副本分片）。 每个分片在本地执行搜索并构建一个匹配文档的 <em>优先队列</em>。</p>
-<p>查询阶段包含以下三个步骤:</p>
-<ol>
-<li>客户端发送一个  search  请求到   一个节点 ， 该节点 会创建一个大小为  <code>from + size</code>  的空优先队列。</li>
-<li>节点将查询请求转发到索引的每个主分片或副本分片中。每个分片在本地执行查询并添加结果到大小为  <code>from + size</code>  的本地有序优先队列中。</li>
-<li>每个分片返回各自优先队列中所有文档的 ID 和排序值给协调节点  ，它合并这些值到自己的优先队列中来产生一个全局排序后的结果列表。</li>
-</ol>
-<p>当一个搜索请求被发送到某个节点时，这个节点就变成了协调节点。 这个节点的任务是广播查询请求到所有相关分片并将它们的响应整合成全局排序后的结果集合，这个结果集合会返回给客户端。</p>
-<h1 id="取回阶段"><a href="#取回阶段" class="headerlink" title="取回阶段"></a>取回阶段</h1><p>分布式阶段由以下步骤构成：</p>
-<ol>
-<li>协调节点辨别出哪些文档需要被取回并向相关的分片提交多个  <code>GET</code>  请求。</li>
-<li>每个分片加载并  <em>丰富</em>  文档，如果有需要的话，接着返回文档给协调节点。</li>
-<li>一旦所有的文档都被取回了，协调节点返回结果给客户端。</li>
-</ol>
-<p>协调节点首先决定哪些文档  <em>确实</em>  需要被取回。例如，如果我们的查询指定了  <code>{ &quot;from&quot;: 90, &quot;size&quot;: 10 }</code>  ，最初的90个结果会被丢弃，只有从第91个开始的10个结果需要被取回。这些文档可能来自和最初搜索请求有关的一个、多个甚至全部分片。</p>
-<p>协调节点给持有相关文档的每个分片创建一个  <a href="https://www.elastic.co/guide/cn/elasticsearch/guide/2.x/distrib-multi-doc.html" title="多文档模式" target="_blank" rel="noopener">multi-get request</a>  ，并发送请求给同样处理查询阶段的分片副本。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1954,7 +1960,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">275</span>
+                  <span class="site-state-item-count">276</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
