@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2022-04-06T07:49:11.881Z</updated>
+  <updated>2022-04-12T06:13:00.669Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -17,11 +17,37 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>mysql锁</title>
+    <link href="https://arvenseyz.github.io/2022/04/08/4-8%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2022/04/08/4-8技术笔记/</id>
+    <published>2022-04-08T08:22:52.000Z</published>
+    <updated>2022-04-12T06:13:00.669Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="复习下隔离级别"><a href="#复习下隔离级别" class="headerlink" title="复习下隔离级别"></a>复习下隔离级别</h2><p>读未提交，会读到别的事务没提交的数据，会脏读（读到未持久化的数据）。</p><p>读已提交，读取别的事务提交的数据，在事务过程中，由于别的事务提交了数据，前后读到的数据不一样，会不可重复读。</p><p>可重复读，别的事务对该行的操作，对自己不可见。但是防不了插入新数据，count会不对，会幻读。</p><p>读串行化</p><h2 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h2><h3 id="表锁"><a href="#表锁" class="headerlink" title="表锁"></a>表锁</h3><p>LOCK TABLES table_name [READ | WRITE]</p><p>直接锁表。两种模式，读锁和写锁。</p><p>读锁的状态下，自己可以读，不能写，写会报错。</p><p>别人可以上读锁，也可以不上锁直接读，不上写直接写会阻塞，等待所有的读锁释放。</p><p>写锁状态下，自己可以写可以读。</p><p>别人上锁、读、写都会阻塞，等待写锁释放。</p><h3 id="行锁"><a href="#行锁" class="headerlink" title="行锁"></a>行锁</h3><h4 id="排他锁"><a href="#排他锁" class="headerlink" title="排他锁"></a>排他锁</h4><p>即行的写锁,X锁，select …..  for update</p><p>当前写操作没有完成前，它会阻断其他写锁和读锁。</p><p>事务对数据加上X锁时，只允许此事务读取和修改此数据，并且其它事务不能对该数据加任何锁（都会阻塞）</p><h3 id="共享锁"><a href="#共享锁" class="headerlink" title="共享锁"></a>共享锁</h3><p>即行的读锁,S锁</p><p>SELECT * FROM table_name WHERE … IN SHARE MODE;</p><p>加了S锁后，该事务只能对数据进行读取而不能修改，并且其它事务只能加S锁，不能加X锁。</p><p>读取结果集的最新版本，同时防止其他事务产生更新的数据版本。</p><p>由于数据的最新版本是不断变化的，所以本读取模式需要强制阻断最新版本的变化，保证自己读取到的是所有人都一致认可的名副其实的最新版本。</p><p><code>MySQL</code>官方文档的例子来说，假如存在两张有关系的表：PARENT和CHILD，使用普通的SELECT语句（快照读）来查询表PARENT并验证父行是否存在后再将子行插入CHILD表，这种方式安全吗？答案是否定的，因为其他会话可能会在你这个会话的SELECT和INSERT之间的某个时间点删除了父行，这个删除操作你是无法察觉到的。</p><h3 id="加锁时机"><a href="#加锁时机" class="headerlink" title="加锁时机"></a>加锁时机</h3><p><strong>update,delete,insert都会自动给涉及到的数据加上排他锁</strong>，select语句默认不会加任何锁类型。</p><p>所以加过排他锁的数据行在其他事务种是不能修改数据的，也不能通过for update和lock in share mode锁的方式查询数据，但可以直接通过select …from…查询数据，因为普通查询没有任何锁机制。</p><h3 id="意向锁"><a href="#意向锁" class="headerlink" title="意向锁"></a>意向锁</h3><p><strong>意向锁都是表锁。</strong>意向锁的存在是为了允许事务在行级上的锁和表级上的锁同时存在。</p><p>意向锁实际上不是给用户用的，而是为了解决性能问题，内部的实现。</p><p>一个事务在加表锁的时候是如何确定这张表的记录行上面有没有加锁呢？</p><p>很显然，最简单的方式就是一行一行遍历每条数据，分别去判断每行有没有被锁住。但是这方法性能有问题，所以才有的意向锁。</p><p><code>当一个事务想要获取表中某一行的（共享/排他）锁的时候，它会自动尝试给当前表的加上意向（共享/排他）锁</code><br>。然后，表锁和行锁之间的兼容互斥性就变成了表锁和意向锁之间的竞争关系。</p><p><strong>意向锁只会与表级的共享 互斥锁具有互斥性</strong>。</p><p>意向锁之间互相兼容，因此针对表中的记录加锁不会因为意向锁而产生互斥，行锁之间的竞争关系是行锁与行锁的竞争，意向锁并不会参与其中；</p><p>意向锁和表级锁会产生互斥，这里互斥的作用就是用于表锁的第二个检查。</p><h2 id="锁升级"><a href="#锁升级" class="headerlink" title="锁升级"></a>锁升级</h2><p>行锁升级为表锁的原因之一是： SQL 语句中未使用到索引，或者说使用的索引未被数据库认可（相当于没有使用索引）。</p><p>如果在数据库的设计中认为锁时一种稀有资源，而且像避免锁的开销，那数据库会频繁出现锁升级现象。（多个行锁还不如一个表锁）</p><p>InnoDB默认采用行锁，在未使用索引字段查询时升级为表锁。MySQL这样设计并不是给你挖坑。它有自己的设计目的。<br>即便你在条件中使用了索引字段，MySQL会根据自身的执行计划，考虑是否使用索引(所以explain命令中会有possible_key 和 key)。如果MySQL认为全表扫描效率更高，它就不会使用索引，这种情况下InnoDB将使用表锁，而不是行锁。因此，在分析锁冲突时，别忘了检查SQL的执行计划，以确认是否真正使用了索引。</p><p>第一种情况：全表更新。事务需要更新大部分或全部数据，且表又比较大。若使用行锁，会导致事务执行效率低，从而可能造成其他事务长时间锁等待和更多的锁冲突。</p><p>第二种情况：多表级联。事务涉及多个表，比较复杂的关联查询，很可能引起死锁，造成大量事务回滚。这种情况若能一次性锁定事务涉及的表，从而可以避免死锁、减少数据库因事务回滚带来的开销。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;复习下隔离级别&quot;&gt;&lt;a href=&quot;#复习下隔离级别&quot; class=&quot;headerlink&quot; title=&quot;复习下隔离级别&quot;&gt;&lt;/a&gt;复习下隔离级别&lt;/h2&gt;&lt;p&gt;读未提交，会读到别的事务没提交的数据，会脏读（读到未持久化的数据）。&lt;/p&gt;
+&lt;p&gt;读已提交，读取别
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="数据库" scheme="https://arvenseyz.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
+  
+  <entry>
     <title>rocketMq和kafka比较</title>
     <link href="https://arvenseyz.github.io/2022/04/06/4-6%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>https://arvenseyz.github.io/2022/04/06/4-6技术笔记/</id>
     <published>2022-04-06T06:37:57.000Z</published>
-    <updated>2022-04-06T07:49:11.881Z</updated>
+    <updated>2022-04-08T08:23:00.611Z</updated>
     
     <content type="html"><![CDATA[<p>rocketMq定位是在线，kafka是离线，这个怎么理解。</p><p>这里的理解是Kafka吞吐高，rocketMq可用性高。</p><h2 id="存储区别"><a href="#存储区别" class="headerlink" title="存储区别"></a>存储区别</h2><p>Kafka 以 Topic 作为文件存储的基本单元，即每个 Topic 有其对应的数据文件和索引文件。消息直接存储在partition中，对单topic为顺序写。</p><p>这样预期结果是，磁盘顺序写+顺序读，性能很好。</p><p>但问题是，是分topic的，如果topic很多，要不停的切topic，顺序读写就被破坏了，降低了性能。</p><p>存储上不分topic，所以这些topic的内容写在一块的。即CommitLog。这样写是顺序写，但是读，由于各topic的内容在一块，只能索引读，即随即读。</p><h2 id="同步刷盘"><a href="#同步刷盘" class="headerlink" title="同步刷盘"></a>同步刷盘</h2><p>指的是数据从pageCache到磁盘的时机</p><p>rocketMq支持同步刷盘，同步刷盘其实并不是每一次请求都刷盘，想象下，qps很大时，这样问题很大，</p><p>刷盘服务有两个队列，requestsWrite : 写队列，主要用于向该线程添加刷盘任务 requestsRead : 读队列，主要用于执行特定的刷盘任务，这是是GroupCommitService 设计的一个亮点，把读写分离，每处理完requestsRead中的任务，就交换这两个队列。</p><p>进行同步刷盘的服务为 GroupCommitService，当请求被提交给GroupCommitService后，GroupCommitService并不是立即处理，而是先放到内部的一个请求队列中，并利用waitPoint通知新请求到来。</p><p>当 GroupCommitService 被唤醒后，便会将 requestsWrite 中的请求交换到 requestsRead中，避免产生锁竞争。</p><p>GroupCommitService 在启动后会在死循环中调用doCommit（）方法，而doCommit（）则不断遍历requestsRead中的请求，进行处理。</p><p>可见这里最终调用了CommitLog.this.mappedFileQueue.flush(0) 来进行刷盘。</p><p>同步刷盘的任务虽然也是在异步线程中执行，但是消息存储的主流程中会同步等待刷盘结果，所以本质上还是同步操作。</p><p>Kafka不支持配置同步刷盘，但是可以配置log.flush.interval.messages  //多少条消息，刷盘1次 默认值 LONG.MAX_VALUE。</p><p>如果配成1，那就是同步刷盘，但是这也就是真的每个请求都刷盘，可以想像性能很差。</p><h2 id="零拷贝"><a href="#零拷贝" class="headerlink" title="零拷贝"></a>零拷贝</h2><p>mmap是用户态和内核态，共享了文件的内存映射，实现这样的映射关系后，进程就可以采用指针的方式读写操作这一段内存，而系统会自动回写脏页面到对应的文件磁盘上，即完成了对文件的操作而不必再调用 read，write 等系统调用函数。相反，内核空间对这段区域的修改也直接反映用户空间，从而可以实现不同进程间的文件共享。</p><p><strong>简单的说，使用mmap之后，数据无需拷贝到用户空间中，应用程序可以直接操作Page Cache中的数据。</strong></p><p>sendfile相当于把文件里的数据，直接到pageCache-&gt;网卡等硬件的缓冲区，跳过了用户空间，整个流程，减少了一次CPU Copy，减少了两次的上下文切换，相比于传统IO确实提升了性能。</p><p>RocketMQ和Kafka都使用到了零拷贝的技术。</p><p>RocketMQ底层对CommitLog、ConsumeQueue之类的磁盘文件的读写操作，基本上都会采用mmap技术来实现。</p><p>kafka的日志文件并没有用到 mmap，而索引文件用了 mmap。</p><p>对于MQ而言，无非就是生产者发送数据到MQ然后持久化到磁盘，之后消费者从MQ读取数据。</p><p>对于RocketMQ来说这两个步骤使用的是<code>mmap+write</code>，而Kafka则是使用<code>mmap+write</code>持久化数据，发送数据使用<code>sendfile</code>。</p><p>看起来sendfile的性能比mmap好，那为什么rocketMq不用sendfile呢，因为<code>sendfile</code>方法IO数据对用户空间完全不可见，所以只能适用于完全不需要用户空间处理的情况，而RocketMQ将所有队列的数据都写入了CommitLog，消费者批量消费时需要读出来进行应用层过滤，所以不能用sendfile。</p><h2 id="rebalance"><a href="#rebalance" class="headerlink" title="rebalance"></a>rebalance</h2><p>rocketMq的rebalance是去中心化的，各个消费者各自rebalance，这样保证了高可用，缺点是，由于各个消费者不知道其他的情况，有序消息在rebalance时，失败重试会乱序。</p><p>kafka的rebalance是中心化的，每个消费组都会有一个coordinator，Coordinator负责处理管理组内的消费者和位移管理，Coordinator发生Rebalance的时候，Coordinator并不会主动通知组内的所有Consumer重新加入组，而是当Consumer向Coordinator发送心跳的时候，Coordinator将Rebalance的状况通过心跳响应告知Consumer。Rebalance机制整体可以分为两个步骤，一个是Joining the Group，另外一个是分配Synchronizing Group State。</p><p>缺点是rebalance时会夯住。</p>]]></content>
     
@@ -501,31 +527,6 @@
       
       
         &lt;h1 id=&quot;Rebalance是什么&quot;&gt;&lt;a href=&quot;#Rebalance是什么&quot; class=&quot;headerlink&quot; title=&quot;Rebalance是什么&quot;&gt;&lt;/a&gt;&lt;strong&gt;Rebalance是什么&lt;/strong&gt;&lt;/h1&gt;&lt;p&gt;Rebalance(再均衡
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="消息队列" scheme="https://arvenseyz.github.io/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>RocketMQ NameServer机制</title>
-    <link href="https://arvenseyz.github.io/2021/12/09/12-9%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://arvenseyz.github.io/2021/12/09/12-9技术笔记/</id>
-    <published>2021-12-09T06:32:21.000Z</published>
-    <updated>2021-12-10T06:51:35.488Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="NameServer的作用"><a href="#NameServer的作用" class="headerlink" title="NameServer的作用"></a><strong>NameServer的作用</strong></h1><p><img src="https://raw.githubusercontent.com/arvenseyz/imageCloud/main/862aa9a7-9185-43af-933c-707030d471d6.png" alt></p><p>可以看到，Broker集群、Producer集群、Consumer集群都需要与NameServer集群进行通信：</p><p><strong>Broker集群</strong></p><p>Broker用于接收生产者发送消息，或者消费者消费消息的请求。一个Broker集群由多组Master/Slave组成，Master可写可读，Slave只可以读，Master将写入的数据同步给Slave。每个Broker节点，在启动时，都会遍历NameServer列表，与每个NameServer建立长连接，注册自己的信息，之后定时上报。</p><p><strong>Producer集群</strong></p><p>消息的生产者，通过NameServer集群获得Topic的路由信息，包括Topic下面有哪些Queue，这些Queue分布在哪些Broker上等。Producer只会将消息发送到Master节点上，因此只需要与Master节点建立连接。</p><p><strong>Consumer集群</strong></p><p>消息的消费者，通过NameServer集群获得Topic的路由信息，连接到对应的Broker上消费消息。注意，由于Master和Slave都可以读取消息，因此Consumer会与Master和Slave都建立连接。</p><h1 id="为什么要使用NameServer"><a href="#为什么要使用NameServer" class="headerlink" title="为什么要使用NameServer"></a><strong>为什么要使用NameServer</strong></h1><p>那么为什么rocketmq选择自己开发一个NameServer，而不是使用这些开源组件呢？</p><p>特别的，RocketMQ设计之初时参考的另一款消息中间件Kafka就使用了Zookeeper，Zookeeper其提供了Master选举、分布式锁、数据的发布和订阅等诸多功能。</p><p>事实上，在RocketMQ的早期版本，即MetaQ 1.x和MetaQ 2.x阶段，也是依赖Zookeeper的。但MetaQ 3.x（即RocketMQ）却去掉了ZooKeeper依赖，转而采用自己的NameServer。</p><p>而RocketMQ的架构设计决定了只需要一个轻量级的元数据服务器就足够了，只需要保持最终一致，而不需要Zookeeper这样的强一致性解决方案，不需要再依赖另一个中间件，从而减少整体维护成本。敏锐的同学肯定已经意识到了，根据CAP理论，RocketMQ在名称服务这个模块的设计上选择了AP，而不是CP。</p><p><strong>Zookeeper CP</strong></p><ul><li>分布式选主，主备高可用切换等场景下有不可替代的作用，而这些需求往往多集中在大数据、离线任务等相关的业务领域，因为大数据领域，讲究分割数据集，并且大部分时间分任务多进程 / 线程并行处理这些数据集，但是总是有一些点上需要将这些任务和进程统一协调，这时候就是 ZooKeeper 发挥巨大作用的用武之地。</li><li>但是在交易场景交易链路上，在主业务数据存取，大规模服务发现、大规模健康监测等方面有天然的短板，应该竭力避免在这些场景下引入 ZooKeeper，在生产实践中，应用对 ZooKeeper 申请使用的时候要进行严格的场景、容量、SLA 需求的评估。</li></ul><p><strong>NameServer AP</strong></p><p>NameServer作为一个名称服务，需要提供服务注册、服务剔除、服务发现这些基本功能，但是NameServer节点之间并不通信，容忍在某个时刻各个节点数据可能不一致的情况下</p><p><strong>所以可以使用 CP，也可以使用AP</strong>，但是大数据使用CP，在线服务则AP，分布式协调、选主使用CP，服务发现使用AP</p><h1 id="NameServer如何保证数据的最终一致"><a href="#NameServer如何保证数据的最终一致" class="headerlink" title="NameServer如何保证数据的最终一致"></a><strong>NameServer如何保证数据的最终一致</strong></h1><p>既然是AP系统，就需要保证最终一致。</p><h3 id="路由注册"><a href="#路由注册" class="headerlink" title="路由注册"></a><strong>路由注册</strong></h3><p>对于Zookeeper、Etcd这样强一致性组件，数据只要写到主节点，内部会通过状态机将数据复制到其他节点，Zookeeper使用的是Zab协议，etcd使用的是raft协议。</p><p>但是NameServer节点之间是互不通信的，无法进行数据复制。RocketMQ采取的策略是，在Broker节点在启动的时候，轮训NameServer列表，与每个NameServer节点建立长连接，发起注册请求。NameServer内部会维护一个Broker表，用来动态存储Broker的信息。</p><p>同时，Broker节点为了证明自己是存活的，会将最新的信息上报给NameServer，然后每隔30秒向NameServer发送心跳包，心跳包中包含 BrokerId、Broker地址、Broker名称、Broker所属集群名称等等，然后NameServer接收到心跳包后，会更新时间戳，记录这个Broker的最新存活时间。</p><p>NameServer在处理心跳包的时候，存在多个Broker同时操作一张Broker表，为了防止并发修改Broker表导致不安全，路由注册操作引入了ReadWriteLock读写锁，这个设计亮点允许多个消息生产者并发读，保证了消息发送时的高并发，但是同一时刻NameServer只能处理一个Broker心跳包，多个心跳包串行处理。这也是读写锁的经典使用场景，即读多写少。</p><h3 id="路由剔除"><a href="#路由剔除" class="headerlink" title="路由剔除"></a><strong>路由剔除</strong></h3><p>正常情况下，如果Broker关闭，则会与NameServer断开长连接，Netty的通道关闭监听器会监听到连接断开事件，然后会将这个Broker信息剔除掉。</p><p>异常情况下，NameServer中有一个定时任务，每隔10秒扫描一下Broker表，如果某个Broker的心跳包最新时间戳距离当前时间超多120秒，也会判定Broker失效并将其移除。</p><p>特别的，对于一些日常运维工作，例如：Broker升级，RocketMQ提供了一种优雅剔除路由信息的方式。如在升级一个Master节点之前，可以先通过命令行工具禁止这个Broker的写权限，发送消息到这个Broker的请求，都会收到一个NO_PERMISSION响应，客户端会自动重试其他的Broker。</p><p>当观察到这个broker没有流量后，再将这个broker移除。</p><h3 id="路由发现"><a href="#路由发现" class="headerlink" title="路由发现"></a><strong>路由发现</strong></h3><p>路由发现是客户端的行为，这里的客户端主要说的是生产者和消费者。具体来说：</p><ul><li>对于生产者，可以发送消息到多个Topic，因此一般是在发送第一条消息时，才会根据Topic获取从NameServer获取路由信息。</li><li>对于消费者，订阅的Topic一般是固定的，所在在启动时就会拉取。</li></ul><p>那么生产者/消费者在工作的过程中，如果路由信息发生了变化怎么处理呢？如：Broker集群新增了节点，节点宕机或者Queue的数量发生了变化。细心的读者注意到，前面讲解NameServer在路由注册或者路由剔除过程中，并不会主动推送会客户端的，这意味着，需要由客户端拉取主题的最新路由信息。</p><p>事实上，RocketMQ客户端提供了定时拉取Topic最新路由信息的机制。</p><h2 id="一致性问题"><a href="#一致性问题" class="headerlink" title="一致性问题"></a>一致性问题</h2><p>定时拉取，还不能解决所有的问题。因为客户端默认是每隔30秒会定时请求NameServer并获取最新的路由表，意味着客户端获取路由信息总是会有30秒的延时。这就带来一个严重的问题，客户端无法实时感知Broker服务器的宕机。如果生产者和消费者在这30秒内，依然会向这个宕机的broker发送或消费消息呢？</p><h1 id="生产者重试机制"><a href="#生产者重试机制" class="headerlink" title="生产者重试机制"></a><strong>生产者重试机制</strong></h1><h2 id="普通消息的重试"><a href="#普通消息的重试" class="headerlink" title="普通消息的重试"></a><strong>普通消息的重试</strong></h2><p>对于普通消息，消息发送默认采用round-robin机制来选择发送到哪一个队列，如果发送失败，默认重试2次。由于之前发送失败的Queue必然位于某个Broker上，在重试过程中，这个失败的Broker上的Queue都不会选择，这里主要是考虑，既然发送到这个Broker上某个Queue失败了，那么发送到这个Broker上的Queue失败的可能性依然很大，所以选择其他Broker。</p><p>但是一定会这样吗？例如Broker集群只是由一组Master/Slave组成，发送消息只会选择Master，如果这个Master失败了，没有其他Master可选，此时依然会选择这个Master上的其他Queue。</p><p>在实际生产环境中，通常Broker集群至少由2组Master/Slave组成，甚至更多，例如我司就是3主3从。这样就可以很好的利用RocketMQ对于普通消息发送的重试机制，每次重试到不同的Broker上。</p><p>事情到这里并没有结束，这段代码只是单次发送消息失败重试选择队列的逻辑。实际情况可能是，在Broker宕机期间，可能会发送多条消息，那么每次都可能会选择到失败的Broker上的Queue，然后再重试，尽管重试可能会成功，但是每次发送消息的耗时会增加。因此，MQFaultStrategy实际上还提供了以下两个功能(超出本文范畴，将会后续其他文章中讲解)：</p><ul><li>失败隔离：即发送消息到某个broker失败之后，将其进行隔离，优先从其他正常的broker中进行选择</li><li>延迟隔离：优先发送消息到延迟比较小的broker</li></ul><p>对于无序消息，通过这种异常重试机制，就可以保证消息发送的高可用了。同时由于不需要NameServer通知众多不固定的生产者，也降低了NameServer实现的复杂性。</p><p><strong>既然重试机制有这么明显的好处，那么对于普通有序消息，和严格有序消息，rocketmq为什么默认不进行重试呢？</strong></p><p>答案很简单，这些消息只能发送某个特定的Broker上的某个特定的Queue中，如果发送失败，重试失败的可能依然很大，所以默认不进行重试。如果需要重试，需要业务方自己来做。</p><h2 id="普通有序消息失败情况下的短暂无序"><a href="#普通有序消息失败情况下的短暂无序" class="headerlink" title="普通有序消息失败情况下的短暂无序"></a><strong>普通有序消息失败情况下的短暂无序</strong></h2><p>首先说明，对于普通有序消息，RocketMQ是不会进行重试的。如果需要重试，那么业务RD同学需要自己编写重试代码，例如通过一个for循环，最多重试几次。<strong>但是业务自己的重试是有问题的，即会破坏消息的有序性。</strong></p><p>这里主要说明：对于普通有序消息，在异常情况下，如何经历短暂无序之后再恢复有序。</p><p><strong>异常情况下的短暂无序</strong></p><p>在异常情况下，例如一个Broker宕机，路由信息刷新后，这个Broker上队列就会从List集合中移除。此时按照相同的方式选择队列，就会选择到其他队列上，造成了无序。但是这个无序是很短暂的，因为之后同一个用户的信息，都会发送到同一个新的队列上。</p><p>如果宕机的broker恢复了，那么再次经历一下短暂无序，之后又变得有序了。</p><h2 id="严格有序消息的重试"><a href="#严格有序消息的重试" class="headerlink" title="严格有序消息的重试"></a><strong>严格有序消息的重试</strong></h2><p>对于严格有序消息，由于直接指定了一个MessageQueue。如果这个MessageQueue所在的Broker宕机了，那么之后的重试必然都失败，只有无限重试，直到成功。因此，非必要的情况下，是不建议使用严格有序消息的。</p><h1 id="客户端NameServer选择策略"><a href="#客户端NameServer选择策略" class="headerlink" title="客户端NameServer选择策略"></a><strong>客户端NameServer选择策略</strong></h1><p>前面讲解了客户端在获取路由信息时，每次都会尝试先从缓存的路由表中查找Topic路由信息，如果找不到，那么就去NameServer更新尝试。</p><p>具体选择哪个NameServer，也是使用round-robin的策略。需要注意的是，尽管使用round-robin策略，但是在选择了一个NameServer节点之后，后面总是会优先选择这个NameServer，除非与这个NameServer节点通信出现异常的情况下，才会选择其他节点。</p><p>为什么客户端不与所有NameServer节点建立连接呢，而是只选择其中一个？可能是，通常NameServer节点是固定的几个，但是客户端的数量可能是成百上千，为了减少每个NameServer节点的压力，所以每个客户端节点只随机与其中一个NameServer节点建立连接。</p><p>为了尽可能保证NameServer集群每个节点的负载均衡，在round-robin策略选择时，每个客户端的初始随机位置都不同。</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">private final AtomicInteger namesrvIndex = new AtomicInteger(initValueIndex());</span><br></pre></td></tr></table></figure><p>其中initValueIndex()就是计算一个随机值，之后每次选择NameServer时，namesrvIndex+1之后，对namesrvAddrList取模，计算在数据下标的位置，尝试创建连接，一旦创建成功，会将当前选择的NameServer地址记录到namesrvAddrChoosed字段中：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">private final AtomicReference&lt;String&gt; namesrvAddrChoosed = new AtomicReference&lt;String&gt;();</span><br></pre></td></tr></table></figure><p>如果某个NameServer节点创建连接失败是，会自动重试其他节点。具体可参见：getAndCreateNameserverChannel 。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;NameServer的作用&quot;&gt;&lt;a href=&quot;#NameServer的作用&quot; class=&quot;headerlink&quot; title=&quot;NameServer的作用&quot;&gt;&lt;/a&gt;&lt;strong&gt;NameServer的作用&lt;/strong&gt;&lt;/h1&gt;&lt;p&gt;&lt;img src=
       
     
     </summary>

@@ -251,6 +251,209 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/12/09/12-9技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/12/09/12-9技术笔记/" itemprop="url">RocketMQ NameServer机制</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-12-09T14:32:21+08:00">
+                2021-12-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="NameServer的作用"><a href="#NameServer的作用" class="headerlink" title="NameServer的作用"></a><strong>NameServer的作用</strong></h1><p><img src="https://raw.githubusercontent.com/arvenseyz/imageCloud/main/862aa9a7-9185-43af-933c-707030d471d6.png" alt></p>
+<p>可以看到，Broker集群、Producer集群、Consumer集群都需要与NameServer集群进行通信：</p>
+<p><strong>Broker集群</strong></p>
+<p>Broker用于接收生产者发送消息，或者消费者消费消息的请求。一个Broker集群由多组Master/Slave组成，Master可写可读，Slave只可以读，Master将写入的数据同步给Slave。每个Broker节点，在启动时，都会遍历NameServer列表，与每个NameServer建立长连接，注册自己的信息，之后定时上报。</p>
+<p><strong>Producer集群</strong></p>
+<p>消息的生产者，通过NameServer集群获得Topic的路由信息，包括Topic下面有哪些Queue，这些Queue分布在哪些Broker上等。Producer只会将消息发送到Master节点上，因此只需要与Master节点建立连接。</p>
+<p><strong>Consumer集群</strong></p>
+<p>消息的消费者，通过NameServer集群获得Topic的路由信息，连接到对应的Broker上消费消息。注意，由于Master和Slave都可以读取消息，因此Consumer会与Master和Slave都建立连接。</p>
+<h1 id="为什么要使用NameServer"><a href="#为什么要使用NameServer" class="headerlink" title="为什么要使用NameServer"></a><strong>为什么要使用NameServer</strong></h1><p>那么为什么rocketmq选择自己开发一个NameServer，而不是使用这些开源组件呢？</p>
+<p>特别的，RocketMQ设计之初时参考的另一款消息中间件Kafka就使用了Zookeeper，Zookeeper其提供了Master选举、分布式锁、数据的发布和订阅等诸多功能。</p>
+<p>事实上，在RocketMQ的早期版本，即MetaQ 1.x和MetaQ 2.x阶段，也是依赖Zookeeper的。但MetaQ 3.x（即RocketMQ）却去掉了ZooKeeper依赖，转而采用自己的NameServer。</p>
+<p>而RocketMQ的架构设计决定了只需要一个轻量级的元数据服务器就足够了，只需要保持最终一致，而不需要Zookeeper这样的强一致性解决方案，不需要再依赖另一个中间件，从而减少整体维护成本。敏锐的同学肯定已经意识到了，根据CAP理论，RocketMQ在名称服务这个模块的设计上选择了AP，而不是CP。</p>
+<p><strong>Zookeeper CP</strong></p>
+<ul>
+<li>分布式选主，主备高可用切换等场景下有不可替代的作用，而这些需求往往多集中在大数据、离线任务等相关的业务领域，因为大数据领域，讲究分割数据集，并且大部分时间分任务多进程 / 线程并行处理这些数据集，但是总是有一些点上需要将这些任务和进程统一协调，这时候就是 ZooKeeper 发挥巨大作用的用武之地。</li>
+<li>但是在交易场景交易链路上，在主业务数据存取，大规模服务发现、大规模健康监测等方面有天然的短板，应该竭力避免在这些场景下引入 ZooKeeper，在生产实践中，应用对 ZooKeeper 申请使用的时候要进行严格的场景、容量、SLA 需求的评估。</li>
+</ul>
+<p><strong>NameServer AP</strong></p>
+<p>NameServer作为一个名称服务，需要提供服务注册、服务剔除、服务发现这些基本功能，但是NameServer节点之间并不通信，容忍在某个时刻各个节点数据可能不一致的情况下</p>
+<p><strong>所以可以使用 CP，也可以使用AP</strong>，但是大数据使用CP，在线服务则AP，分布式协调、选主使用CP，服务发现使用AP</p>
+<h1 id="NameServer如何保证数据的最终一致"><a href="#NameServer如何保证数据的最终一致" class="headerlink" title="NameServer如何保证数据的最终一致"></a><strong>NameServer如何保证数据的最终一致</strong></h1><p>既然是AP系统，就需要保证最终一致。</p>
+<h3 id="路由注册"><a href="#路由注册" class="headerlink" title="路由注册"></a><strong>路由注册</strong></h3><p>对于Zookeeper、Etcd这样强一致性组件，数据只要写到主节点，内部会通过状态机将数据复制到其他节点，Zookeeper使用的是Zab协议，etcd使用的是raft协议。</p>
+<p>但是NameServer节点之间是互不通信的，无法进行数据复制。RocketMQ采取的策略是，在Broker节点在启动的时候，轮训NameServer列表，与每个NameServer节点建立长连接，发起注册请求。NameServer内部会维护一个Broker表，用来动态存储Broker的信息。</p>
+<p>同时，Broker节点为了证明自己是存活的，会将最新的信息上报给NameServer，然后每隔30秒向NameServer发送心跳包，心跳包中包含 BrokerId、Broker地址、Broker名称、Broker所属集群名称等等，然后NameServer接收到心跳包后，会更新时间戳，记录这个Broker的最新存活时间。</p>
+<p>NameServer在处理心跳包的时候，存在多个Broker同时操作一张Broker表，为了防止并发修改Broker表导致不安全，路由注册操作引入了ReadWriteLock读写锁，这个设计亮点允许多个消息生产者并发读，保证了消息发送时的高并发，但是同一时刻NameServer只能处理一个Broker心跳包，多个心跳包串行处理。这也是读写锁的经典使用场景，即读多写少。</p>
+<h3 id="路由剔除"><a href="#路由剔除" class="headerlink" title="路由剔除"></a><strong>路由剔除</strong></h3><p>正常情况下，如果Broker关闭，则会与NameServer断开长连接，Netty的通道关闭监听器会监听到连接断开事件，然后会将这个Broker信息剔除掉。</p>
+<p>异常情况下，NameServer中有一个定时任务，每隔10秒扫描一下Broker表，如果某个Broker的心跳包最新时间戳距离当前时间超多120秒，也会判定Broker失效并将其移除。</p>
+<p>特别的，对于一些日常运维工作，例如：Broker升级，RocketMQ提供了一种优雅剔除路由信息的方式。如在升级一个Master节点之前，可以先通过命令行工具禁止这个Broker的写权限，发送消息到这个Broker的请求，都会收到一个NO_PERMISSION响应，客户端会自动重试其他的Broker。</p>
+<p>当观察到这个broker没有流量后，再将这个broker移除。</p>
+<h3 id="路由发现"><a href="#路由发现" class="headerlink" title="路由发现"></a><strong>路由发现</strong></h3><p>路由发现是客户端的行为，这里的客户端主要说的是生产者和消费者。具体来说：</p>
+<ul>
+<li>对于生产者，可以发送消息到多个Topic，因此一般是在发送第一条消息时，才会根据Topic获取从NameServer获取路由信息。</li>
+<li>对于消费者，订阅的Topic一般是固定的，所在在启动时就会拉取。</li>
+</ul>
+<p>那么生产者/消费者在工作的过程中，如果路由信息发生了变化怎么处理呢？如：Broker集群新增了节点，节点宕机或者Queue的数量发生了变化。细心的读者注意到，前面讲解NameServer在路由注册或者路由剔除过程中，并不会主动推送会客户端的，这意味着，需要由客户端拉取主题的最新路由信息。</p>
+<p>事实上，RocketMQ客户端提供了定时拉取Topic最新路由信息的机制。</p>
+<h2 id="一致性问题"><a href="#一致性问题" class="headerlink" title="一致性问题"></a>一致性问题</h2><p>定时拉取，还不能解决所有的问题。因为客户端默认是每隔30秒会定时请求NameServer并获取最新的路由表，意味着客户端获取路由信息总是会有30秒的延时。这就带来一个严重的问题，客户端无法实时感知Broker服务器的宕机。如果生产者和消费者在这30秒内，依然会向这个宕机的broker发送或消费消息呢？</p>
+<h1 id="生产者重试机制"><a href="#生产者重试机制" class="headerlink" title="生产者重试机制"></a><strong>生产者重试机制</strong></h1><h2 id="普通消息的重试"><a href="#普通消息的重试" class="headerlink" title="普通消息的重试"></a><strong>普通消息的重试</strong></h2><p>对于普通消息，消息发送默认采用round-robin机制来选择发送到哪一个队列，如果发送失败，默认重试2次。由于之前发送失败的Queue必然位于某个Broker上，在重试过程中，这个失败的Broker上的Queue都不会选择，这里主要是考虑，既然发送到这个Broker上某个Queue失败了，那么发送到这个Broker上的Queue失败的可能性依然很大，所以选择其他Broker。</p>
+<p>但是一定会这样吗？例如Broker集群只是由一组Master/Slave组成，发送消息只会选择Master，如果这个Master失败了，没有其他Master可选，此时依然会选择这个Master上的其他Queue。</p>
+<p>在实际生产环境中，通常Broker集群至少由2组Master/Slave组成，甚至更多，例如我司就是3主3从。这样就可以很好的利用RocketMQ对于普通消息发送的重试机制，每次重试到不同的Broker上。</p>
+<p>事情到这里并没有结束，这段代码只是单次发送消息失败重试选择队列的逻辑。实际情况可能是，在Broker宕机期间，可能会发送多条消息，那么每次都可能会选择到失败的Broker上的Queue，然后再重试，尽管重试可能会成功，但是每次发送消息的耗时会增加。因此，MQFaultStrategy实际上还提供了以下两个功能(超出本文范畴，将会后续其他文章中讲解)：</p>
+<ul>
+<li>失败隔离：即发送消息到某个broker失败之后，将其进行隔离，优先从其他正常的broker中进行选择</li>
+<li>延迟隔离：优先发送消息到延迟比较小的broker</li>
+</ul>
+<p>对于无序消息，通过这种异常重试机制，就可以保证消息发送的高可用了。同时由于不需要NameServer通知众多不固定的生产者，也降低了NameServer实现的复杂性。</p>
+<p><strong>既然重试机制有这么明显的好处，那么对于普通有序消息，和严格有序消息，rocketmq为什么默认不进行重试呢？</strong></p>
+<p>答案很简单，这些消息只能发送某个特定的Broker上的某个特定的Queue中，如果发送失败，重试失败的可能依然很大，所以默认不进行重试。如果需要重试，需要业务方自己来做。</p>
+<h2 id="普通有序消息失败情况下的短暂无序"><a href="#普通有序消息失败情况下的短暂无序" class="headerlink" title="普通有序消息失败情况下的短暂无序"></a><strong>普通有序消息失败情况下的短暂无序</strong></h2><p>首先说明，对于普通有序消息，RocketMQ是不会进行重试的。如果需要重试，那么业务RD同学需要自己编写重试代码，例如通过一个for循环，最多重试几次。<strong>但是业务自己的重试是有问题的，即会破坏消息的有序性。</strong></p>
+<p>这里主要说明：对于普通有序消息，在异常情况下，如何经历短暂无序之后再恢复有序。</p>
+<p><strong>异常情况下的短暂无序</strong></p>
+<p>在异常情况下，例如一个Broker宕机，路由信息刷新后，这个Broker上队列就会从List集合中移除。此时按照相同的方式选择队列，就会选择到其他队列上，造成了无序。但是这个无序是很短暂的，因为之后同一个用户的信息，都会发送到同一个新的队列上。</p>
+<p>如果宕机的broker恢复了，那么再次经历一下短暂无序，之后又变得有序了。</p>
+<h2 id="严格有序消息的重试"><a href="#严格有序消息的重试" class="headerlink" title="严格有序消息的重试"></a><strong>严格有序消息的重试</strong></h2><p>对于严格有序消息，由于直接指定了一个MessageQueue。如果这个MessageQueue所在的Broker宕机了，那么之后的重试必然都失败，只有无限重试，直到成功。因此，非必要的情况下，是不建议使用严格有序消息的。</p>
+<h1 id="客户端NameServer选择策略"><a href="#客户端NameServer选择策略" class="headerlink" title="客户端NameServer选择策略"></a><strong>客户端NameServer选择策略</strong></h1><p>前面讲解了客户端在获取路由信息时，每次都会尝试先从缓存的路由表中查找Topic路由信息，如果找不到，那么就去NameServer更新尝试。</p>
+<p>具体选择哪个NameServer，也是使用round-robin的策略。需要注意的是，尽管使用round-robin策略，但是在选择了一个NameServer节点之后，后面总是会优先选择这个NameServer，除非与这个NameServer节点通信出现异常的情况下，才会选择其他节点。</p>
+<p>为什么客户端不与所有NameServer节点建立连接呢，而是只选择其中一个？可能是，通常NameServer节点是固定的几个，但是客户端的数量可能是成百上千，为了减少每个NameServer节点的压力，所以每个客户端节点只随机与其中一个NameServer节点建立连接。</p>
+<p>为了尽可能保证NameServer集群每个节点的负载均衡，在round-robin策略选择时，每个客户端的初始随机位置都不同。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">private final AtomicInteger namesrvIndex = new AtomicInteger(initValueIndex());</span><br></pre></td></tr></table></figure>
+<p>其中initValueIndex()就是计算一个随机值，之后每次选择NameServer时，namesrvIndex+1之后，对namesrvAddrList取模，计算在数据下标的位置，尝试创建连接，一旦创建成功，会将当前选择的NameServer地址记录到namesrvAddrChoosed字段中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">private final AtomicReference&lt;String&gt; namesrvAddrChoosed = new AtomicReference&lt;String&gt;();</span><br></pre></td></tr></table></figure>
+<p>如果某个NameServer节点创建连接失败是，会自动重试其他节点。具体可参见：getAndCreateNameserverChannel 。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/12/01/12-1技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1745,171 +1948,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/22/9-22技术笔记-2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/09/22/9-22技术笔记-2/" itemprop="url">FST</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-09-22T11:20:52+08:00">
-                2021-09-22
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="FST（Finite-State-Transducer）"><a href="#FST（Finite-State-Transducer）" class="headerlink" title="FST（Finite State Transducer）"></a>FST（Finite State Transducer）</h2><p>FST类似一种TRIE树。</p>
-<p><a href="https://imgtu.com/i/4N3OO0" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/09/22/4N3OO0.png" alt="4N3OO0.png"></a></p>
-<p><a href="https://imgtu.com/i/4N8Em6" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/09/22/4N8Em6.png" alt="4N8Em6.png"></a></p>
-<p>可见FST和字典树类似，区别在于，它不但共享了前缀，还共享了后缀。</p>
-<h2 id="怎么构建"><a href="#怎么构建" class="headerlink" title="怎么构建"></a>怎么构建</h2><p>FST树的构建比较简单，但其依赖于前提<strong><em>输入有序</em></strong></p>
-<p>只需要每次和上一个输入进行最大前缀匹配即可。</p>
-<p><img src="https://s3.bmp.ovh/imgs/2021/09/a813ad0d38865fba.png" alt></p>
-<p>插入“do”与，前一个单词“deep”进行最大前缀匹配，发现是d，则在d边后增加新边o，o边指向终点。</p>
-<h1 id="怎么用"><a href="#怎么用" class="headerlink" title="怎么用"></a>怎么用</h1><p>Lucene在存储倒排索引时，分为2个文件: 词典文件(.tim), 词典索引文件(.tip)。其中.tip中存储的就是多个FST，<br>FST中存储的是&lt;单词前缀，以该前缀开头的所有Term的压缩块在磁盘中的位置&gt;。</p>
-<p>ES的词典，实际上分了两级，Terms Dictionary 通过 .tim 后缀文件存储，其内部采用 NodeBlock 对 Term 进行压缩前缀存储，处理过程会将相同前缀的的 Term 压缩为一个 NodeBlock，NodeBlock 会存储公共前缀，然后将每个 Term 的后缀以及对应 Term 的 Posting 关联信息处理为一个 Entry 保存到 Block。</p>
-<p><img src="https://s3.bmp.ovh/imgs/2021/09/13ba20217a706cd5.png" alt></p>
-<p>在上图中可以看到 Block 中还包含了 Block，这里是为了处理包含相同前缀的 Term 集合内部部分 Term 又包含了相同前缀。</p>
-<p>举个例子，在下图中为公共前缀为 a 的 Term 集合，内部部分 Term 的又包含了相同前缀 ab，这时这部分 Term 就会处理为一个嵌套的 Block。</p>
-<p>Terms Dictionary 是按 NodeBlock 存储在.tim 文件上。当文档数量越来越多的时，Dictionary 中的 Term 也会越来越多，那查询效率必然也会逐渐变低。</p>
-<p>因此需要一个很好的数据结构为 Dictionary 建构一个索引，这就是 Terms Index(.tip文件存储)，Lucene 采用了 FST 这个数据结构来实现这个索引。</p>
-<p>实际上，<strong>FST的结构非常复杂，我们可以简单的将其理解为一个高效的K-V结构，而且空间占用率更高</strong>。这里想简单强调一下：<strong>Lucene到底在FST里存了什么数据？</strong> 如果你已经了解FST在Lucene中充当的角色和作用的话，我想你可能会误认为FST中存了Dictionary中所有的Terms数据，这样可以通过FST是找到具体的Term的位置，或者通过FST可以切实获知一个Term是否存在。</p>
-<p><strong>然而，事实并非如此。</strong> FST即不能知道某个Term在Dictionary(.tim)文件上具体的位置，也不能仅通过FST就能确切的知道Term是否真实存在。它只能告诉你，查询的Term可能在这些Blocks上，到底存不存在FST并不能给出确切的答案，<strong>因为FST是通过Dictionary的每个Block的前缀构成，所以通过FST只可以直接找到这个Block在.tim文件上具体的File Pointer</strong>，并无法直接找到Terms。</p>
-<h3 id="倒排索引的实现"><a href="#倒排索引的实现" class="headerlink" title="倒排索引的实现"></a>倒排索引的实现</h3><ul>
-<li>通过 Term Index 数据（.tip文件）中的 StartFP 获取指定字段的 FST</li>
-<li>通过 FST 找到指定 Term 在 Term Dictionary（.tim 文件）可能存在的 Block</li>
-<li>将对应 Block 加载内存，遍历 Block 中的 Entry，通过后缀（Suffix）判断是否存在指定 Term</li>
-<li>存在则通过 Entry 的 TermStat 数据中各个文件的 FP 获取 Posting 数据</li>
-<li>如果需要获取 Term 对应的所有 DocId 则直接遍历 TermFreqs，如果获取指定 DocId 数据则通过 SkipData快速跳转</li>
-</ul>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1960,7 +1998,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">276</span>
+                  <span class="site-state-item-count">277</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

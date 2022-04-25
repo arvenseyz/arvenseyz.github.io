@@ -251,6 +251,151 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/04/28/4-28技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/04/28/4-28技术笔记-1/" itemprop="url">重名，前三名sql</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-04-28T18:27:10+08:00">
+                2020-04-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h3 id="查询student表中重名的学生"><a href="#查询student表中重名的学生" class="headerlink" title="查询student表中重名的学生"></a>查询student表中重名的学生</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">id</span>,<span class="keyword">name</span></span><br><span class="line"><span class="keyword">from</span> student</span><br><span class="line"><span class="keyword">where</span> <span class="keyword">name</span> <span class="keyword">in</span> (</span><br><span class="line"><span class="keyword">select</span> <span class="keyword">name</span> <span class="keyword">from</span> student <span class="keyword">group</span> <span class="keyword">by</span> <span class="keyword">name</span> <span class="keyword">having</span>(<span class="keyword">count</span>(*) &gt; <span class="number">1</span>)</span><br><span class="line">) <span class="keyword">order</span> <span class="keyword">by</span> <span class="keyword">name</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="每门课第一名（支持并列）"><a href="#每门课第一名（支持并列）" class="headerlink" title="每门课第一名（支持并列）"></a>每门课第一名（支持并列）</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> qtest <span class="keyword">as</span> x <span class="keyword">where</span> score=</span><br><span class="line">(<span class="keyword">select</span> <span class="keyword">max</span>(score) <span class="keyword">from</span> qtest  <span class="keyword">where</span> subject=x.subject);</span><br></pre></td></tr></table></figure>
+<p>即自连接，看成ab两张表，a中等于b中该学科最高成绩的。</p>
+<h3 id="每门课前三名"><a href="#每门课前三名" class="headerlink" title="每门课前三名"></a>每门课前三名</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> qtest x <span class="keyword">where</span></span><br><span class="line"><span class="number">3</span>&gt;(<span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">from</span> qtest  <span class="keyword">where</span> subject=x.subject <span class="keyword">and</span> score&gt;x.score)</span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> subject,score <span class="keyword">desc</span>;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/04/24/4-24技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1612,153 +1757,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/02/16/2-16技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/02/16/2-16技术笔记/" itemprop="url">同步I/O</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-02-16T17:19:52+08:00">
-                2020-02-16
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="缓冲区"><a href="#缓冲区" class="headerlink" title="缓冲区"></a>缓冲区</h2><p>在调用函数write()时，似乎该函数一旦返回，数据便已经写到了文件中.</p>
-<p>但显然，写磁盘速度很慢，如果加个内存缓冲区，只写入缓冲区，后续再把缓冲区写入磁盘，可以低速的输入输出设备长时间占用CPU，提高效率。</p>
-<h2 id="write函数"><a href="#write函数" class="headerlink" title="write函数"></a>write函数</h2><p>当调用write()函数写出数据时，数据一旦写到该缓冲区（关键：只是写到缓冲区），函数便立即返回.此时写出的数据可以用read()读回，也可以被其他进程读到，但是并不意味着它们已经被写到了外部永久存储介质上，即使调用close()关闭文件后也可能如此. 因为缓冲区的数据可能还在等待输出.<br>因此，从数据被实际写到磁盘的角度来看，用write()写出的文件数据与外部存储设备并不是完全同步的.不同步的时间间隔非常短，一般只有几秒或十几秒，具体取决于写出的数据量和I/O数据缓冲区的状态.尽管不同步的时间间隔很短，但是如果在此期间发生掉电或者系统崩溃，则会导致所写数据来不及写至磁盘而丢失的情况.</p>
-<h2 id="sync函数"><a href="#sync函数" class="headerlink" title="sync函数"></a>sync函数</h2><p>sync负责将系统缓冲区的数据“写入”磁盘，以确保数据的一致性和同步性.注意：sync函数只是将所有修改过的块缓冲区排入写队列，然后就返回，他并不等待实际I/O操作结束.所以不要认为调用了sync函数，就觉得数据已安全的送到磁盘文件上，有可能会出现问题，但是sync函数是无法得知的.<br>系统守候进程一般每隔一段时间调用一次sync函数，确保定期刷新内核的块缓存.UNIX系统中，系统守候进程update会周期性地（一般每个30秒）调用sync函数.命令sync(1)也调用sync函数.</p>
-<h2 id="fsync函数"><a href="#fsync函数" class="headerlink" title="fsync函数"></a>fsync函数</h2><p>与sync函数不同，fsync函数只对由文件描符filedes指定的单一文件起作用，强制与描述字fildes相连文件的所有修改过的数据（包括核内I/O缓冲区中的数据）传送到外部永久介质，即刷新fildes给出的文件的所有信息，并且等待写磁盘操作结束，然后返回.调用 fsync()的进程将阻塞直到设备报告传送已经完成.这个fsync就安全点了.<br>一个程序在写出数据之后，如果继续进行后续处理之前要求确保所写数据已写到磁盘，则应当调用fsync().例如，数据库应用通常会在调用write()保存关键交易数据的同时也调用fsync().这样更能保证数据的安全可靠.</p>
-<h2 id="fdatasync函数"><a href="#fdatasync函数" class="headerlink" title="fdatasync函数"></a>fdatasync函数</h2><p>fdatasync函数类似于fsync函数，但它只影响文件数据部分，强制传送用户已写出的数据至物理存储设备，不包括文件本身的特征数据.这样可以适当减少文件刷新时的数据传送量.而除数据外，fdatasync还会同步更新文件的属性.</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1809,7 +1807,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">276</span>
+                  <span class="site-state-item-count">277</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

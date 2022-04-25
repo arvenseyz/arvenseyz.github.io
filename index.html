@@ -251,6 +251,181 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/04/08/4-8技术笔记/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2022/04/08/4-8技术笔记/" itemprop="url">mysql锁</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-04-08T16:22:52+08:00">
+                2022-04-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="复习下隔离级别"><a href="#复习下隔离级别" class="headerlink" title="复习下隔离级别"></a>复习下隔离级别</h2><p>读未提交，会读到别的事务没提交的数据，会脏读（读到未持久化的数据）。</p>
+<p>读已提交，读取别的事务提交的数据，在事务过程中，由于别的事务提交了数据，前后读到的数据不一样，会不可重复读。</p>
+<p>可重复读，别的事务对该行的操作，对自己不可见。但是防不了插入新数据，count会不对，会幻读。</p>
+<p>读串行化</p>
+<h2 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h2><h3 id="表锁"><a href="#表锁" class="headerlink" title="表锁"></a>表锁</h3><p>LOCK TABLES table_name [READ | WRITE]</p>
+<p>直接锁表。两种模式，读锁和写锁。</p>
+<p>读锁的状态下，自己可以读，不能写，写会报错。</p>
+<p>别人可以上读锁，也可以不上锁直接读，不上写直接写会阻塞，等待所有的读锁释放。</p>
+<p>写锁状态下，自己可以写可以读。</p>
+<p>别人上锁、读、写都会阻塞，等待写锁释放。</p>
+<h3 id="行锁"><a href="#行锁" class="headerlink" title="行锁"></a>行锁</h3><h4 id="排他锁"><a href="#排他锁" class="headerlink" title="排他锁"></a>排他锁</h4><p>即行的写锁,X锁，select …..  for update</p>
+<p>当前写操作没有完成前，它会阻断其他写锁和读锁。</p>
+<p>事务对数据加上X锁时，只允许此事务读取和修改此数据，并且其它事务不能对该数据加任何锁（都会阻塞）</p>
+<h3 id="共享锁"><a href="#共享锁" class="headerlink" title="共享锁"></a>共享锁</h3><p>即行的读锁,S锁</p>
+<p>SELECT * FROM table_name WHERE … IN SHARE MODE;</p>
+<p>加了S锁后，该事务只能对数据进行读取而不能修改，并且其它事务只能加S锁，不能加X锁。</p>
+<p>读取结果集的最新版本，同时防止其他事务产生更新的数据版本。</p>
+<p>由于数据的最新版本是不断变化的，所以本读取模式需要强制阻断最新版本的变化，保证自己读取到的是所有人都一致认可的名副其实的最新版本。</p>
+<p><code>MySQL</code>官方文档的例子来说，假如存在两张有关系的表：PARENT和CHILD，使用普通的SELECT语句（快照读）来查询表PARENT并验证父行是否存在后再将子行插入CHILD表，这种方式安全吗？答案是否定的，因为其他会话可能会在你这个会话的SELECT和INSERT之间的某个时间点删除了父行，这个删除操作你是无法察觉到的。</p>
+<h3 id="加锁时机"><a href="#加锁时机" class="headerlink" title="加锁时机"></a>加锁时机</h3><p><strong>update,delete,insert都会自动给涉及到的数据加上排他锁</strong>，select语句默认不会加任何锁类型。</p>
+<p>所以加过排他锁的数据行在其他事务种是不能修改数据的，也不能通过for update和lock in share mode锁的方式查询数据，但可以直接通过select …from…查询数据，因为普通查询没有任何锁机制。</p>
+<h3 id="意向锁"><a href="#意向锁" class="headerlink" title="意向锁"></a>意向锁</h3><p><strong>意向锁都是表锁。</strong>意向锁的存在是为了允许事务在行级上的锁和表级上的锁同时存在。</p>
+<p>意向锁实际上不是给用户用的，而是为了解决性能问题，内部的实现。</p>
+<p>一个事务在加表锁的时候是如何确定这张表的记录行上面有没有加锁呢？</p>
+<p>很显然，最简单的方式就是一行一行遍历每条数据，分别去判断每行有没有被锁住。但是这方法性能有问题，所以才有的意向锁。</p>
+<p><code>当一个事务想要获取表中某一行的（共享/排他）锁的时候，它会自动尝试给当前表的加上意向（共享/排他）锁</code><br>。然后，表锁和行锁之间的兼容互斥性就变成了表锁和意向锁之间的竞争关系。</p>
+<p><strong>意向锁只会与表级的共享 互斥锁具有互斥性</strong>。</p>
+<p>意向锁之间互相兼容，因此针对表中的记录加锁不会因为意向锁而产生互斥，行锁之间的竞争关系是行锁与行锁的竞争，意向锁并不会参与其中；</p>
+<p>意向锁和表级锁会产生互斥，这里互斥的作用就是用于表锁的第二个检查。</p>
+<h2 id="锁升级"><a href="#锁升级" class="headerlink" title="锁升级"></a>锁升级</h2><p>行锁升级为表锁的原因之一是： SQL 语句中未使用到索引，或者说使用的索引未被数据库认可（相当于没有使用索引）。</p>
+<p>如果在数据库的设计中认为锁时一种稀有资源，而且像避免锁的开销，那数据库会频繁出现锁升级现象。（多个行锁还不如一个表锁）</p>
+<p>InnoDB默认采用行锁，在未使用索引字段查询时升级为表锁。MySQL这样设计并不是给你挖坑。它有自己的设计目的。<br>即便你在条件中使用了索引字段，MySQL会根据自身的执行计划，考虑是否使用索引(所以explain命令中会有possible_key 和 key)。如果MySQL认为全表扫描效率更高，它就不会使用索引，这种情况下InnoDB将使用表锁，而不是行锁。因此，在分析锁冲突时，别忘了检查SQL的执行计划，以确认是否真正使用了索引。</p>
+<p>第一种情况：全表更新。事务需要更新大部分或全部数据，且表又比较大。若使用行锁，会导致事务执行效率低，从而可能造成其他事务长时间锁等待和更多的锁冲突。</p>
+<p>第二种情况：多表级联。事务涉及多个表，比较复杂的关联查询，很可能引起死锁，造成大量事务回滚。这种情况若能一次性锁定事务涉及的表，从而可以避免死锁、减少数据库因事务回滚带来的开销。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/04/06/4-6技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1869,168 +2044,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2022/03/04/3-4技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2022/03/04/3-4技术笔记/" itemprop="url">mongo的checkpoint和Journaling</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2022-03-04T15:41:57+08:00">
-                2022-03-04
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="page"><a href="#page" class="headerlink" title="page"></a>page</h1><p>WiredTiger存储引擎里面，磁盘里集合数据和索引都是通过B+ Tree来组织的，但是提供给应用读写的数据都是发生在内存里的，WiredTiger会按需将磁盘的数据以page为单位加载到内存，同时在内存会构造相应的B+ Tree来存储这些数据。应用都是在内存中对Page进行增删改，内存中的Page会利用一些数据结构来记录应用的修改，然后经过reconcile(调和)生成新的Page(基于原Page修改后的Page)，然后等待evict线程将生成的新的Page写到磁盘，并丢弃旧的Page。</p>
-<p>第一步：pages从磁盘读到内存；</p>
-<p>第二步：pages在内存中被修改；</p>
-<p>第三步：被修改的脏pages在内存被reconcile，完成后将discard这些pages。</p>
-<p>第四步：pages被选中，加入淘汰队列，等待被evict线程淘汰出内存；</p>
-<p>第五步：evict线程会将“干净“的pages直接从内存丢弃（因为相对于磁盘page来说没做任何修改），将经过reconcile处理后的磁盘映像写到磁盘再丢弃“脏的”pages。</p>
-<h1 id="checkPoint"><a href="#checkPoint" class="headerlink" title="checkPoint"></a>checkPoint</h1><p>WiredTiger的写操作会默认写入 Cache ,并持久化到 WAL (Write Ahead Log)，每60s或Log文件达到2G做一次 checkpoint (当然我们也可以通过在写入时传入 j: true 的参数强制 journal 文件的同步 ，writeConcern { w: , j: , wtimeout: }) 产生快照文件。WiredTiger初始化时，恢复至最新的快照状态，然后再根据WAL恢复数据，保证数据的完整性。<br>本质上来说，Checkpoint相当于一个日志，记录了上次Checkpoint后相关数据文件的变化。</p>
-<p>checkpoint 中文名为检查点，顾名思义，是检查某一时刻内存和磁盘中的数据状态，即从上一次检查点到现在哪些Page被删除，哪些Page被新建等，可以说是记录了数据库中内存数据相对于上一次检查点的一个快照。当向Disk写入数据时，WiredTiger将Snapshot中的所有数据以一致性方式写入到数据文件（Disk Files）中。一旦Checkpoint创建成功，WiredTiger保证数据文件和内存数据是一致性的，因此，Checkpoint担当的是还原点（Recovery Point），一旦发生系统故障，可以根据检查点恢复出最新一次检查点的状态，然后通过回放从检查点之后的journal日志恢复出断电前的数据。<br>总的来说，Checkpoint主要有两个目的：</p>
-<p>一是将内存里面发生修改的数据写到数据文件进行持久化保存，确保数据一致性；</p>
-<p>二是实现数据库在某个时刻意外发生故障，再次启动时，缩短数据库的恢复时间。</p>
-<p>Checkpoint技术通过在内存中维护一定的数据结构(B+ Tree)，记录应用对数据的改动，即从上次checkpoint到现在的内存页的改动，和要删除的页等，然后通过定时刷新等触发方式，将内存中的Checkpoint 的B+ Tree刷新到磁盘。一旦checkpoint完成，磁盘中数据就和内存数据同步了，checkpoint可以生成新的live Tress来继续记录应用新的改动。</p>
-<h3 id="journal日志"><a href="#journal日志" class="headerlink" title="journal日志"></a>journal日志</h3><p>checkpoint保证了每个检查点之间，内存数据同步到磁盘。但是两个checkpoint时间间隔内的数据也需要保证持久化，这个就要靠journal日志来实现了。</p>
-<p>journal 是顺序写入的二进制日志文件，用于记录上一个Checkpoint之后发生的数据更新，能够将数据库从系统异常终止事件中还原到一个有效的状态。journal日志文件是预分配的，从图6: MongoDB数据目录文件可以看出，journal目录下的文件都是100MB，是预分配好的，可以提高性能。WiredTiger 为每个客户端发起的写操作创建一个日志记录。日志记录包括由初始写入引起的任何内部写入操作。例如，对集合中文档的更新可能会导致对索引的修改；WiredTiger 创建单个日志记录，其中包括文档更新操作及其关联的索引修改。每条日志记录都有一个唯一的标识符，<br>WiredTiger 的最小日志记录大小为 128 字节。MongoDB 将 WiredTiger 配置为使用内存缓冲来存储日志记录。线程协调分配并复制到它们的缓冲区部分，缓冲最大 128 kB 的所有日志记录。当满足以下条件时，journal会被刷入到磁盘中：</p>
-<ul>
-<li><p>每100ms</p>
-</li>
-<li><p>写操作时加了选项<code>{j:true}</code>  </p>
-</li>
-<li><p>当 WiredTiger 创建一个新的日志文件时。由于 MongoDB 使用 100 MB 的日志文件大小限制，WiredTiger 大约每 100 MB 数据创建一个新日志文件。</p>
-</li>
-</ul>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2081,7 +2094,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">276</span>
+                  <span class="site-state-item-count">277</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

@@ -251,6 +251,182 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/12/29/12-29技术笔记-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/12/29/12-29技术笔记-1/" itemprop="url">mongo索引</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-12-29T11:57:43+08:00">
+                2020-12-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>在现在的引擎即wiredTiger下，mongo索引也用的是B+树。</p>
+<h1 id="为什么要用B-树"><a href="#为什么要用B-树" class="headerlink" title="为什么要用B+树"></a>为什么要用B+树</h1><p>原因和mysql一样，B+树很宽，这样树很扁，减少了磁盘io。</p>
+<h1 id="B-树什么样子的"><a href="#B-树什么样子的" class="headerlink" title="B+树什么样子的"></a>B+树什么样子的</h1><p><a href="https://imgchr.com/i/rHRpfx" target="_blank" rel="noopener"><img src="https://s3.ax1x.com/2020/12/29/rHRpfx.png" alt="rHRpfx.png"></a></p>
+<p>在整个B-Tree中，从上往下依次为Root结点、内部结点和叶子结点，每个结点就是一个Page，数据以Page为单位在内存和磁盘间进行调度，每个Page的大小决定了相应结点的分支数量，每条索引记录会包含一个数据指针，指向一条数据记录所在文件的偏移量。</p>
+<p>如上图，假设每个结点100个分支，那么所有叶子结点合起来可以包含100万个键值（等于100<em>100</em>100）。通常情况下Root结点和内部结点的Page会驻留在内存中，所以查找一条数据可能只需2次磁盘I/O。但随着数据不断的插入、删除，会涉及到B-Tree结点的分裂、位置提升及合并等操作，因此维护一个B-Tree的平衡也是比较耗时的。</p>
+<p>B<strong>+</strong> Tree中的leaf page包含一个页头（page header）、块头（block header）和真正的数据（key/value），其中页头定义了页的类型、页中实际载荷数据的大小、页中记录条数等信息；块头定义了此页的checksum、块在磁盘上的寻址位置等信息。</p>
+<p>WiredTiger有一个块设备管理的模块，用来为page分配block。如果要定位某一行数据（key/value）的位置，可以先通过block的位置找到此page（相对于文件起始位置的偏移量），再通过page找到行数据的相对位置，最后可以得到行数据相对于文件起始位置的偏移量offsets。由于offsets是一个8字节大小的变量，所以WiredTiger磁盘文件的大小，其最大值可以非常大(2^64bit)。</p>
+<h1 id="叶子节点里有什么"><a href="#叶子节点里有什么" class="headerlink" title="叶子节点里有什么"></a>叶子节点里有什么</h1><p><a href="https://imgchr.com/i/rH4CUH" target="_blank" rel="noopener"><img src="https://s3.ax1x.com/2020/12/29/rH4CUH.png" alt="rH4CUH.png"></a></p>
+<p>对数据的查询，修改，新增，都是先到内存，后到磁盘。</p>
+<ul>
+<li><p>内存上的leaf page会维护一个WT_ROW结构的数组变量，将保存从磁盘leaf page读取的keys/values值，每一条记录还有一个cell_offset变量，表示这条记录在page上的偏移量；</p>
+</li>
+<li><p>内存上的leaf page会维护一个WT_UPDATE结构的数组变量，每条被修改的记录都会有一个数组元素与之对应，如果某条记录被多次修改，则会将所有修改值以链表形式保存。</p>
+</li>
+<li><p>内存上的leaf page会维护一个WT_INSERT_HEAD结构的数组变量，具体插入的data会保存在WT_INSERT_HEAD结构中的WT_UPDATE属性上，且通过key属性的offset和size可以计算出此条记录待插入的位置；同时，为了提高寻找待插入位置的效率，每个WT_INSERT_HEAD变量以跳转链表的形式构成。</p>
+</li>
+</ul>
+<h1 id="索引分类"><a href="#索引分类" class="headerlink" title="索引分类"></a>索引分类</h1><h2 id="id-字段索引"><a href="#id-字段索引" class="headerlink" title="_id 字段索引"></a>_id 字段索引</h2><p>默认情况下，MongoDB 在创建一个 collection 的时候，会创建一个 _id 字段，该字段是一个唯一索引，保证不会重复插入两份相同的 documents；同时，该字段是不允许被删除的；</p>
+<h2 id="单字段和复合索引"><a href="#单字段和复合索引" class="headerlink" title="单字段和复合索引"></a>单字段和复合索引</h2><p>类似与mysql。还能指定顺序，sort时也走索引。</p>
+<h2 id="数组索引"><a href="#数组索引" class="headerlink" title="数组索引"></a>数组索引</h2><p>如果为一个数组类型的key建立了索引，实际上是给数组中的每一个元素建立了一条索引。</p>
+<p>可以为某个数组字段的每一个元素建立索引，但有限制</p>
+<ol>
+<li><p>不能同时在两个数组字段上建立一个复合索引</p>
+</li>
+<li><p>不能使用数组索引( Multikey Indexes )来做为分片主键( Sharded Key )</p>
+</li>
+<li><p>不能用作 Hashed Indexes</p>
+</li>
+<li><p>如果查询条件是需要完整匹配整个数组的元素，包含顺序；那么这个时候，数组索引只能作用到第一个查询元素上，它会查询所有的数组中包含该元素的数组，然后再从这些数组中依次匹配，找到完全匹配的数组项</p>
+</li>
+</ol>
+<h1 id="索引变种"><a href="#索引变种" class="headerlink" title="索引变种"></a>索引变种</h1><h2 id="唯一索引"><a href="#唯一索引" class="headerlink" title="唯一索引"></a>唯一索引</h2><p>同mysql，也支持联合unique。</p>
+<h2 id="部分索引"><a href="#部分索引" class="headerlink" title="部分索引"></a>部分索引</h2><p>有时候，如果对所有的数据都创建索引，非常浪费资源而且可能会导致性能问题；所以，通过 Partial Indexes 可以通过对需要被索引的字段设置过滤条件，进而只在该字段的部分数据集上创建索引，有针对性的提升查询性能。</p>
+<h2 id="稀疏索引"><a href="#稀疏索引" class="headerlink" title="稀疏索引"></a>稀疏索引</h2><p>MongoDB 中同一个 collection M 中的不同 document 的结构是随性的，是可以不相同的，document A 可以包含 Field X 但是 document B 可以不包含 Field X，包含的却是另外一个字段 Field X；所以，假设，我们按照常规索引的方式对 Field X 创建索引，这个时候，MongoDB 会对整个 collection M 中的记录创建索引，当 document B 不存在该字段 Field X 的时候，会使用 X = <code>null</code> 的方式为其同样的创建索引；这样的话，就造成了不必要的空间浪费，所以，稀疏索引既是 Sparse Indexes 诞生了，它诞生的目的就是为了解决上述的情况，当 document B 不存在 Field X 的时候，直接将该记录跳过，不为该记录其创建任何索引；</p>
+<h2 id="生死索引-Time-To-Alive-Indexes-TTL-Indexes"><a href="#生死索引-Time-To-Alive-Indexes-TTL-Indexes" class="headerlink" title="生死索引( Time To Alive Indexes, TTL Indexes )"></a>生死索引( Time To Alive Indexes, TTL Indexes )</h2><p>TTL index 是在某个<code>日期字段</code>上所创建的一种索引，其作用是，为其设置声明时间，如果超过了声明时间，那么 MongoDB 将会自动的去删除该记录( document )；</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/12/28/12-28技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1592,156 +1768,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/08/18/8-18技术笔记/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/08/18/8-18技术笔记/" itemprop="url">AOF</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-08-18T20:30:55+08:00">
-                2020-08-18
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>都知道持久化有AOF和RDB两种，那么是什么的全称呢，AOF是Append Only File，RDB是Redis DataBase。</p>
-<h2 id="AOF"><a href="#AOF" class="headerlink" title="AOF"></a>AOF</h2><h3 id="后写日志"><a href="#后写日志" class="headerlink" title="后写日志"></a>后写日志</h3><p><em>AOF</em>日志的<em>全称</em>是Append Only File,从名字上我们就能看出来,它是一个追加写入的日志文件。与数据库不同，redis为了性能，AOF是先写数据，后写日志，那么必然会有数据写成功了日志还没写的情况，redis为了性能，容忍丢数据。</p>
-<h3 id="刷盘时机"><a href="#刷盘时机" class="headerlink" title="刷盘时机"></a>刷盘时机</h3><p>redis是用标准C写的，写日志调用的是write函数，其实并不是真正的写入磁盘了，操作系统会在内核缓存write做的修改，当然可以调用fsync函数强制os写入到磁盘。</p>
-<p>调用fsync函数强制os写入到磁盘的时机有三种，显然性能越高可靠性越低。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">appendonly yes              //启用aof持久化方式</span><br><span class="line"># appendfsync always      //每次收到写命令就立即强制写入磁盘，最慢的，但是保证完全的持久化，不推荐使用</span><br><span class="line">appendfsync everysec     //每秒钟强制写入磁盘一次，在性能和持久化方面做了很好的折中，推荐</span><br><span class="line"># appendfsync no    //完全依赖os，性能最好,持久化没保证</span><br></pre></td></tr></table></figure>
-<h3 id="日志整理"><a href="#日志整理" class="headerlink" title="日志整理"></a>日志整理</h3><p>AOF一直往后面追加，日志文件为越来越大。比如对同一个key的操作，可以简化整理，方法如下。</p>
-<p>redis调用fork，新起一个子进程，子进程不是根据老的日志文件进行整理，而是根据现在内存中的数据进行整理。</p>
-<p>有这样一些细节：fork会让主进程把内存拷贝给子进程，拷贝不可能瞬间拷贝整个内存的，而是采用操作系统提供的写时复制(Copy On Write)机制，即先拷贝页表等数据结构，就是在写发生时，才真正拷贝内存真正的数据。</p>
-<p>内存拷贝完成后，子进程开始处理，这时主进程依然在接受请求，父进程继续处理client请求，除了把写命令写入到原来的aof文件中。同时把收到的写命令缓存起来。这样就能保证如果子进程重写失败的话并不会出问题。当子进程把快照内容写入已命令方式写到临时文件中后，子进程发信号通知父进程。然后父进程把缓存的写命令也写入到临时文件。现在父进程可以使用临时文件替换老的aof文件，并重命名，后面收到的写命令也开始往新的aof文件中追加。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1792,7 +1818,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">276</span>
+                  <span class="site-state-item-count">277</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>

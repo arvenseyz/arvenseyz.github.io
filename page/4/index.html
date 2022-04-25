@@ -251,6 +251,171 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/22/9-22技术笔记-2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Arvense">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Arvense">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/09/22/9-22技术笔记-2/" itemprop="url">FST</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-09-22T11:20:52+08:00">
+                2021-09-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="FST（Finite-State-Transducer）"><a href="#FST（Finite-State-Transducer）" class="headerlink" title="FST（Finite State Transducer）"></a>FST（Finite State Transducer）</h2><p>FST类似一种TRIE树。</p>
+<p><a href="https://imgtu.com/i/4N3OO0" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/09/22/4N3OO0.png" alt="4N3OO0.png"></a></p>
+<p><a href="https://imgtu.com/i/4N8Em6" target="_blank" rel="noopener"><img src="https://z3.ax1x.com/2021/09/22/4N8Em6.png" alt="4N8Em6.png"></a></p>
+<p>可见FST和字典树类似，区别在于，它不但共享了前缀，还共享了后缀。</p>
+<h2 id="怎么构建"><a href="#怎么构建" class="headerlink" title="怎么构建"></a>怎么构建</h2><p>FST树的构建比较简单，但其依赖于前提<strong><em>输入有序</em></strong></p>
+<p>只需要每次和上一个输入进行最大前缀匹配即可。</p>
+<p><img src="https://s3.bmp.ovh/imgs/2021/09/a813ad0d38865fba.png" alt></p>
+<p>插入“do”与，前一个单词“deep”进行最大前缀匹配，发现是d，则在d边后增加新边o，o边指向终点。</p>
+<h1 id="怎么用"><a href="#怎么用" class="headerlink" title="怎么用"></a>怎么用</h1><p>Lucene在存储倒排索引时，分为2个文件: 词典文件(.tim), 词典索引文件(.tip)。其中.tip中存储的就是多个FST，<br>FST中存储的是&lt;单词前缀，以该前缀开头的所有Term的压缩块在磁盘中的位置&gt;。</p>
+<p>ES的词典，实际上分了两级，Terms Dictionary 通过 .tim 后缀文件存储，其内部采用 NodeBlock 对 Term 进行压缩前缀存储，处理过程会将相同前缀的的 Term 压缩为一个 NodeBlock，NodeBlock 会存储公共前缀，然后将每个 Term 的后缀以及对应 Term 的 Posting 关联信息处理为一个 Entry 保存到 Block。</p>
+<p><img src="https://s3.bmp.ovh/imgs/2021/09/13ba20217a706cd5.png" alt></p>
+<p>在上图中可以看到 Block 中还包含了 Block，这里是为了处理包含相同前缀的 Term 集合内部部分 Term 又包含了相同前缀。</p>
+<p>举个例子，在下图中为公共前缀为 a 的 Term 集合，内部部分 Term 的又包含了相同前缀 ab，这时这部分 Term 就会处理为一个嵌套的 Block。</p>
+<p>Terms Dictionary 是按 NodeBlock 存储在.tim 文件上。当文档数量越来越多的时，Dictionary 中的 Term 也会越来越多，那查询效率必然也会逐渐变低。</p>
+<p>因此需要一个很好的数据结构为 Dictionary 建构一个索引，这就是 Terms Index(.tip文件存储)，Lucene 采用了 FST 这个数据结构来实现这个索引。</p>
+<p>实际上，<strong>FST的结构非常复杂，我们可以简单的将其理解为一个高效的K-V结构，而且空间占用率更高</strong>。这里想简单强调一下：<strong>Lucene到底在FST里存了什么数据？</strong> 如果你已经了解FST在Lucene中充当的角色和作用的话，我想你可能会误认为FST中存了Dictionary中所有的Terms数据，这样可以通过FST是找到具体的Term的位置，或者通过FST可以切实获知一个Term是否存在。</p>
+<p><strong>然而，事实并非如此。</strong> FST即不能知道某个Term在Dictionary(.tim)文件上具体的位置，也不能仅通过FST就能确切的知道Term是否真实存在。它只能告诉你，查询的Term可能在这些Blocks上，到底存不存在FST并不能给出确切的答案，<strong>因为FST是通过Dictionary的每个Block的前缀构成，所以通过FST只可以直接找到这个Block在.tim文件上具体的File Pointer</strong>，并无法直接找到Terms。</p>
+<h3 id="倒排索引的实现"><a href="#倒排索引的实现" class="headerlink" title="倒排索引的实现"></a>倒排索引的实现</h3><ul>
+<li>通过 Term Index 数据（.tip文件）中的 StartFP 获取指定字段的 FST</li>
+<li>通过 FST 找到指定 Term 在 Term Dictionary（.tim 文件）可能存在的 Block</li>
+<li>将对应 Block 加载内存，遍历 Block 中的 Entry，通过后缀（Suffix）判断是否存在指定 Term</li>
+<li>存在则通过 Entry 的 TermStat 数据中各个文件的 FP 获取 Posting 数据</li>
+<li>如果需要获取 Term 对应的所有 DocId 则直接遍历 TermFreqs，如果获取指定 DocId 数据则通过 SkipData快速跳转</li>
+</ul>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2021/09/18/9-16技术笔记/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1727,182 +1892,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://arvenseyz.github.io/2020/12/29/12-29技术笔记-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Arvense">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Arvense">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/12/29/12-29技术笔记-1/" itemprop="url">mongo索引</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-12-29T11:57:43+08:00">
-                2020-12-29
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/技术/" itemprop="url" rel="index">
-                    <span itemprop="name">技术</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>在现在的引擎即wiredTiger下，mongo索引也用的是B+树。</p>
-<h1 id="为什么要用B-树"><a href="#为什么要用B-树" class="headerlink" title="为什么要用B+树"></a>为什么要用B+树</h1><p>原因和mysql一样，B+树很宽，这样树很扁，减少了磁盘io。</p>
-<h1 id="B-树什么样子的"><a href="#B-树什么样子的" class="headerlink" title="B+树什么样子的"></a>B+树什么样子的</h1><p><a href="https://imgchr.com/i/rHRpfx" target="_blank" rel="noopener"><img src="https://s3.ax1x.com/2020/12/29/rHRpfx.png" alt="rHRpfx.png"></a></p>
-<p>在整个B-Tree中，从上往下依次为Root结点、内部结点和叶子结点，每个结点就是一个Page，数据以Page为单位在内存和磁盘间进行调度，每个Page的大小决定了相应结点的分支数量，每条索引记录会包含一个数据指针，指向一条数据记录所在文件的偏移量。</p>
-<p>如上图，假设每个结点100个分支，那么所有叶子结点合起来可以包含100万个键值（等于100<em>100</em>100）。通常情况下Root结点和内部结点的Page会驻留在内存中，所以查找一条数据可能只需2次磁盘I/O。但随着数据不断的插入、删除，会涉及到B-Tree结点的分裂、位置提升及合并等操作，因此维护一个B-Tree的平衡也是比较耗时的。</p>
-<p>B<strong>+</strong> Tree中的leaf page包含一个页头（page header）、块头（block header）和真正的数据（key/value），其中页头定义了页的类型、页中实际载荷数据的大小、页中记录条数等信息；块头定义了此页的checksum、块在磁盘上的寻址位置等信息。</p>
-<p>WiredTiger有一个块设备管理的模块，用来为page分配block。如果要定位某一行数据（key/value）的位置，可以先通过block的位置找到此page（相对于文件起始位置的偏移量），再通过page找到行数据的相对位置，最后可以得到行数据相对于文件起始位置的偏移量offsets。由于offsets是一个8字节大小的变量，所以WiredTiger磁盘文件的大小，其最大值可以非常大(2^64bit)。</p>
-<h1 id="叶子节点里有什么"><a href="#叶子节点里有什么" class="headerlink" title="叶子节点里有什么"></a>叶子节点里有什么</h1><p><a href="https://imgchr.com/i/rH4CUH" target="_blank" rel="noopener"><img src="https://s3.ax1x.com/2020/12/29/rH4CUH.png" alt="rH4CUH.png"></a></p>
-<p>对数据的查询，修改，新增，都是先到内存，后到磁盘。</p>
-<ul>
-<li><p>内存上的leaf page会维护一个WT_ROW结构的数组变量，将保存从磁盘leaf page读取的keys/values值，每一条记录还有一个cell_offset变量，表示这条记录在page上的偏移量；</p>
-</li>
-<li><p>内存上的leaf page会维护一个WT_UPDATE结构的数组变量，每条被修改的记录都会有一个数组元素与之对应，如果某条记录被多次修改，则会将所有修改值以链表形式保存。</p>
-</li>
-<li><p>内存上的leaf page会维护一个WT_INSERT_HEAD结构的数组变量，具体插入的data会保存在WT_INSERT_HEAD结构中的WT_UPDATE属性上，且通过key属性的offset和size可以计算出此条记录待插入的位置；同时，为了提高寻找待插入位置的效率，每个WT_INSERT_HEAD变量以跳转链表的形式构成。</p>
-</li>
-</ul>
-<h1 id="索引分类"><a href="#索引分类" class="headerlink" title="索引分类"></a>索引分类</h1><h2 id="id-字段索引"><a href="#id-字段索引" class="headerlink" title="_id 字段索引"></a>_id 字段索引</h2><p>默认情况下，MongoDB 在创建一个 collection 的时候，会创建一个 _id 字段，该字段是一个唯一索引，保证不会重复插入两份相同的 documents；同时，该字段是不允许被删除的；</p>
-<h2 id="单字段和复合索引"><a href="#单字段和复合索引" class="headerlink" title="单字段和复合索引"></a>单字段和复合索引</h2><p>类似与mysql。还能指定顺序，sort时也走索引。</p>
-<h2 id="数组索引"><a href="#数组索引" class="headerlink" title="数组索引"></a>数组索引</h2><p>如果为一个数组类型的key建立了索引，实际上是给数组中的每一个元素建立了一条索引。</p>
-<p>可以为某个数组字段的每一个元素建立索引，但有限制</p>
-<ol>
-<li><p>不能同时在两个数组字段上建立一个复合索引</p>
-</li>
-<li><p>不能使用数组索引( Multikey Indexes )来做为分片主键( Sharded Key )</p>
-</li>
-<li><p>不能用作 Hashed Indexes</p>
-</li>
-<li><p>如果查询条件是需要完整匹配整个数组的元素，包含顺序；那么这个时候，数组索引只能作用到第一个查询元素上，它会查询所有的数组中包含该元素的数组，然后再从这些数组中依次匹配，找到完全匹配的数组项</p>
-</li>
-</ol>
-<h1 id="索引变种"><a href="#索引变种" class="headerlink" title="索引变种"></a>索引变种</h1><h2 id="唯一索引"><a href="#唯一索引" class="headerlink" title="唯一索引"></a>唯一索引</h2><p>同mysql，也支持联合unique。</p>
-<h2 id="部分索引"><a href="#部分索引" class="headerlink" title="部分索引"></a>部分索引</h2><p>有时候，如果对所有的数据都创建索引，非常浪费资源而且可能会导致性能问题；所以，通过 Partial Indexes 可以通过对需要被索引的字段设置过滤条件，进而只在该字段的部分数据集上创建索引，有针对性的提升查询性能。</p>
-<h2 id="稀疏索引"><a href="#稀疏索引" class="headerlink" title="稀疏索引"></a>稀疏索引</h2><p>MongoDB 中同一个 collection M 中的不同 document 的结构是随性的，是可以不相同的，document A 可以包含 Field X 但是 document B 可以不包含 Field X，包含的却是另外一个字段 Field X；所以，假设，我们按照常规索引的方式对 Field X 创建索引，这个时候，MongoDB 会对整个 collection M 中的记录创建索引，当 document B 不存在该字段 Field X 的时候，会使用 X = <code>null</code> 的方式为其同样的创建索引；这样的话，就造成了不必要的空间浪费，所以，稀疏索引既是 Sparse Indexes 诞生了，它诞生的目的就是为了解决上述的情况，当 document B 不存在 Field X 的时候，直接将该记录跳过，不为该记录其创建任何索引；</p>
-<h2 id="生死索引-Time-To-Alive-Indexes-TTL-Indexes"><a href="#生死索引-Time-To-Alive-Indexes-TTL-Indexes" class="headerlink" title="生死索引( Time To Alive Indexes, TTL Indexes )"></a>生死索引( Time To Alive Indexes, TTL Indexes )</h2><p>TTL index 是在某个<code>日期字段</code>上所创建的一种索引，其作用是，为其设置声明时间，如果超过了声明时间，那么 MongoDB 将会自动的去删除该记录( document )；</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1953,7 +1942,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">276</span>
+                  <span class="site-state-item-count">277</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
