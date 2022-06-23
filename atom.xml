@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://arvenseyz.github.io/"/>
-  <updated>2022-04-12T06:13:00.669Z</updated>
+  <updated>2022-06-23T02:58:23.743Z</updated>
   <id>https://arvenseyz.github.io/</id>
   
   <author>
@@ -17,11 +17,37 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>Spring中的循环依赖及解决</title>
+    <link href="https://arvenseyz.github.io/2022/06/22/6-22%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
+    <id>https://arvenseyz.github.io/2022/06/22/6-22技术笔记/</id>
+    <published>2022-06-22T07:05:22.000Z</published>
+    <updated>2022-06-23T02:58:23.743Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="循环依赖是什么"><a href="#循环依赖是什么" class="headerlink" title="循环依赖是什么"></a>循环依赖是什么</h1><p>就是A对象依赖了B对象，B对象依赖了A对象。</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// A依赖了B</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span>&#123;</span><br><span class="line"><span class="keyword">public</span> B b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// B依赖了A</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span></span>&#123;</span><br><span class="line"><span class="keyword">public</span> A a;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">A a = <span class="keyword">new</span> A();</span><br><span class="line">B b = <span class="keyword">new</span> B();</span><br><span class="line"></span><br><span class="line">a.b = b;</span><br><span class="line">b.a = a;</span><br></pre></td></tr></table></figure><p>其实在java中很正常，而且java也是允许的，但是在spring中不正常。</p><p>因为，在Spring中，一个对象并不是简单new出来了，而是会经过一系列的Bean的生命周期，就是因为Bean的生命周期所以才会出现循环依赖问题。在Spring中，出现循环依赖的场景很多，有的场景Spring自动解决了，而有的场景则需要程序员来解决。</p><h2 id="Bean的生命周期"><a href="#Bean的生命周期" class="headerlink" title="Bean的生命周期"></a>Bean的生命周期</h2><ol><li><p>Spring扫描class得到BeanDefinition</p></li><li><p>根据得到的BeanDefinition去生成bean</p></li><li><p>首先根据class推断构造方法</p></li><li><p>根据推断出来的构造方法，反射，得到一个对象（暂时叫做原始对象）</p></li><li><p>填充原始对象中的属性（依赖注入）</p></li><li><p>如果原始对象中的某个方法被AOP了，那么则需要根据原始对象生成一个代理对象</p></li><li><p>把最终生成的代理对象放入单例池（源码中叫做singletonObjects）中，下次getBean时就直接从单例池拿即可</p></li></ol><p>第四步是new（构造方法反射）。</p><p>比如上文说的A类，A类中存在一个B类的b属性，所以，当A类生成了一个原始对象之后，就会去给b属性去赋值，此时就会根据b属性的类型和属性名去BeanFactory中去获取B类所对应的单例bean。</p><p>如果此时BeanFactory中不存在B对应的Bean，则需要生成一个B对应的Bean，然后赋值给b属性。</p><p>但是B的Bean又需要一个A的Bean来生成，这就循环依赖了。</p><h1 id="Spring怎么解决循环依赖"><a href="#Spring怎么解决循环依赖" class="headerlink" title="Spring怎么解决循环依赖"></a>Spring怎么解决循环依赖</h1><h2 id="缓存"><a href="#缓存" class="headerlink" title="缓存"></a>缓存</h2><p><a href="https://imgtu.com/i/jpTzOH" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2022/06/22/jpTzOH.md.png" alt="jpTzOH.md.png"></a></p><p>A的Bean在创建过程中，在进行依赖注入之前，先把A的原始Bean放入缓存（提早暴露，只要放到缓存了，其他Bean需要时就可以从缓存中拿了），放入缓存后，再进行依赖注入，此时A的Bean依赖了B的Bean，如果B的Bean不存在，则需要创建B的Bean，而创建B的Bean的过程和A一样，也是先创建一个B的原始对象，然后把B的原始对象提早暴露出来放入缓存中，然后在对B的原始对象进行依赖注入A，此时能从缓存中拿到A的原始对象（虽然是A的原始对象，还不是最终的Bean），B的原始对象依赖注入完了之后，B的生命周期结束，那么A的生命周期也能结束。</p><p>因为整个过程中，都只有一个A原始对象，所以对于B而言，就算在属性注入时，注入的是A原始对象，也没有关系，因为A原始对象在后续的生命周期中在堆中没有发生变化。</p><h2 id="三级缓存"><a href="#三级缓存" class="headerlink" title="三级缓存"></a>三级缓存</h2><p>实际上spring对bean的缓存，不止上面的原始对象缓存一层，而是三级缓存的结构。</p><p>三级缓存是通用的叫法。</p><p>一级缓存为：singletonObjects，缓存的是已经经历了完整生命周期的bean对象。</p><p>二级缓存为：earlySingletonObjects，表示缓存的是早期的bean对象。早期是什么意思？表示Bean的生命周期还没走完就把这个Bean放入earlySingletonObjects。</p><p>三级缓存为：singletonFactories，缓存的是ObjectFactory，表示对象工厂，用来创建某个对象的。</p><p>从此处分析，spring这么解决循环依赖的，两个池子，半成品（earlySingletonObjects）和成品（singletonObjects），一个正在被创建的bean才会被放在半成品池子里。在注入bean，向容器获取bean的时候，优先向成品池子要，要不到，再去向半成品池子要。</p><p>那这么看来，只需要两级缓存就够了，第三级呢？</p><h2 id="对象冲突"><a href="#对象冲突" class="headerlink" title="对象冲突"></a>对象冲突</h2><p>如果A的原始对象注入给B的属性之后，A的原始对象进行了AOP产生了一个代理对象，此时就会出现，对于A而言，它的Bean对象其实应该是AOP之后的代理对象，而B的a属性对应的并不是AOP之后的代理对象，这就产生了冲突。</p><p><strong>B依赖的A和最终的A不是同一个对象。</strong></p><p>那么如何解决这个问题？这个问题可以说没有办法解决。</p><p>因为在一个Bean的生命周期最后，Spring提供了BeanPostProcessor可以去对Bean进行加工，这个加工不仅仅只是能修改Bean的属性值，也可以替换掉当前Bean。</p><p>BeanPostProcessor的执行在Bean的生命周期中是处于属性注入之后的，循环依赖是发生在属性注入过程中的，所以很有可能导致，<strong>注入给B对象的A对象和经历过完整生命周期之后的A对象，不是一个对象</strong>。这就是有问题的。</p><p><strong>所以在这种情况下的循环依赖，Spring是解决不了的，因为在属性注入时，Spring也不知道A对象后续会经过哪些BeanPostProcessor以及会对A对象做什么处理。</strong></p><h2 id="AOP"><a href="#AOP" class="headerlink" title="AOP"></a>AOP</h2><p>使用AOP的话，beanName对应的最终对象和原始对象不是一个对象却会经常出现。</p><p>AOP就是通过一个BeanPostProcessor来实现的，这个BeanPostProcessor就是AnnotationAwareAspectJAutoProxyCreator，它的父类是AbstractAutoProxyCreator，而在Spring中AOP利用的要么是JDK动态代理，要么CGLib的动态代理，所以如果给一个类中的某个方法设置了切面，那么这个类最终就需要生成一个代理对象。</p><p>一般过程就是：A类—&gt;生成一个普通对象–&gt;属性注入–&gt;基于切面生成一个代理对象–&gt;把代理对象放入singletonObjects单例池中。</p><p>而AOP可以说是Spring中除开IOC的另外一大功能，而循环依赖又是属于IOC范畴的，所以这两大功能想要并存，Spring需要特殊处理。</p><p>如何处理的，就是利用了第三级缓存<strong>singletonFactories</strong>。</p><p>三级缓存里把最原始的对象封装到ObjectFactory 工厂对象的逻辑里，而这时候对象是不稳定的，在调用singletonFactory.getObject() 后实际的对象可能会需要代理的包装，才能成为我们实际程序使用的对象， 从而保存到二级缓存里去，这也是三级缓存和二级缓存的区别，二级缓存里保存的对象是经过了代理包装或替换的，三级缓存中的对象还存在不确定性。</p><p><a href="https://imgtu.com/i/jpqYjS" target="_blank" rel="noopener"><img src="https://s1.ax1x.com/2022/06/22/jpqYjS.md.png" alt="jpqYjS.md.png"></a></p><p>其实还要一个缓存，就是earlyProxyReferences，它用来记录某个原始对象是否进行过AOP了。</p><p>singletonFactories缓存的是一个ObjectFactory，主要用来去生成原始对象进行了AOP之后得到的代理对象，在每个Bean的生成过程中，都会提前暴露一个工厂，这个工厂可能用到，也可能用不到，如果没有出现循环依赖依赖本bean，那么这个工厂无用，本bean按照自己的生命周期执行，执行完后直接把本bean放入singletonObjects中即可，如果出现了循环依赖依赖了本bean，则另外那个bean执行ObjectFactory提交得到一个AOP之后的代理对象(如果有AOP的话，如果无需AOP，则直接得到一个原始对象)。</p><h1 id="怎么看待循环依赖"><a href="#怎么看待循环依赖" class="headerlink" title="怎么看待循环依赖"></a>怎么看待循环依赖</h1><p>循环依赖更多的不是技术问题，费尽心机解决循环依赖没有意义。</p><p>出现循环依赖一定是业务设计有问题。高层业务和底层业务的划分不够清晰，一般，业务的依赖方向一定是无环的，有环的业务，在后续的维护和拓展一定非常鸡肋。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;循环依赖是什么&quot;&gt;&lt;a href=&quot;#循环依赖是什么&quot; class=&quot;headerlink&quot; title=&quot;循环依赖是什么&quot;&gt;&lt;/a&gt;循环依赖是什么&lt;/h1&gt;&lt;p&gt;就是A对象依赖了B对象，B对象依赖了A对象。&lt;/p&gt;
+&lt;figure class=&quot;highligh
+      
+    
+    </summary>
+    
+      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="spring" scheme="https://arvenseyz.github.io/tags/spring/"/>
+    
+  </entry>
+  
+  <entry>
     <title>mysql锁</title>
     <link href="https://arvenseyz.github.io/2022/04/08/4-8%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
     <id>https://arvenseyz.github.io/2022/04/08/4-8技术笔记/</id>
     <published>2022-04-08T08:22:52.000Z</published>
-    <updated>2022-04-12T06:13:00.669Z</updated>
+    <updated>2022-05-19T11:55:01.871Z</updated>
     
     <content type="html"><![CDATA[<h2 id="复习下隔离级别"><a href="#复习下隔离级别" class="headerlink" title="复习下隔离级别"></a>复习下隔离级别</h2><p>读未提交，会读到别的事务没提交的数据，会脏读（读到未持久化的数据）。</p><p>读已提交，读取别的事务提交的数据，在事务过程中，由于别的事务提交了数据，前后读到的数据不一样，会不可重复读。</p><p>可重复读，别的事务对该行的操作，对自己不可见。但是防不了插入新数据，count会不对，会幻读。</p><p>读串行化</p><h2 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h2><h3 id="表锁"><a href="#表锁" class="headerlink" title="表锁"></a>表锁</h3><p>LOCK TABLES table_name [READ | WRITE]</p><p>直接锁表。两种模式，读锁和写锁。</p><p>读锁的状态下，自己可以读，不能写，写会报错。</p><p>别人可以上读锁，也可以不上锁直接读，不上写直接写会阻塞，等待所有的读锁释放。</p><p>写锁状态下，自己可以写可以读。</p><p>别人上锁、读、写都会阻塞，等待写锁释放。</p><h3 id="行锁"><a href="#行锁" class="headerlink" title="行锁"></a>行锁</h3><h4 id="排他锁"><a href="#排他锁" class="headerlink" title="排他锁"></a>排他锁</h4><p>即行的写锁,X锁，select …..  for update</p><p>当前写操作没有完成前，它会阻断其他写锁和读锁。</p><p>事务对数据加上X锁时，只允许此事务读取和修改此数据，并且其它事务不能对该数据加任何锁（都会阻塞）</p><h3 id="共享锁"><a href="#共享锁" class="headerlink" title="共享锁"></a>共享锁</h3><p>即行的读锁,S锁</p><p>SELECT * FROM table_name WHERE … IN SHARE MODE;</p><p>加了S锁后，该事务只能对数据进行读取而不能修改，并且其它事务只能加S锁，不能加X锁。</p><p>读取结果集的最新版本，同时防止其他事务产生更新的数据版本。</p><p>由于数据的最新版本是不断变化的，所以本读取模式需要强制阻断最新版本的变化，保证自己读取到的是所有人都一致认可的名副其实的最新版本。</p><p><code>MySQL</code>官方文档的例子来说，假如存在两张有关系的表：PARENT和CHILD，使用普通的SELECT语句（快照读）来查询表PARENT并验证父行是否存在后再将子行插入CHILD表，这种方式安全吗？答案是否定的，因为其他会话可能会在你这个会话的SELECT和INSERT之间的某个时间点删除了父行，这个删除操作你是无法察觉到的。</p><h3 id="加锁时机"><a href="#加锁时机" class="headerlink" title="加锁时机"></a>加锁时机</h3><p><strong>update,delete,insert都会自动给涉及到的数据加上排他锁</strong>，select语句默认不会加任何锁类型。</p><p>所以加过排他锁的数据行在其他事务种是不能修改数据的，也不能通过for update和lock in share mode锁的方式查询数据，但可以直接通过select …from…查询数据，因为普通查询没有任何锁机制。</p><h3 id="意向锁"><a href="#意向锁" class="headerlink" title="意向锁"></a>意向锁</h3><p><strong>意向锁都是表锁。</strong>意向锁的存在是为了允许事务在行级上的锁和表级上的锁同时存在。</p><p>意向锁实际上不是给用户用的，而是为了解决性能问题，内部的实现。</p><p>一个事务在加表锁的时候是如何确定这张表的记录行上面有没有加锁呢？</p><p>很显然，最简单的方式就是一行一行遍历每条数据，分别去判断每行有没有被锁住。但是这方法性能有问题，所以才有的意向锁。</p><p><code>当一个事务想要获取表中某一行的（共享/排他）锁的时候，它会自动尝试给当前表的加上意向（共享/排他）锁</code><br>。然后，表锁和行锁之间的兼容互斥性就变成了表锁和意向锁之间的竞争关系。</p><p><strong>意向锁只会与表级的共享 互斥锁具有互斥性</strong>。</p><p>意向锁之间互相兼容，因此针对表中的记录加锁不会因为意向锁而产生互斥，行锁之间的竞争关系是行锁与行锁的竞争，意向锁并不会参与其中；</p><p>意向锁和表级锁会产生互斥，这里互斥的作用就是用于表锁的第二个检查。</p><h2 id="锁升级"><a href="#锁升级" class="headerlink" title="锁升级"></a>锁升级</h2><p>行锁升级为表锁的原因之一是： SQL 语句中未使用到索引，或者说使用的索引未被数据库认可（相当于没有使用索引）。</p><p>如果在数据库的设计中认为锁时一种稀有资源，而且像避免锁的开销，那数据库会频繁出现锁升级现象。（多个行锁还不如一个表锁）</p><p>InnoDB默认采用行锁，在未使用索引字段查询时升级为表锁。MySQL这样设计并不是给你挖坑。它有自己的设计目的。<br>即便你在条件中使用了索引字段，MySQL会根据自身的执行计划，考虑是否使用索引(所以explain命令中会有possible_key 和 key)。如果MySQL认为全表扫描效率更高，它就不会使用索引，这种情况下InnoDB将使用表锁，而不是行锁。因此，在分析锁冲突时，别忘了检查SQL的执行计划，以确认是否真正使用了索引。</p><p>第一种情况：全表更新。事务需要更新大部分或全部数据，且表又比较大。若使用行锁，会导致事务执行效率低，从而可能造成其他事务长时间锁等待和更多的锁冲突。</p><p>第二种情况：多表级联。事务涉及多个表，比较复杂的关联查询，很可能引起死锁，造成大量事务回滚。这种情况若能一次性锁定事务涉及的表，从而可以避免死锁、减少数据库因事务回滚带来的开销。</p>]]></content>
     
@@ -502,31 +528,6 @@
       
       
         &lt;h2 id=&quot;什么是推和拉&quot;&gt;&lt;a href=&quot;#什么是推和拉&quot; class=&quot;headerlink&quot; title=&quot;什么是推和拉&quot;&gt;&lt;/a&gt;什么是推和拉&lt;/h2&gt;&lt;p&gt;说到推拉，其实只针对消费者和broker的行为，生产者只有推（不然生产者岂不是还得把消息持久化等着broke
-      
-    
-    </summary>
-    
-      <category term="技术" scheme="https://arvenseyz.github.io/categories/%E6%8A%80%E6%9C%AF/"/>
-    
-    
-      <category term="消息队列" scheme="https://arvenseyz.github.io/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>RocketMQ Rebalance机制</title>
-    <link href="https://arvenseyz.github.io/2021/12/10/12-10%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/"/>
-    <id>https://arvenseyz.github.io/2021/12/10/12-10技术笔记/</id>
-    <published>2021-12-10T06:51:50.000Z</published>
-    <updated>2021-12-13T03:30:58.392Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="Rebalance是什么"><a href="#Rebalance是什么" class="headerlink" title="Rebalance是什么"></a><strong>Rebalance是什么</strong></h1><p>Rebalance(再均衡)机制指的是：将一个Topic下的<strong>多个队列(或称之为分区)</strong>，在同一个消费者组(consumer group)下的<strong>多个消费者实例</strong>(consumer instance)之间进行重新分配。</p><p><strong>Rebalance机制本意是为了提升消息的并行处理能力。</strong>例如，一个Topic下5个队列，在只有1个消费者的情况下，那么这个消费者将负责处理这5个队列的消息。如果此时我们增加一个消费者，那么可以给其中一个消费者分配2个队列，给另一个分配3个队列，从而提升消息的并行处理能力。</p><p>但是Rebalance机制也存在明显的<strong>限制</strong>与<strong>危害</strong>。</p><p><strong>Rebalance限制：</strong></p><p>由于一个队列最多分配给一个消费者，因此当某个消费者组下的消费者实例数量大于队列的数量时，多余的消费者实例将分配不到任何队列。</p><p><strong>Rebalance危害：</strong></p><p>除了以上限制，更加严重的是，在发生Rebalance时，存在着一些危害，如下所述：</p><ul><li><strong>消费暂停：</strong>考虑在只有Consumer 1的情况下，其负责消费所有5个队列；在新增Consumer 2，触发Rebalance时，需要分配2个队列给其消费。那么Consumer 1就需要停止这2个队列的消费，等到这两个队列分配给Consumer 2后，这两个队列才能继续被消费。</li><li><strong>重复消费：</strong>Consumer 2 在消费分配给自己的2个队列时，必须接着从Consumer 1之前已经消费到的offset继续开始消费。然而默认情况下，offset是异步提交的，如consumer 1当前消费到offset为10，但是异步提交给broker的offset为8；那么如果consumer 2从8的offset开始消费，那么就会有2条消息重复。也就是说，Consumer 2 并不会等待Consumer1提交完offset后，再进行Rebalance，因此提交间隔越长，可能造成的重复消费就越多。</li><li><strong>消费突刺：</strong>由于rebalance可能导致重复消费，如果需要重复消费的消息过多；或者因为rebalance暂停时间过长，导致积压了部分消息。那么都有可能导致在rebalance结束之后瞬间可能需要消费很多消息。</li></ul><h1 id="什么时候Reblance"><a href="#什么时候Reblance" class="headerlink" title="什么时候Reblance"></a>什么时候Reblance</h1><p>从本质上来说，触发Rebalance的根本因素无非是两个：</p><p><strong>1. 订阅Topic的队列数量变化</strong> </p><p><strong>2. 消费者组信息变化。</strong> </p><p><strong>队列信息</strong>和<strong>消费者组信息</strong>称之为Rebalance元数据，Broker负责维护这些元数据，并在二者信息发生变化时，以某种通知机制告诉消费者组下所有实例，需要进行Rebalance。从这个角度来说，Broker在Rebalance过程中，是一个协调者的角色。</p><h1 id="怎么reblance"><a href="#怎么reblance" class="headerlink" title="怎么reblance"></a>怎么reblance</h1><p>Broker是通知每个消费者各自Rebalance，即每个消费者自己给自己重新分配队列，而不是Broker将分配好的结果告知Consumer。从这个角度，RocketMQ与Kafka Rebalance机制类似，二者Rebalance分配都是在客户端进行，不同的是：</p><ul><li><strong>Kafka：</strong>会在消费者组的多个消费者实例中，选出一个作为Group Leader，由这个Group Leader来进行分区分配，分配结果通过Cordinator(特殊角色的broker)同步给其他消费者。相当于Kafka的分区分配只有一个大脑，就是Group Leader。</li><li><strong>RocketMQ：</strong>每个消费者，自己负责给自己分配队列，相当于每个消费者都是一个大脑。</li></ul><p>如果RocketMQ是去中心化的，必然有如下两个问题：</p><ol><li><p>脑裂：因为每个消费者都不知道其他消费者分配的结果，会不会出现一个队列分配给了多个消费者，或者有的队列分配给了多个消费者。</p></li><li><p>如果某个消费者没有收到Rebalance通知怎么办</p></li></ol><p><strong>只要任意一个消费者组需要Rebalance，这台机器上启动的所有其他消费者，也都要进行Rebalance</strong>。</p><h2 id="单个Topic-Rebalance流程"><a href="#单个Topic-Rebalance流程" class="headerlink" title="单个Topic Rebalance流程"></a><strong>单个Topic Rebalance流程</strong></h2><p>单个Topic的Rebalance流程，是在RebalanceImpl类的rebalanceByTopic方法中进行的，整体上可以分为4大步骤：</p><p>1、从namesrv获取messageQueue信息</p><p>2、从broker获取consumer信息</p><p>3、选择Rebalance策略</p><p>4、三者结合实现Rebalance操作</p><p>消费者在Rebalance时需要获得：Topic的队列信息和消费者组实例信息。</p><p><strong>对于队列信息：</strong></p><p>会从之前的缓存的Topic路由信息中获取；Topic路由信息会定时的进行更新。</p><p><strong>对于消费者组实例信息：</strong></p><p>前面我们提到过Broker通过ConsumerManager维护了所有的消费者信息，findConsumerIdList方法内部会会发送<strong>GET_CONSUMER_LIST_BY_GROUP</strong>给请求给任意一个Broker进行获取。</p><p>每个消费者是自己给自己分配，相当于存在多个大脑。那么如何保证分配结果的一致呢？通过以下两个手段来保证：</p><ul><li>对Topic队列，以及消费者各自进行排序</li><li>每个消费者需要使用相同的分配策略。</li></ul><p>尽管每个消费者是各自给自己分配，但是因为使用的相同的分配策略，定位从队列列表中哪个位置开始给自己分配，给自己分配多少个队列，从而保证最终分配结果的一致。</p><h2 id="出发时机"><a href="#出发时机" class="headerlink" title="出发时机"></a>出发时机</h2><p>简单地来说，RocketMQ有三个时机会触发负载均衡：</p><ol><li><p>启动的时候，会立即触发</p></li><li><p>有消费实例数量的变更的时候。broker在接受到消费者的心跳包的时候如果发现这个实例是新的实例的时候，会广播一个消费者数量变更的事件给所有消费者实例；同理，当发现一个消费者实例的连接断了，也会广播这样的一个事件</p></li><li><p>定期触发（默认20秒）。</p></li></ol><p>第一个时机很好理解。启动的时候，消费者需要需要知道自己要分配什么队列，所以要触发Rebalance。</p><p>第二个时机实际也很好理解。因为有实例的数量变更，所以分配的结果肯定也需要调整的，这时候就要广播给各消费者。</p><p>第三点定期触发的原因实际上是一个补偿机制，为了避免第二点广播的时候因为网络异常等原因丢失了重分配的信号，或者还有别的场景实际上也需要重新计算分配结果（例如队列的数量变化、权限变化），所以需要一个定时任务做补偿。</p><p>所以rocketMQ去中心化Reblance的机制，导致，负载均衡的这个实现原理，就会导致RocketMQ消息重复比一般的消息中间件概率要大，而且严重不少（消息是批量重复的）。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;Rebalance是什么&quot;&gt;&lt;a href=&quot;#Rebalance是什么&quot; class=&quot;headerlink&quot; title=&quot;Rebalance是什么&quot;&gt;&lt;/a&gt;&lt;strong&gt;Rebalance是什么&lt;/strong&gt;&lt;/h1&gt;&lt;p&gt;Rebalance(再均衡
       
     
     </summary>
